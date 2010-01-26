@@ -1,7 +1,7 @@
 /*
  * The MIT License
  * 
- * Copyright (c) 2004-2009, Sun Microsystems, Inc., Kohsuke Kawaguchi
+ * Copyright (c) 2004-2009, Sun Microsystems, Inc., Kohsuke Kawaguchi, Yahoo!, Inc.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,24 +21,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package hudson.tasks.junit;
+package hudson.tasks.test;
+
 
 import java.util.Collection;
-import java.util.List;
 
 /**
+ * The purpose of this class is to provide a good place for the
+ * jelly to bind to.  
  * {@link TabulatedResult} whose immediate children
  * are other {@link TabulatedResult}s.
  *
  * @author Kohsuke Kawaguchi
  */
-abstract class MetaTabulatedResult extends TabulatedResult {
-    public abstract String getChildTitle();
+public abstract class MetaTabulatedResult extends TabulatedResult {
 
     /**
      * All failed tests.
      */
-    public abstract List<CaseResult> getFailedTests();
+    public abstract Collection<? extends TestResult> getFailedTests();
 
-    public abstract Collection<? extends TabulatedResult> getChildren();
 }
