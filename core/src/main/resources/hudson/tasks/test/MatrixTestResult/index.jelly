@@ -30,7 +30,7 @@ THE SOFTWARE.
       <h1 class="matrix-test-result-headline page-headline">Test Result</h1>
       <test:bar/>
 
-      <table class="pane sortable">
+      <table class="pane sortable bigtable">
         <tr>
           <td class="pane-header">Configuration Name</td>
           <td class="pane-header" style="width:4em">Duration</td>
