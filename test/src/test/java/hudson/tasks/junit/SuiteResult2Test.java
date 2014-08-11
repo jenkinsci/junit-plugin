@@ -34,7 +34,7 @@ import static org.jvnet.hudson.test.MemoryAssert.*;
 import static org.junit.Assert.*;
 import org.junit.Test;
 
-public class SuiteResultTest {
+public class SuiteResult2Test {
 
     @SuppressWarnings({"DM_DEFAULT_ENCODING", "OS_OPEN_STREAM", "RV_RETURN_VALUE_IGNORED_BAD_PRACTICE"})
     @Test public void sizeSurefire() throws Exception {
