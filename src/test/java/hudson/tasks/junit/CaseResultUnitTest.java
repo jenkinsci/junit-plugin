@@ -27,11 +27,13 @@ package hudson.tasks.junit;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicReference;
 import junit.framework.TestCase;
+import org.jvnet.hudson.test.For;
 import org.jvnet.localizer.LocaleProvider;
 
-public class CaseResultTest extends TestCase {
+@For(CaseResult.class)
+public class CaseResultUnitTest extends TestCase {
     
-    public CaseResultTest(String name) {
+    public CaseResultUnitTest(String name) {
         super(name);
     }
     
