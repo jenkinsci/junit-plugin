@@ -234,11 +234,6 @@ public class JUnitResultArchiver extends Recorder {
 			return Messages.JUnitResultArchiver_DisplayName();
 		}
 
-        @Override
-        public String getHelpFile() {
-            return "/help/tasks/junit/report.html";
-        }
-
 		@Override
 		public Publisher newInstance(StaplerRequest req, JSONObject formData)
 				throws hudson.model.Descriptor.FormException {

@@ -29,9 +29,9 @@ THE SOFTWARE.
       <f:optionalBlock name="aggregatedTestResult.specify" negative="true"
               title="${%Automatically aggregate all downstream tests}"
               checked="${instance.jobs==null}"
-              help="/help/tasks/aggregate-test/auto-aggregate.html">
+              help="/descriptorByName/hudson.tasks.test.AggregatedTestResultPublisher/help/auto-aggregate">
         <f:entry title="${%Jobs to aggregate}"
-                 help="/help/tasks/aggregate-test/manual-list.html">
+                 help="/descriptorByName/hudson.tasks.test.AggregatedTestResultPublisher/help/manual-list">
           <f:textbox name="aggregatedTestResult.jobs" value="${instance.jobs}"
                      checkUrl="'descriptorByName/hudson.tasks.test.AggregatedTestResultPublisher/check?value='+encodeURIComponent(this.value)"
                      field="jobs"
