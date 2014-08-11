@@ -24,7 +24,7 @@ THE SOFTWARE.
 -->
 
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:test="/lib/hudson/test" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
 
   <script type="text/javascript">
     function showFailures() {
@@ -42,7 +42,7 @@ THE SOFTWARE.
   <t:summary icon="clipboard.png">
     <a href="${it.urlName}/">${it.displayName}</a>
     <st:nbsp/>
-    <t:test-result />
+    <test:test-result/>
 
     <j:set var="failedTests" value="${it.failedTests}" />
     <j:if test="${failedTests != null}">

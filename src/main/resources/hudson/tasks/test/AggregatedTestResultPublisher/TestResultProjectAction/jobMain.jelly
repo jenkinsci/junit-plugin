@@ -24,14 +24,14 @@ THE SOFTWARE.
 -->
 
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:t="/lib/hudson">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:t="/lib/hudson" xmlns:test="/lib/hudson/test">
     <table style="margin-top: 1em; margin-left: 1em;">
         <j:set var="atr" value="${it.project.lastCompletedBuild.getAction(it.class.classLoader.loadClass('hudson.tasks.test.AggregatedTestResultPublisher$TestResultAction'))}"/>
         <j:if test="${atr != null}">
             <t:summary icon="clipboard.png">
                 <a href="lastCompletedBuild/${atr.urlName}/">${%Latest Aggregated Test Result}</a>
                 <st:nbsp/>
-                <t:test-result it="${atr}"/>
+                <test:test-result it="${atr}"/>
             </t:summary>
         </j:if>
     </table>
