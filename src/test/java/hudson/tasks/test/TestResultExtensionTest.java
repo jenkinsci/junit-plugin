@@ -27,7 +27,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
-import hudson.model.AbstractBuild;
+import hudson.model.Run;
 import org.jvnet.hudson.test.HudsonTestCase;
 import org.jvnet.hudson.test.TouchBuilder;
 
@@ -50,13 +50,13 @@ public class TestResultExtensionTest extends HudsonTestCase {
         assertBuildStatus(Result.SUCCESS, build);
         TrivialTestResultAction action = build.getAction(TrivialTestResultAction.class);
         assertNotNull("we should have an action", action);
-        assertNotNull("parent action should have an owner", action.owner); 
+        assertNotNull("parent action should have an owner", action.run);
         Object resultObject = action.getResult();
         assertNotNull("we should have a result");
         assertTrue("result should be an TestResult",
                 resultObject instanceof TestResult);
         TestResult result = (TestResult) resultObject;
-        AbstractBuild<?,?> ownerBuild = result.getOwner();
+        Run<?,?> ownerBuild = result.getRun();
         assertNotNull("we should have an owner", ownerBuild);
         assertNotNull("we should have a list of test actions", result.getTestActions());
 
