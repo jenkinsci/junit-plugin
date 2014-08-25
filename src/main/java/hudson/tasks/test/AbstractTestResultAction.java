@@ -279,10 +279,10 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
         DataSetBuilder<String,NumberOnlyBuildLabel> dsb = new DataSetBuilder<String,NumberOnlyBuildLabel>();
 
         for (AbstractTestResultAction<?> a = this; a != null; a = a.getPreviousResult(AbstractTestResultAction.class, false)) {
-            dsb.add( a.getFailCount(), "failed", new NumberOnlyBuildLabel(a.owner));
+            dsb.add( a.getFailCount(), "failed", new NumberOnlyBuildLabel((Run) a.owner));
             if(!failureOnly) {
-                dsb.add( a.getSkipCount(), "skipped", new NumberOnlyBuildLabel(a.owner));
-                dsb.add( a.getTotalCount()-a.getFailCount()-a.getSkipCount(),"total", new NumberOnlyBuildLabel(a.owner));
+                dsb.add( a.getSkipCount(), "skipped", new NumberOnlyBuildLabel((Run) a.owner));
+                dsb.add( a.getTotalCount()-a.getFailCount()-a.getSkipCount(),"total", new NumberOnlyBuildLabel((Run) a.owner));
             }
         }
         return dsb.build();
