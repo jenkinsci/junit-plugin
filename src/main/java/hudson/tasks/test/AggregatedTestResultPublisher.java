@@ -59,6 +59,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.CheckForNull;
+import org.acegisecurity.AccessDeniedException;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
@@ -163,9 +164,14 @@ public class AggregatedTestResultPublisher extends Recorder {
         public Collection<AbstractProject> getJobs() {
             List<AbstractProject> r = new ArrayList<AbstractProject>();
             for (String job : Util.tokenize(jobs,",")) {
-                AbstractProject j = Jenkins.getInstance().getItemByFullName(job.trim(), AbstractProject.class);
-                if(j!=null)
-                    r.add(j);
+                try {
+                    AbstractProject j = Jenkins.getInstance().getItemByFullName(job.trim(), AbstractProject.class);
+                    if (j != null) {
+                        r.add(j);
+                    }
+                } catch (AccessDeniedException x) {
+                    // just skip it
+                }
             }
             return r;
         }
