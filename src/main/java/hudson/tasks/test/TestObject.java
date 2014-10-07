@@ -317,7 +317,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
 
     /**
      * Gets the full name of this object.
-     * @since 1.594
+     * @since 1.551
      */
     public String getFullName() {
         StringBuilder sb = new StringBuilder(getName());
