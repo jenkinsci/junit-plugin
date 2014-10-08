@@ -259,6 +259,9 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
 		public FormValidation doCheckTestResults(
 				@AncestorInPath AbstractProject project,
 				@QueryParameter String value) throws IOException {
+            if (project == null) {
+                return FormValidation.ok();
+            }
 			return FilePath.validateFileMask(project.getSomeWorkspace(), value);
 		}
 
