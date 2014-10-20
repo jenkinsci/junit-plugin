@@ -52,7 +52,6 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
 import jenkins.tasks.SimpleBuildStep;
@@ -138,6 +137,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
 
 			TestResult result = parse(testResults, build, workspace, launcher, listener);
 
+        synchronized (build) {
             // TODO can the build argument be omitted now, or is it used prior to the call to addAction?
             TestResultAction action = build.getAction(TestResultAction.class);
             boolean appending;
@@ -178,6 +178,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
 
 		if (action.getResult().getFailCount() > 0)
 			build.setResult(Result.UNSTABLE);
+        }
 	}
 
 	/**
