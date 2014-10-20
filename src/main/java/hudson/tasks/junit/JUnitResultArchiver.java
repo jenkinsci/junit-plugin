@@ -205,7 +205,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
     }
 
     /** @since 1.2-beta-1 */
-    public final void setHealthScaleFactor(double healthScaleFactor) {
+    @DataBoundSetter public final void setHealthScaleFactor(double healthScaleFactor) {
         this.healthScaleFactor = Math.max(0.0, healthScaleFactor);
     }
 
@@ -214,7 +214,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
 	}
 
     /** @since 1.2-beta-1 */
-    public final void setTestDataPublishers(DescribableList<TestDataPublisher,Descriptor<TestDataPublisher>> testDataPublishers) {
+    @DataBoundSetter public final void setTestDataPublishers(DescribableList<TestDataPublisher,Descriptor<TestDataPublisher>> testDataPublishers) {
         this.testDataPublishers = testDataPublishers;
     }
 
