@@ -101,7 +101,7 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
 
     @Override
     public String getChildTitle() {
-        return "Class Reults"; 
+        return "Class Results";
     }
 
     @Exported(visibility=999)
