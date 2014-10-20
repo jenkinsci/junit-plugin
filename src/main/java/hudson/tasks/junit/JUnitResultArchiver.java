@@ -204,7 +204,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
         return healthScaleFactor == null ? 1.0 : healthScaleFactor;
     }
 
-    /** @since TODO */
+    /** @since 1.2-beta-1 */
     public final void setHealthScaleFactor(double healthScaleFactor) {
         this.healthScaleFactor = Math.max(0.0, healthScaleFactor);
     }
@@ -213,7 +213,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
 		return testDataPublishers;
 	}
 
-    /** @since TODO */
+    /** @since 1.2-beta-1 */
     public final void setTestDataPublishers(DescribableList<TestDataPublisher,Descriptor<TestDataPublisher>> testDataPublishers) {
         this.testDataPublishers = testDataPublishers;
     }
@@ -225,7 +225,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
 		return keepLongStdio;
 	}
 
-    /** @since TODO */
+    /** @since 1.2-beta-1 */
     @DataBoundSetter public final void setKeepLongStdio(boolean keepLongStdio) {
         this.keepLongStdio = keepLongStdio;
     }

@@ -74,7 +74,7 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
     }
 
     /**
-     * @since TODO
+     * @since 1.2-beta-1
      */
     public TestResultAction(Run owner, TestResult result, TaskListener listener) {
         super(owner);
@@ -92,7 +92,7 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
 
     /**
      * Overwrites the {@link TestResult} by a new data set.
-     * @since TODO
+     * @since 1.2-beta-1
      */
     public synchronized void setResult(TestResult result, TaskListener listener) {
         result.freeze(this);

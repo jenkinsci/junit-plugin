@@ -126,7 +126,7 @@ public abstract class AggregatedTestResultAction extends AbstractTestResultActio
         @Deprecated
         public final AbstractBuild<?,?> child;
         /**
-         * @since TODO
+         * @since 1.2-beta-1
          */
         @Exported(name="child")
         public final Run<?,?> run;
@@ -139,7 +139,7 @@ public abstract class AggregatedTestResultAction extends AbstractTestResultActio
         }
 
         /**
-         * @since TODO
+         * @since 1.2-beta-1
          */
         public ChildReport(Run<?,?> run, AbstractTestResultAction result) {
             this.child = run instanceof AbstractBuild ? (AbstractBuild) run : null;
@@ -169,7 +169,7 @@ public abstract class AggregatedTestResultAction extends AbstractTestResultActio
     protected abstract String getChildName(AbstractTestResultAction tr);
 
     /**
-     * @since TODO
+     * @since 1.2-beta-1
      */
     public Run<?,?> resolveRun(Child child) {
         return resolveChild(child);

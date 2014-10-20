@@ -58,7 +58,7 @@ public abstract class TestObject extends AbstractModelObject implements Serializ
     }
 
     /**
-     * @since TODO
+     * @since 1.2-beta-1
      */
     public Run<?,?> getRun() {
         return getOwner();
@@ -97,7 +97,7 @@ public abstract class TestObject extends AbstractModelObject implements Serializ
     }
 
     /**
-     * @since TODO
+     * @since 1.2-beta-1
      */
 	public TestObject getResultInRun(Run<?,?> run) {
         if (run instanceof AbstractBuild) {

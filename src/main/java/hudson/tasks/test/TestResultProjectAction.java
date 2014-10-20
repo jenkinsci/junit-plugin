@@ -50,7 +50,7 @@ import java.util.List;
 public class TestResultProjectAction implements Action {
     /**
      * Project that owns this action.
-     * @since TODO
+     * @since 1.2-beta-1
      */
     public final Job<?,?> job;
 
@@ -58,7 +58,7 @@ public class TestResultProjectAction implements Action {
     public final AbstractProject<?,?> project;
 
     /**
-     * @since TODO
+     * @since 1.2-beta-1
      */
     public TestResultProjectAction(Job<?,?> job) {
         this.job = job;
