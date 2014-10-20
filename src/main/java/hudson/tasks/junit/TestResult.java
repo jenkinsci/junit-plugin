@@ -252,6 +252,16 @@ public final class TestResult extends MetaTabulatedResult {
         suites.add(sr);
         duration += sr.getDuration();
     }
+
+    /**
+     * Adds the suites from another test result to this one.
+     */
+    void merge(TestResult other) {
+        for (SuiteResult suite : other.suites) {
+            suite.setParent(null); // otherwise freeze ignores it
+            add(suite);
+        }
+    }
     
     private boolean strictEq(Object lhs, Object rhs) {
         return lhs != null && rhs != null && lhs.equals(rhs);

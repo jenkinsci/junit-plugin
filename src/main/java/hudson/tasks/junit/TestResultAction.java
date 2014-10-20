@@ -207,8 +207,21 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         return Collections.unmodifiableList(result);
     }
 
+    List<Data> getData() {
+        return testData;
+    }
+
     public void setData(List<Data> testData) {
 	this.testData = testData;
+    }
+
+    /**
+     * Merges an additional test result into this one.
+     */
+    void mergeResult(TestResult additionalResult, TaskListener listener) {
+        TestResult original = getResult();
+        original.merge(additionalResult);
+        setResult(original, listener);
     }
 
     /**

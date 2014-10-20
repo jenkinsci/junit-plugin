@@ -36,6 +36,15 @@ import org.jvnet.hudson.test.recipes.LocalData;
 
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import hudson.Launcher;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.BuildListener;
+import hudson.model.Result;
+import hudson.tasks.BuildStepDescriptor;
+import hudson.tasks.Builder;
+import java.io.IOException;
+import java.util.List;
 import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Rule;
@@ -43,6 +52,7 @@ import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
 import org.jvnet.hudson.test.RandomlyFails;
+import org.jvnet.hudson.test.TestExtension;
 
 public class JUnitResultArchiverTest {
 
@@ -160,4 +170,40 @@ public class JUnitResultArchiverTest {
 		fail("no form found");
 		return null;
 	}
+
+    @LocalData
+    @Test public void repeatedArchiving() throws Exception {
+        project.getPublishersList().removeAll(JUnitResultArchiver.class);
+        project.getBuildersList().add(new SimpleArchive("*ApiTest.xml"));
+        project.getBuildersList().add(new SimpleArchive("*HudsonPrivateSecurityRealmTest.xml"));
+        FreeStyleBuild build = j.assertBuildStatus(Result.UNSTABLE, project.scheduleBuild2(0).get());
+        List<TestResultAction> actions = build.getActions(TestResultAction.class);
+        assertEquals(1, actions.size());
+        TestResultAction testResultAction = actions.get(0);
+		TestResult result = testResultAction.getResult();
+		assertNotNull("no TestResult", result);
+		assertEquals("should have 1 failing test", 1, testResultAction.getFailCount());
+		assertEquals("should have 1 failing test", 1, result.getFailCount());
+		assertEquals("should have 8 total tests", 8, testResultAction.getTotalCount());
+		assertEquals("should have 8 total tests", 8, result.getTotalCount());
+    }
+    public static final class SimpleArchive extends Builder {
+        private final String pattern;
+        public SimpleArchive(String pattern) {
+            this.pattern = pattern;
+        }
+        @Override public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+            new JUnitResultArchiver(pattern).perform(build, build.getWorkspace(), launcher, listener);
+            return true;
+        }
+        @TestExtension public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {
+            @Override public boolean isApplicable(Class<? extends AbstractProject> jobType) {
+                return true;
+            }
+            @Override public String getDisplayName() {
+                return "Incremental JUnit result publishing";
+            }
+        }
+    }
+
 }

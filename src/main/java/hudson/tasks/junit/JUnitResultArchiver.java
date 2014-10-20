@@ -133,24 +133,34 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
 	public void perform(Run build, FilePath workspace, Launcher launcher,
 			TaskListener listener) throws InterruptedException, IOException {
 		listener.getLogger().println(Messages.JUnitResultArchiver_Recording());
-		TestResultAction action;
 		
 		final String testResults = build.getEnvironment(listener).expand(this.testResults);
 
-		try {
 			TestResult result = parse(testResults, build, workspace, launcher, listener);
 
             // TODO can the build argument be omitted now, or is it used prior to the call to addAction?
-            action = new TestResultAction(build, result, listener);
-            action.setHealthScaleFactor(getHealthScaleFactor()); // TODO do we want to move this to the constructor?
-            result.freeze(action);
+            TestResultAction action = build.getAction(TestResultAction.class);
+            boolean appending;
+            if (action == null) {
+                appending = false;
+                action = new TestResultAction(build, result, listener);
+            } else {
+                appending = true;
+                action.mergeResult(result, listener);
+            }
+            action.setHealthScaleFactor(getHealthScaleFactor()); // overwrites previous value if appending
 			if (result.isEmpty()) {
+                if (build.getResult() == Result.FAILURE) {
+                    // most likely a build failed before it gets to the test phase.
+                    // don't report confusing error message.
+                    return;
+                }
 			    // most likely a configuration error in the job - e.g. false pattern to match the JUnit result files
 				throw new AbortException(Messages.JUnitResultArchiver_ResultIsEmpty());
 			}
 
             // TODO: Move into JUnitParser [BUG 3123310]
-			List<Data> data = new ArrayList<Data>();
+			List<Data> data = action.getData();
 			if (testDataPublishers != null) {
 				for (TestDataPublisher tdp : testDataPublishers) {
 					Data d = tdp.contributeTestData(build, workspace, launcher, listener, result);
@@ -160,23 +170,11 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
 				}
 			}
 
-			action.setData(data);
-		} catch (AbortException e) {
-			if (build.getResult() == Result.FAILURE)
-				// most likely a build failed before it gets to the test phase.
-				// don't report confusing error message.
-				return;
-
-			listener.getLogger().println(e.getMessage());
-			build.setResult(Result.FAILURE);
-			return;
-		} catch (IOException e) {
-			e.printStackTrace(listener.error("Failed to archive test reports"));
-			build.setResult(Result.FAILURE);
-			return;
-		}
-
-		build.addAction(action);
+            if (appending) {
+                build.save();
+            } else {
+                build.addAction(action);
+            }
 
 		if (action.getResult().getFailCount() > 0)
 			build.setResult(Result.UNSTABLE);
