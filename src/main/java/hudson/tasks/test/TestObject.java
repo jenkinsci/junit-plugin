@@ -88,6 +88,10 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
         return '/' + getId();
     }
 
+    public String getFullDisplayName() {
+        return getDisplayName();
+    }
+
     /**
      * Returns the top level test result data.
      *
