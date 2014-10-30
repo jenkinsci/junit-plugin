@@ -26,6 +26,7 @@ package hudson.tasks.junit;
 import hudson.model.TaskListener;
 import hudson.tasks.test.TestResultParser;
 import hudson.*;
+import hudson.model.AbstractBuild;
 import hudson.model.Run;
 import hudson.remoting.VirtualChannel;
 
@@ -66,6 +67,11 @@ public class JUnitParser extends TestResultParser {
     @Override
     public String getTestResultLocationMessage() {
         return Messages.JUnitParser_TestResultLocationMessage();
+    }
+
+    @Deprecated
+    @Override public TestResult parse(String testResultLocations, AbstractBuild build, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
+        return (TestResult) super.parse(testResultLocations, build, launcher, listener);
     }
 
     @Override
