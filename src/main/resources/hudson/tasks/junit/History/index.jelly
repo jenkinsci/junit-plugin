@@ -57,7 +57,7 @@ THE SOFTWARE.
           <div align="center">
           	show
           	<a id="count-link" href="#" onclick='javascript:setCount()'>count</a>
-          	<a id="duration-link" href="#" onclick="javascript:setDuration()" style="display:none;">duration</a> 
+          	<a id="duration-link" href="#" onclick="javascript:setDuration()" style="display:none;">duration</a>
           </div>
         </j:when>
         <j:otherwise>
@@ -66,13 +66,13 @@ THE SOFTWARE.
       </j:choose>
       <st:include from="${it.testObject}" it="${it.testObject}" page="list.jelly" optional="true"/>
       	<div>
-	      <j:if test="${start > 0}">
-	      		<a href="${app.rootUrl}${it.testObject.run.url}testReport${it.testObject.url}/history${(start-25)>0?'?start='+(start-25):''}">${%Newer}</a>
-	      </j:if>
-	       
 	      <j:if test="${it.testObject.run.parent.builds.size() > end}">
 	      		<a href="${app.rootUrl}${it.testObject.run.url}testReport${it.testObject.url}/history?start=${end+1}">${%Older}</a>
 	      </j:if>
+
+	      <j:if test="${start > 0}">
+	      		<a href="${app.rootUrl}${it.testObject.run.url}testReport${it.testObject.url}/history${(start-25)>0?'?start='+(start-25):''}">${%Newer}</a>
+	      </j:if>	       
       	</div>
     </l:main-panel>
 	</l:layout>
