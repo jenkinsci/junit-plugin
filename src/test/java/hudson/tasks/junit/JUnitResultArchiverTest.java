@@ -40,10 +40,14 @@ import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.model.Descriptor;
 import hudson.model.Result;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import static org.junit.Assert.*;
 import org.junit.Before;
@@ -53,6 +57,7 @@ import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
 import org.jvnet.hudson.test.RandomlyFails;
 import org.jvnet.hudson.test.TestExtension;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 public class JUnitResultArchiverTest {
 
@@ -202,6 +207,38 @@ public class JUnitResultArchiverTest {
             }
             @Override public String getDisplayName() {
                 return "Incremental JUnit result publishing";
+            }
+        }
+    }
+
+    @Test public void configRoundTrip() throws Exception {
+        JUnitResultArchiver a = new JUnitResultArchiver("TEST-*.xml");
+        a.setKeepLongStdio(true);
+        a.setTestDataPublishers(Collections.singletonList(new MockTestDataPublisher("testing")));
+        a.setHealthScaleFactor(0.77);
+        a = j.configRoundtrip(a);
+        assertEquals("TEST-*.xml", a.getTestResults());
+        assertTrue(a.isKeepLongStdio());
+        List<? extends TestDataPublisher> testDataPublishers = a.getTestDataPublishers();
+        assertEquals(1, testDataPublishers.size());
+        assertEquals(MockTestDataPublisher.class, testDataPublishers.get(0).getClass());
+        assertEquals("testing", ((MockTestDataPublisher) testDataPublishers.get(0)).getName());
+        assertEquals(0.77, a.getHealthScaleFactor(), 0.01);
+    }
+    public static class MockTestDataPublisher extends TestDataPublisher {
+        private final String name;
+        @DataBoundConstructor public MockTestDataPublisher(String name) {
+            this.name = name;
+        }
+        public String getName() {
+            return name;
+        }
+        @Override public TestResultAction.Data contributeTestData(Run<?,?> run, FilePath workspace, Launcher launcher, TaskListener listener, TestResult testResult) throws IOException, InterruptedException {
+            return null;
+        }
+        @TestExtension("configRoundTrip") public static class DescriptorImpl extends Descriptor<TestDataPublisher> {
+            @Override public String getDisplayName() {
+                return "MockTestDataPublisher";
             }
         }
     }

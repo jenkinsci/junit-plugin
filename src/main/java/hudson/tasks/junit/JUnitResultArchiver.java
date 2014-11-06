@@ -43,15 +43,14 @@ import hudson.tasks.Recorder;
 import hudson.tasks.junit.TestResultAction.Data;
 import hudson.util.DescribableList;
 import hudson.util.FormValidation;
-import net.sf.json.JSONObject;
 import org.apache.tools.ant.DirectoryScanner;
 import org.apache.tools.ant.types.FileSet;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nonnull;
 import jenkins.tasks.SimpleBuildStep;
@@ -208,13 +207,14 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
         this.healthScaleFactor = Math.max(0.0, healthScaleFactor);
     }
 
-    public DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> getTestDataPublishers() {
-		return testDataPublishers;
+    public List<? extends TestDataPublisher> getTestDataPublishers() {
+		return testDataPublishers == null ? Collections.<TestDataPublisher>emptyList() : testDataPublishers;
 	}
 
-    /** @since 1.2-beta-1 */
-    @DataBoundSetter public final void setTestDataPublishers(DescribableList<TestDataPublisher,Descriptor<TestDataPublisher>> testDataPublishers) {
-        this.testDataPublishers = testDataPublishers;
+    /** @since 1.2 */
+    @DataBoundSetter public final void setTestDataPublishers(List<? extends TestDataPublisher> testDataPublishers) {
+        this.testDataPublishers = new DescribableList<TestDataPublisher,Descriptor<TestDataPublisher>>(Saveable.NOOP);
+        this.testDataPublishers.addAll(testDataPublishers);
     }
 
 	/**
@@ -235,21 +235,6 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
     public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
 		public String getDisplayName() {
 			return Messages.JUnitResultArchiver_DisplayName();
-		}
-
-		@Override
-		public Publisher newInstance(StaplerRequest req, JSONObject formData)
-				throws hudson.model.Descriptor.FormException {
-			String testResults = formData.getString("testResults");
-            boolean keepLongStdio = formData.getBoolean("keepLongStdio");
-			DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> testDataPublishers = new DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>>(Saveable.NOOP);
-            try {
-                testDataPublishers.rebuild(req, formData, TestDataPublisher.all());
-            } catch (IOException e) {
-                throw new FormException(e,null);
-            }
-
-            return new JUnitResultArchiver(testResults, keepLongStdio, testDataPublishers);
 		}
 
 		/**
