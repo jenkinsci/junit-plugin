@@ -159,7 +159,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
         final int failCount = getFailCount();
         int score = (totalCount == 0)
                 ? 100
-                : (int) (100.0 * Math.max(0.0, Math.min(0.0, 1.0 - (scaleFactor * failCount) / totalCount)));
+                : (int) (100.0 * Math.max(0.0, Math.min(1.0, 1.0 - (scaleFactor * failCount) / totalCount)));
         Localizable description, displayName = Messages._AbstractTestResultAction_getDisplayName();
         if (totalCount == 0) {
         	description = Messages._AbstractTestResultAction_zeroTestDescription(displayName);

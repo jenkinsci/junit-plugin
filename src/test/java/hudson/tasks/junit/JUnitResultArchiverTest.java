@@ -202,6 +202,7 @@ public class JUnitResultArchiverTest {
 		assertEquals("should have 1 failing test", 1, result.getFailCount());
 		assertEquals("should have 8 total tests", 8, testResultAction.getTotalCount());
 		assertEquals("should have 8 total tests", 8, result.getTotalCount());
+        assertEquals(/* ⅞ = 87.5% */87, testResultAction.getBuildHealth().getScore());
     }
     public static final class SimpleArchive extends Builder {
         private final String name;
