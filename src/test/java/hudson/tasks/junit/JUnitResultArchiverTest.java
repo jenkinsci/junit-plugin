@@ -47,6 +47,8 @@ import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.List;
 import static org.junit.Assert.*;
@@ -176,11 +178,20 @@ public class JUnitResultArchiverTest {
 		return null;
 	}
 
-    @LocalData
     @Test public void repeatedArchiving() throws Exception {
+        doRepeatedArchiving(false);
+    }
+    @Test public void repeatedArchivingSlave() throws Exception {
+        doRepeatedArchiving(true);
+    }
+    private void doRepeatedArchiving(boolean slave) throws Exception {
+        if (slave) {
+            DumbSlave s = j.createOnlineSlave();
+            project.setAssignedLabel(s.getSelfLabel());
+        }
         project.getPublishersList().removeAll(JUnitResultArchiver.class);
-        project.getBuildersList().add(new SimpleArchive("*ApiTest.xml"));
-        project.getBuildersList().add(new SimpleArchive("*HudsonPrivateSecurityRealmTest.xml"));
+        project.getBuildersList().add(new SimpleArchive("A", 7, 0));
+        project.getBuildersList().add(new SimpleArchive("B", 0, 1));
         FreeStyleBuild build = j.assertBuildStatus(Result.UNSTABLE, project.scheduleBuild2(0).get());
         List<TestResultAction> actions = build.getActions(TestResultAction.class);
         assertEquals(1, actions.size());
@@ -193,12 +204,32 @@ public class JUnitResultArchiverTest {
 		assertEquals("should have 8 total tests", 8, result.getTotalCount());
     }
     public static final class SimpleArchive extends Builder {
-        private final String pattern;
-        public SimpleArchive(String pattern) {
-            this.pattern = pattern;
+        private final String name;
+        private final int pass;
+        private final int fail;
+        public SimpleArchive(String name, int pass, int fail) {
+            this.name = name;
+            this.pass = pass;
+            this.fail = fail;
         }
         @Override public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-            new JUnitResultArchiver(pattern).perform(build, build.getWorkspace(), launcher, listener);
+            FilePath ws = build.getWorkspace();
+            OutputStream os = ws.child(name + ".xml").write();
+            try {
+                PrintWriter pw = new PrintWriter(os);
+                pw.println("<testsuite failures=\"" + fail + "\" errors=\"0\" skipped=\"0\" tests=\"" + (pass + fail) + "\" name=\"" + name + "\">");
+                for (int i = 0; i < pass; i++) {
+                    pw.println("<testcase classname=\"" + name + "\" name=\"passing" + i + "\"/>");
+                }
+                for (int i = 0; i < fail; i++) {
+                    pw.println("<testcase classname=\"" + name + "\" name=\"failing" + i + "\"><error message=\"failure\"/></testcase>");
+                }
+                pw.println("</testsuite>");
+                pw.flush();
+            } finally {
+                os.close();
+            }
+            new JUnitResultArchiver(name + ".xml").perform(build, ws, launcher, listener);
             return true;
         }
         @TestExtension public static final class DescriptorImpl extends BuildStepDescriptor<Builder> {

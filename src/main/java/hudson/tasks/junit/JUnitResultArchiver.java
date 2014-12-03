@@ -145,6 +145,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
                 action = new TestResultAction(build, result, listener);
             } else {
                 appending = true;
+                result.freeze(action);
                 action.mergeResult(result, listener);
             }
             action.setHealthScaleFactor(getHealthScaleFactor()); // overwrites previous value if appending
