@@ -32,6 +32,7 @@ import hudson.remoting.VirtualChannel;
 
 import java.io.IOException;
 import java.io.File;
+import jenkins.MasterToSlaveFileCallable;
 
 import org.apache.tools.ant.types.FileSet;
 import org.apache.tools.ant.DirectoryScanner;
@@ -89,8 +90,7 @@ public class JUnitParser extends TestResultParser {
         return workspace.act(new ParseResultCallable(testResultLocations, buildTime, timeOnMaster, keepLongStdio));
     }
 
-    private static final class ParseResultCallable implements
-            FilePath.FileCallable<TestResult> {
+    private static final class ParseResultCallable extends MasterToSlaveFileCallable<TestResult> {
         private final long buildTime;
         private final String testResults;
         private final long nowMaster;

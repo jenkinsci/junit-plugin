@@ -25,7 +25,6 @@ package hudson.tasks.test;
 
 import hudson.AbortException;
 import hudson.FilePath;
-import hudson.FilePath.FileCallable;
 import hudson.Launcher;
 import hudson.Util;
 import hudson.model.Run;
@@ -37,6 +36,7 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import jenkins.MasterToSlaveFileCallable;
 
 /**
  * Default partial implementation of {@link TestResultParser} that handles GLOB dereferencing
@@ -74,7 +74,7 @@ public abstract class DefaultTestResultParserImpl extends TestResultParser imple
 
     @Override
     public TestResult parseResult(final String testResultLocations, final Run<?,?> build, FilePath workspace, final Launcher launcher, final TaskListener listener) throws InterruptedException, IOException {
-        return workspace.act(new FileCallable<TestResult>() {
+        return workspace.act(new MasterToSlaveFileCallable<TestResult>() {
             final boolean ignoreTimestampCheck = IGNORE_TIMESTAMP_CHECK; // so that the property can be set on the master
             final long buildTime = build.getTimestamp().getTimeInMillis();
             final long nowMaster = System.currentTimeMillis();
