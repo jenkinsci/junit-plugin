@@ -134,7 +134,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
 		
 		final String testResults = build.getEnvironment(listener).expand(this.testResults);
 
-        if (!hasTests(testResults, new File(workspace.toURI()))) {
+        if (!hasTests(new File(workspace.toURI()), testResults)) {
             listener.getLogger().println(Messages.JUnitResultArchiver_NoTestReportFound());
             build.setResult(Result.UNSTABLE);
             return;
@@ -187,7 +187,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
         }
 	}
 
-    private boolean hasTests(String testLocationOrPattern, File workspace ) {
+    private boolean hasTests(File workspace, String testLocationOrPattern) {
         FileSet fs = Util.createFileSet(workspace, testLocationOrPattern);
         DirectoryScanner ds = fs.getDirectoryScanner();
 
