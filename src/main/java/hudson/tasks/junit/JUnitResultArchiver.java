@@ -24,10 +24,7 @@
  */
 package hudson.tasks.junit;
 
-import hudson.AbortException;
-import hudson.Extension;
-import hudson.FilePath;
-import hudson.Launcher;
+import hudson.*;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
@@ -49,9 +46,12 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.Nonnull;
 import jenkins.tasks.SimpleBuildStep;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -134,6 +134,12 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
 		
 		final String testResults = build.getEnvironment(listener).expand(this.testResults);
 
+        if (!hasTests(testResults, new File(workspace.toURI()))) {
+            listener.getLogger().println(Messages.JUnitResultArchiver_NoTestReportFound());
+            build.setResult(Result.UNSTABLE);
+            return;
+        }
+
 			TestResult result = parse(testResults, build, workspace, launcher, listener);
 
         synchronized (build) {
@@ -180,6 +186,14 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
 			build.setResult(Result.UNSTABLE);
         }
 	}
+
+    private boolean hasTests(String testLocationOrPattern, File workspace ) {
+        FileSet fs = Util.createFileSet(workspace, testLocationOrPattern);
+        DirectoryScanner ds = fs.getDirectoryScanner();
+
+        String[] files = ds.getIncludedFiles();
+        return files.length > 0;
+    }
 
 	/**
 	 * Not actually used, but left for backward compatibility
