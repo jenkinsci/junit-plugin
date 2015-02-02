@@ -31,18 +31,18 @@ public class JUnitStep extends AbstractStepImpl {
     private static final Logger LOGGER = Logger.getLogger(JUnitStep.class.getName());
 
     @Nullable
-    private String location;
+    private final String testResults;
 
     private boolean keepLongStdio;
 
     @DataBoundConstructor
-    public JUnitStep(@Nullable String location) {
-        this.location = location;
+    public JUnitStep(@Nullable String testResults) {
+        this.testResults = testResults;
     }
 
     @Nullable
-    public String getLocation() {
-        return location;
+    public String getTestResults() {
+        return testResults;
     }
 
     public boolean isKeepLongStdio() {
@@ -50,10 +50,6 @@ public class JUnitStep extends AbstractStepImpl {
     }
 
     @DataBoundSetter
-    public void setLocation(@Nullable String location) {
-        this.location = location;
-    }
-
     public void setKeepLongStdio(boolean keepLongStdio) {
         this.keepLongStdio = keepLongStdio;
     }
@@ -83,7 +79,7 @@ public class JUnitStep extends AbstractStepImpl {
             final long buildTime = build.getTimestamp().getTimeInMillis();
             final long timeOnMaster = System.currentTimeMillis();
 
-            String location = step.location;
+            String location = step.testResults;
             if (location == null) {
                 location = "**/target/surefire-reports/TEST-*.xml";
             }
@@ -111,10 +107,6 @@ public class JUnitStep extends AbstractStepImpl {
                     result.freeze(action);
                     action.mergeResult(result, listener);
                     build.save();
-                }
-
-                if (action.getResult().getFailCount() > 0) {
-                    build.setResult(Result.UNSTABLE);
                 }
             }
 
@@ -161,18 +153,7 @@ public class JUnitStep extends AbstractStepImpl {
             FileSet fs = Util.createFileSet(ws, testResults);
             DirectoryScanner ds = fs.getDirectoryScanner();
 
-            TestResult result = new TestResult(buildTime + (nowSlave - nowMaster), ds, keepLongStdio);
-
-            String[] files = ds.getIncludedFiles();
-            if (files.length == 0) {
-                // no test result. Most likely a configuration
-                // error or fatal problem
-                throw new AbortException(hudson.tasks.junit.Messages.JUnitResultArchiver_NoTestReportFound());
-            }
-
-            LOGGER.info("Found files: " + Arrays.toString(files));
-
-            return result;
+            return new TestResult(buildTime + (nowSlave - nowMaster), ds, keepLongStdio);
         }
 
         @Override

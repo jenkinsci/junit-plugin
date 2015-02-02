@@ -53,5 +53,10 @@
             <artifactId>workflow-step-api</artifactId>
             <version>1.1</version>
         </dependency>
+        <dependency>
+            <groupId>org.jenkins-ci.plugins</groupId>
+            <artifactId>script-security</artifactId>
+            <version>1.12</version>
+        </dependency>
     </dependencies>
 </project>

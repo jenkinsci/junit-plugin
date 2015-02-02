@@ -1,5 +1,7 @@
 package hudson.tasks.junit;
 
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
+
 import java.io.Serializable;
 
 /**
@@ -15,25 +17,28 @@ public class TestResultSummary implements Serializable {
     private int totalCount;
 
     public TestResultSummary(TestResult result) {
-        result.tally();
         failCount = result.getFailCount();
         passCount = result.getPassCount();
         skipCount = result.getSkipCount();
         totalCount = result.getTotalCount();
     }
 
+    @Whitelisted
     public int getFailCount() {
         return failCount;
     }
 
+    @Whitelisted
     public int getPassCount() {
         return passCount;
     }
 
+    @Whitelisted
     public int getSkipCount() {
         return skipCount;
     }
 
+    @Whitelisted
     public int getTotalCount() {
         return totalCount;
     }
