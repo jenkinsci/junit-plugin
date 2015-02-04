@@ -81,9 +81,9 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         setResult(result, listener);
     }
 
-    /** @since 1.545 */
+    @Deprecated
     public TestResultAction(TestResult result, BuildListener listener) {
-        this(null, result, listener);
+        this((Run) null, result, listener);
     }
 
     @Override public Collection<? extends Action> getProjectActions() {
@@ -101,11 +101,13 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         failCount = result.getFailCount();
         skipCount = result.getSkipCount();
 
+        if (run != null) {
         // persist the data
         try {
             getDataFile().write(result);
         } catch (IOException e) {
             e.printStackTrace(listener.fatalError("Failed to save the JUnit test result"));
+        }
         }
 
         this.result = new WeakReference<TestResult>(result);
