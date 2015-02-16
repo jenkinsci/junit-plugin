@@ -143,39 +143,40 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         stderr = possiblyTrimStdio(_this, keepLongStdio, testCase.elementText("system-err"));
     }
 
-    private static final int HALF_MAX_SIZE = 500;
     static String possiblyTrimStdio(Collection<CaseResult> results, boolean keepLongStdio, String stdio) { // HUDSON-6516
         if (stdio == null) {
             return null;
         }
-        if (!isTrimming(results, keepLongStdio)) {
+        if (keepLongStdio) {
             return stdio;
         }
         int len = stdio.length();
-        int middle = len - HALF_MAX_SIZE * 2;
+        int halfMaxSize = halfMaxSize(results);
+        int middle = len - halfMaxSize * 2;
         if (middle <= 0) {
             return stdio;
         }
-        return stdio.subSequence(0, HALF_MAX_SIZE) + "\n...[truncated " + middle + " chars]...\n" + stdio.subSequence(len - HALF_MAX_SIZE, len);
+        return stdio.subSequence(0, halfMaxSize) + "\n...[truncated " + middle + " chars]...\n" + stdio.subSequence(len - halfMaxSize, len);
     }
 
     /**
      * Flavor of {@link #possiblyTrimStdio(Collection, boolean, String)} that doesn't try to read the whole thing into memory.
      */
     static String possiblyTrimStdio(Collection<CaseResult> results, boolean keepLongStdio, File stdio) throws IOException {
-        if (!isTrimming(results, keepLongStdio) && stdio.length()<1024*1024) {
+        long len = stdio.length();
+        if (keepLongStdio && len < 1024 * 1024) {
             return FileUtils.readFileToString(stdio);
         }
+        int halfMaxSize = halfMaxSize(results);
 
-        long len = stdio.length();
-        long middle = len - HALF_MAX_SIZE * 2;
+        long middle = len - halfMaxSize * 2;
         if (middle <= 0) {
             return FileUtils.readFileToString(stdio);
         }
 
         TextFile tx = new TextFile(stdio);
-        String head = tx.head(HALF_MAX_SIZE);
-        String tail = tx.fastTail(HALF_MAX_SIZE);
+        String head = tx.head(halfMaxSize);
+        String tail = tx.fastTail(halfMaxSize);
 
         int headBytes = head.getBytes().length;
         int tailBytes = tail.getBytes().length;
@@ -189,14 +190,15 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         return head + "\n...[truncated " + middle + " bytes]...\n" + tail;
     }
 
-    private static boolean isTrimming(Collection<CaseResult> results, boolean keepLongStdio) {
-        if (keepLongStdio)      return false;
+    private static final int HALF_MAX_SIZE = 500;
+    private static final int HALF_MAX_FAILING_SIZE = 50000;
+    private static int halfMaxSize(Collection<CaseResult> results) {
         for (CaseResult result : results) {
-            // if there's a failure, do not trim and keep the whole thing
-            if (result.errorStackTrace != null)
-                return false;
+            if (result.errorStackTrace != null) {
+                return HALF_MAX_FAILING_SIZE;
+            }
         }
-        return true;
+        return HALF_MAX_SIZE;
     }
 
 
