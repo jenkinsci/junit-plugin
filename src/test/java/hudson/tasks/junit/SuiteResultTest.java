@@ -178,6 +178,36 @@ public class SuiteResultTest extends TestCase {
         }
     }
 
+    public void testSuiteStdioTrimmingOnFail() throws Exception {
+        File data = File.createTempFile("testSuiteStdioTrimming", ".xml");
+        try {
+            Writer w = new FileWriter(data);
+            try {
+                PrintWriter pw = new PrintWriter(w);
+                pw.println("<testsuites name='x'>");
+                pw.println("<testsuite failures='1' errors='0' tests='1' name='x'>");
+                pw.println("<testcase name='x' classname='x'><error>oops</error></testcase>");
+                pw.println("<system-out/>");
+                pw.print("<system-err><![CDATA[");
+                pw.println("First line is intact.");
+                for (int i = 0; i < 10000; i++) {
+                    pw.println("Line #" + i + " might be elided.");
+                }
+                pw.println("Last line is intact.");
+                pw.println("]]></system-err>");
+                pw.println("</testsuite>");
+                pw.println("</testsuites>");
+                pw.flush();
+            } finally {
+                w.close();
+            }
+            SuiteResult sr = parseOne(data);
+            assertEquals(sr.getStderr(), 100032, sr.getStderr().length());
+        } finally {
+            data.delete();
+        }
+    }
+
     @SuppressWarnings({"RV_RETURN_VALUE_IGNORED_BAD_PRACTICE", "DM_DEFAULT_ENCODING", "OS_OPEN_STREAM"})
     public void testSuiteStdioTrimmingSurefire() throws Exception {
         File data = File.createTempFile("TEST-", ".xml");
@@ -210,6 +240,46 @@ public class SuiteResultTest extends TestCase {
                 }
                 SuiteResult sr = parseOne(data);
                 assertEquals(sr.getStdout(), 1030, sr.getStdout().length());
+            } finally {
+                data2.delete();
+            }
+        } finally {
+            data.delete();
+        }
+    }
+
+    @SuppressWarnings({"RV_RETURN_VALUE_IGNORED_BAD_PRACTICE", "DM_DEFAULT_ENCODING", "OS_OPEN_STREAM"})
+    public void testSuiteStdioTrimmingSurefireOnFail() throws Exception {
+        File data = File.createTempFile("TEST-", ".xml");
+        try {
+            Writer w = new FileWriter(data);
+            try {
+                PrintWriter pw = new PrintWriter(w);
+                pw.println("<testsuites name='x'>");
+                pw.println("<testsuite failures='1' errors='0' tests='1' name='x'>");
+                pw.println("<testcase name='x' classname='x'><error>oops</error></testcase>");
+                pw.println("</testsuite>");
+                pw.println("</testsuites>");
+                pw.flush();
+            } finally {
+                w.close();
+            }
+            File data2 = new File(data.getParentFile(), data.getName().replaceFirst("^TEST-(.+)[.]xml$", "$1-output.txt"));
+            try {
+                w = new FileWriter(data2);
+                try {
+                    PrintWriter pw = new PrintWriter(w);
+                    pw.println("First line is intact.");
+                    for (int i = 0; i < 10000; i++) {
+                        pw.println("Line #" + i + " might be elided.");
+                    }
+                    pw.println("Last line is intact.");
+                    pw.flush();
+                } finally {
+                    w.close();
+                }
+                SuiteResult sr = parseOne(data);
+                assertEquals(sr.getStdout(), 100032, sr.getStdout().length());
             } finally {
                 data2.delete();
             }
