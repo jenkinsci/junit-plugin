@@ -221,8 +221,15 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
             if(b==null)
                 return null;
             U r = b.getAction(type);
-            if(r!=null)
+            if (r != null) {
+                if (r == this) {
+                    throw new IllegalStateException(this + " was attached to both " + b + " and " + run);
+                }
+                if (r.run.number != b.number) {
+                    throw new IllegalStateException(r + " was attached to both " + b + " and " + r.run);
+                }
                 return r;
+            }
         }
     }
     
