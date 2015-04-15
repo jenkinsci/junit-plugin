@@ -1,18 +1,18 @@
 /*
  * The MIT License
- * 
+ *
  * Copyright (c) 2009, Yahoo!, Inc.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -39,7 +39,7 @@ import org.apache.tools.ant.DirectoryScanner;
 
 /**
  * Parse some JUnit xml files and generate a TestResult containing all the
- * results parsed. 
+ * results parsed.
  */
 @Extension
 public class JUnitParser extends TestResultParser {
@@ -86,8 +86,8 @@ public class JUnitParser extends TestResultParser {
 
         // [BUG 3123310] TODO - Test Result Refactor: review and fix TestDataPublisher/TestAction subsystem]
         // also get code that deals with testDataPublishers from JUnitResultArchiver.perform
-        
-        return workspace.act(new ParseResultCallable(testResultLocations, buildTime, timeOnMaster, keepLongStdio));
+
+        return workspace.act(new ParseResultCallable(testResultLocations, buildTime, timeOnMaster, keepLongStdio, listener));
     }
 
     private static final class ParseResultCallable extends MasterToSlaveFileCallable<TestResult> {
@@ -95,12 +95,22 @@ public class JUnitParser extends TestResultParser {
         private final String testResults;
         private final long nowMaster;
         private final boolean keepLongStdio;
+        private final TaskListener listener;
 
         private ParseResultCallable(String testResults, long buildTime, long nowMaster, boolean keepLongStdio) {
             this.buildTime = buildTime;
             this.testResults = testResults;
             this.nowMaster = nowMaster;
             this.keepLongStdio = keepLongStdio;
+            this.listener = null;
+        }
+
+        private ParseResultCallable(String testResults, long buildTime, long nowMaster, boolean keepLongStdio, TaskListener listener) {
+            this.buildTime = buildTime;
+            this.testResults = testResults;
+            this.nowMaster = nowMaster;
+            this.keepLongStdio = keepLongStdio;
+            this.listener = listener;
         }
 
         public TestResult invoke(File ws, VirtualChannel channel) throws IOException {
@@ -116,9 +126,9 @@ public class JUnitParser extends TestResultParser {
                 throw new AbortException(Messages.JUnitResultArchiver_NoTestReportFound());
             }
 
-            TestResult result = new TestResult(buildTime + (nowSlave - nowMaster), ds, keepLongStdio);
+            TestResult result = new TestResult(buildTime + (nowSlave - nowMaster), ds, keepLongStdio, listener);
             result.tally();
-            return result; 
+            return result;
         }
     }
 

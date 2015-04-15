@@ -221,7 +221,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     }
     
     public ClassResult getParent() {
-    	return classResult;
+        return classResult;
     }
 
     private static String getError(Element testCase) {
@@ -338,14 +338,14 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     
     @Override
     public String getFullName() {
-    	return className+'.'+getName();
+        return className+'.'+getName();
     }
     
     /**
      * @since 1.515
      */
     public String getFullDisplayName() {
-    	return TestNameTransformer.getTransformedName(getFullName());
+        return TestNameTransformer.getTransformedName(getFullName());
     }
 
     @Override
@@ -386,7 +386,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     }
     
     public Run<?,?> getFailedSinceRun() {
-    	return getRun().getParent().getBuildByNumber(getFailedSince());
+        return getRun().getParent().getBuildByNumber(getFailedSince());
     }
 
     /**

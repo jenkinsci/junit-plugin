@@ -48,35 +48,38 @@ import java.util.regex.Pattern;
  * Result of one test suite.
  *
  * <p>
- * The notion of "test suite" is rather arbitrary in JUnit ant task.
- * It's basically one invocation of junit.
+ * The notion of "test suite" is rather arbitrary in JUnit ant task. It's
+ * basically one invocation of junit.
  *
  * <p>
- * This object is really only used as a part of the persisted
- * object tree.
+ * This object is really only used as a part of the persisted object tree.
  *
  * @author Kohsuke Kawaguchi
  */
 @ExportedBean
 public final class SuiteResult implements Serializable {
+
     private final String file;
     private final String name;
     private final String stdout;
     private final String stderr;
     private float duration;
     /**
-     * The 'timestamp' attribute of  the test suite.
-     * AFAICT, this is not a required attribute in XML, so the value may be null.
+     * The 'timestamp' attribute of the test suite. AFAICT, this is not a
+     * required attribute in XML, so the value may be null.
      */
     private String timestamp;
-    /** Optional ID attribute of a test suite. E.g., Eclipse plug-ins tests always have the name 'tests' but a different id. **/
+    /**
+     * Optional ID attribute of a test suite. E.g., Eclipse plug-ins tests
+     * always have the name 'tests' but a different id. *
+     */
     private String id;
 
     /**
      * All test cases.
      */
     private final List<CaseResult> cases = new ArrayList<CaseResult>();
-    private transient Map<String,CaseResult> casesByName;
+    private transient Map<String, CaseResult> casesByName;
     private transient hudson.tasks.junit.TestResult parent;
 
     SuiteResult(String name, String stdout, String stderr) {
@@ -86,9 +89,9 @@ public final class SuiteResult implements Serializable {
         this.file = null;
     }
 
-    private synchronized Map<String,CaseResult> casesByName() {
+    private synchronized Map<String, CaseResult> casesByName() {
         if (casesByName == null) {
-            casesByName = new HashMap<String,CaseResult>();
+            casesByName = new HashMap<String, CaseResult>();
             for (CaseResult c : cases) {
                 casesByName.put(c.getName(), c);
             }
@@ -98,9 +101,11 @@ public final class SuiteResult implements Serializable {
 
     /**
      * Passed to {@link ParserConfigurator}.
+     *
      * @since 1.416
      */
     public static class SuiteResultParserConfigurationContext {
+
         public final File xmlReport;
 
         SuiteResultParserConfigurationContext(File xmlReport) {
@@ -109,21 +114,21 @@ public final class SuiteResult implements Serializable {
     }
 
     /**
-     * Parses the JUnit XML file into {@link SuiteResult}s.
-     * This method returns a collection, as a single XML may have multiple &lt;testsuite>
-     * elements wrapped into the top-level &lt;testsuites>.
+     * Parses the JUnit XML file into {@link SuiteResult}s. This method returns
+     * a collection, as a single XML may have multiple &lt;testsuite> elements
+     * wrapped into the top-level &lt;testsuites>.
      */
     static List<SuiteResult> parse(File xmlReport, boolean keepLongStdio) throws DocumentException, IOException, InterruptedException {
         List<SuiteResult> r = new ArrayList<SuiteResult>();
 
         // parse into DOM
         SAXReader saxReader = new SAXReader();
-        ParserConfigurator.applyConfiguration(saxReader,new SuiteResultParserConfigurationContext(xmlReport));
+        ParserConfigurator.applyConfiguration(saxReader, new SuiteResultParserConfigurationContext(xmlReport));
 
         Document result = saxReader.read(xmlReport);
         Element root = result.getRootElement();
 
-        parseSuite(xmlReport,keepLongStdio,r,root);
+        parseSuite(xmlReport, keepLongStdio, r, root);
 
         return r;
     }
@@ -131,45 +136,48 @@ public final class SuiteResult implements Serializable {
     private static void parseSuite(File xmlReport, boolean keepLongStdio, List<SuiteResult> r, Element root) throws DocumentException, IOException {
         // nested test suites
         @SuppressWarnings("unchecked")
-        List<Element> testSuites = (List<Element>)root.elements("testsuite");
-        for (Element suite : testSuites)
+        List<Element> testSuites = (List<Element>) root.elements("testsuite");
+        for (Element suite : testSuites) {
             parseSuite(xmlReport, keepLongStdio, r, suite);
+        }
 
         // child test cases
         // FIXME: do this also if no testcases!
-        if (root.element("testcase")!=null || root.element("error")!=null)
+        if (root.element("testcase") != null || root.element("error") != null) {
             r.add(new SuiteResult(xmlReport, root, keepLongStdio));
+        }
     }
 
     /**
-     * @param xmlReport
-     *      A JUnit XML report file whose top level element is 'testsuite'.
-     * @param suite
-     *      The parsed result of {@code xmlReport}
+     * @param xmlReport A JUnit XML report file whose top level element is
+     * 'testsuite'.
+     * @param suite The parsed result of {@code xmlReport}
      */
     private SuiteResult(File xmlReport, Element suite, boolean keepLongStdio) throws DocumentException, IOException {
-    	this.file = xmlReport.getAbsolutePath();
+        this.file = xmlReport.getAbsolutePath();
         String name = suite.attributeValue("name");
-        if(name==null)
-            // some user reported that name is null in their environment.
-            // see http://www.nabble.com/Unexpected-Null-Pointer-Exception-in-Hudson-1.131-tf4314802.html
-            name = '('+xmlReport.getName()+')';
-        else {
+        if (name == null) // some user reported that name is null in their environment.
+        // see http://www.nabble.com/Unexpected-Null-Pointer-Exception-in-Hudson-1.131-tf4314802.html
+        {
+            name = '(' + xmlReport.getName() + ')';
+        } else {
             String pkg = suite.attributeValue("package");
-            if(pkg!=null&& pkg.length()>0)   name=pkg+'.'+name;
+            if (pkg != null && pkg.length() > 0) {
+                name = pkg + '.' + name;
+            }
         }
         this.name = TestObject.safe(name);
         this.timestamp = suite.attributeValue("timestamp");
         this.id = suite.attributeValue("id");
 
         Element ex = suite.element("error");
-        if(ex!=null) {
+        if (ex != null) {
             // according to junit-noframes.xsl l.229, this happens when the test class failed to load
             addCase(new CaseResult(this, suite, "<init>", keepLongStdio));
         }
-        
+
         @SuppressWarnings("unchecked")
-        List<Element> testCases = (List<Element>)suite.elements("testcase");
+        List<Element> testCases = (List<Element>) suite.elements("testcase");
         for (Element e : testCases) {
             // https://issues.jenkins-ci.org/browse/JENKINS-1233 indicates that
             // when <testsuites> is present, we are better off using @classname on the
@@ -189,23 +197,22 @@ public final class SuiteResult implements Serializable {
             // are at odds with each other --- when both are present,
             // one wants to use @name from <testsuite>,
             // the other wants to use @classname from <testcase>.
-
             addCase(new CaseResult(this, e, classname, keepLongStdio));
         }
 
         String stdout = CaseResult.possiblyTrimStdio(cases, keepLongStdio, suite.elementText("system-out"));
         String stderr = CaseResult.possiblyTrimStdio(cases, keepLongStdio, suite.elementText("system-err"));
-        if (stdout==null && stderr==null) {
+        if (stdout == null && stderr == null) {
             // Surefire never puts stdout/stderr in the XML. Instead, it goes to a separate file (when ${maven.test.redirectTestOutputToFile}).
             Matcher m = SUREFIRE_FILENAME.matcher(xmlReport.getName());
             if (m.matches()) {
                 // look for ***-output.txt from TEST-***.xml
-                File mavenOutputFile = new File(xmlReport.getParentFile(),m.group(1)+"-output.txt");
+                File mavenOutputFile = new File(xmlReport.getParentFile(), m.group(1) + "-output.txt");
                 if (mavenOutputFile.exists()) {
                     try {
                         stdout = CaseResult.possiblyTrimStdio(cases, keepLongStdio, mavenOutputFile);
                     } catch (IOException e) {
-                        throw new IOException("Failed to read "+mavenOutputFile,e);
+                        throw new IOException("Failed to read " + mavenOutputFile, e);
                     }
                 }
             }
@@ -221,12 +228,12 @@ public final class SuiteResult implements Serializable {
         duration += cr.getDuration();
     }
 
-    @Exported(visibility=9)
+    @Exported(visibility = 9)
     public String getName() {
         return name;
     }
 
-    @Exported(visibility=9)
+    @Exported(visibility = 9)
     public float getDuration() {
         return duration;
     }
@@ -257,39 +264,56 @@ public final class SuiteResult implements Serializable {
      * The absolute path to the original test report. OS-dependent.
      */
     public String getFile() {
-		return file;
-	}
+        return file;
+    }
 
-	public hudson.tasks.junit.TestResult getParent() {
+    public hudson.tasks.junit.TestResult getParent() {
         return parent;
     }
 
-    @Exported(visibility=9)
+    @Exported(visibility = 9)
     public String getTimestamp() {
         return timestamp;
     }
 
-    @Exported(visibility=9)
+    @Exported(visibility = 9)
     public String getId() {
         return id;
     }
 
-    @Exported(inline=true,visibility=9)
+    @Exported(inline = true, visibility = 9)
     public List<CaseResult> getCases() {
         return cases;
     }
 
     public SuiteResult getPreviousResult() {
         hudson.tasks.test.TestResult pr = parent.getPreviousResult();
-        if(pr==null)    return null;
-        if(pr instanceof hudson.tasks.junit.TestResult)
-            return ((hudson.tasks.junit.TestResult)pr).getSuite(name);
+        if (pr == null) {
+            return null;
+        }
+        if (pr instanceof hudson.tasks.junit.TestResult) {
+            return ((hudson.tasks.junit.TestResult) pr).getSuite(name);
+        }
         return null;
     }
 
+     /**
+     * Check if all the tests exists for the suiteResult
+     * @param suiteResult
+     * @return true if all the tests were found, false otherwise
+     */
+    public boolean includesTestsFrom(SuiteResult suiteResult) {
+        for (CaseResult caseResult : getCases()) {
+            if (suiteResult.getCase(caseResult.getName()) == null) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     /**
-     * Returns the {@link CaseResult} whose {@link CaseResult#getName()}
-     * is the same as the given string.
+     * Returns the {@link CaseResult} whose {@link CaseResult#getName()} is the
+     * same as the given string.
      *
      * <p>
      * Note that test name needs not be unique.
@@ -298,18 +322,19 @@ public final class SuiteResult implements Serializable {
         return casesByName().get(name);
     }
 
-	public Set<String> getClassNames() {
-		Set<String> result = new HashSet<String>();
-		for (CaseResult c : cases) {
-			result.add(c.getClassName());
-		}
-		return result;
-	}
+    public Set<String> getClassNames() {
+        Set<String> result = new HashSet<String>();
+        for (CaseResult c : cases) {
+            result.add(c.getClassName());
+        }
+        return result;
+    }
 
-    /** KLUGE. We have to call this to prevent freeze()
-     * from calling c.freeze() on all its children,
-     * because that in turn calls c.getOwner(),
-     * which requires a non-null parent.
+    /**
+     * KLUGE. We have to call this to prevent freeze() from calling c.freeze()
+     * on all its children, because that in turn calls c.getOwner(), which
+     * requires a non-null parent.
+     *
      * @param parent
      */
     void setParent(hudson.tasks.junit.TestResult parent) {
@@ -317,12 +342,13 @@ public final class SuiteResult implements Serializable {
     }
 
     /*package*/ boolean freeze(hudson.tasks.junit.TestResult owner) {
-        if(this.parent!=null)
+        if (this.parent != null) {
             return false;   // already frozen
-
+        }
         this.parent = owner;
-        for (CaseResult c : cases)
+        for (CaseResult c : cases) {
             c.freeze(this);
+        }
         return true;
     }
 
