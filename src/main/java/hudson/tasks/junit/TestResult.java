@@ -26,7 +26,6 @@ package hudson.tasks.junit;
 import hudson.AbortException;
 import hudson.Util;
 import hudson.model.Run;
-import hudson.model.TaskListener;
 import hudson.tasks.test.AbstractTestResultAction;
 import hudson.tasks.test.MetaTabulatedResult;
 import hudson.tasks.test.TestObject;
@@ -77,7 +76,6 @@ public final class TestResult extends MetaTabulatedResult {
 
     private transient TestObject parent;
 
-    private transient TaskListener listener = null;
     /**
      * Number of all tests.
      */
@@ -124,18 +122,8 @@ public final class TestResult extends MetaTabulatedResult {
         parse(buildTime, results);
     }
 
-    public TestResult(long buildTime, DirectoryScanner results, boolean keepLongStdio, TaskListener listener) throws IOException {
-        this.keepLongStdio = keepLongStdio;
-        this.listener = listener;
-        parse(buildTime, results);
-    }
-
-    public void setListener(TaskListener listener) {
-        this.listener = listener;
-    }
-
     public TestObject getParent() {
-        return parent;
+    	return parent;
     }
 
     @Override
@@ -145,7 +133,7 @@ public final class TestResult extends MetaTabulatedResult {
 
     @Override
     public TestResult getTestResult() {
-        return this;
+    	return this;
     }
 
     /**
@@ -157,11 +145,11 @@ public final class TestResult extends MetaTabulatedResult {
         File baseDir = results.getBasedir();
         parse(buildTime,baseDir,includedFiles);
     }
-
+        
     /**
      * Collect reports from the given report files, while
      * filtering out all files that were created before the given time.
-     *
+     * 
      * @since 1.426
      */
     public void parse(long buildTime, File baseDir, String[] reportFiles) throws IOException {
@@ -174,10 +162,6 @@ public final class TestResult extends MetaTabulatedResult {
             if ( (buildTime-3000/*error margin*/ <= reportFile.lastModified())) {
                 parsePossiblyEmpty(reportFile);
                 parsed = true;
-            } else {
-                if (listener != null) {
-                    listener.getLogger().println(String.format("[JUnit] Skipping %s because it is too old.", value));
-                }
             }
         }
 
@@ -198,10 +182,10 @@ public final class TestResult extends MetaTabulatedResult {
                 Util.getTimeSpanString(buildTime-f.lastModified())));
         }
     }
-
+    
     /**
      * Collect reports from the given report files
-     *
+     * 
      * @since 1.500
      */
     public void parse(long buildTime, Iterable<File> reportFiles) throws IOException {
@@ -212,10 +196,6 @@ public final class TestResult extends MetaTabulatedResult {
             if ( (buildTime-3000/*error margin*/ <= reportFile.lastModified())) {
                 parsePossiblyEmpty(reportFile);
                 parsed = true;
-            } else {
-                if (listener != null) {
-                    listener.getLogger().println(String.format("[JUnit] Skipping %s because it is too old.", reportFile.getName()));
-                }
             }
         }
 
@@ -235,13 +215,10 @@ public final class TestResult extends MetaTabulatedResult {
                 "For example, %s is %s old%n", f,
                 Util.getTimeSpanString(buildTime-f.lastModified())));
         }
-
+        
     }
-
+    
     private void parsePossiblyEmpty(File reportFile) throws IOException {
-        if (listener != null) {
-            listener.getLogger().println(String.format("[JUnit] Processing %s", reportFile.getName()));
-        }
         if(reportFile.length()==0) {
             // this is a typical problem when JVM quits abnormally, like OutOfMemoryError during a test.
             SuiteResult sr = new SuiteResult(reportFile.getName(), "", "");
@@ -251,25 +228,21 @@ public final class TestResult extends MetaTabulatedResult {
             parse(reportFile);
         }
     }
-
+    
     private void add(SuiteResult sr) {
         for (SuiteResult s : suites) {
             // JENKINS-12457: If a testsuite is distributed over multiple files, merge it into a single SuiteResult:
-            if(s.getName().equals(sr.getName()) && nullSafeEq(s.getId(), sr.getId())) {
-
+            if(s.getName().equals(sr.getName())  && nullSafeEq(s.getId(),sr.getId())) {
+            
                 // However, a common problem is that people parse TEST-*.xml as well as TESTS-TestSuite.xml.
                 // In that case consider the result file as a duplicate and discard it.
                 // see http://jenkins.361315.n4.nabble.com/Problem-with-duplicate-build-execution-td371616.html for discussion.
-                if(strictEq(s.getTimestamp(), sr.getTimestamp())) {
+                if(strictEq(s.getTimestamp(),sr.getTimestamp())) {
                     if(sr.includesTestsFrom(s)) {
-                        if (listener != null) {
-                            listener.getLogger().println(String.format("[JUnit] Skipping %s because it's already in another test suite",
-                                    sr.getName()));
-                        }
                         return;
                     }
                 }
-
+            
                 for (CaseResult cr: sr.getCases()) {
                     s.addCase(cr);
                     cr.replaceParent(s);
@@ -291,7 +264,7 @@ public final class TestResult extends MetaTabulatedResult {
             add(suite);
         }
     }
-
+    
     private boolean strictEq(Object lhs, Object rhs) {
         return lhs != null && rhs != null && lhs.equals(rhs);
     }
@@ -420,9 +393,9 @@ public final class TestResult extends MetaTabulatedResult {
     public int getSkipCount() {
         return skippedTests;
     }
-
+    
     /**
-     * Returns <tt>true</tt> if this doesn't have any any test results.
+     * Returns <tt>true</tt> if this doesn't have any any test results. 
      * @since 1.511
      */
     @Exported(visibility=999)
@@ -569,9 +542,9 @@ public final class TestResult extends MetaTabulatedResult {
 
         PackageResult result = byPackage(token);
         if (result != null) {
-            return result;
+        	return result;
         } else {
-            return super.getDynamic(token, req, rsp);
+        	return super.getDynamic(token, req, rsp);
         }
     }
 
