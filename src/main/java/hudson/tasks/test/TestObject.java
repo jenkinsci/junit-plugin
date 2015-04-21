@@ -32,6 +32,7 @@ import hudson.tasks.junit.TestAction;
 import hudson.tasks.junit.TestResultAction;
 import jenkins.model.Jenkins;
 
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.*;
 import org.kohsuke.stapler.export.ExportedBean;
 
@@ -371,17 +372,19 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
 
     /**
      * Replaces URL-unsafe characters.
+     *
+     * If s is an empty string, returns "(empty)" otherwise the generated URL would contain
+     * two slashes one after the other and getDynamic() would fail
      */
     public static String safe(String s) {
-        if (s.isEmpty()) {
+        if (StringUtils.isEmpty(s)) {
             return "(empty)";
         } else {
             // this still seems to be a bit faster than a single replace with regexp
             return s.replace('/', '_').replace('\\', '_').replace(':', '_').replace('?', '_').replace('#', '_').replace('%', '_');
+            // Note: we probably should some helpers like Commons URIEscapeUtils here to escape all invalid URL chars, but then we
+            // still would have to escape /, ? and so on
         }
-        
-        // Note: we probably should some helpers like Commons URIEscapeUtils here to escape all invalid URL chars, but then we
-        // still would have to escape /, ? and so on
     }
 
     /**
