@@ -23,19 +23,22 @@
  */
 package hudson.tasks.junit;
 
-import hudson.model.TaskListener;
-import hudson.tasks.test.TestResultParser;
-import hudson.*;
+import hudson.AbortException;
+import hudson.Extension;
+import hudson.FilePath;
+import hudson.Launcher;
+import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
-
-import java.io.IOException;
-import java.io.File;
+import hudson.tasks.test.TestResultParser;
 import jenkins.MasterToSlaveFileCallable;
-
-import org.apache.tools.ant.types.FileSet;
 import org.apache.tools.ant.DirectoryScanner;
+import org.apache.tools.ant.types.FileSet;
+
+import java.io.File;
+import java.io.IOException;
 
 /**
  * Parse some JUnit xml files and generate a TestResult containing all the
@@ -44,7 +47,7 @@ import org.apache.tools.ant.DirectoryScanner;
 @Extension
 public class JUnitParser extends TestResultParser {
 
-    private final boolean keepLongStdio;
+    private final PluginConfig config;
     private final boolean allowEmptyResults;
 
     /** TODO TestResultParser.all does not seem to ever be called so why must this be an Extension? */
@@ -59,8 +62,18 @@ public class JUnitParser extends TestResultParser {
      */
     @Deprecated
     public JUnitParser(boolean keepLongStdio) {
-        this.keepLongStdio = keepLongStdio;
+        this.config = PluginConfig.defaults(keepLongStdio);
         this.allowEmptyResults = false;
+    }
+
+    /**
+     * @param config stdio configuration.
+     * @param allowEmptyResults if true, empty results are allowed
+     * @since 1.23
+     */
+    public JUnitParser(PluginConfig config, boolean allowEmptyResults) {
+        this.config = config;
+        this.allowEmptyResults = allowEmptyResults;
     }
 
     /**
@@ -69,7 +82,7 @@ public class JUnitParser extends TestResultParser {
      * @since 1.10
      */
     public JUnitParser(boolean keepLongStdio, boolean allowEmptyResults) {
-        this.keepLongStdio = keepLongStdio;
+        this.config = PluginConfig.defaults(keepLongStdio);
         this.allowEmptyResults = allowEmptyResults;
     }
 
@@ -101,22 +114,22 @@ public class JUnitParser extends TestResultParser {
         // also get code that deals with testDataPublishers from JUnitResultArchiver.perform
 
         return workspace.act(new ParseResultCallable(testResultLocations, buildTime,
-                                                     timeOnMaster, keepLongStdio, allowEmptyResults));
+                                                     timeOnMaster, config, allowEmptyResults));
     }
 
     private static final class ParseResultCallable extends MasterToSlaveFileCallable<TestResult> {
         private final long buildTime;
         private final String testResults;
         private final long nowMaster;
-        private final boolean keepLongStdio;
+        private final PluginConfig config;
         private final boolean allowEmptyResults;
 
-        private ParseResultCallable(String testResults, long buildTime, long nowMaster,
-                                    boolean keepLongStdio, boolean allowEmptyResults) {
+        private ParseResultCallable(String testResults, long buildTime, long nowMaster, PluginConfig config,
+                                    boolean allowEmptyResults) {
             this.buildTime = buildTime;
             this.testResults = testResults;
             this.nowMaster = nowMaster;
-            this.keepLongStdio = keepLongStdio;
+            this.config = config;
             this.allowEmptyResults = allowEmptyResults;
         }
 
@@ -129,7 +142,7 @@ public class JUnitParser extends TestResultParser {
 
             String[] files = ds.getIncludedFiles();
             if (files.length > 0) {
-                result = new TestResult(buildTime + (nowSlave - nowMaster), ds, keepLongStdio);
+                result = new TestResult(buildTime + (nowSlave - nowMaster), ds, config);
                 result.tally();
             } else {
                 if (this.allowEmptyResults) {

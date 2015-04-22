@@ -36,12 +36,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -120,8 +115,19 @@ public final class SuiteResult implements Serializable {
      * Parses the JUnit XML file into {@link SuiteResult}s.
      * This method returns a collection, as a single XML may have multiple &lt;testsuite>
      * elements wrapped into the top-level &lt;testsuites>.
+     * @deprecated in favor of {@link #parse(File, PluginConfig)}
      */
     static List<SuiteResult> parse(File xmlReport, boolean keepLongStdio) throws DocumentException, IOException, InterruptedException {
+        return parse(xmlReport, PluginConfig.defaults(keepLongStdio));
+    }
+
+    /**
+     * Parses the JUnit XML file into {@link SuiteResult}s.
+     * This method returns a collection, as a single XML may have multiple &lt;testsuite>
+     * elements wrapped into the top-level &lt;testsuites>.
+     * @since 1.6
+     */
+    static List<SuiteResult> parse(File xmlReport, PluginConfig config) throws DocumentException, IOException, InterruptedException {
         List<SuiteResult> r = new ArrayList<SuiteResult>();
 
         // parse into DOM
@@ -134,7 +140,7 @@ public final class SuiteResult implements Serializable {
             Document result = saxReader.read(xmlReportStream);
             Element root = result.getRootElement();
 
-            parseSuite(xmlReport,keepLongStdio,r,root);
+            parseSuite(xmlReport,config,r,root);
         } finally {
             xmlReportStream.close();
         }
@@ -142,17 +148,17 @@ public final class SuiteResult implements Serializable {
         return r;
     }
 
-    private static void parseSuite(File xmlReport, boolean keepLongStdio, List<SuiteResult> r, Element root) throws DocumentException, IOException {
+    private static void parseSuite(File xmlReport, PluginConfig config, List<SuiteResult> r, Element root) throws DocumentException, IOException {
         // nested test suites
         @SuppressWarnings("unchecked")
         List<Element> testSuites = (List<Element>)root.elements("testsuite");
         for (Element suite : testSuites)
-            parseSuite(xmlReport, keepLongStdio, r, suite);
+            parseSuite(xmlReport, config, r, suite);
 
         // child test cases
         // FIXME: do this also if no testcases!
         if (root.element("testcase")!=null || root.element("error")!=null)
-            r.add(new SuiteResult(xmlReport, root, keepLongStdio));
+            r.add(new SuiteResult(xmlReport, root, config));
     }
 
     /**
@@ -161,7 +167,7 @@ public final class SuiteResult implements Serializable {
      * @param suite
      *      The parsed result of {@code xmlReport}
      */
-    private SuiteResult(File xmlReport, Element suite, boolean keepLongStdio) throws DocumentException, IOException {
+    private SuiteResult(File xmlReport, Element suite, PluginConfig config) throws DocumentException, IOException {
     	this.file = xmlReport.getAbsolutePath();
         String name = suite.attributeValue("name");
         if(name==null)
@@ -183,9 +189,9 @@ public final class SuiteResult implements Serializable {
         Element ex = suite.element("error");
         if(ex!=null) {
             // according to junit-noframes.xsl l.229, this happens when the test class failed to load
-            addCase(new CaseResult(this, suite, "<init>", keepLongStdio));
+            addCase(new CaseResult(this, suite, "<init>", config));
         }
-        
+
         @SuppressWarnings("unchecked")
         List<Element> testCases = (List<Element>)suite.elements("testcase");
         for (Element e : testCases) {
@@ -208,11 +214,11 @@ public final class SuiteResult implements Serializable {
             // one wants to use @name from <testsuite>,
             // the other wants to use @classname from <testcase>.
 
-            addCase(new CaseResult(this, e, classname, keepLongStdio));
+            addCase(new CaseResult(this, e, classname, config));
         }
 
-        String stdout = CaseResult.possiblyTrimStdio(cases, keepLongStdio, suite.elementText("system-out"));
-        String stderr = CaseResult.possiblyTrimStdio(cases, keepLongStdio, suite.elementText("system-err"));
+        String stdout = CaseResult.possiblyTrimStdio(cases, config, suite.elementText("system-out"));
+        String stderr = CaseResult.possiblyTrimStdio(cases, config, suite.elementText("system-err"));
         if (stdout==null && stderr==null) {
             // Surefire never puts stdout/stderr in the XML. Instead, it goes to a separate file (when ${maven.test.redirectTestOutputToFile}).
             Matcher m = SUREFIRE_FILENAME.matcher(xmlReport.getName());
@@ -221,7 +227,7 @@ public final class SuiteResult implements Serializable {
                 File mavenOutputFile = new File(xmlReport.getParentFile(),m.group(1)+"-output.txt");
                 if (mavenOutputFile.exists()) {
                     try {
-                        stdout = CaseResult.possiblyTrimStdio(cases, keepLongStdio, mavenOutputFile);
+                        stdout = CaseResult.possiblyTrimStdio(cases, config, mavenOutputFile);
                     } catch (IOException e) {
                         throw new IOException("Failed to read "+mavenOutputFile,e);
                     }
@@ -236,7 +242,7 @@ public final class SuiteResult implements Serializable {
     /*package*/ void addCase(CaseResult cr) {
         cases.add(cr);
         casesByName().put(cr.getName(), cr);
-        
+
         //if suite time was not specified use sum of the cases' times
         if( !hasTimeAttr() ){
             duration += cr.getDuration();
@@ -369,7 +375,7 @@ public final class SuiteResult implements Serializable {
 
     /**
      * Merges another SuiteResult into this one.
-     * 
+     *
      * @param sr the SuiteResult to merge into this one
      */
     public void merge(SuiteResult sr) {

@@ -29,6 +29,11 @@ import hudson.model.Run;
 import hudson.tasks.test.AbstractTestResultAction;
 import hudson.tasks.test.MetaTabulatedResult;
 import hudson.tasks.test.TestObject;
+import org.apache.tools.ant.DirectoryScanner;
+import org.dom4j.DocumentException;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.export.Exported;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,12 +46,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-
-import org.apache.tools.ant.DirectoryScanner;
-import org.dom4j.DocumentException;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
-import org.kohsuke.stapler.export.Exported;
 
 /**
  * Root of all the test results for one build.
@@ -94,20 +93,28 @@ public final class TestResult extends MetaTabulatedResult {
      */
     private transient List<CaseResult> failedTests;
 
-    private final boolean keepLongStdio;
+    private final PluginConfig config;
 
     /**
      * Creates an empty result.
      */
     public TestResult() {
-        this(false);
+        this(PluginConfig.defaults());
     }
 
     /**
      * @since 1.522
      */
+    @Deprecated
     public TestResult(boolean keepLongStdio) {
-        this.keepLongStdio = keepLongStdio;
+        this(PluginConfig.defaults(keepLongStdio));
+    }
+
+    /**
+     * @since 1.23
+     */
+    public TestResult(PluginConfig config) {
+        this.config = config;
     }
 
     @Deprecated
@@ -120,9 +127,21 @@ public final class TestResult extends MetaTabulatedResult {
      * filtering out all files that were created before the given time.
      * @param keepLongStdio if true, retain a suite's complete stdout/stderr even if this is huge and the suite passed
      * @since 1.358
+     * @deprecated in favor of {@link #TestResult(long, DirectoryScanner, PluginConfig)}.
      */
+    @Deprecated
     public TestResult(long buildTime, DirectoryScanner results, boolean keepLongStdio) throws IOException {
-        this.keepLongStdio = keepLongStdio;
+        this(buildTime, results, PluginConfig.defaults(keepLongStdio));
+    }
+
+    /**
+     * Collect reports from the given {@link DirectoryScanner}, while
+     * filtering out all files that were created before the given time.
+     * @param config plugin configuration.
+     * @since 1.6
+     */
+    public TestResult(long buildTime, DirectoryScanner results, PluginConfig config) throws IOException {
+        this.config = config;
         parse(buildTime, results);
     }
 
@@ -296,7 +315,7 @@ public final class TestResult extends MetaTabulatedResult {
      */
     public void parse(File reportFile) throws IOException {
         try {
-            for (SuiteResult suiteResult : SuiteResult.parse(reportFile, keepLongStdio))
+            for (SuiteResult suiteResult : SuiteResult.parse(reportFile, config))
                 add(suiteResult);
         } catch (InterruptedException e) {
             throw new IOException("Failed to read "+reportFile,e);
