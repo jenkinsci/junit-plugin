@@ -24,10 +24,12 @@
 package hudson.tasks.junit;
 
 import com.thoughtworks.xstream.XStream;
+import hudson.Util;
 import hudson.XmlFile;
 import hudson.model.AbstractBuild;
 import hudson.model.Action;
 import hudson.model.BuildListener;
+import hudson.model.Job;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.test.AbstractTestResultAction;
@@ -86,8 +88,14 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         this((Run) null, result, listener);
     }
 
+    @SuppressWarnings("deprecation")
     @Override public Collection<? extends Action> getProjectActions() {
-		return Collections.<Action>singleton(new TestResultProjectAction(run.getParent()));
+        Job<?,?> job = run.getParent();
+        if (/* getAction(Class) produces a StackOverflowError */!Util.filter(job.getActions(), TestResultProjectAction.class).isEmpty()) {
+            // JENKINS-26077: someone like XUnitPublisher already added one
+            return Collections.emptySet();
+        }
+		return Collections.singleton(new TestResultProjectAction(job));
     }
 
     /**
