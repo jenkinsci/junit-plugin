@@ -95,7 +95,7 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
             // JENKINS-26077: someone like XUnitPublisher already added one
             return Collections.emptySet();
         }
-		return Collections.singleton(new TestResultProjectAction(job));
+        return Collections.singleton(new TestResultProjectAction(job));
     }
 
     /**
