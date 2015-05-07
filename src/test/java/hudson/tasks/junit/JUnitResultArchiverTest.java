@@ -274,5 +274,11 @@ public class JUnitResultArchiverTest {
             }
         }
     }
+    @Test public void emptyDirectory() throws Exception{
+        JUnitResultArchiver a = new JUnitResultArchiver("TEST-*.xml");
+        FreeStyleProject freeStyleProject = j.createFreeStyleProject();
+        freeStyleProject.getPublishersList().add(a);
+        j.assertBuildStatusSuccess(freeStyleProject.scheduleBuild2(0));
+    }
 
 }
