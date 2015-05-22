@@ -237,8 +237,9 @@ public final class TestResult extends MetaTabulatedResult {
                     if (!suiteResult.caseAlreadyExists(caseResult)) {
                         suiteResult.addCase(caseResult);
                         caseResult.replaceParent(suiteResult);
+                        duration += caseResult.getDuration();
+                    }
                 }
-                duration += sr.getDuration();
                 return;
             }
         }
