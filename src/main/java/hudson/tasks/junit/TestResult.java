@@ -229,28 +229,21 @@ public final class TestResult extends MetaTabulatedResult {
         }
     }
     
-    private void add(SuiteResult sr) {
-        for (SuiteResult s : suites) {
+    private void add(SuiteResult suiteResultToAdd) {
+        for (SuiteResult suiteResult : suites) {
             // JENKINS-12457: If a testsuite is distributed over multiple files, merge it into a single SuiteResult:
-            if(s.getName().equals(sr.getName())  && nullSafeEq(s.getId(),sr.getId())) {
-            
-                // However, a common problem is that people parse TEST-*.xml as well as TESTS-TestSuite.xml.
-                // In that case consider the result file as a duplicate and discard it.
-                // see http://jenkins.361315.n4.nabble.com/Problem-with-duplicate-build-execution-td371616.html for discussion.
-                if(strictEq(s.getTimestamp(),sr.getTimestamp())) {
-                    return;
-                }
-            
-                for (CaseResult cr: sr.getCases()) {
-                    s.addCase(cr);
-                    cr.replaceParent(s);
+            if(suiteResult.getName().equals(suiteResultToAdd.getName()) && nullSafeEq(suiteResult.getId(), suiteResultToAdd.getId())) {
+                for (CaseResult caseResult: suiteResultToAdd.getCases()) {
+                    if (!suiteResult.caseAlreadyExists(caseResult)) {
+                        suiteResult.addCase(caseResult);
+                        caseResult.replaceParent(suiteResult);
                 }
                 duration += sr.getDuration();
                 return;
             }
         }
-        suites.add(sr);
-        duration += sr.getDuration();
+        suites.add(suiteResultToAdd);
+        duration += suiteResultToAdd.getDuration();
     }
 
     /**

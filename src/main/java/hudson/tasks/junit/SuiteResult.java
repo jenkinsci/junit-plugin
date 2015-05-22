@@ -221,6 +221,19 @@ public final class SuiteResult implements Serializable {
         duration += cr.getDuration();
     }
 
+    boolean caseAlreadyExists(CaseResult caseResultToAdd) {
+        boolean found = false;
+        if (casesByName().get(caseResultToAdd.getName()) != null) {
+            for (CaseResult caseResult: cases) {
+                if (caseResult.isEquals(caseResultToAdd)) {
+                    found = true;
+                    break;
+                }
+            }
+        }
+        return found;
+    }
+
     @Exported(visibility=9)
     public String getName() {
         return name;

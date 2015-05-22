@@ -460,6 +460,15 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         return null;
     }
 
+    public boolean isEquals(CaseResult caseResult) {
+        if (getName().equals(caseResult.getName()) &&
+                getClassName().equals(caseResult.getClassName()) &&
+                getDuration() == caseResult.getDuration()) {
+            return true;
+        }
+        return false;
+    }
+
     /**
      * Gets the "children" of this test result that failed
      *
