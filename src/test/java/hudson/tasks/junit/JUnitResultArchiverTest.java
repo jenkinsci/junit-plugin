@@ -24,6 +24,10 @@
 package hudson.tasks.junit;
 
 import hudson.FilePath;
+import hudson.matrix.AxisList;
+import hudson.matrix.MatrixBuild;
+import hudson.matrix.MatrixProject;
+import hudson.matrix.TextAxis;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.slaves.DumbSlave;
@@ -34,8 +38,10 @@ import java.util.concurrent.TimeUnit;
 import org.jvnet.hudson.test.TouchBuilder;
 import org.jvnet.hudson.test.recipes.LocalData;
 
+import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
 import com.gargoylesoftware.htmlunit.html.HtmlForm;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
@@ -46,18 +52,24 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.List;
+
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.junit.Assert.*;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
 import org.jvnet.hudson.test.RandomlyFails;
+import org.jvnet.hudson.test.SingleFileSCM;
 import org.jvnet.hudson.test.TestExtension;
 import org.kohsuke.stapler.DataBoundConstructor;
 
@@ -275,4 +287,27 @@ public class JUnitResultArchiverTest {
         }
     }
 
+    @Test public void specialCharsInRelativePath() throws Exception {
+        final String ID_PREFIX = "test-../a=%3C%7C%23)/testReport/org.twia.vendor/VendorManagerTest/testCreateAdjustingFirm/";
+        final String EXPECTED = "org.twia.dao.DAOException: [S2001] Hibernate encountered an error updating Claim [null]";
+
+        MatrixProject p = j.createMatrixProject();
+        p.setAxes(new AxisList(new TextAxis("a", "<|#)")));
+        p.setScm(new SingleFileSCM("report.xml", getClass().getResource("junit-report-20090516.xml")));
+        p.getPublishersList().add(new JUnitResultArchiver("report.xml"));
+
+        MatrixBuild b = p.scheduleBuild2(0).get();
+        j.assertBuildStatus(Result.UNSTABLE, b);
+
+        WebClient wc = j.createWebClient();
+        HtmlPage page = wc.getPage(b, "testReport");
+
+        assertThat(page.asText(), not(containsString(EXPECTED)));
+
+        ((HtmlAnchor) page.getElementById(ID_PREFIX + "-showlink")).click();
+        assertThat(page.asText(), containsString(EXPECTED));
+
+        ((HtmlAnchor) page.getElementById(ID_PREFIX + "-hidelink")).click();
+        assertThat(page.asText(), not(containsString(EXPECTED)));
+    }
 }
