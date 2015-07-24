@@ -84,10 +84,10 @@ THE SOFTWARE.
   <j:set var="id" value="${h.jsStringEscape(url)}"/>
   <j:set var="open" value="showFailureSummary('test-${id}','${url}/summary')"/>
   <j:set var="close" value="hideFailureSummary('test-${id}')"/>
-  <a id="test-${id}-showlink" href="#" onclick="${open}" title="${%Show details}">
+  <a id="test-${id}-showlink" onclick="${open}" title="${%Show details}">
     <l:icon class="icon-document-add icon-sm"/>
   </a>
-  <a id="test-${id}-hidelink" href="#" onclick="${close}" title="${%Hide details}" style="display:none">
+  <a id="test-${id}-hidelink" onclick="${close}" title="${%Hide details}" style="display:none">
     <l:icon class="icon-document-delete icon-sm"/>
   </a>
   <st:nbsp/>
