@@ -216,7 +216,7 @@ public final class SuiteResult implements Serializable {
     }
 
     /*package*/ boolean addCase(CaseResult cr) {
-        if (caseAlreadyExists(cr)) {
+        if (!caseAlreadyExists(cr)) {
             cases.add(cr);
             casesByName().put(cr.getName(), cr);
             duration += cr.getDuration();
