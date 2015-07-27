@@ -234,8 +234,7 @@ public final class TestResult extends MetaTabulatedResult {
             // JENKINS-12457: If a testsuite is distributed over multiple files, merge it into a single SuiteResult:
             if(suiteResult.getName().equals(suiteResultToAdd.getName()) && nullSafeEq(suiteResult.getId(), suiteResultToAdd.getId())) {
                 for (CaseResult caseResult: suiteResultToAdd.getCases()) {
-                    if (!suiteResult.caseAlreadyExists(caseResult)) {
-                        suiteResult.addCase(caseResult);
+                    if (suiteResult.addCase(caseResult)) {
                         caseResult.replaceParent(suiteResult);
                         duration += caseResult.getDuration();
                     }
