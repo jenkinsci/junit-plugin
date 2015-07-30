@@ -300,6 +300,28 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
         return this.packageName.compareTo(that.packageName);
     }
 
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 37 * hash + (this.packageName != null ? this.packageName.hashCode() : 0);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final PackageResult other = (PackageResult) obj;
+        if ((this.packageName == null) ? (other.packageName != null) : !this.packageName.equals(other.packageName)) {
+            return false;
+        }
+        return true;
+    }
+    
     public String getDisplayName() {
         return TestNameTransformer.getTransformedName(packageName);
     }

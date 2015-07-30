@@ -37,6 +37,7 @@ import org.kohsuke.stapler.*;
 import org.kohsuke.stapler.export.ExportedBean;
 
 import com.google.common.collect.MapMaker;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
@@ -52,6 +53,8 @@ import java.util.logging.Logger;
  * @author Kohsuke Kawaguchi
  */
 @ExportedBean
+@SuppressFBWarnings(value = "NM_SAME_SIMPLE_NAME_AS_SUPERCLASS", 
+        justification = "Bad practice, but we have to keep APIs")
 public abstract class TestObject extends hudson.tasks.junit.TestObject {
 
     private static final Logger LOGGER = Logger.getLogger(TestObject.class.getName());
@@ -179,14 +182,15 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
             } else {
                 // We're not in a stapler request. Okay, give up.
                 LOGGER.info("trying to get relative path, but it is not my ancestor, and we're not in a stapler request. Trying absolute hudson url...");
-                String hudsonRootUrl = Jenkins.getInstance().getRootUrl();
-                if (hudsonRootUrl==null||hudsonRootUrl.length()==0) {
-                    LOGGER.warning("Can't find anything like a decent hudson url. Punting, returning empty string."); 
+                final Jenkins jenkins = Jenkins.getInstance();
+                final String jenkinsUrl = jenkins != null ? jenkins.getRootUrl() : null;
+                if (jenkinsUrl==null || jenkinsUrl.length() == 0) {
+                    LOGGER.warning("Can't find anything like a decent Jenkins url. Punting, returning empty string."); 
                     return "";
 
                 }
                 buf.insert(0, '/');
-                buf.insert(0, hudsonRootUrl);
+                buf.insert(0, jenkinsUrl);
             }
 
             LOGGER.info("Here's our relative path: " + buf.toString()); 
