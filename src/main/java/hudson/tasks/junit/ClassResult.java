@@ -120,7 +120,7 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
     
     public CaseResult getCaseResult(String name) {
         for (CaseResult c : cases) {
-            if(c.getSafeName().equals(name))
+            if(c.getName().equals(name))
                 return c;
         }
         return null;
