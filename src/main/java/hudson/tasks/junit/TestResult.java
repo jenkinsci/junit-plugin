@@ -625,6 +625,8 @@ public final class TestResult extends MetaTabulatedResult {
             suitesByName = new HashMap<String,SuiteResult>();
             totalTests = 0;
             failedTests = new ArrayList<CaseResult>();
+            skippedTests = new ArrayList<CaseResult>();
+            passedTests = new ArrayList<CaseResult>();
             byPackages = new TreeMap<String,PackageResult>();
         }
 
