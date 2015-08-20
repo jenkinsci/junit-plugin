@@ -257,6 +257,24 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
     }
 
     /**
+     * A shortcut for scripting
+     * 
+     * @return List of passed tests from associated test result.
+     */
+    public List<? extends TestResult> getPassedTests() {
+        return Collections.emptyList();
+    }
+
+    /**
+     * A shortcut for scripting
+     * 
+     * @return List of skipped tests from associated test result.
+     */
+    public List<? extends TestResult> getSkippedTests() {
+        return Collections.emptyList();
+    }
+
+    /**
      * Generates a PNG image for the test result trend.
      */
     public void doGraph( StaplerRequest req, StaplerResponse rsp) throws IOException {
