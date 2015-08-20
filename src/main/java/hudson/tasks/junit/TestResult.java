@@ -417,7 +417,7 @@ public final class TestResult extends MetaTabulatedResult {
      * @return the children of this test result, if any, or an empty collection
      */
     @Override
-    public Collection<? extends hudson.tasks.test.TestResult> getPassedTests() {
+    public List<CaseResult> getPassedTests() {
         return passedTests;
     }
 
@@ -427,7 +427,7 @@ public final class TestResult extends MetaTabulatedResult {
      * @return the children of this test result, if any, or an empty list
      */
     @Override
-    public Collection<? extends hudson.tasks.test.TestResult> getSkippedTests() {
+    public List<CaseResult> getSkippedTests() {
         return skippedTests;
     }
 
