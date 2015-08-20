@@ -391,6 +391,9 @@ public final class TestResult extends MetaTabulatedResult {
     @Exported(visibility=999)
     @Override
     public int getSkipCount() {
+        if(skippedTests==null)
+            return 0;
+        else
         return skippedTests.size();
     }
     
