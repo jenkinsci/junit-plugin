@@ -81,7 +81,9 @@ public final class TestResult extends MetaTabulatedResult {
      */
     private transient int totalTests;
 
-    private transient int skippedTests;
+    private transient List<CaseResult> passedTests;
+
+    private transient List<CaseResult> skippedTests;
 
     private float duration;
 
@@ -389,7 +391,7 @@ public final class TestResult extends MetaTabulatedResult {
     @Exported(visibility=999)
     @Override
     public int getSkipCount() {
-        return skippedTests;
+        return skippedTests.size();
     }
     
     /**
@@ -413,7 +415,7 @@ public final class TestResult extends MetaTabulatedResult {
      */
     @Override
     public Collection<? extends hudson.tasks.test.TestResult> getPassedTests() {
-        throw new UnsupportedOperationException();  // TODO: implement!(FIXME: generated)
+        return passedTests;
     }
 
     /**
@@ -423,7 +425,7 @@ public final class TestResult extends MetaTabulatedResult {
      */
     @Override
     public Collection<? extends hudson.tasks.test.TestResult> getSkippedTests() {
-        throw new UnsupportedOperationException();  // TODO: implement!(FIXME: generated)
+        return skippedTests;
     }
 
     /**
@@ -574,10 +576,12 @@ public final class TestResult extends MetaTabulatedResult {
         // TODO: free children? memmory leak?
         suitesByName = new HashMap<String,SuiteResult>();
         failedTests = new ArrayList<CaseResult>();
+        skippedTests = new ArrayList<CaseResult>();
+        passedTests = new ArrayList<CaseResult>();
         byPackages = new TreeMap<String,PackageResult>();
 
         totalTests = 0;
-        skippedTests = 0;
+        //skippedTests = 0;
 
         // Ask all of our children to tally themselves
         for (SuiteResult s : suites) {
@@ -599,8 +603,9 @@ public final class TestResult extends MetaTabulatedResult {
 
         for (PackageResult pr : byPackages.values()) {
             pr.tally();
-            skippedTests += pr.getSkipCount();
+            skippedTests.addAll(pr.getSkippedTests());
             failedTests.addAll(pr.getFailedTests());
+            passedTests.addAll(pr.getPassedTests());
             totalTests += pr.getTotalCount();
         }
     }
@@ -631,10 +636,13 @@ public final class TestResult extends MetaTabulatedResult {
 
             totalTests += s.getCases().size();
             for(CaseResult cr : s.getCases()) {
-                if(cr.isSkipped())
-                    skippedTests++;
-                else if(!cr.isPassed())
+                if(cr.isSkipped()) {
+                    skippedTests.add(cr);
+                } else if(!cr.isPassed()) {
                     failedTests.add(cr);
+                } else {
+                    passedTests.add(cr);
+                }
 
                 String pkg = cr.getPackageName(), spkg = safe(pkg);
                 PackageResult pr = byPackage(spkg);
@@ -644,7 +652,9 @@ public final class TestResult extends MetaTabulatedResult {
             }
         }
 
+        Collections.sort(skippedTests,CaseResult.BY_AGE);
         Collections.sort(failedTests,CaseResult.BY_AGE);
+        Collections.sort(passedTests,CaseResult.BY_AGE);
 
         for (PackageResult pr : byPackages.values())
             pr.freeze();

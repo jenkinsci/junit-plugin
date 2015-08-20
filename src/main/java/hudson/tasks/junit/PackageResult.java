@@ -201,7 +201,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
      * @return the children of this test result, if any, or an empty collection
      */
     @Override
-    public Collection<? extends hudson.tasks.test.TestResult> getPassedTests() {
+    public List<CaseResult> getPassedTests() {
         List<CaseResult> r = new ArrayList<CaseResult>();
         for (ClassResult clr : classes.values()) {
             for (CaseResult cr : clr.getChildren()) {
@@ -220,7 +220,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
      * @return the children of this test result, if any, or an empty list
      */
     @Override
-    public Collection<? extends TestResult> getSkippedTests() {
+    public List<CaseResult> getSkippedTests() {
         List<CaseResult> r = new ArrayList<CaseResult>();
         for (ClassResult clr : classes.values()) {
             for (CaseResult cr : clr.getChildren()) {
