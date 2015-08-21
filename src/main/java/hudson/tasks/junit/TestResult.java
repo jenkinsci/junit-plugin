@@ -584,7 +584,6 @@ public final class TestResult extends MetaTabulatedResult {
         byPackages = new TreeMap<String,PackageResult>();
 
         totalTests = 0;
-        //skippedTests = 0;
 
         // Ask all of our children to tally themselves
         for (SuiteResult s : suites) {
