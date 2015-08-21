@@ -260,7 +260,9 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
      * A shortcut for scripting
      * 
      * @return List of passed tests from associated test result.
+     * @since TODO
      */
+    @NonNull
     public List<? extends TestResult> getPassedTests() {
         return Collections.emptyList();
     }
@@ -269,7 +271,9 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
      * A shortcut for scripting
      * 
      * @return List of skipped tests from associated test result.
+     * @since TODO
      */
+    @NonNull
     public List<? extends TestResult> getSkippedTests() {
         return Collections.emptyList();
     }
