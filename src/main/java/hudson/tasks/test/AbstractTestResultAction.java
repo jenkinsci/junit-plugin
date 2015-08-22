@@ -36,7 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import javax.validation.constraints.NotNull;
+import javax.annotation.Nonnull;
 import jenkins.model.RunAction2;
 import jenkins.model.lazy.LazyBuildMixIn;
 import org.jfree.chart.ChartFactory;
@@ -263,7 +263,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
      * @return List of passed tests from associated test result.
      * @since TODO
      */
-    @NotNull
+    @Nonnull
     public List<? extends TestResult> getPassedTests() {
         return Collections.emptyList();
     }
@@ -274,7 +274,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
      * @return List of skipped tests from associated test result.
      * @since TODO
      */
-    @NotNull
+    @Nonnull
     public List<? extends TestResult> getSkippedTests() {
         return Collections.emptyList();
     }
