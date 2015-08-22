@@ -85,6 +85,8 @@ public final class TestResult extends MetaTabulatedResult {
 
     private transient List<CaseResult> skippedTests;
 
+    private transient int skippedTestsCounter;
+
     private float duration;
 
     /**
@@ -391,10 +393,7 @@ public final class TestResult extends MetaTabulatedResult {
     @Exported(visibility=999)
     @Override
     public int getSkipCount() {
-        if(skippedTests==null)
-            return 0;
-        else
-        return skippedTests.size();
+        return skippedTestsCounter;
     }
     
     /**
@@ -418,6 +417,17 @@ public final class TestResult extends MetaTabulatedResult {
      */
     @Override
     public List<CaseResult> getPassedTests() {
+        if(passedTests == null){
+            passedTests = new ArrayList<CaseResult>();
+            for(SuiteResult s : suites) {
+                for(CaseResult cr : s.getCases()) {
+                    if (cr.isPassed()) {
+                        passedTests.add(cr);
+                    }
+                }
+            }
+        }
+
         return passedTests;
     }
 
@@ -428,6 +438,17 @@ public final class TestResult extends MetaTabulatedResult {
      */
     @Override
     public List<CaseResult> getSkippedTests() {
+        if(skippedTests == null){
+            skippedTests = new ArrayList<CaseResult>();
+            for(SuiteResult s : suites) {
+                for(CaseResult cr : s.getCases()) {
+                    if (cr.isSkipped()) {
+                        skippedTests.add(cr);
+                    }
+                }
+            }
+        }
+
         return skippedTests;
     }
 
@@ -579,11 +600,12 @@ public final class TestResult extends MetaTabulatedResult {
         // TODO: free children? memmory leak?
         suitesByName = new HashMap<String,SuiteResult>();
         failedTests = new ArrayList<CaseResult>();
-        skippedTests = new ArrayList<CaseResult>();
-        passedTests = new ArrayList<CaseResult>();
+        skippedTests = null;
+        passedTests = null;
         byPackages = new TreeMap<String,PackageResult>();
 
         totalTests = 0;
+        skippedTestsCounter = 0;
 
         // Ask all of our children to tally themselves
         for (SuiteResult s : suites) {
@@ -605,9 +627,8 @@ public final class TestResult extends MetaTabulatedResult {
 
         for (PackageResult pr : byPackages.values()) {
             pr.tally();
-            skippedTests.addAll(pr.getSkippedTests());
+            skippedTestsCounter += pr.getSkipCount();
             failedTests.addAll(pr.getFailedTests());
-            passedTests.addAll(pr.getPassedTests());
             totalTests += pr.getTotalCount();
         }
     }
@@ -627,8 +648,8 @@ public final class TestResult extends MetaTabulatedResult {
             suitesByName = new HashMap<String,SuiteResult>();
             totalTests = 0;
             failedTests = new ArrayList<CaseResult>();
-            skippedTests = new ArrayList<CaseResult>();
-            passedTests = new ArrayList<CaseResult>();
+            skippedTests = null;
+            passedTests = null;
             byPackages = new TreeMap<String,PackageResult>();
         }
 
@@ -641,11 +662,16 @@ public final class TestResult extends MetaTabulatedResult {
             totalTests += s.getCases().size();
             for(CaseResult cr : s.getCases()) {
                 if(cr.isSkipped()) {
-                    skippedTests.add(cr);
+                    skippedTestsCounter++;
+                    if (skippedTests != null) {
+                        skippedTests.add(cr)
+                    }
                 } else if(!cr.isPassed()) {
                     failedTests.add(cr);
                 } else {
-                    passedTests.add(cr);
+                    if(passedTests != null) {
+                        passedTests.add(cr)
+                    }
                 }
 
                 String pkg = cr.getPackageName(), spkg = safe(pkg);
@@ -656,9 +682,15 @@ public final class TestResult extends MetaTabulatedResult {
             }
         }
 
-        Collections.sort(skippedTests,CaseResult.BY_AGE);
         Collections.sort(failedTests,CaseResult.BY_AGE);
-        Collections.sort(passedTests,CaseResult.BY_AGE);
+
+        if(passedTests != null) {
+            Collections.sort(passedTests,CaseResult.BY_AGE);
+        }
+
+        if(skippedTests != null) {
+            Collections.sort(skippedTests,CaseResult.BY_AGE);
+        }
 
         for (PackageResult pr : byPackages.values())
             pr.freeze();
