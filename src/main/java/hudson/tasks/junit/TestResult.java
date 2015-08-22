@@ -664,13 +664,13 @@ public final class TestResult extends MetaTabulatedResult {
                 if(cr.isSkipped()) {
                     skippedTestsCounter++;
                     if (skippedTests != null) {
-                        skippedTests.add(cr)
+                        skippedTests.add(cr);
                     }
                 } else if(!cr.isPassed()) {
                     failedTests.add(cr);
                 } else {
                     if(passedTests != null) {
-                        passedTests.add(cr)
+                        passedTests.add(cr);
                     }
                 }
 
