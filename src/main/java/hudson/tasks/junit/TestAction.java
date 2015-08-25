@@ -24,6 +24,7 @@
 package hudson.tasks.junit;
 
 import hudson.model.Action;
+import org.kohsuke.stapler.export.ExportedBean;
 
 /**
  * 
@@ -38,6 +39,7 @@ import hudson.model.Action;
  * @since 1.320
  * @see TestDataPublisher
  */
+@ExportedBean
 public abstract class TestAction implements Action {
 
 	/**
