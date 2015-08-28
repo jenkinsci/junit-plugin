@@ -46,7 +46,7 @@ THE SOFTWARE.
               </j:forEach>
             </td>
             <td class="pane" style="text-align:right"><j:out value="${p.description}"/></td>
-            <td class="pane" style="text-align:right" data="${p.duration}">${p.durationString}</td>
+            <td class="pane no-wrap" style="text-align:right" data="${p.duration}">${p.durationString}</td>
             <td class="pane" style="text-align:right">${p.failCount}</td>
             <td class="pane" style="text-align:right">${p.skipCount}</td>
             <td class="pane" style="text-align:right">${p.totalCount}</td>
