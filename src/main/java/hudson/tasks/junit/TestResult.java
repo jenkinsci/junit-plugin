@@ -416,7 +416,7 @@ public final class TestResult extends MetaTabulatedResult {
      * @return the children of this test result, if any, or an empty collection
      */
     @Override
-    public List<CaseResult> getPassedTests() {
+    public synchronized List<CaseResult> getPassedTests() {
         if(passedTests == null){
             passedTests = new ArrayList<CaseResult>();
             for(SuiteResult s : suites) {
@@ -437,7 +437,7 @@ public final class TestResult extends MetaTabulatedResult {
      * @return the children of this test result, if any, or an empty list
      */
     @Override
-    public List<CaseResult> getSkippedTests() {
+    public synchronized List<CaseResult> getSkippedTests() {
         if(skippedTests == null){
             skippedTests = new ArrayList<CaseResult>();
             for(SuiteResult s : suites) {
