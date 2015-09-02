@@ -23,6 +23,7 @@
  */
 package hudson.tasks.junit;
 
+import hudson.Util;
 import hudson.tasks.test.TestObject;
 import hudson.util.io.ParserConfigurator;
 import org.dom4j.Document;
@@ -32,6 +33,7 @@ import org.dom4j.io.SAXReader;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
+import javax.annotation.CheckForNull;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
@@ -71,6 +73,11 @@ public final class SuiteResult implements Serializable {
     private String timestamp;
     /** Optional ID attribute of a test suite. E.g., Eclipse plug-ins tests always have the name 'tests' but a different id. **/
     private String id;
+    /**
+     * An optional archive id to late be able to differentiate suites that has been merged.
+     */
+    @CheckForNull
+    private final String archiveId;
 
     /**
      * All test cases.
@@ -79,10 +86,11 @@ public final class SuiteResult implements Serializable {
     private transient Map<String,CaseResult> casesByName;
     private transient hudson.tasks.junit.TestResult parent;
 
-    SuiteResult(String name, String stdout, String stderr) {
+    SuiteResult(String name, String stdout, String stderr, @CheckForNull String archiveId) {
         this.name = name;
         this.stderr = stderr;
         this.stdout = stdout;
+        this.archiveId = Util.fixEmptyAndTrim(archiveId);
         this.file = null;
     }
 
@@ -113,7 +121,7 @@ public final class SuiteResult implements Serializable {
      * This method returns a collection, as a single XML may have multiple &lt;testsuite>
      * elements wrapped into the top-level &lt;testsuites>.
      */
-    static List<SuiteResult> parse(File xmlReport, boolean keepLongStdio) throws DocumentException, IOException, InterruptedException {
+    static List<SuiteResult> parse(File xmlReport, boolean keepLongStdio, @CheckForNull String archiveId) throws DocumentException, IOException, InterruptedException {
         List<SuiteResult> r = new ArrayList<SuiteResult>();
 
         // parse into DOM
@@ -123,22 +131,22 @@ public final class SuiteResult implements Serializable {
         Document result = saxReader.read(xmlReport);
         Element root = result.getRootElement();
 
-        parseSuite(xmlReport,keepLongStdio,r,root);
+        parseSuite(xmlReport, keepLongStdio, archiveId, r, root);
 
         return r;
     }
 
-    private static void parseSuite(File xmlReport, boolean keepLongStdio, List<SuiteResult> r, Element root) throws DocumentException, IOException {
+    private static void parseSuite(File xmlReport, boolean keepLongStdio, @CheckForNull String archiveId, List<SuiteResult> r, Element root) throws DocumentException, IOException {
         // nested test suites
         @SuppressWarnings("unchecked")
         List<Element> testSuites = (List<Element>)root.elements("testsuite");
         for (Element suite : testSuites)
-            parseSuite(xmlReport, keepLongStdio, r, suite);
+            parseSuite(xmlReport, keepLongStdio, archiveId, r, suite);
 
         // child test cases
         // FIXME: do this also if no testcases!
         if (root.element("testcase")!=null || root.element("error")!=null)
-            r.add(new SuiteResult(xmlReport, root, keepLongStdio));
+            r.add(new SuiteResult(xmlReport, root, keepLongStdio, archiveId));
     }
 
     /**
@@ -146,19 +154,26 @@ public final class SuiteResult implements Serializable {
      *      A JUnit XML report file whose top level element is 'testsuite'.
      * @param suite
      *      The parsed result of {@code xmlReport}
+     * @param archiveId
+     *      an optional id from the {@link JUnitResultArchiver} to later differentiate suites when merged.
      */
-    private SuiteResult(File xmlReport, Element suite, boolean keepLongStdio) throws DocumentException, IOException {
-    	this.file = xmlReport.getAbsolutePath();
-        String name = suite.attributeValue("name");
-        if(name==null)
+    private SuiteResult(File xmlReport, Element suite, boolean keepLongStdio, @CheckForNull String archiveId) throws DocumentException, IOException {
+        this.archiveId = Util.fixEmptyAndTrim(archiveId);
+        this.file = xmlReport.getAbsolutePath();
+        final String name = suite.attributeValue("name");
+        StringBuilder nameBuilder = new StringBuilder("");
+        if(name==null) {
             // some user reported that name is null in their environment.
             // see http://www.nabble.com/Unexpected-Null-Pointer-Exception-in-Hudson-1.131-tf4314802.html
-            name = '('+xmlReport.getName()+')';
-        else {
+            nameBuilder.append('(').append(xmlReport.getName()).append(')');
+        } else {
             String pkg = suite.attributeValue("package");
-            if(pkg!=null&& pkg.length()>0)   name=pkg+'.'+name;
+            if(pkg != null && pkg.length() > 0) {
+                nameBuilder.append(pkg).append('.');
+            }
+            nameBuilder.append(name);
         }
-        this.name = TestObject.safe(name);
+        this.name = TestObject.safe(nameBuilder.toString());
         this.timestamp = suite.attributeValue("timestamp");
         this.id = suite.attributeValue("id");
 
@@ -277,6 +292,11 @@ public final class SuiteResult implements Serializable {
     @Exported(inline=true,visibility=9)
     public List<CaseResult> getCases() {
         return cases;
+    }
+
+    @Exported(inline=true,visibility=9)
+    public String getArchiveId() {
+        return archiveId;
     }
 
     public SuiteResult getPreviousResult() {
