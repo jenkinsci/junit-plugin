@@ -47,7 +47,7 @@ THE SOFTWARE.
               </j:forEach>
             </td>
             <td class="pane" style="text-align:left"><j:out value="${test.description}"/></td>
-            <td class="pane" style="text-align:left" data="${test.duration}">${test.durationString}</td>
+            <td class="pane no-wrap" style="text-align:left" data="${test.duration}">${test.durationString}</td>
             <td class="pane">
               <j:set var="pst" value="${test.status}" />
               <span class="${pst.cssClass}">
