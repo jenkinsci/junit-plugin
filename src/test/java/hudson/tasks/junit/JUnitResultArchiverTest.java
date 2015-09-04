@@ -286,6 +286,12 @@ public class JUnitResultArchiverTest {
             }
         }
     }
+    @Test public void emptyDirectory() throws Exception{
+        JUnitResultArchiver a = new JUnitResultArchiver("TEST-*.xml");
+        FreeStyleProject freeStyleProject = j.createFreeStyleProject();
+        freeStyleProject.getPublishersList().add(a);
+        j.assertBuildStatusSuccess(freeStyleProject.scheduleBuild2(0));
+    }
 
     @Test public void specialCharsInRelativePath() throws Exception {
         final String ID_PREFIX = "test-../a=%3C%7C%23)/testReport/org.twia.vendor/VendorManagerTest/testCreateAdjustingFirm/";

@@ -150,13 +150,9 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
             }
             action.setHealthScaleFactor(getHealthScaleFactor()); // overwrites previous value if appending
 			if (result.isEmpty()) {
-                if (build.getResult() == Result.FAILURE) {
-                    // most likely a build failed before it gets to the test phase.
-                    // don't report confusing error message.
-                    return;
-                }
 			    // most likely a configuration error in the job - e.g. false pattern to match the JUnit result files
-				throw new AbortException(Messages.JUnitResultArchiver_ResultIsEmpty());
+                listener.getLogger().println(Messages.JUnitResultArchiver_ResultIsEmpty());
+                return;
 			}
 
             // TODO: Move into JUnitParser [BUG 3123310]

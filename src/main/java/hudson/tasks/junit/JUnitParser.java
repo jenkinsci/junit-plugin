@@ -113,7 +113,7 @@ public class JUnitParser extends TestResultParser {
             if (files.length == 0) {
                 // no test result. Most likely a configuration
                 // error or fatal problem
-                throw new AbortException(Messages.JUnitResultArchiver_NoTestReportFound());
+                return new TestResult();
             }
 
             TestResult result = new TestResult(buildTime + (nowSlave - nowMaster), ds, keepLongStdio);
