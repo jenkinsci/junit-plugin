@@ -74,7 +74,9 @@ public final class SuiteResult implements Serializable {
     /** Optional ID attribute of a test suite. E.g., Eclipse plug-ins tests always have the name 'tests' but a different id. **/
     private String id;
     /**
-     * An optional archive id to late be able to differentiate suites that has been merged.
+     * An optional archive id to be able to differentiate suites that has been merged.
+     * @see JUnitResultArchiver#archiveId
+     * @see CaseResult#archiveId
      */
     @CheckForNull
     private final String archiveId;

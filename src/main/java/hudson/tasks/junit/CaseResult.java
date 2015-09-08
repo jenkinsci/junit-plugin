@@ -75,7 +75,9 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
 
     private transient ClassResult classResult;
     /**
-     * An optional archive id to late be able to differentiate suites that has been merged.
+     * An optional archive id to be able to differentiate suites that has been merged.
+     * @see JUnitResultArchiver#archiveId
+     * @see SuiteResult#archiveId
      */
     @CheckForNull
     private final String archiveId;

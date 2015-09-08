@@ -77,7 +77,9 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
 
 
     /**
-     * A prefix to put on all test suite names, null == none.
+     * An optional id for the test suites.
+     * Mostly usable in workflows where you might collect test results in different places
+     * and later want to differentiate between the different collections.
      */
     @CheckForNull
     private String archiveId = null;
