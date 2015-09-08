@@ -103,7 +103,8 @@ public class JUnitResultArchiverTest {
 	}
 
     @LocalData
-    @Test public void basicSuiteArchiveId() throws Exception {
+    @Test
+    public void basicSuiteArchiveId() throws Exception {
         archiver.setArchiveId("dasId");
         FreeStyleBuild build = project.scheduleBuild2(0).get(10, TimeUnit.SECONDS);
 
@@ -128,7 +129,8 @@ public class JUnitResultArchiverTest {
 
     @RandomlyFails("TimeoutException from basic")
     @LocalData
-    @Test public void slave() throws Exception {
+    @Test
+    public void slave() throws Exception {
         DumbSlave s = j.createOnlineSlave();
         project.setAssignedLabel(s.getSelfLabel());
 

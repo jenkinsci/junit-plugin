@@ -24,14 +24,12 @@
 package hudson.tasks.junit;
 
 import hudson.Util;
-import hudson.util.TextFile;
-import org.apache.commons.io.FileUtils;
-import org.jvnet.localizer.Localizable;
-
 import hudson.model.Run;
 import hudson.tasks.test.TestResult;
-
+import hudson.util.TextFile;
+import org.apache.commons.io.FileUtils;
 import org.dom4j.Element;
+import org.jvnet.localizer.Localizable;
 import org.kohsuke.stapler.export.Exported;
 
 import javax.annotation.CheckForNull;
@@ -275,11 +273,11 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     }
 
     public String getDisplayName() {
-        StringBuilder transformedName = new StringBuilder(TestNameTransformer.getTransformedName(testName));
-        if (this.archiveId != null) {
-            transformedName.insert(0, "[" + this.archiveId + "]");
+        if (this.archiveId == null) {
+            return TestNameTransformer.getTransformedName(testName);
+        } else {
+            return "[" + this.archiveId + "] " + TestNameTransformer.getTransformedName(testName);
         }
-        return transformedName.toString();
     }
 
     /**
@@ -365,11 +363,11 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      * @since 1.515
      */
     public String getFullDisplayName() {
-        StringBuilder transformedName = new StringBuilder(TestNameTransformer.getTransformedName(getFullName()));
-        if (this.archiveId != null) {
-            transformedName.insert(0, "[" + this.archiveId + "]");
+        if (this.archiveId == null) {
+            return TestNameTransformer.getTransformedName(getFullName());
+        } else {
+            return "[" + this.archiveId + "] " + TestNameTransformer.getTransformedName(getFullName());
         }
-        return transformedName.toString();
     }
 
     @Override
