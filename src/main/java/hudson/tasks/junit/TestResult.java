@@ -276,7 +276,9 @@ public final class TestResult extends MetaTabulatedResult {
     private void add(SuiteResult sr) {
         for (SuiteResult s : suites) {
             // JENKINS-12457: If a testsuite is distributed over multiple files, merge it into a single SuiteResult:
-            if(s.getName().equals(sr.getName())  && nullSafeEq(s.getId(),sr.getId())) {
+            if(s.getName().equals(sr.getName())
+                    && nullSafeEq(s.getId(), sr.getId())
+                    && nullSafeEq(s.getArchiveId(), sr.getArchiveId())) {
             
                 // However, a common problem is that people parse TEST-*.xml as well as TESTS-TestSuite.xml.
                 // In that case consider the result file as a duplicate and discard it.
@@ -676,7 +678,7 @@ public final class TestResult extends MetaTabulatedResult {
             if(!s.freeze(this))      // this is disturbing: has-a-parent is conflated with has-been-counted
                 continue;
 
-            suitesByName.put(s.getName(),s);
+            suitesByName.put(s.getName(),s);  //Now when suites can have the same name but different archiveId this can overwrite them
 
             totalTests += s.getCases().size();
             for(CaseResult cr : s.getCases()) {

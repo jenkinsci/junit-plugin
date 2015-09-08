@@ -180,7 +180,7 @@ public final class SuiteResult implements Serializable {
         Element ex = suite.element("error");
         if(ex!=null) {
             // according to junit-noframes.xsl l.229, this happens when the test class failed to load
-            addCase(new CaseResult(this, suite, "<init>", keepLongStdio));
+            addCase(new CaseResult(this, suite, "<init>", keepLongStdio, archiveId));
         }
         
         @SuppressWarnings("unchecked")
@@ -205,7 +205,7 @@ public final class SuiteResult implements Serializable {
             // one wants to use @name from <testsuite>,
             // the other wants to use @classname from <testcase>.
 
-            addCase(new CaseResult(this, e, classname, keepLongStdio));
+            addCase(new CaseResult(this, e, classname, keepLongStdio, archiveId));
         }
 
         String stdout = CaseResult.possiblyTrimStdio(cases, keepLongStdio, suite.elementText("system-out"));

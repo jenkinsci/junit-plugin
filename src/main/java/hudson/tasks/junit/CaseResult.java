@@ -23,6 +23,7 @@
  */
 package hudson.tasks.junit;
 
+import hudson.Util;
 import hudson.util.TextFile;
 import org.apache.commons.io.FileUtils;
 import org.jvnet.localizer.Localizable;
@@ -33,6 +34,7 @@ import hudson.tasks.test.TestResult;
 import org.dom4j.Element;
 import org.kohsuke.stapler.export.Exported;
 
+import javax.annotation.CheckForNull;
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
@@ -72,6 +74,11 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     private transient SuiteResult parent;
 
     private transient ClassResult classResult;
+    /**
+     * An optional archive id to late be able to differentiate suites that has been merged.
+     */
+    @CheckForNull
+    private final String archiveId;
 
     /**
      * Some tools report stdout and stderr at testcase level (such as Maven surefire plugin), others do so at
@@ -106,7 +113,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         return 0.0f;
     }
 
-    CaseResult(SuiteResult parent, Element testCase, String testClassName, boolean keepLongStdio) {
+    CaseResult(SuiteResult parent, Element testCase, String testClassName, boolean keepLongStdio, @CheckForNull String archiveId) {
         // schema for JUnit report XML format is not available in Ant,
         // so I don't know for sure what means what.
         // reports in http://www.nabble.com/difference-in-junit-publisher-and-ant-junitreport-tf4308604.html#a12265700
@@ -131,6 +138,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
 
         className = testClassName;
         testName = nameAttr;
+        this.archiveId = Util.fixEmptyAndTrim(archiveId);
         errorStackTrace = getError(testCase);
         errorDetails = getErrorMessage(testCase);
         this.parent = parent;
@@ -218,6 +226,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         this.duration = 0.0f;
         this.skipped = false;
         this.skippedMessage = null;
+        this.archiveId = parent != null ? parent.getArchiveId() : null;
     }
     
     public ClassResult getParent() {
@@ -264,7 +273,11 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     }
 
     public String getDisplayName() {
-        return TestNameTransformer.getTransformedName(testName);
+        StringBuilder transformedName = new StringBuilder(TestNameTransformer.getTransformedName(testName));
+        if (this.archiveId != null) {
+            transformedName.insert(0, "[" + this.archiveId + "]");
+        }
+        return transformedName.toString();
     }
 
     /**
@@ -319,6 +332,11 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         return className;
     }
 
+    @Exported(visibility=9)
+    public String getArchiveId() {
+        return archiveId;
+    }
+
     /**
      * Gets the simple (not qualified) class name.
      */
@@ -345,7 +363,11 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      * @since 1.515
      */
     public String getFullDisplayName() {
-    	return TestNameTransformer.getTransformedName(getFullName());
+        StringBuilder transformedName = new StringBuilder(TestNameTransformer.getTransformedName(getFullName()));
+        if (this.archiveId != null) {
+            transformedName.insert(0, "[" + this.archiveId + "]");
+        }
+        return transformedName.toString();
     }
 
     @Override

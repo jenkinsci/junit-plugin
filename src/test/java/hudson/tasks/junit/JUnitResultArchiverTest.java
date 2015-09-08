@@ -114,11 +114,12 @@ public class JUnitResultArchiverTest {
         wc.getPage(build); // build page
         wc.getPage(build, "testReport");  // test report
         wc.getPage(build, "testReport/hudson.security"); // package
-        wc.getPage(build, "testReport/hudson.security/HudsonPrivateSecurityRealmTest/"); // class
-        wc.getPage(build, "testReport/hudson.security/HudsonPrivateSecurityRealmTest/testDataCompatibilityWith1_282/"); // method
+        wc.getPage(build, "testReport/hudson.security/HudsonPrivateSecurityRealmTest/");// class
+        HtmlPage methodPage = wc.getPage(build, "testReport/hudson.security/HudsonPrivateSecurityRealmTest/testDataCompatibilityWith1_282/");// method
         //OK good it looks like before
 
         //Now what about the suite archive id?
+        j.assertStringContains(methodPage.asText(), "[dasId]");
         TestResultAction testResultAction = build.getAction(TestResultAction.class);
         SuiteResult suite = testResultAction.getResult().getSuite("hudson.security.HudsonPrivateSecurityRealmTest");
         assertNotNull(suite);
@@ -126,8 +127,8 @@ public class JUnitResultArchiverTest {
     }
 
     @RandomlyFails("TimeoutException from basic")
-   @LocalData
-   @Test public void slave() throws Exception {
+    @LocalData
+    @Test public void slave() throws Exception {
         DumbSlave s = j.createOnlineSlave();
         project.setAssignedLabel(s.getSelfLabel());
 
