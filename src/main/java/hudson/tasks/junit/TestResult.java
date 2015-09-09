@@ -48,6 +48,8 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
 
+import javax.annotation.CheckForNull;
+
 /**
  * Root of all the test results for one build.
  *
@@ -118,8 +120,19 @@ public final class TestResult extends MetaTabulatedResult {
      * @since 1.358
      */
     public TestResult(long buildTime, DirectoryScanner results, boolean keepLongStdio) throws IOException {
+        this(buildTime, results, keepLongStdio, null);
+    }
+
+    /**
+     * Collect reports from the given {@link DirectoryScanner}, while
+     * filtering out all files that were created before the given time.
+     * @param keepLongStdio if true, retain a suite's complete stdout/stderr even if this is huge and the suite passed
+     * @param archiveId An optional archive id to put on each test suite
+     *                  to later be able to differentiate suites that has been merged into another TestResult.
+     */
+    public TestResult(long buildTime, DirectoryScanner results, boolean keepLongStdio, @CheckForNull String archiveId) throws IOException {
         this.keepLongStdio = keepLongStdio;
-        parse(buildTime, results);
+        parse(buildTime, results, archiveId);
     }
 
     public TestObject getParent() {
@@ -140,10 +153,22 @@ public final class TestResult extends MetaTabulatedResult {
      * Collect reports from the given {@link DirectoryScanner}, while
      * filtering out all files that were created before the given time.
      */
+    @Deprecated
     public void parse(long buildTime, DirectoryScanner results) throws IOException {
+        parse(buildTime, results, null);
+    }
+
+    /**
+     * Collect reports from the given {@link DirectoryScanner}, while
+     * filtering out all files that were created before the given time.
+     *
+     * @param archiveId An optional archive id to put on each test suite
+     *                  to later be able to differentiate suites that has been merged into another TestResult.
+     */
+    public void parse(long buildTime, DirectoryScanner results, @CheckForNull String archiveId) throws IOException {
         String[] includedFiles = results.getIncludedFiles();
         File baseDir = results.getBasedir();
-        parse(buildTime,baseDir,includedFiles);
+        parse(buildTime,baseDir,includedFiles, archiveId);
     }
         
     /**
@@ -152,7 +177,20 @@ public final class TestResult extends MetaTabulatedResult {
      * 
      * @since 1.426
      */
+    @Deprecated
     public void parse(long buildTime, File baseDir, String[] reportFiles) throws IOException {
+        parse(buildTime, baseDir, reportFiles, null);
+    }
+
+    /**
+     * Collect reports from the given report files, while
+     * filtering out all files that were created before the given time.
+     *
+     * @param archiveId An optional archive id to put on each test suite
+     *                  to later be able to differentiate suites that has been merged into another TestResult.
+     * @throws IOException if so
+     */
+    public void parse(long buildTime, File baseDir, String[] reportFiles, @CheckForNull String archiveId) throws IOException {
 
         boolean parsed=false;
 
@@ -160,7 +198,7 @@ public final class TestResult extends MetaTabulatedResult {
             File reportFile = new File(baseDir, value);
             // only count files that were actually updated during this build
             if ( (buildTime-3000/*error margin*/ <= reportFile.lastModified())) {
-                parsePossiblyEmpty(reportFile);
+                parsePossiblyEmpty(reportFile, archiveId);
                 parsed = true;
             }
         }
@@ -188,13 +226,18 @@ public final class TestResult extends MetaTabulatedResult {
      * 
      * @since 1.500
      */
+    @Deprecated
     public void parse(long buildTime, Iterable<File> reportFiles) throws IOException {
+        parse(buildTime, reportFiles, null);
+    }
+
+    public void parse(long buildTime, Iterable<File> reportFiles, @CheckForNull String archiveId) throws IOException {
         boolean parsed=false;
 
         for (File reportFile : reportFiles) {
             // only count files that were actually updated during this build
             if ( (buildTime-3000/*error margin*/ <= reportFile.lastModified())) {
-                parsePossiblyEmpty(reportFile);
+                parsePossiblyEmpty(reportFile, archiveId);
                 parsed = true;
             }
         }
@@ -218,21 +261,24 @@ public final class TestResult extends MetaTabulatedResult {
         
     }
     
-    private void parsePossiblyEmpty(File reportFile) throws IOException {
+    private void parsePossiblyEmpty(File reportFile, @CheckForNull String archiveId) throws IOException {
         if(reportFile.length()==0) {
             // this is a typical problem when JVM quits abnormally, like OutOfMemoryError during a test.
-            SuiteResult sr = new SuiteResult(reportFile.getName(), "", "");
+            String name = reportFile.getName();
+            SuiteResult sr = new SuiteResult(name, "", "", archiveId);
             sr.addCase(new CaseResult(sr,"<init>","Test report file "+reportFile.getAbsolutePath()+" was length 0"));
             add(sr);
         } else {
-            parse(reportFile);
+            parse(reportFile, archiveId);
         }
     }
     
     private void add(SuiteResult sr) {
         for (SuiteResult s : suites) {
             // JENKINS-12457: If a testsuite is distributed over multiple files, merge it into a single SuiteResult:
-            if(s.getName().equals(sr.getName())  && nullSafeEq(s.getId(),sr.getId())) {
+            if(s.getName().equals(sr.getName())
+                    && nullSafeEq(s.getId(), sr.getId())
+                    && nullSafeEq(s.getArchiveId(), sr.getArchiveId())) {
             
                 // However, a common problem is that people parse TEST-*.xml as well as TESTS-TestSuite.xml.
                 // In that case consider the result file as a duplicate and discard it.
@@ -263,11 +309,11 @@ public final class TestResult extends MetaTabulatedResult {
         }
     }
     
-    private boolean strictEq(Object lhs, Object rhs) {
+    static boolean strictEq(Object lhs, Object rhs) {
         return lhs != null && rhs != null && lhs.equals(rhs);
     }
 
-    private boolean nullSafeEq(Object lhs, Object rhs) {
+    static boolean nullSafeEq(Object lhs, Object rhs) {
         if (lhs == null) {
             return rhs == null;
         }
@@ -277,9 +323,14 @@ public final class TestResult extends MetaTabulatedResult {
     /**
      * Parses an additional report file.
      */
+    @Deprecated
     public void parse(File reportFile) throws IOException {
+        parse(reportFile, null);
+    }
+
+    public void parse(File reportFile, @CheckForNull String archiveId) throws IOException {
         try {
-            for (SuiteResult suiteResult : SuiteResult.parse(reportFile, keepLongStdio))
+            for (SuiteResult suiteResult : SuiteResult.parse(reportFile, keepLongStdio, archiveId))
                 add(suiteResult);
         } catch (InterruptedException e) {
             throw new IOException("Failed to read "+reportFile,e);
@@ -290,7 +341,7 @@ public final class TestResult extends MetaTabulatedResult {
                 throw new IOException("Failed to read "+reportFile+"\n"+
                     "Is this really a JUnit report file? Your configuration must be matching too many files",e);
             } else {
-                SuiteResult sr = new SuiteResult(reportFile.getName(), "", "");
+                SuiteResult sr = new SuiteResult(reportFile.getName(), "", "", archiveId);
                 StringWriter writer = new StringWriter();
                 e.printStackTrace(new PrintWriter(writer));
                 String error = "Failed to read test report file "+reportFile.getAbsolutePath()+"\n"+writer.toString();
@@ -627,7 +678,7 @@ public final class TestResult extends MetaTabulatedResult {
             if(!s.freeze(this))      // this is disturbing: has-a-parent is conflated with has-been-counted
                 continue;
 
-            suitesByName.put(s.getName(),s);
+            suitesByName.put(s.getName(),s);  //Now when suites can have the same name but different archiveId this can overwrite them
 
             totalTests += s.getCases().size();
             for(CaseResult cr : s.getCases()) {

@@ -23,16 +23,16 @@
  */
 package hudson.tasks.junit;
 
-import hudson.util.TextFile;
-import org.apache.commons.io.FileUtils;
-import org.jvnet.localizer.Localizable;
-
+import hudson.Util;
 import hudson.model.Run;
 import hudson.tasks.test.TestResult;
-
+import hudson.util.TextFile;
+import org.apache.commons.io.FileUtils;
 import org.dom4j.Element;
+import org.jvnet.localizer.Localizable;
 import org.kohsuke.stapler.export.Exported;
 
+import javax.annotation.CheckForNull;
 import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
@@ -264,7 +264,12 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     }
 
     public String getDisplayName() {
-        return TestNameTransformer.getTransformedName(testName);
+        String archiveId = this.parent != null ? Util.fixEmptyAndTrim(parent.getArchiveId()) : null;
+        if (archiveId == null) {
+            return TestNameTransformer.getTransformedName(testName);
+        } else {
+            return "[" + archiveId + "] " + TestNameTransformer.getTransformedName(testName);
+        }
     }
 
     /**
@@ -292,6 +297,15 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     @Exported(visibility=9)
     public float getDuration() {
         return duration;
+    }
+
+    /**
+     * @return the archive id
+     * @see SuiteResult#getArchiveId()
+     */
+    @Exported(visibility=2)
+    public String getArchiveId() {
+        return this.parent != null ? this.parent.getArchiveId() : null;
     }
 
     /**
@@ -345,7 +359,12 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      * @since 1.515
      */
     public String getFullDisplayName() {
-    	return TestNameTransformer.getTransformedName(getFullName());
+        String archiveId = this.parent != null ? Util.fixEmptyAndTrim(parent.getArchiveId()) : null;
+        if (archiveId == null) {
+            return TestNameTransformer.getTransformedName(getFullName());
+        } else {
+            return "[" + archiveId + "] " + TestNameTransformer.getTransformedName(getFullName());
+        }
     }
 
     @Override

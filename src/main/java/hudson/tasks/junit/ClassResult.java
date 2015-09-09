@@ -23,6 +23,7 @@
  */
 package hudson.tasks.junit;
 
+import hudson.Util;
 import hudson.model.Run;
 import hudson.tasks.test.TabulatedResult;
 import hudson.tasks.test.TestResult;
@@ -34,6 +35,8 @@ import org.kohsuke.stapler.export.Exported;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import static hudson.tasks.junit.TestResult.nullSafeEq;
 
 /**
  * Cumulative test result of a test class.
@@ -51,6 +54,8 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
     private float duration; 
 
     private final PackageResult parent;
+
+    private transient String archiveId;
 
     ClassResult(PackageResult parent, String className) {
         this.parent = parent;
@@ -166,6 +171,11 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
         return skipCount;
     }
 
+    @Exported(visibility = 2)
+    public String getArchiveId() {
+        return archiveId;
+    }
+
     public void add(CaseResult r) {
         cases.add(r);
     }
@@ -177,6 +187,7 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
     public void tally() {
         passCount=failCount=skipCount=0;
         duration=0;
+        String arId = null;
         for (CaseResult r : cases) {
             r.setClass(this);
             if (r.isSkipped()) {
@@ -189,6 +200,21 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
                 failCount++;
             }
             duration += r.getDuration();
+            if (arId == null) {
+                arId = r.getArchiveId();
+            } else {
+                if (!nullSafeEq(r.getArchiveId(), arId)) {
+                    //All cases are not from the same archiveId, so then no id
+                    this.archiveId = null;
+                } else {
+                    //So far the same
+                    this.archiveId = arId;
+                }
+            }
+        }
+        if (cases.size() == 1) {
+            //Only one case so the archiveId should be set to that
+            this.archiveId = cases.get(0).getArchiveId();
         }
     }
 
@@ -207,7 +233,12 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
     }
 
     public String getDisplayName() {
-        return TestNameTransformer.getTransformedName(getName());
+        String arId = Util.fixEmptyAndTrim(this.archiveId);
+        if (arId == null) {
+            return TestNameTransformer.getTransformedName(getName());
+        } else {
+            return "[" + arId + "] " + TestNameTransformer.getTransformedName(getName());
+        }
     }
     
     /**
@@ -219,7 +250,16 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
     }
     
     public String getFullDisplayName() {
-    	return getParent().getDisplayName() + "." + TestNameTransformer.getTransformedName(className);
+        String arId = Util.fixEmptyAndTrim(this.archiveId);
+        StringBuilder str = new StringBuilder(getParent().getDisplayName());
+        str.append('.').append(TestNameTransformer.getTransformedName(className));
+        if (arId != null) {
+            StringBuilder s2 = new StringBuilder("[");
+            s2.append(arId).append("] ");
+            s2.append(str);
+            str = s2;
+        }
+        return str.toString();
     }
 
     /**
