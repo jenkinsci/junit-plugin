@@ -309,11 +309,11 @@ public final class TestResult extends MetaTabulatedResult {
         }
     }
     
-    private boolean strictEq(Object lhs, Object rhs) {
+    static boolean strictEq(Object lhs, Object rhs) {
         return lhs != null && rhs != null && lhs.equals(rhs);
     }
 
-    private boolean nullSafeEq(Object lhs, Object rhs) {
+    static boolean nullSafeEq(Object lhs, Object rhs) {
         if (lhs == null) {
             return rhs == null;
         }

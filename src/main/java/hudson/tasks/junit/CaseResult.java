@@ -72,13 +72,6 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     private transient SuiteResult parent;
 
     private transient ClassResult classResult;
-    /**
-     * An optional archive id to be able to differentiate suites that has been merged.
-     * @see JUnitResultArchiver#archiveId
-     * @see SuiteResult#archiveId
-     */
-    @CheckForNull
-    private final String archiveId;
 
     /**
      * Some tools report stdout and stderr at testcase level (such as Maven surefire plugin), others do so at
@@ -113,7 +106,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         return 0.0f;
     }
 
-    CaseResult(SuiteResult parent, Element testCase, String testClassName, boolean keepLongStdio, @CheckForNull String archiveId) {
+    CaseResult(SuiteResult parent, Element testCase, String testClassName, boolean keepLongStdio) {
         // schema for JUnit report XML format is not available in Ant,
         // so I don't know for sure what means what.
         // reports in http://www.nabble.com/difference-in-junit-publisher-and-ant-junitreport-tf4308604.html#a12265700
@@ -138,7 +131,6 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
 
         className = testClassName;
         testName = nameAttr;
-        this.archiveId = Util.fixEmptyAndTrim(archiveId);
         errorStackTrace = getError(testCase);
         errorDetails = getErrorMessage(testCase);
         this.parent = parent;
@@ -226,7 +218,6 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         this.duration = 0.0f;
         this.skipped = false;
         this.skippedMessage = null;
-        this.archiveId = parent != null ? parent.getArchiveId() : null;
     }
     
     public ClassResult getParent() {
@@ -273,10 +264,11 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     }
 
     public String getDisplayName() {
-        if (this.archiveId == null) {
+        String archiveId = this.parent != null ? Util.fixEmptyAndTrim(parent.getArchiveId()) : null;
+        if (archiveId == null) {
             return TestNameTransformer.getTransformedName(testName);
         } else {
-            return "[" + this.archiveId + "] " + TestNameTransformer.getTransformedName(testName);
+            return "[" + archiveId + "] " + TestNameTransformer.getTransformedName(testName);
         }
     }
 
@@ -308,6 +300,15 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     }
 
     /**
+     * @return the archive id
+     * @see SuiteResult#getArchiveId()
+     */
+    @Exported(visibility=2)
+    public String getArchiveId() {
+        return this.parent != null ? this.parent.getArchiveId() : null;
+    }
+
+    /**
      * Gets the version of {@link #getName()} that's URL-safe.
      */
     public @Override synchronized String getSafeName() {
@@ -330,11 +331,6 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     @Exported(visibility=9)
     public String getClassName() {
         return className;
-    }
-
-    @Exported(visibility=9)
-    public String getArchiveId() {
-        return archiveId;
     }
 
     /**
@@ -363,10 +359,11 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      * @since 1.515
      */
     public String getFullDisplayName() {
-        if (this.archiveId == null) {
+        String archiveId = this.parent != null ? Util.fixEmptyAndTrim(parent.getArchiveId()) : null;
+        if (archiveId == null) {
             return TestNameTransformer.getTransformedName(getFullName());
         } else {
-            return "[" + this.archiveId + "] " + TestNameTransformer.getTransformedName(getFullName());
+            return "[" + archiveId + "] " + TestNameTransformer.getTransformedName(getFullName());
         }
     }
 

@@ -76,7 +76,7 @@ public final class SuiteResult implements Serializable {
     /**
      * An optional archive id to be able to differentiate suites that has been merged.
      * @see JUnitResultArchiver#archiveId
-     * @see CaseResult#archiveId
+     * @see CaseResult#getArchiveId()
      */
     @CheckForNull
     private final String archiveId;
@@ -182,7 +182,7 @@ public final class SuiteResult implements Serializable {
         Element ex = suite.element("error");
         if(ex!=null) {
             // according to junit-noframes.xsl l.229, this happens when the test class failed to load
-            addCase(new CaseResult(this, suite, "<init>", keepLongStdio, archiveId));
+            addCase(new CaseResult(this, suite, "<init>", keepLongStdio));
         }
         
         @SuppressWarnings("unchecked")
@@ -207,7 +207,7 @@ public final class SuiteResult implements Serializable {
             // one wants to use @name from <testsuite>,
             // the other wants to use @classname from <testcase>.
 
-            addCase(new CaseResult(this, e, classname, keepLongStdio, archiveId));
+            addCase(new CaseResult(this, e, classname, keepLongStdio));
         }
 
         String stdout = CaseResult.possiblyTrimStdio(cases, keepLongStdio, suite.elementText("system-out"));
@@ -296,7 +296,7 @@ public final class SuiteResult implements Serializable {
         return cases;
     }
 
-    @Exported(inline=true,visibility=9)
+    @Exported(inline=true,visibility=2)
     public String getArchiveId() {
         return archiveId;
     }

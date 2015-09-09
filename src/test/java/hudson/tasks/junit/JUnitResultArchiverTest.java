@@ -115,12 +115,13 @@ public class JUnitResultArchiverTest {
         wc.getPage(build); // build page
         wc.getPage(build, "testReport");  // test report
         wc.getPage(build, "testReport/hudson.security"); // package
-        wc.getPage(build, "testReport/hudson.security/HudsonPrivateSecurityRealmTest/");// class
+        HtmlPage classPage = wc.getPage(build, "testReport/hudson.security/HudsonPrivateSecurityRealmTest/");// class
         HtmlPage methodPage = wc.getPage(build, "testReport/hudson.security/HudsonPrivateSecurityRealmTest/testDataCompatibilityWith1_282/");// method
         //OK good it looks like before
 
         //Now what about the suite archive id?
         j.assertStringContains(methodPage.asText(), "[dasId]");
+        j.assertStringContains(classPage.asText(), "[dasId]");
         TestResultAction testResultAction = build.getAction(TestResultAction.class);
         SuiteResult suite = testResultAction.getResult().getSuite("hudson.security.HudsonPrivateSecurityRealmTest");
         assertNotNull(suite);
