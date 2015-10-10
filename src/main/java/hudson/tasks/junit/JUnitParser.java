@@ -1,18 +1,18 @@
 /*
  * The MIT License
- * 
+ *
  * Copyright (c) 2009, Yahoo!, Inc.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -39,25 +39,27 @@ import org.apache.tools.ant.DirectoryScanner;
 
 /**
  * Parse some JUnit xml files and generate a TestResult containing all the
- * results parsed. 
+ * results parsed.
  */
 @Extension
 public class JUnitParser extends TestResultParser {
 
     private final boolean keepLongStdio;
+    private final boolean allowEmptyResults;
 
     /** TODO TestResultParser.all does not seem to ever be called so why must this be an Extension? */
     @Deprecated
     public JUnitParser() {
-        this(false);
+        this(false, false);
     }
 
     /**
      * @param keepLongStdio if true, retain a suite's complete stdout/stderr even if this is huge and the suite passed
      * @since 1.358
      */
-    public JUnitParser(boolean keepLongStdio) {
+    public JUnitParser(boolean keepLongStdio, boolean allowEmptyResults) {
         this.keepLongStdio = keepLongStdio;
+        this.allowEmptyResults = allowEmptyResults;
     }
 
     @Override
@@ -86,8 +88,9 @@ public class JUnitParser extends TestResultParser {
 
         // [BUG 3123310] TODO - Test Result Refactor: review and fix TestDataPublisher/TestAction subsystem]
         // also get code that deals with testDataPublishers from JUnitResultArchiver.perform
-        
-        return workspace.act(new ParseResultCallable(testResultLocations, buildTime, timeOnMaster, keepLongStdio));
+
+        return workspace.act(new ParseResultCallable(testResultLocations, buildTime,
+                                                     timeOnMaster, keepLongStdio, allowEmptyResults));
     }
 
     private static final class ParseResultCallable extends MasterToSlaveFileCallable<TestResult> {
@@ -95,12 +98,15 @@ public class JUnitParser extends TestResultParser {
         private final String testResults;
         private final long nowMaster;
         private final boolean keepLongStdio;
+        private final boolean allowEmptyResults;
 
-        private ParseResultCallable(String testResults, long buildTime, long nowMaster, boolean keepLongStdio) {
+        private ParseResultCallable(String testResults, long buildTime, long nowMaster,
+                                    boolean keepLongStdio, boolean allowEmptyResults) {
             this.buildTime = buildTime;
             this.testResults = testResults;
             this.nowMaster = nowMaster;
             this.keepLongStdio = keepLongStdio;
+            this.allowEmptyResults = allowEmptyResults;
         }
 
         public TestResult invoke(File ws, VirtualChannel channel) throws IOException {
@@ -108,17 +114,22 @@ public class JUnitParser extends TestResultParser {
 
             FileSet fs = Util.createFileSet(ws, testResults);
             DirectoryScanner ds = fs.getDirectoryScanner();
+            TestResult result = null;
 
             String[] files = ds.getIncludedFiles();
-            if (files.length == 0) {
-                // no test result. Most likely a configuration
-                // error or fatal problem
-                throw new AbortException(Messages.JUnitResultArchiver_NoTestReportFound());
+            if (files.length > 0) {
+                result = new TestResult(buildTime + (nowSlave - nowMaster), ds, keepLongStdio);
+                result.tally();
+            } else {
+                if (this.allowEmptyResults) {
+                    result = new TestResult();
+                } else {
+                    // no test result. Most likely a configuration
+                    // error or fatal problem
+                    throw new AbortException(Messages.JUnitResultArchiver_NoTestReportFound());
+                }
             }
-
-            TestResult result = new TestResult(buildTime + (nowSlave - nowMaster), ds, keepLongStdio);
-            result.tally();
-            return result; 
+            return result;
         }
     }
 
