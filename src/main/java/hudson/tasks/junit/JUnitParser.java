@@ -57,6 +57,17 @@ public class JUnitParser extends TestResultParser {
      * @param keepLongStdio if true, retain a suite's complete stdout/stderr even if this is huge and the suite passed
      * @since 1.358
      */
+    @Deprecated
+    public JUnitParser(boolean keepLongStdio) {
+        this.keepLongStdio = keepLongStdio;
+        this.allowEmptyResults = false;
+    }
+
+    /**
+     * @param keepLongStdio if true, retain a suite's complete stdout/stderr even if this is huge and the suite passed
+     * @param allowEmptyResults if true, empty results are allowed
+     * @since 1.10
+     */
     public JUnitParser(boolean keepLongStdio, boolean allowEmptyResults) {
         this.keepLongStdio = keepLongStdio;
         this.allowEmptyResults = allowEmptyResults;
