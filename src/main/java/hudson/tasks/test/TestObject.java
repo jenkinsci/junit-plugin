@@ -28,6 +28,7 @@ import hudson.Util;
 import hudson.Functions;
 import hudson.model.*;
 import hudson.tasks.junit.History;
+import hudson.tasks.junit.GroupByError;
 import hudson.tasks.junit.TestAction;
 import hudson.tasks.junit.TestResultAction;
 import jenkins.model.Jenkins;
@@ -40,6 +41,7 @@ import org.kohsuke.stapler.export.ExportedBean;
 import com.google.common.collect.MapMaker;
 
 import javax.servlet.ServletException;
+
 import java.io.IOException;
 import java.util.*;
 import java.util.logging.Logger;
@@ -415,6 +417,10 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
     @Override
     public History getHistory() {
         return new History(this);
+    }
+    
+    public GroupByError getGroupByError() {
+    	return new GroupByError(this);
     }
 
     public Object getDynamic(String token, StaplerRequest req,

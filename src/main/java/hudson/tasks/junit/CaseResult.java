@@ -293,6 +293,20 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     public float getDuration() {
         return duration;
     }
+    
+   
+    /**
+     * Gets the short version of error message.
+     */
+    @Exported(visibility=9) 
+    public String getShortErrorMessage() {
+    	if(getErrorDetails() == null || getErrorDetails().isEmpty() == true) {
+    		return getErrorStackTrace().split("[\\r\\n]+")[0];			// Get the first line
+    	}else {
+    		return getErrorDetails();
+    	}
+    	
+    }
 
     /**
      * Gets the version of {@link #getName()} that's URL-safe.

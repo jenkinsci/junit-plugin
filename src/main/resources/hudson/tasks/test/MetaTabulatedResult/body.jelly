@@ -27,15 +27,18 @@ THE SOFTWARE.
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson/test" xmlns:f="/lib/form">
   <j:if test="${it.failCount!=0}">
     <h2>${%All Failed Tests}</h2>
+    <a href="groupByError">${%Group Failed Tests}</a>
     <table class="pane sortable bigtable">
       <tr>
         <td class="pane-header">${%Test Name}</td>
+        <td class="pane-header">${%Error Message}</td>
         <td class="pane-header" style="width:4em">${%Duration}</td>
         <td class="pane-header" style="width:3em">${%Age}</td>
       </tr>
       <j:forEach var="f" items="${it.failedTests}" varStatus="i">
         <tr>
           <td class="pane"><t:failed-test result="${f}" url="${f.getRelativePathFrom(it)}"/></td>
+          <td class="pane no-wrap"><div style="width:600px;overflow:hidden;text-overflow:ellipsis">${f.shortErrorMessage}</div></td>
           <td class="pane no-wrap" style="text-align:right;" data="${f.duration}">
             ${f.durationString}
           </td>
