@@ -38,12 +38,12 @@ public class GroupByError {
 	private final TestObject testObject;
 
 	/**
-     * Maximum percentage of difference for testing whether two strings are similar.
-     * If the percentage of difference of two strings is below 50%, they seem to be similar.
+	 * Maximum percentage of difference for testing whether two strings are similar.
+	 * If the percentage of difference of two strings is below 50%, they seem to be similar.
 	 * 0.5f (50%) is just personal opinion.
 	 */
 	private static double MAX_DIFF_PERCENTAGE_FOR_SIMILARITY = 0.5f;
-	
+
 	/**
 	 * All {@link GroupedCaseResults}
 	 */
@@ -53,14 +53,14 @@ public class GroupByError {
 		this.testObject = testObject;
 
 		groups = new HashMap<String, GroupedCaseResults>();
-		
+
 		// generate groups
 		List<CaseResult> failedCases = (List<CaseResult>) testObject.getResultInRun(testObject.getRun()).getFailedTests();
 		for(CaseResult cr: failedCases) {
 			add(cr);
 		}
 	}
-	
+
 	private void add(CaseResult cr) {
 		for(GroupedCaseResults g: groups.values()) {
 			if(g.similar(cr, MAX_DIFF_PERCENTAGE_FOR_SIMILARITY)) {
@@ -69,7 +69,7 @@ public class GroupByError {
 				return;
 			}
 		}
-	
+
 		// add a new group
 		GroupedCaseResults g = new GroupedCaseResults(cr.getShortErrorMessage());
 		g.add(cr);
@@ -79,7 +79,7 @@ public class GroupByError {
 	public TestObject getTestObject() {
 		return testObject;
 	}
-	
+
 
 	/**
 	 * 
@@ -93,8 +93,8 @@ public class GroupByError {
 	 * 
 	 * @return All {@link GroupedCaseResults}.
 	 */
-    public List<GroupedCaseResults> getGroups() {
-        return new ArrayList<GroupedCaseResults>(groups.values());
-    }
-    
+	public List<GroupedCaseResults> getGroups() {
+		return new ArrayList<GroupedCaseResults>(groups.values());
+	}
+
 }

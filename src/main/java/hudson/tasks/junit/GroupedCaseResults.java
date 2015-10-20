@@ -35,63 +35,63 @@ import org.kohsuke.stapler.export.Exported;
  * Case results with similar error message.
  */
 public class GroupedCaseResults {
-    private static final Logger LOGGER = Logger.getLogger(GroupedCaseResults.class.getName());
-    
-    /**
-     * Representative error message for this group, actually one of error messages.
-     */
-    private final String repErrorMessage;
-    
-    /**
-     * Case results which have similar error message.
-     */
-    private final List<CaseResult> cases = new ArrayList<CaseResult>();
-    
-    
-    public GroupedCaseResults(String repErrorMessage) {
-    	this.repErrorMessage = repErrorMessage;
-    }
-    
-    public String getRepErrorMessage() {
-        return repErrorMessage;
-    }
-    
-    public String getId() {
-    	return cases.get(0).getId();
-    }
+	private static final Logger LOGGER = Logger.getLogger(GroupedCaseResults.class.getName());
 
-    public List<CaseResult> getChildren() {
-        return cases;
-    }
+	/**
+	 * Representative error message for this group, actually one of error messages.
+	 */
+	private final String repErrorMessage;
 
-    public boolean hasChildren() {
-        return ((cases != null) && (cases.size() > 0));
-    }
-    
-    public void add(CaseResult r) {
-        cases.add(r);
-    }
-    
-    public CaseResult getCaseResult(String name) {
-        for (CaseResult c : cases) {
-            if(c.getSafeName().equals(name))
-                return c;
-        }
-        return null;
-    }
-    
-    public int getCount() {
-    	return cases.size();
-    }
+	/**
+	 * Case results which have similar error message.
+	 */
+	private final List<CaseResult> cases = new ArrayList<CaseResult>();
 
-    public boolean similar(CaseResult cr, double maxDiff) {
-   
-    	// The more different two strings are, the longer their distance is.
-    	float diffPercent = EditDistance.editDistance(repErrorMessage, cr.getShortErrorMessage()) / (float)(repErrorMessage.length());
+
+	public GroupedCaseResults(String repErrorMessage) {
+		this.repErrorMessage = repErrorMessage;
+	}
+
+	public String getRepErrorMessage() {
+		return repErrorMessage;
+	}
+
+	public String getId() {
+		return cases.get(0).getId();
+	}
+
+	public List<CaseResult> getChildren() {
+		return cases;
+	}
+
+	public boolean hasChildren() {
+		return ((cases != null) && (cases.size() > 0));
+	}
+
+	public void add(CaseResult r) {
+		cases.add(r);
+	}
+
+	public CaseResult getCaseResult(String name) {
+		for (CaseResult c : cases) {
+			if(c.getSafeName().equals(name))
+				return c;
+		}
+		return null;
+	}
+
+	public int getCount() {
+		return cases.size();
+	}
+
+	public boolean similar(CaseResult cr, double maxDiff) {
+
+		// The more different two strings are, the longer their distance is.
+		float diffPercent = EditDistance.editDistance(repErrorMessage, cr.getShortErrorMessage()) / (float)(repErrorMessage.length());
 		if(diffPercent <= maxDiff) {
 			return true;
 		}else {
 			return false;
 		}
-    }
+	}
 }

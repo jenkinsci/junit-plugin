@@ -86,11 +86,11 @@ THE SOFTWARE.
   <j:set var="p" value="${it.getResultInRun(b)}"/>
   <div id="test-${id}" class="failure-summary" style="display: none;">
       <table>
-      <j:forEach var="f" items="${group.children}" varStatus="i">
-     	<tr>
-	    	<td class="pane"><a href="${app.rootUrl}${testObject.run.url}testReport${f.url}">${f.fullName}</a></td>
-     	</tr> 
-      </j:forEach>
+      	<j:forEach var="f" items="${group.children}" varStatus="i">
+     		<tr>
+	    		<td class="pane"><a href="${app.rootUrl}${testObject.run.url}testReport${f.url}">${f.fullName}</a></td>
+     		</tr> 
+      	</j:forEach>
       </table>
   </div>
 </j:jelly>

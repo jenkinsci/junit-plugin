@@ -26,25 +26,25 @@ THE SOFTWARE.
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson/test" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
   <l:layout title="${%title(it.testObject.displayName)}">
-		<st:include from="${it.testObject}" it="${it.testObject}" page="sidepanel.jelly" />
-		<l:main-panel>
-			<H2>${%title(it.testObject.displayName)}</H2>
+	<st:include from="${it.testObject}" it="${it.testObject}" page="sidepanel.jelly" />
+	<l:main-panel>
+		<H2>${%title(it.testObject.displayName)}</H2>
 	
-	<j:if test="${it.failCount!=0}">
-    <table class="pane sortable bigtable">
-      <tr>
-        <td class="pane-header">${%Error Message}</td>
-        <td class="pane-header">${%Count}</td>
-      </tr>
+		<j:if test="${it.failCount!=0}">
+    		<table class="pane sortable bigtable">
+      			<tr>
+        			<td class="pane-header">${%Error Message}</td>
+        			<td class="pane-header">${%Count}</td>
+      			</tr>
     
-      <j:forEach var="f" items="${it.groups}" varStatus="i">
-     	<tr>
-            <td class="pane"><t:failed-tests-group group="${f}" testObject="${it.testObject}"/></td>
-     		<td>${f.count}</td>
-     	</tr> 
-      </j:forEach>
-    </table>
-  </j:if>	
-    	</l:main-panel>
-	</l:layout>
+      			<j:forEach var="f" items="${it.groups}" varStatus="i">
+     				<tr>
+        				<td class="pane"><t:failed-tests-group group="${f}" testObject="${it.testObject}"/></td>
+     					<td>${f.count}</td>
+     				</tr> 
+      			</j:forEach>
+    		</table>
+  		</j:if>	
+    </l:main-panel>
+  </l:layout>
 </j:jelly>
