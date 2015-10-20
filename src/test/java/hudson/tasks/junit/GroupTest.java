@@ -29,19 +29,28 @@ import hudson.model.BuildListener;
 import hudson.model.Result;
 import hudson.model.FreeStyleBuild;
 import hudson.Launcher;
-import org.jvnet.hudson.test.HudsonTestCase;
+
+import org.junit.Rule;
+import org.junit.Test;
+import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestBuilder;
+
 import java.io.IOException;
+
+import static org.junit.Assert.*;
 
 /**
  * Tests for {@link GroupByError, @link GroupedCaseResults}
  */
-public class GroupTest extends HudsonTestCase {
+public class GroupTest {
 
 
+    @Rule public JenkinsRule j = new JenkinsRule();
+    
     /**
      * Verifies that the failed tests are grouped by error message.
      */
+    @Test
     public void testFreestyleErrorMsgAndStacktraceRender() throws Exception {
         FreeStyleBuild b = configureTestBuild(null);
         TestResult tr = b.getAction(TestResultAction.class).getResult();
@@ -64,7 +73,7 @@ public class GroupTest extends HudsonTestCase {
     
 
     private FreeStyleBuild configureTestBuild(String projectName) throws Exception {
-        FreeStyleProject p = projectName == null ? createFreeStyleProject() : createFreeStyleProject(projectName);
+        FreeStyleProject p = projectName == null ? j.createFreeStyleProject() : j.createFreeStyleProject(projectName);
         p.getBuildersList().add(new TestBuilder() {
             public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
                 build.getWorkspace().child("junit.xml").copyFrom(
@@ -73,6 +82,6 @@ public class GroupTest extends HudsonTestCase {
             }
         });
         p.getPublishersList().add(new JUnitResultArchiver("*.xml"));
-        return assertBuildStatus(Result.UNSTABLE, p.scheduleBuild2(0).get());
+        return j.assertBuildStatus(Result.UNSTABLE, p.scheduleBuild2(0).get());
     }
 }
