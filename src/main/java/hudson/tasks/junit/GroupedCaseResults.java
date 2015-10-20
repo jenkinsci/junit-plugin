@@ -25,18 +25,14 @@ package hudson.tasks.junit;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Logger;
 
 import hudson.util.EditDistance;
 
-import org.kohsuke.stapler.export.Exported;
 
 /**
  * Case results with similar error message.
  */
 public class GroupedCaseResults {
-	private static final Logger LOGGER = Logger.getLogger(GroupedCaseResults.class.getName());
-
 	/**
 	 * Representative error message for this group, actually one of error messages.
 	 */
