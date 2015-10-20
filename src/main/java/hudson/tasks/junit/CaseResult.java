@@ -300,12 +300,13 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      */
     @Exported(visibility=9) 
     public String getShortErrorMessage() {
-    	if(getErrorDetails() == null || getErrorDetails().isEmpty() == true) {
-    		return getErrorStackTrace().split("[\\r\\n]+")[0];			// Get the first line
+    	if(errorDetails != null && errorDetails.isEmpty() == false) {
+    		return errorDetails;
+    	}else if(errorStackTrace != null) {
+    		return errorStackTrace.split("[\\r\\n]+")[0];			// Get the first line
     	}else {
-    		return getErrorDetails();
+    		return "";
     	}
-    	
     }
 
     /**
