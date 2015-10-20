@@ -45,6 +45,7 @@ import org.apache.tools.ant.DirectoryScanner;
 public class JUnitParser extends TestResultParser {
 
     private final boolean keepLongStdio;
+    private final boolean ignoreNoReports;
 
     /** TODO TestResultParser.all does not seem to ever be called so why must this be an Extension? */
     @Deprecated
@@ -52,12 +53,20 @@ public class JUnitParser extends TestResultParser {
         this(false);
     }
 
+    @Deprecated
+    public JUnitParser(boolean keepLongStdio) {
+        this(keepLongStdio, false);
+    }
+
     /**
      * @param keepLongStdio if true, retain a suite's complete stdout/stderr even if this is huge and the suite passed
-     * @since 1.358
+     * @param ignoreNoReports if false, and if no JUnit output, fail the JUnit reporting.
+
+     * @since 1.596.2	 
      */
-    public JUnitParser(boolean keepLongStdio) {
+    public JUnitParser(boolean keepLongStdio, boolean ignoreNoReports) {
         this.keepLongStdio = keepLongStdio;
+        this.ignoreNoReports = ignoreNoReports;
     }
 
     @Override
@@ -87,7 +96,7 @@ public class JUnitParser extends TestResultParser {
         // [BUG 3123310] TODO - Test Result Refactor: review and fix TestDataPublisher/TestAction subsystem]
         // also get code that deals with testDataPublishers from JUnitResultArchiver.perform
         
-        return workspace.act(new ParseResultCallable(testResultLocations, buildTime, timeOnMaster, keepLongStdio));
+        return workspace.act(new ParseResultCallable(testResultLocations, buildTime, timeOnMaster, keepLongStdio, ignoreNoReports));
     }
 
     private static final class ParseResultCallable extends MasterToSlaveFileCallable<TestResult> {
@@ -95,12 +104,14 @@ public class JUnitParser extends TestResultParser {
         private final String testResults;
         private final long nowMaster;
         private final boolean keepLongStdio;
+        private final boolean ignoreNoReports;
 
-        private ParseResultCallable(String testResults, long buildTime, long nowMaster, boolean keepLongStdio) {
+        private ParseResultCallable(String testResults, long buildTime, long nowMaster, boolean keepLongStdio, boolean ignoreNoReports) {
             this.buildTime = buildTime;
             this.testResults = testResults;
             this.nowMaster = nowMaster;
             this.keepLongStdio = keepLongStdio;
+            this.ignoreNoReports = ignoreNoReports;
         }
 
         public TestResult invoke(File ws, VirtualChannel channel) throws IOException {
@@ -110,15 +121,18 @@ public class JUnitParser extends TestResultParser {
             DirectoryScanner ds = fs.getDirectoryScanner();
 
             String[] files = ds.getIncludedFiles();
-            if (files.length == 0) {
+            if ((files.length == 0) && (ignoreNoReports == false)) {
                 // no test result. Most likely a configuration
                 // error or fatal problem
                 throw new AbortException(Messages.JUnitResultArchiver_NoTestReportFound());
             }
 
-            TestResult result = new TestResult(buildTime + (nowSlave - nowMaster), ds, keepLongStdio);
-            result.tally();
-            return result; 
+            TestResult result = null;
+            if (files.length != 0) {
+				result = new TestResult(buildTime + (nowSlave - nowMaster), ds, keepLongStdio);
+				result.tally();
+			}
+            return result;
         }
     }
 

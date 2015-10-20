@@ -75,6 +75,12 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
     private boolean keepLongStdio;
 
     /**
+     * If true, and if no JUnit output, don't fail the JUnit reporting.
+     * @since 1.596.2	 
+     */
+    private boolean ignoreNoReports;
+
+    /**
      * {@link TestDataPublisher}s configured for this archiver, to process the recorded data.
      * For compatibility reasons, can be null.
      * @since 1.320
@@ -91,25 +97,28 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
     @Deprecated
     public JUnitResultArchiver(String testResults,
             DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> testDataPublishers) {
-        this(testResults, false, testDataPublishers);
+        this(testResults, false, false, testDataPublishers);
     }
 	
 	@Deprecated
 	public JUnitResultArchiver(
 			String testResults,
             boolean keepLongStdio,
+            boolean ignoreNoReports,
 			DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> testDataPublishers) {
-        this(testResults, keepLongStdio, testDataPublishers, 1.0);
+        this(testResults, keepLongStdio, ignoreNoReports, testDataPublishers, 1.0);
     }
 
 	@Deprecated
 	public JUnitResultArchiver(
 			String testResults,
             boolean keepLongStdio,
+            boolean ignoreNoReports,
 			DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> testDataPublishers,
             double healthScaleFactor) {
 		this.testResults = testResults;
         setKeepLongStdio(keepLongStdio);
+        setIgnoreNoReports(ignoreNoReports);
         setTestDataPublishers(testDataPublishers == null ? Collections.<TestDataPublisher>emptyList() : testDataPublishers);
         setHealthScaleFactor(healthScaleFactor);
 	}
@@ -117,7 +126,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
     private TestResult parse(String expandedTestResults, Run<?,?> run, @Nonnull FilePath workspace, Launcher launcher, TaskListener listener)
             throws IOException, InterruptedException
     {
-        return new JUnitParser(isKeepLongStdio()).parseResult(expandedTestResults, run, workspace, launcher, listener);
+        return new JUnitParser(isKeepLongStdio(), isIgnoreNoReports()).parseResult(expandedTestResults, run, workspace, launcher, listener);
     }
 
     @Deprecated
@@ -134,7 +143,13 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
 		
 		final String testResults = build.getEnvironment(listener).expand(this.testResults);
 
-			TestResult result = parse(testResults, build, workspace, launcher, listener);
+		TestResult result = parse(testResults, build, workspace, launcher, listener);
+
+		// Job configured not to fail if there are no reports
+		// don't report confusing error message.
+		if ((result == null) || (result.isEmpty()) && (ignoreNoReports)) {
+			return;
+		}
 
         synchronized (build) {
             // TODO can the build argument be omitted now, or is it used prior to the call to addAction?
@@ -229,6 +244,21 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
     @DataBoundSetter public final void setKeepLongStdio(boolean keepLongStdio) {
         this.keepLongStdio = keepLongStdio;
     }
+
+	/**
+	 * @return the ignoreNoReports
+	 */
+	public boolean isIgnoreNoReports() {
+		return ignoreNoReports;
+	}
+
+	/**
+	 * @set the ignoreNoReports
+	 * @since 1.596.2	 
+	 */
+	@DataBoundSetter public final void setIgnoreNoReports(boolean ignoreNoReports) {
+		this.ignoreNoReports = ignoreNoReports;
+	}
 
 	private static final long serialVersionUID = 1L;
 

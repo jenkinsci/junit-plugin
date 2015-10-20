@@ -30,6 +30,9 @@ THE SOFTWARE.
 		description="${%description('http://ant.apache.org/manual/Types/fileset.html')}">
 		<f:textbox />
 	</f:entry>
+	<f:entry field="ignoreNoReports" title="">
+		<f:checkbox name="ignoreNoReports" title="${%Ignore empty JUnit reports}"/>
+	</f:entry>
 	<f:entry field="keepLongStdio" title="">
 		<f:checkbox name="keepLongStdio" title="${%Retain long standard output/error}"/>
 	</f:entry>
