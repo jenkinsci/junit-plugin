@@ -27,7 +27,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
-import org.apache.commons.lang3.StringUtils;
+import hudson.util.EditDistance;
+
 import org.kohsuke.stapler.export.Exported;
 
 /**
@@ -83,9 +84,11 @@ public class GroupedCaseResults {
     	return cases.size();
     }
 
-    public boolean similar(CaseResult cr, double minDist) {
-    	
-		if(StringUtils.getJaroWinklerDistance(repErrorMessage, cr.getShortErrorMessage()) >= minDist) {
+    public boolean similar(CaseResult cr, double maxDiff) {
+   
+    	// The more different two strings are, the longer their distance is.
+    	float diffPercent = EditDistance.editDistance(repErrorMessage, cr.getShortErrorMessage()) / (float)(repErrorMessage.length());
+		if(diffPercent <= maxDiff) {
 			return true;
 		}else {
 			return false;

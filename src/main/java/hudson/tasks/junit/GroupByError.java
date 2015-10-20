@@ -30,8 +30,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.lang3.StringUtils;
-
 /**
  * 
  * Group case results by error message.
@@ -40,10 +38,11 @@ public class GroupByError {
 	private final TestObject testObject;
 
 	/**
-     * Minimum distance for testing whether they are similar.
-	 * 0.9f is just personal opinion.
+     * Maximum percentage of difference for testing whether two strings are similar.
+     * If the percentage of difference of two strings is below 50%, they seem to be similar.
+	 * 0.5f (50%) is just personal opinion.
 	 */
-	private double minDist = 0.9f;
+	private static double MAX_DIFF_PERCENTAGE_FOR_SIMILARITY = 0.5f;
 	
 	/**
 	 * All {@link GroupedCaseResults}
@@ -64,7 +63,7 @@ public class GroupByError {
 	
 	private void add(CaseResult cr) {
 		for(GroupedCaseResults g: groups.values()) {
-			if(g.similar(cr, minDist)) {
+			if(g.similar(cr, MAX_DIFF_PERCENTAGE_FOR_SIMILARITY)) {
 				// add case to the existing group
 				g.add(cr);
 				return;
