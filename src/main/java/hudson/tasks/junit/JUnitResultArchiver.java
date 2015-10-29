@@ -97,10 +97,17 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
     @Deprecated
     public JUnitResultArchiver(String testResults,
             DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> testDataPublishers) {
-        this(testResults, false, false, testDataPublishers);
+        this(testResults, false, testDataPublishers);
     }
 	
-	@Deprecated
+    @Deprecated
+    public JUnitResultArchiver(
+            String testResults,
+            boolean keepLongStdio,
+            DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> testDataPublishers) {
+        this(testResults, keepLongStdio, false, testDataPublishers, 1.0);
+    }
+    
 	public JUnitResultArchiver(
 			String testResults,
             boolean keepLongStdio,
@@ -113,16 +120,25 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
 	public JUnitResultArchiver(
 			String testResults,
             boolean keepLongStdio,
-            boolean ignoreNoReports,
 			DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> testDataPublishers,
             double healthScaleFactor) {
-		this.testResults = testResults;
+
+        this(testResults, keepLongStdio, false, testDataPublishers, healthScaleFactor);
+    }
+
+    public JUnitResultArchiver(
+            String testResults,
+            boolean keepLongStdio,
+            boolean ignoreNoReports,
+            DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> testDataPublishers,
+            double healthScaleFactor) {
+        this.testResults = testResults;
         setKeepLongStdio(keepLongStdio);
         setIgnoreNoReports(ignoreNoReports);
         setTestDataPublishers(testDataPublishers == null ? Collections.<TestDataPublisher>emptyList() : testDataPublishers);
         setHealthScaleFactor(healthScaleFactor);
-	}
-
+    }
+    
     private TestResult parse(String expandedTestResults, Run<?,?> run, @Nonnull FilePath workspace, Launcher launcher, TaskListener listener)
             throws IOException, InterruptedException
     {
