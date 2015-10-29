@@ -105,7 +105,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
             String testResults,
             boolean keepLongStdio,
             DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> testDataPublishers) {
-        this(testResults, keepLongStdio, false, testDataPublishers, 1.0);
+        this(testResults, keepLongStdio, false, testDataPublishers);
     }
     
 	public JUnitResultArchiver(
