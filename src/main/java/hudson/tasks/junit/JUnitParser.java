@@ -62,7 +62,7 @@ public class JUnitParser extends TestResultParser {
      * @param keepLongStdio if true, retain a suite's complete stdout/stderr even if this is huge and the suite passed
      * @param ignoreNoReports if false, and if no JUnit output, fail the JUnit reporting.
 
-     * @since 1.596.2	 
+     * @since TODO 
      */
     public JUnitParser(boolean keepLongStdio, boolean ignoreNoReports) {
         this.keepLongStdio = keepLongStdio;

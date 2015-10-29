@@ -76,7 +76,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
 
     /**
      * If true, and if no JUnit output, don't fail the JUnit reporting.
-     * @since 1.596.2	 
+     * @since TODO
      */
     private boolean ignoreNoReports;
 
@@ -254,7 +254,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
 
 	/**
 	 * @set the ignoreNoReports
-	 * @since 1.596.2	 
+	 * @since TODO
 	 */
 	@DataBoundSetter public final void setIgnoreNoReports(boolean ignoreNoReports) {
 		this.ignoreNoReports = ignoreNoReports;
