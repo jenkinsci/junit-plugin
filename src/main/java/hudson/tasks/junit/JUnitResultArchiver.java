@@ -1,19 +1,19 @@
 /*
  * The MIT License
- * 
+ *
  * Copyright (c) 2004-2009, Sun Microsystems, Inc., Kohsuke Kawaguchi, Martin Eigenbrodt,
  * Tom Huybrechts, Yahoo!, Inc., Richard Hierlmeier
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -58,7 +58,7 @@ import org.kohsuke.stapler.DataBoundSetter;
 
 /**
  * Generates HTML report from JUnit test result XML files.
- * 
+ *
  * @author Kohsuke Kawaguchi
  */
 public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
@@ -83,41 +83,48 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
 
     private Double healthScaleFactor;
 
-	@DataBoundConstructor
-	public JUnitResultArchiver(String testResults) {
-		this.testResults = testResults;
-	}
+    /**
+     * If true, don't throw exception on missing test results or no files found.
+     */
+    private boolean allowEmptyResults;
+
+    @DataBoundConstructor
+    public JUnitResultArchiver(String testResults) {
+        this.testResults = testResults;
+    }
 
     @Deprecated
     public JUnitResultArchiver(String testResults,
             DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> testDataPublishers) {
         this(testResults, false, testDataPublishers);
     }
-	
-	@Deprecated
-	public JUnitResultArchiver(
-			String testResults,
+
+    @Deprecated
+    public JUnitResultArchiver(
+            String testResults,
             boolean keepLongStdio,
-			DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> testDataPublishers) {
+            DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> testDataPublishers) {
         this(testResults, keepLongStdio, testDataPublishers, 1.0);
     }
 
-	@Deprecated
-	public JUnitResultArchiver(
-			String testResults,
+    @Deprecated
+    public JUnitResultArchiver(
+            String testResults,
             boolean keepLongStdio,
-			DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> testDataPublishers,
+            DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> testDataPublishers,
             double healthScaleFactor) {
-		this.testResults = testResults;
+        this.testResults = testResults;
         setKeepLongStdio(keepLongStdio);
         setTestDataPublishers(testDataPublishers == null ? Collections.<TestDataPublisher>emptyList() : testDataPublishers);
         setHealthScaleFactor(healthScaleFactor);
-	}
+        setAllowEmptyResults(false);
+    }
 
     private TestResult parse(String expandedTestResults, Run<?,?> run, @Nonnull FilePath workspace, Launcher launcher, TaskListener listener)
             throws IOException, InterruptedException
     {
-        return new JUnitParser(isKeepLongStdio()).parseResult(expandedTestResults, run, workspace, launcher, listener);
+        return new JUnitParser(this.isKeepLongStdio(),
+                               this.isAllowEmptyResults()).parseResult(expandedTestResults, run, workspace, launcher, listener);
     }
 
     @Deprecated
@@ -128,13 +135,13 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
     }
 
     @Override
-	public void perform(Run build, FilePath workspace, Launcher launcher,
-			TaskListener listener) throws InterruptedException, IOException {
-		listener.getLogger().println(Messages.JUnitResultArchiver_Recording());
-		
-		final String testResults = build.getEnvironment(listener).expand(this.testResults);
+    public void perform(Run build, FilePath workspace, Launcher launcher,
+            TaskListener listener) throws InterruptedException, IOException {
+        listener.getLogger().println(Messages.JUnitResultArchiver_Recording());
 
-			TestResult result = parse(testResults, build, workspace, launcher, listener);
+        final String testResults = build.getEnvironment(listener).expand(this.testResults);
+
+        TestResult result = parse(testResults, build, workspace, launcher, listener);
 
         synchronized (build) {
             // TODO can the build argument be omitted now, or is it used prior to the call to addAction?
@@ -149,26 +156,31 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
                 action.mergeResult(result, listener);
             }
             action.setHealthScaleFactor(getHealthScaleFactor()); // overwrites previous value if appending
-			if (result.isEmpty()) {
+            if (result.isEmpty()) {
                 if (build.getResult() == Result.FAILURE) {
                     // most likely a build failed before it gets to the test phase.
                     // don't report confusing error message.
                     return;
                 }
-			    // most likely a configuration error in the job - e.g. false pattern to match the JUnit result files
-				throw new AbortException(Messages.JUnitResultArchiver_ResultIsEmpty());
-			}
+                if (this.allowEmptyResults) {
+                    // User allow empty results
+                    listener.getLogger().println(Messages.JUnitResultArchiver_ResultIsEmpty());
+                    return;
+                }
+                // most likely a configuration error in the job - e.g. false pattern to match the JUnit result files
+                throw new AbortException(Messages.JUnitResultArchiver_ResultIsEmpty());
+            }
 
             // TODO: Move into JUnitParser [BUG 3123310]
-			List<Data> data = action.getData();
-			if (testDataPublishers != null) {
-				for (TestDataPublisher tdp : testDataPublishers) {
-					Data d = tdp.contributeTestData(build, workspace, launcher, listener, result);
-					if (d != null) {
-						data.add(d);
-					}
-				}
-			}
+            List<Data> data = action.getData();
+            if (testDataPublishers != null) {
+                for (TestDataPublisher tdp : testDataPublishers) {
+                    Data d = tdp.contributeTestData(build, workspace, launcher, listener, result);
+                    if (d != null) {
+                        data.add(d);
+                    }
+                }
+            }
 
             if (appending) {
                 build.save();
@@ -176,28 +188,28 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
                 build.addAction(action);
             }
 
-		if (action.getResult().getFailCount() > 0)
-			build.setResult(Result.UNSTABLE);
+        if (action.getResult().getFailCount() > 0)
+            build.setResult(Result.UNSTABLE);
         }
-	}
+    }
 
-	/**
-	 * Not actually used, but left for backward compatibility
-	 * 
-	 * @deprecated since 2009-08-10.
-	 */
-	protected TestResult parseResult(DirectoryScanner ds, long buildTime)
-			throws IOException {
-		return new TestResult(buildTime, ds);
-	}
+    /**
+     * Not actually used, but left for backward compatibility
+     *
+     * @deprecated since 2009-08-10.
+     */
+    protected TestResult parseResult(DirectoryScanner ds, long buildTime)
+            throws IOException {
+        return new TestResult(buildTime, ds);
+    }
 
-	public BuildStepMonitor getRequiredMonitorService() {
-		return BuildStepMonitor.NONE;
-	}
+    public BuildStepMonitor getRequiredMonitorService() {
+        return BuildStepMonitor.NONE;
+    }
 
-	public String getTestResults() {
-		return testResults;
-	}
+    public String getTestResults() {
+        return testResults;
+    }
 
     public double getHealthScaleFactor() {
         return healthScaleFactor == null ? 1.0 : healthScaleFactor;
@@ -209,8 +221,8 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
     }
 
     public @Nonnull List<? extends TestDataPublisher> getTestDataPublishers() {
-		return testDataPublishers == null ? Collections.<TestDataPublisher>emptyList() : testDataPublishers;
-	}
+        return testDataPublishers == null ? Collections.<TestDataPublisher>emptyList() : testDataPublishers;
+    }
 
     /** @since 1.2 */
     @DataBoundSetter public final void setTestDataPublishers(@Nonnull List<? extends TestDataPublisher> testDataPublishers) {
@@ -218,41 +230,54 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
         this.testDataPublishers.addAll(testDataPublishers);
     }
 
-	/**
-	 * @return the keepLongStdio
-	 */
-	public boolean isKeepLongStdio() {
-		return keepLongStdio;
-	}
+    /**
+     * @return the keepLongStdio
+     */
+    public boolean isKeepLongStdio() {
+        return keepLongStdio;
+    }
 
     /** @since 1.2-beta-1 */
     @DataBoundSetter public final void setKeepLongStdio(boolean keepLongStdio) {
         this.keepLongStdio = keepLongStdio;
     }
 
-	private static final long serialVersionUID = 1L;
+    /**
+     *
+     * @return the allowEmptyResults
+     */
+    public boolean isAllowEmptyResults() {
+        return allowEmptyResults;
+    }
+
+    @DataBoundSetter public final void setAllowEmptyResults(boolean allowEmptyResults) {
+        this.allowEmptyResults = allowEmptyResults;
+    }
+
+
+    private static final long serialVersionUID = 1L;
 
     @Extension
     public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
-		public String getDisplayName() {
-			return Messages.JUnitResultArchiver_DisplayName();
-		}
+        public String getDisplayName() {
+            return Messages.JUnitResultArchiver_DisplayName();
+        }
 
-		/**
-		 * Performs on-the-fly validation on the file mask wildcard.
-		 */
-		public FormValidation doCheckTestResults(
-				@AncestorInPath AbstractProject project,
-				@QueryParameter String value) throws IOException {
+        /**
+         * Performs on-the-fly validation on the file mask wildcard.
+         */
+        public FormValidation doCheckTestResults(
+                @AncestorInPath AbstractProject project,
+                @QueryParameter String value) throws IOException {
             if (project == null) {
                 return FormValidation.ok();
             }
-			return FilePath.validateFileMask(project.getSomeWorkspace(), value);
-		}
+            return FilePath.validateFileMask(project.getSomeWorkspace(), value);
+        }
 
-		public boolean isApplicable(Class<? extends AbstractProject> jobType) {
-			return true;
-		}
+        public boolean isApplicable(Class<? extends AbstractProject> jobType) {
+            return true;
+        }
 
         public FormValidation doCheckHealthScaleFactor(@QueryParameter double value) {
             if (value < 1e-7) return FormValidation.warning("Test health reporting disabled");
