@@ -186,6 +186,17 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
           return getResult().getFailedTests();
      }
 
+    @Override
+    public List<CaseResult> getPassedTests() {
+        return getResult().getPassedTests();
+    }
+
+    @Override
+    public List<CaseResult> getSkippedTests() {
+        return getResult().getSkippedTests();
+    }
+
+
     /**
      * Loads a {@link TestResult} from disk.
      */
