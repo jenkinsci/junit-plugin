@@ -80,11 +80,26 @@ public class GroupedCaseResults {
 		return cases.size();
 	}
 
-	public boolean similar(CaseResult cr, double maxDiff) {
+	// http://stackoverflow.com/questions/955110/similarity-string-comparison-in-java
+	public boolean similar(CaseResult cr, double minDiff) {
+		
+		String longer = repErrorMessage;
+		String shorter = cr.getShortErrorMessage();
+		if(longer.length() < shorter.length()) {		// longer should always have greater lengths.
+			longer = cr.getShortErrorMessage();
+			shorter = repErrorMessage;
+		}
 
-		// The more different two strings are, the longer their distance is.
-		float diffPercent = EditDistance.editDistance(repErrorMessage, cr.getShortErrorMessage()) / (float)(repErrorMessage.length());
-		if(diffPercent <= maxDiff) {
+		int longerLength = longer.length();
+		if(longerLength == 0) {
+			return true;		// both strings are zero length.
+		}
+
+		// editDistance(): The more different two strings are, the longer their distance is.
+		// 0 (toally different) <= diff <= 1 (same)
+		float diff = (longerLength - EditDistance.editDistance(longer, shorter)) / (float)(longerLength);
+
+		if(diff >= minDiff) {
 			return true;
 		}else {
 			return false;
