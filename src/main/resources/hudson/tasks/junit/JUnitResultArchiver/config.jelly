@@ -48,5 +48,4 @@ THE SOFTWARE.
             <f:checkbox default="false" title="${%Do not fail the build on empty test results}"/>
         </f:entry>
     </f:advanced>
-    -->
 </j:jelly>
