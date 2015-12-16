@@ -24,19 +24,44 @@ THE SOFTWARE.
 
 <!-- Groups failed tests by error message -->
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson/test" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:t="/lib/hudson/test">
+
+<j:set var="minSimilarity" value="${request.getParameter('minSimilarity')}"/>
+<j:if test="${minSimilarity == null}">
+	<j:set var="minSimilarity" value="0.5"/>
+</j:if>
+${it.group(minSimilarity)}		<!-- if the minSimilarity is null, this line is not invoked. -->
+
+<script type="text/javascript">
+	function regroup() {
+        window.location = window.location.pathname + "?minSimilarity=" + 
+							document.getElementById('minSimilarity').value;
+
+    }
+</script>
+
   <l:layout title="${%title(it.testObject.displayName)}">
 	<st:include from="${it.testObject}" it="${it.testObject}" page="sidepanel.jelly" />
 	<l:main-panel>
 		<H2>${%title(it.testObject.displayName)}</H2>
 	
 		<j:if test="${it.failCount!=0}">
+            <table>
+                <tr>
+                  <td>Min. Similarity (between 0 and 1):</td>
+			      <td> <input id="minSimilarity" type="number" value="${minSimilarity}" step="0.01" 
+					    	  min = "0.0" max = "1.0"/> </td>
+                  <td> <button id="regroup" onclick="regroup()">Regroup</button> </td>
+                  <td>(0: All failed tests are grouped into one. 1: The exactly same errors are grouped together.) </td>
+                </tr>
+            </table>
+
     		<table class="pane sortable bigtable">
       			<tr>
         			<td class="pane-header">${%Error Message}</td>
         			<td class="pane-header">${%Count}</td>
       			</tr>
-    
+                 
       			<j:forEach var="f" items="${it.groups}" varStatus="i">
      				<tr>
         				<td class="pane"><t:failed-tests-group group="${f}" testObject="${it.testObject}"/></td>
@@ -44,7 +69,7 @@ THE SOFTWARE.
      				</tr> 
       			</j:forEach>
     		</table>
-  		</j:if>	
+		</j:if>	
     </l:main-panel>
   </l:layout>
 </j:jelly>

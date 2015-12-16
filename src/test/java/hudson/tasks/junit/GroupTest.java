@@ -51,26 +51,65 @@ public class GroupTest {
      * Verifies that the failed tests are grouped by error message.
      */
     @Test
-    public void testFreestyleErrorMsgAndStacktraceRender() throws Exception {
+    public void testGroupByError() throws Exception {
         FreeStyleBuild b = configureTestBuild(null);
         TestResult tr = b.getAction(TestResultAction.class).getResult();
         assertEquals(4,tr.getFailedTests().size());
 
         GroupByError groupByError = new GroupByError(tr);
+		groupByError.group("0.5");
         assertEquals("Should have had two groups, but had " + groupByError.getGroups().size(), 2, groupByError.getGroups().size());
         
         
         GroupedCaseResults group1 = groupByError.getGroups().get(0);
         assertEquals("Should have had three elements, but had " + group1.getCount(), 3, group1.getCount());
-        assertEquals(true, group1.similar(new CaseResult(null, "ddd", "some.package.somewhere.WhooHoo: "
-        		+ "[ID : 245025], [TID : 3311e81d-c848-4d60-1111-f1fb2ff06a1f],"
-        		+ " - message : On Provision problem."), 0.9f));
         
         GroupedCaseResults group2 = groupByError.getGroups().get(1);
         assertEquals("Should have had one elements, but had " + group2.getCount(), 1, group2.getCount());
         assertEquals("java.lang.NullPointerException: null", group2.getRepErrorMessage());
     }
-    
+
+ 	@Test
+	public void testSameErrorMessagesShouldBeGroupedTogether() throws Exception {
+
+		String errorMsg = "some.package.somewhere.whoohoo: "
+               + "[id : 245025], [tid : 3311e81d-c848-4d60-1111-f1fb2ff06a1f],"
+               + " - message : on provision problem.";
+		GroupedCaseResults group = new GroupedCaseResults(errorMsg);
+		CaseResult cr = new CaseResult(null, "ddd", errorMsg);
+
+		assertEquals(true, group.similar(cr, 1.0f));
+		assertEquals(true, group.similar(cr, 0.5f));
+	}
+
+ 	@Test
+	public void testTotallyDifferentErrorMessagesShouldBeNotGrouped() throws Exception {
+
+		GroupedCaseResults group = new GroupedCaseResults("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+		CaseResult cr = new CaseResult(null, "ddd", "1234567890bbddffee uuuufffeelloo 232319232 123112");
+
+		assertEquals(false, group.similar(cr, 1.0f));
+		assertEquals(false, group.similar(cr, 0.5f));
+		assertEquals(false, group.similar(cr, 0.1f));
+		assertEquals(true, group.similar(cr, 0.0f));
+	}
+
+ 	@Test
+	public void testSimilarErrorMessagesShouldBeGrouped() throws Exception {
+
+		String errorMsg = "some.package.somewhere.whoohoo: "
+               + "[id : 245025], [tid : 3311e81d-c848-4d60-1111-f1fb2ff06a1f],"
+               + " - message : on provision problem.";
+		String errorMsg2 = "some.package.somewhere.whoohoo: "
+               + "[id : 245025], [tid : 55551111-c848-adfe-555-f1fb2ff06a1f],"
+               + " - message : on provision problem.";
+		GroupedCaseResults group = new GroupedCaseResults(errorMsg);
+		CaseResult cr = new CaseResult(null, "ddd", errorMsg2);
+
+		assertEquals(false, group.similar(cr, 1.0f));
+		assertEquals(true, group.similar(cr, 0.5f));
+	}
+
 
     private FreeStyleBuild configureTestBuild(String projectName) throws Exception {
         FreeStyleProject p = projectName == null ? j.createFreeStyleProject() : j.createFreeStyleProject(projectName);

@@ -37,40 +37,52 @@ import java.util.Set;
 public class GroupByError {
 	private final TestObject testObject;
 
-	/**
-	 * Maximum percentage of difference for testing whether two strings are similar.
-	 * If the percentage of difference of two strings is below 50%, they seem to be similar.
-	 * 0.5f (50%) is just personal opinion.
-	 */
-	private static double MAX_DIFF_PERCENTAGE_FOR_SIMILARITY = 0.5f;
 
 	/**
 	 * All {@link GroupedCaseResults}
 	 */
-	private final HashMap<String, GroupedCaseResults> groups;
+	private HashMap<String, GroupedCaseResults> groups;
 
 	public GroupByError(TestObject testObject) {
 		this.testObject = testObject;
 
-		groups = new HashMap<String, GroupedCaseResults>();
-
-		// generate groups
-		List<CaseResult> failedCases = (List<CaseResult>) testObject.getResultInRun(testObject.getRun()).getFailedTests();
-		for(CaseResult cr: failedCases) {
-			add(cr);
-		}
 	}
 
-	private void add(CaseResult cr) {
+
+	public void group(String minSimilarity) {
+		double val = 0.5f;			// 0.5f: default value
+		try {
+			double tmp = Double.valueOf(minSimilarity);
+			if(tmp >= 0.0f && tmp <= 1.0f) {
+				val = tmp;
+			}
+		}catch(NumberFormatException e) {
+		}
+
+		group(val);
+	}
+
+    private void group(double minSimilarity) {
+		groups = new HashMap<String, GroupedCaseResults>();
+
+		List<CaseResult> failedCases = (List<CaseResult>) testObject.getResultInRun(testObject.getRun()).getFailedTests();
+		for(CaseResult cr: failedCases) {
+			add(cr, minSimilarity);
+		}
+
+    }
+
+	private void add(CaseResult cr, double minSimilarity) {
 		for(GroupedCaseResults g: groups.values()) {
-			if(g.similar(cr, MAX_DIFF_PERCENTAGE_FOR_SIMILARITY)) {
-				// add case to the existing group
+			// If the similarity of two case results is greater than the parameter (minSimilarity), they are grouped.
+			if(g.similar(cr, minSimilarity)) {
+				// add the case to the existing group
 				g.add(cr);
 				return;
 			}
 		}
 
-		// add a new group
+		// add the case to a new group
 		GroupedCaseResults g = new GroupedCaseResults(cr.getShortErrorMessage());
 		g.add(cr);
 		groups.put(cr.getShortErrorMessage(), g);
