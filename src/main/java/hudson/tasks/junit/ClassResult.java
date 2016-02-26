@@ -59,7 +59,7 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
 
     @Override
     public Run<?, ?> getRun() {
-        return (parent==null ? null: parent.getRun());
+        return parent==null ? null: parent.getRun();
     }
 
     public PackageResult getParent() {
@@ -144,7 +144,7 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
     }
 
     public boolean hasChildren() {
-        return ((cases != null) && (cases.size() > 0));
+        return (cases != null) && (cases.size() > 0);
     }
 
     // TODO: wait for stapler 1.60     @Exported
