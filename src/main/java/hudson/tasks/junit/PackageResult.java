@@ -56,7 +56,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
     
     @Override
     public Run<?,?> getRun() {
-        return (parent == null ? null : parent.getRun());
+        return parent == null ? null : parent.getRun();
     }
 
     public hudson.tasks.junit.TestResult getParent() {
@@ -73,7 +73,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
         if (safeName != null) {
             return safeName;
         }
-        Collection<PackageResult> siblings = (parent == null ? Collections.EMPTY_LIST : parent.getChildren());
+        Collection<PackageResult> siblings = parent == null ? Collections.EMPTY_LIST : parent.getChildren();
         return safeName = uniquifyName(
                 siblings,
                 safe(getName()));
@@ -167,7 +167,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
     @Override
     public boolean hasChildren() {
         int totalTests = passCount + failCount + skipCount;
-        return (totalTests != 0);
+        return totalTests != 0;
     }
 
     /**
@@ -254,7 +254,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
      */
     @Override
     public boolean isPassed() {
-        return (failCount == 0 && skipCount == 0);
+        return failCount == 0 && skipCount == 0;
     }
 
     void add(CaseResult r) {

@@ -104,7 +104,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
     public hudson.tasks.junit.TestResult getTestResult() {
         TestObject parent = getParent();
 
-        return (parent == null ? null : getParent().getTestResult());
+        return parent == null ? null : getParent().getTestResult();
     }
 
     /**
@@ -113,7 +113,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
     public TestResult getTopLevelTestResult() {
         TestObject parent = getParent();
 
-        return (parent == null ? null : getParent().getTopLevelTestResult());
+        return parent == null ? null : getParent().getTopLevelTestResult();
     }
     
     /**
