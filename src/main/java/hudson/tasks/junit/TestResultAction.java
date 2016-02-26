@@ -217,15 +217,15 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
     }
 
     public List<TestAction> getActions(TestObject object) {
-        List<TestAction> result = new ArrayList<TestAction>();
+        List<TestAction> resultLocal = new ArrayList<TestAction>();
         // Added check for null testData to avoid NPE from issue 4257.
         if (testData != null) {
             for (Data data : testData)
                 for (TestAction ta : data.getTestAction(object))
                     if (ta != null)
-                        result.add(ta);
+                    	resultLocal.add(ta);
         }
-        return Collections.unmodifiableList(result);
+        return Collections.unmodifiableList(resultLocal);
     }
 
     List<Data> getData() {

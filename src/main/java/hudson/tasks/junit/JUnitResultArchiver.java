@@ -139,9 +139,9 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
             TaskListener listener) throws InterruptedException, IOException {
         listener.getLogger().println(Messages.JUnitResultArchiver_Recording());
 
-        final String testResults = build.getEnvironment(listener).expand(this.testResults);
+        final String testResultsLocal = build.getEnvironment(listener).expand(this.testResults);
 
-        TestResult result = parse(testResults, build, workspace, launcher, listener);
+        TestResult result = parse(testResultsLocal, build, workspace, launcher, listener);
 
         synchronized (build) {
             // TODO can the build argument be omitted now, or is it used prior to the call to addAction?

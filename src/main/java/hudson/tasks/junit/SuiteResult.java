@@ -149,16 +149,16 @@ public final class SuiteResult implements Serializable {
      */
     private SuiteResult(File xmlReport, Element suite, boolean keepLongStdio) throws DocumentException, IOException {
     	this.file = xmlReport.getAbsolutePath();
-        String name = suite.attributeValue("name");
-        if(name==null)
+        String nameLocal = suite.attributeValue("name");
+        if(nameLocal==null)
             // some user reported that name is null in their environment.
             // see http://www.nabble.com/Unexpected-Null-Pointer-Exception-in-Hudson-1.131-tf4314802.html
-            name = '('+xmlReport.getName()+')';
+        	nameLocal = '('+xmlReport.getName()+')';
         else {
             String pkg = suite.attributeValue("package");
-            if(pkg!=null&& pkg.length()>0)   name=pkg+'.'+name;
+            if(pkg!=null&& pkg.length()>0)   nameLocal=pkg+'.'+nameLocal;
         }
-        this.name = TestObject.safe(name);
+        this.name = TestObject.safe(nameLocal);
         this.timestamp = suite.attributeValue("timestamp");
         this.id = suite.attributeValue("id");
 
@@ -193,9 +193,9 @@ public final class SuiteResult implements Serializable {
             addCase(new CaseResult(this, e, classname, keepLongStdio));
         }
 
-        String stdout = CaseResult.possiblyTrimStdio(cases, keepLongStdio, suite.elementText("system-out"));
-        String stderr = CaseResult.possiblyTrimStdio(cases, keepLongStdio, suite.elementText("system-err"));
-        if (stdout==null && stderr==null) {
+        String stdoutLocal = CaseResult.possiblyTrimStdio(cases, keepLongStdio, suite.elementText("system-out"));
+        String stderrLocal = CaseResult.possiblyTrimStdio(cases, keepLongStdio, suite.elementText("system-err"));
+        if (stdoutLocal==null && stderrLocal==null) {
             // Surefire never puts stdout/stderr in the XML. Instead, it goes to a separate file (when ${maven.test.redirectTestOutputToFile}).
             Matcher m = SUREFIRE_FILENAME.matcher(xmlReport.getName());
             if (m.matches()) {
@@ -203,7 +203,7 @@ public final class SuiteResult implements Serializable {
                 File mavenOutputFile = new File(xmlReport.getParentFile(),m.group(1)+"-output.txt");
                 if (mavenOutputFile.exists()) {
                     try {
-                        stdout = CaseResult.possiblyTrimStdio(cases, keepLongStdio, mavenOutputFile);
+                    	stdoutLocal = CaseResult.possiblyTrimStdio(cases, keepLongStdio, mavenOutputFile);
                     } catch (IOException e) {
                         throw new IOException("Failed to read "+mavenOutputFile,e);
                     }
@@ -211,8 +211,8 @@ public final class SuiteResult implements Serializable {
             }
         }
 
-        this.stdout = stdout;
-        this.stderr = stderr;
+        this.stdout = stdoutLocal;
+        this.stderr = stderrLocal;
     }
 
     /*package*/ void addCase(CaseResult cr) {

@@ -255,11 +255,11 @@ public class AggregatedTestResultPublisher extends Recorder {
             if(lastUpdated>lastChanged)     return;
             lastUpdated = lastChanged+1;
 
-            int failCount = 0;
-            int totalCount = 0;
-            List<AbstractTestResultAction> individuals = new ArrayList<AbstractTestResultAction>();
-            List<AbstractProject> didntRun = new ArrayList<AbstractProject>();
-            List<AbstractProject> noFingerprints = new ArrayList<AbstractProject>();
+            int failCountLocal = 0;
+            int totalCountLocal = 0;
+            List<AbstractTestResultAction> individualsLocal = new ArrayList<AbstractTestResultAction>();
+            List<AbstractProject> didntRunLocal = new ArrayList<AbstractProject>();
+            List<AbstractProject> noFingerprintsLocal = new ArrayList<AbstractProject>();
             for (AbstractProject job : getJobs()) {
                 RangeSet rs = owner.getDownstreamRelationship(job);
                 if(rs.isEmpty()) {
@@ -272,9 +272,9 @@ public class AggregatedTestResultPublisher extends Recorder {
                     }
                     if(b!=null && b.getAction(AbstractTestResultAction.class)!=null) {
                         if(b.getAction(FingerprintAction.class)!=null) {
-                            didntRun.add(job);
+                        	didntRunLocal.add(job);
                         } else {
-                            noFingerprints.add(job);
+                        	noFingerprintsLocal.add(job);
                         }
                     }
                 } else {
@@ -292,20 +292,20 @@ public class AggregatedTestResultPublisher extends Recorder {
                             continue;   // don't count them
 
                         for( AbstractTestResultAction ta : b.getActions(AbstractTestResultAction.class)) {
-                            failCount += ta.getFailCount();
-                            totalCount += ta.getTotalCount();
-                            individuals.add(ta);
+                        	failCountLocal += ta.getFailCount();
+                        	totalCountLocal += ta.getTotalCount();
+                        	individualsLocal.add(ta);
                         }
                         break;
                     }
                 }
             }
 
-            this.failCount = failCount;
-            this.totalCount = totalCount;
-            this.individuals = individuals;
-            this.didntRun = didntRun;
-            this.noFingerprints = noFingerprints;
+            this.failCount = failCountLocal;
+            this.totalCount = totalCountLocal;
+            this.individuals = individualsLocal;
+            this.didntRun = didntRunLocal;
+            this.noFingerprints = noFingerprintsLocal;
         }
 
         public boolean getHasFingerprintAction() {
