@@ -74,9 +74,8 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
             return safeName;
         }
         Collection<PackageResult> siblings = (parent == null ? Collections.EMPTY_LIST : parent.getChildren());
-        return safeName = uniquifyName(
-                siblings,
-                safe(getName()));
+        safeName = uniquifyName(siblings, safe(getName()));
+        return safeName;
     }
 
     @Override
@@ -261,7 +260,8 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
         String n = r.getSimpleName(), sn = safe(n);
         ClassResult c = getClassResult(sn);
         if (c == null) {
-            classes.put(sn,c=new ClassResult(this,n));
+        	c=new ClassResult(this,n)
+            classes.put(sn, c);
         }
         c.add(r);
         duration += r.getDuration(); 
