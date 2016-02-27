@@ -308,7 +308,8 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
                 buf.setCharAt(i,'_');
         }
         Collection<CaseResult> siblings = (classResult ==null ? Collections.<CaseResult>emptyList(): classResult.getChildren());
-        return safeName = uniquifyName(siblings, buf.toString());
+        safeName = uniquifyName(siblings, buf.toString());
+        return safeName; 
     }
 
     /**
