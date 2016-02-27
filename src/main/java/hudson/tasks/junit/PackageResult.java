@@ -260,7 +260,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
         String n = r.getSimpleName(), sn = safe(n);
         ClassResult c = getClassResult(sn);
         if (c == null) {
-        	c=new ClassResult(this,n)
+        	c=new ClassResult(this,n);
             classes.put(sn, c);
         }
         c.add(r);
