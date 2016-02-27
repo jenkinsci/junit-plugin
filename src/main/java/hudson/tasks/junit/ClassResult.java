@@ -115,7 +115,8 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
         if (safeName != null) {
             return safeName;
         }
-        return safeName = uniquifyName(parent.getChildren(), safe(getName()));
+        safeName = uniquifyName(parent.getChildren(), safe(getName()));
+        return safeName;
     }
     
     public CaseResult getCaseResult(String name) {

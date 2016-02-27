@@ -619,8 +619,10 @@ public final class TestResult extends MetaTabulatedResult {
                 cr.tally();
                 String pkg = cr.getPackageName(), spkg = safe(pkg);
                 PackageResult pr = byPackage(spkg);
-                if(pr==null)
-                    byPackages.put(spkg,pr=new PackageResult(this,pkg));
+                if(pr==null) {
+                	pr=new PackageResult(this,pkg);
+                    byPackages.put(spkg, pr);
+                }
                 pr.add(cr);
             }
         }
