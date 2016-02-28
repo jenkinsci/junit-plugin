@@ -307,7 +307,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
             if(!Character.isJavaIdentifierPart(ch))
                 buf.setCharAt(i,'_');
         }
-        Collection<CaseResult> siblings = (classResult ==null ? Collections.<CaseResult>emptyList(): classResult.getChildren());
+        Collection<CaseResult> siblings = classResult ==null ? Collections.<CaseResult>emptyList(): classResult.getChildren();
         return safeName = uniquifyName(siblings, buf.toString());
     }
 

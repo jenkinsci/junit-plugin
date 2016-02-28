@@ -163,7 +163,7 @@ public final class TestResult extends MetaTabulatedResult {
         for (String value : reportFiles) {
             File reportFile = new File(baseDir, value);
             // only count files that were actually updated during this build
-            if ( (buildTime-3000/*error margin*/ <= reportFile.lastModified())) {
+            if (buildTime-3000/*error margin*/ <= reportFile.lastModified()) {
                 parsePossiblyEmpty(reportFile);
                 parsed = true;
             }
@@ -197,7 +197,7 @@ public final class TestResult extends MetaTabulatedResult {
 
         for (File reportFile : reportFiles) {
             // only count files that were actually updated during this build
-            if ( (buildTime-3000/*error margin*/ <= reportFile.lastModified())) {
+            if (buildTime-3000/*error margin*/ <= reportFile.lastModified()) {
                 parsePossiblyEmpty(reportFile);
                 parsed = true;
             }
@@ -310,7 +310,7 @@ public final class TestResult extends MetaTabulatedResult {
 
     @Override
     public Run<?,?> getRun() {
-        return (parentAction == null? null: parentAction.run);
+        return parentAction == null? null: parentAction.run;
     }
 
     @Override
@@ -531,7 +531,7 @@ public final class TestResult extends MetaTabulatedResult {
      */
     @Override
     public boolean isPassed() {
-       return (getFailCount() == 0);
+       return getFailCount() == 0;
     }
 
     @Override

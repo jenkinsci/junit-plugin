@@ -73,7 +73,7 @@ public class JUnitParserTest extends HudsonTestCase {
             assertTrue("result should be a TestResult", result instanceof hudson.tasks.junit.TestResult);
             System.out.println("We passed some assertions in the JUnitParserTestBuilder");
             theResult = result;
-            return (result != null);
+            return result != null;
         }
     }
 
