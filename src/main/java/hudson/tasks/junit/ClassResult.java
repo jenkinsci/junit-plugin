@@ -188,10 +188,12 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
             else {
                 failCount++;
             }
-            duration += r.getDuration();
+            //retrieve the class duration from these cases' suite time
+            if(duration == 0){
+                duration = r.getSuiteResult().getDuration();
+            }
         }
     }
-
 
     void freeze() {
         this.tally();

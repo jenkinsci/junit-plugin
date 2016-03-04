@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Automation Tests" tests="8" errors="0" failures="0" ignored="0">
+    <testsuite name="test.fs.FileSystemTests" time="25">
+      <testcase name="testPrefix" classname="test.fs.FileSystemTest1" time="10"/>
+      <testcase name="testPrefix" classname="test.fs.FileSystemTest2" time="11"/>
+    </testsuite>
+    <testsuite name="test.db.DatabaseTests" >
+      <testcase name="testTable" classname="test.db.DatabaseTest1" time="10"/>
+      <testcase name="testTable" classname="test.db.DatabaseTest2" time="12"/>
+    </testsuite>
+    <testsuite name="test.lib.Rest" >
+        <testsuite name="test.RestMethods" time="40">
+          <testcase name="testInterface" classname="test.Rest.post" time="12"/>
+          <testcase name="testInterface" classname="test.Rest.get" time="13"/>
+          <testcase name="testInterface" classname="test.Rest.delete" time="13"/>
+      </testsuite>
+      <testcase name="testFinish" classname="test.Rest.cleanup" time="20"/>
+    </testsuite>
+</testsuites>

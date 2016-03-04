@@ -72,6 +72,9 @@ public final class SuiteResult implements Serializable {
     /** Optional ID attribute of a test suite. E.g., Eclipse plug-ins tests always have the name 'tests' but a different id. **/
     private String id;
 
+    /** Optional time attribute of a test suite. E.g., Suites can use their own time attribute or the sum of their cases' times as before.**/
+    private String time;
+
     /**
      * All test cases.
      */
@@ -161,7 +164,12 @@ public final class SuiteResult implements Serializable {
         this.name = TestObject.safe(name);
         this.timestamp = suite.attributeValue("timestamp");
         this.id = suite.attributeValue("id");
-
+        
+        // check for test suite time attribute
+        if( ( this.time = suite.attributeValue("time") ) != null ){
+            duration = Float.parseFloat(this.time);
+        }
+        
         Element ex = suite.element("error");
         if(ex!=null) {
             // according to junit-noframes.xsl l.229, this happens when the test class failed to load
@@ -218,7 +226,11 @@ public final class SuiteResult implements Serializable {
     /*package*/ void addCase(CaseResult cr) {
         cases.add(cr);
         casesByName().put(cr.getName(), cr);
-        duration += cr.getDuration();
+        
+        //if suite time was not specified use sum of the cases' times
+        if(this.time == null){
+            duration += cr.getDuration();
+        }
     }
 
     @Exported(visibility=9)
