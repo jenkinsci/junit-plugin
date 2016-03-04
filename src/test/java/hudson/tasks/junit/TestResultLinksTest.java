@@ -72,11 +72,11 @@ public class TestResultLinksTest extends HudsonTestCase {
         String testReportPageUrl =  project.getLastBuild().getUrl() + "/testReport";
         HtmlPage testReportPage = wc.goTo( testReportPageUrl );
 
-        Page packagePage = testReportPage.getFirstAnchorByText("tacoshack.meals").click();
+        Page packagePage = testReportPage.getAnchorByText("tacoshack.meals").click();
         assertGoodStatus(packagePage); // I expect this to work; just checking that my use of the APIs is correct.
 
         // Now we're on that page. We should be able to find a link to the failed test in there.
-        HtmlAnchor anchor = testReportPage.getFirstAnchorByText("tacoshack.meals.NachosTest.testBeanDip");
+        HtmlAnchor anchor = testReportPage.getAnchorByText("tacoshack.meals.NachosTest.testBeanDip");
         String href = anchor.getHrefAttribute();
         System.out.println("link is : " + href);
         Page failureFromLink = anchor.click();

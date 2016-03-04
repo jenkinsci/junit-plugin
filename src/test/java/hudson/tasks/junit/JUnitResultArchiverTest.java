@@ -172,8 +172,10 @@ public class JUnitResultArchiverTest {
         object.doSubmitDescription("description");
 
         // test the roundtrip
-        HtmlPage page = j.new WebClient().goTo(url);
+        final WebClient wc = j.createWebClient();
+        HtmlPage page = wc.goTo(url);
         page.getAnchorByHref("editDescription").click();
+        wc.waitForBackgroundJavaScript(10000L);
         HtmlForm form = findForm(page, "submitDescription");
         j.submit(form);
 
@@ -307,7 +309,7 @@ public class JUnitResultArchiverTest {
         final String ID_PREFIX = "test-../a=%3C%7C%23)/testReport/org.twia.vendor/VendorManagerTest/testCreateAdjustingFirm/";
         final String EXPECTED = "org.twia.dao.DAOException: [S2001] Hibernate encountered an error updating Claim [null]";
 
-        MatrixProject p = j.createMatrixProject();
+        MatrixProject p = j.jenkins.createProject(MatrixProject.class, "test-" + j.jenkins.getItems().size());
         p.setAxes(new AxisList(new TextAxis("a", "<|#)")));
         p.setScm(new SingleFileSCM("report.xml", getClass().getResource("junit-report-20090516.xml")));
         p.getPublishersList().add(new JUnitResultArchiver("report.xml"));
@@ -321,9 +323,11 @@ public class JUnitResultArchiverTest {
         assertThat(page.asText(), not(containsString(EXPECTED)));
 
         ((HtmlAnchor) page.getElementById(ID_PREFIX + "-showlink")).click();
+        wc.waitForBackgroundJavaScript(10000L);
         assertThat(page.asText(), containsString(EXPECTED));
 
         ((HtmlAnchor) page.getElementById(ID_PREFIX + "-hidelink")).click();
+        wc.waitForBackgroundJavaScript(10000L);
         assertThat(page.asText(), not(containsString(EXPECTED)));
     }
 }

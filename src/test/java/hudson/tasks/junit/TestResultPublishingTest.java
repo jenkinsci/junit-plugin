@@ -154,7 +154,7 @@ public class TestResultPublishingTest extends HudsonTestCase {
         // We expect to see one failure, for com.yahoo.breakable.misc.UglyTest.becomeUglier
         // which should link to http://localhost:8080/job/wonky/3/testReport/org.jvnet.hudson.examples.small/MiscTest/testEleanor/
         assertXPathResultsContainText(buildPage, "//a", "org.jvnet.hudson.examples.small.MiscTest.testEleanor");
-        HtmlAnchor failingTestLink = buildPage.getFirstAnchorByText("org.jvnet.hudson.examples.small.MiscTest.testEleanor");
+        HtmlAnchor failingTestLink = buildPage.getAnchorByText("org.jvnet.hudson.examples.small.MiscTest.testEleanor");
         assertNotNull(failingTestLink);
         Page failingTestPage = failingTestLink.click();
         assertGoodStatus(failingTestPage);
@@ -258,7 +258,7 @@ public class TestResultPublishingTest extends HudsonTestCase {
         assertGoodStatus(historyPage);
         assertXPath(historyPage, "//img[@id='graph']");
         assertXPath(historyPage, "//table[@id='testresult']");
-        HtmlElement wholeTable = historyPage.getElementById("testresult");
+        DomElement wholeTable = historyPage.getElementById("testresult");
         assertNotNull("table with id 'testresult' exists", wholeTable);
         assertTrue("wholeTable is a table", wholeTable instanceof HtmlTable);
         HtmlTable table = (HtmlTable) wholeTable;
