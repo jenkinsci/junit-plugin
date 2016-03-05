@@ -94,6 +94,8 @@ public class History {
 
     /**
      * Graph of duration of tests over time.
+     *
+     * @return a graph of duration of tests over time.
      */
     public Graph getDurationGraph() {
        return new GraphImpl("seconds") {
@@ -131,6 +133,8 @@ public class History {
 
     /**
      * Graph of # of tests over time.
+     *
+     * @return a graph of number of tests over time.
      */
     public Graph getCountGraph() {
         return new GraphImpl("") {

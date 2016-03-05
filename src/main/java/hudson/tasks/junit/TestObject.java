@@ -58,6 +58,7 @@ public abstract class TestObject extends AbstractModelObject implements Serializ
     }
 
     /**
+     * @return the run in which this test was executed.
      * @since 1.2-beta-1
      */
     public Run<?,?> getRun() {
@@ -68,7 +69,9 @@ public abstract class TestObject extends AbstractModelObject implements Serializ
 
 	public abstract String getId(); 	
 	/**
-	 * Returns url relative to TestResult
+	 * Returns url relative to TestResult.
+     *
+     * @return the url relative to {@link TestResult}.
 	 */
 	public abstract String getUrl(); 
 
@@ -97,6 +100,9 @@ public abstract class TestObject extends AbstractModelObject implements Serializ
     }
 
     /**
+     * @param run The run for which the run is requested.
+     *
+     * @return the test result for the provided run.
      * @since 1.2-beta-1
      */
 	public TestObject getResultInRun(Run<?,?> run) {
@@ -109,12 +115,16 @@ public abstract class TestObject extends AbstractModelObject implements Serializ
 
 	/**
 	 * Time took to run this test. In seconds.
+     *
+     * @return the time in seconds the test ran.
 	 */
 	public abstract float getDuration();
 
 	/**
 	 * Returns the string representation of the {@link #getDuration()}, in a
 	 * human readable format.
+     *
+     * @return a string representation of {@link #getDuration()}.
 	 */
 	public abstract String getDurationString();
 
@@ -124,16 +134,22 @@ public abstract class TestObject extends AbstractModelObject implements Serializ
 
     /**
 	 * Exposes this object through the remote API.
+     *
+     * @return the api for this test object.
 	 */
 	public abstract Api getApi();
 
     /**
 	 * Gets the name of this object.
+     *
+     * @return the name of this object.
 	 */
 	public abstract String getName();
 
     /**
 	 * Gets the version of {@link #getName()} that's URL-safe.
+     *
+     * @return the URL-safe name of this object.
 	 */
 	public abstract String getSafeName();
 
@@ -141,21 +157,29 @@ public abstract class TestObject extends AbstractModelObject implements Serializ
 
     /**
      * Gets the total number of passed tests.
+     *
+     * @return the total number of passed tests.
      */
     public abstract int getPassCount();
 
     /**
      * Gets the total number of failed tests.
+     *
+     * @return the total number of failed tests.
      */
     public abstract int getFailCount();
 
     /**
      * Gets the total number of skipped tests.
+     *
+     * @return the total number of skipped tests.
      */
     public abstract int getSkipCount();
 
     /**
      * Gets the total number of tests.
+     *
+     * @return the total number of tests.
      */
     public abstract int getTotalCount();
 

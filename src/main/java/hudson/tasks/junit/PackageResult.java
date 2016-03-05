@@ -188,6 +188,8 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
 
     /**
      * Returns a list of the failed cases, sorted by age.
+     *
+     * @return a list of the failed cases, sorted by age.
      */
     public List<CaseResult> getFailedTestsSortedByAge() {
         List<CaseResult> failedTests = getFailedTests();

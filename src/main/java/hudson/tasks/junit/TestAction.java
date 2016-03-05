@@ -44,6 +44,9 @@ public abstract class TestAction implements Action {
 
 	/**
 	 * Returns text with annotations.
+	 * @param text Text to annotate.
+	 *
+	 * @return the text with the annotations.
 	 */
 	public String annotate(String text) {
 		return text;

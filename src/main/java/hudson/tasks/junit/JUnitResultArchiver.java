@@ -195,7 +195,11 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
 
     /**
      * Not actually used, but left for backward compatibility
+     * @param ds Directory scanner.
+     * @param buildTime Build Time.
      *
+     * @return a {@link TestResult}.
+     * @throws IOException if an error occurs.
      * @deprecated since 2009-08-10.
      */
     protected TestResult parseResult(DirectoryScanner ds, long buildTime)
@@ -215,7 +219,11 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
         return healthScaleFactor == null ? 1.0 : healthScaleFactor;
     }
 
-    /** @since 1.2-beta-1 */
+    /**
+     * @param healthScaleFactor Health scale factor.
+     *
+     * @since 1.2-beta-1
+     */
     @DataBoundSetter public final void setHealthScaleFactor(double healthScaleFactor) {
         this.healthScaleFactor = Math.max(0.0, healthScaleFactor);
     }
@@ -224,20 +232,28 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
         return testDataPublishers == null ? Collections.<TestDataPublisher>emptyList() : testDataPublishers;
     }
 
-    /** @since 1.2 */
+    /**
+     * @param testDataPublishers Test data publishers.
+     *
+     * @since 1.2
+     */
     @DataBoundSetter public final void setTestDataPublishers(@Nonnull List<? extends TestDataPublisher> testDataPublishers) {
         this.testDataPublishers = new DescribableList<TestDataPublisher,Descriptor<TestDataPublisher>>(Saveable.NOOP);
         this.testDataPublishers.addAll(testDataPublishers);
     }
 
     /**
-     * @return the keepLongStdio
+     * @return the keepLongStdio.
      */
     public boolean isKeepLongStdio() {
         return keepLongStdio;
     }
 
-    /** @since 1.2-beta-1 */
+    /**
+     * @param keepLongStdio Whether to keep long stdio.
+     *
+     * @since 1.2-beta-1
+     */
     @DataBoundSetter public final void setKeepLongStdio(boolean keepLongStdio) {
         this.keepLongStdio = keepLongStdio;
     }
@@ -265,6 +281,11 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
 
         /**
          * Performs on-the-fly validation on the file mask wildcard.
+         * @param project Project.
+         * @param value File mask to validate.
+         *
+         * @return the validation result.
+         * @throws IOException if an error occurs.
          */
         public FormValidation doCheckTestResults(
                 @AncestorInPath AbstractProject project,

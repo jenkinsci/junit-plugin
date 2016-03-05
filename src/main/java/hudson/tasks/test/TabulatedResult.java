@@ -39,6 +39,7 @@ public abstract class TabulatedResult extends TestResult {
     /**
      * Gets the child test result objects.
      *
+     * @return the child test result objects.
      * @see TestObject#getParent()
      */
     public abstract Collection<? extends TestResult> getChildren();

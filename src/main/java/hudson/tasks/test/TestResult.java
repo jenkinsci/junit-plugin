@@ -44,7 +44,7 @@ public abstract class TestResult extends TestObject {
     /**
      * If the concept of a parent action is important to a subclass, then it should
      * provide a non-noop implementation of this method. 
-     * @param action
+     * @param action Action that points to the top level test result.
      */
     public void setParentAction(AbstractTestResultAction action) {
     }
@@ -52,6 +52,8 @@ public abstract class TestResult extends TestObject {
     /**
      * Returns the action that points to the top level test result includes
      * this test result.
+     *
+     * @return action The action that points to the top level test result.
      */
     public AbstractTestResultAction getParentAction() {
         return getRun().getAction(AbstractTestResultAction.class);
@@ -67,13 +69,15 @@ public abstract class TestResult extends TestObject {
     
     /**
      * Sets the parent test result
-     * @param parent
+     * @param parent Parent test result.
      */
     public void setParent(TestObject parent) {
     }
 
     /**
      * Gets the human readable title of this result object.
+     *
+     * @return the human readable title of this result object.
      */
     public /* abstract */ String getTitle(){
         return "";
@@ -187,6 +191,8 @@ public abstract class TestResult extends TestObject {
     /**
      * If this test failed, then return the build number
      * when this test started failing.
+     *
+     * @return the build number when this test started failing.
      */
     public int getFailedSince() {
         return 0;
@@ -195,6 +201,8 @@ public abstract class TestResult extends TestObject {
     /**
      * If this test failed, then return the run
      * when this test started failing.
+     *
+     * @return the run when this test started failing.
      */
     public Run<?,?> getFailedSinceRun() {
         return null;
@@ -202,6 +210,8 @@ public abstract class TestResult extends TestObject {
 
     /**
      * The stdout of this test.
+     *
+     * @return the stdout of this test.
      */
     public String getStdout() {
         return "";
@@ -209,6 +219,8 @@ public abstract class TestResult extends TestObject {
 
     /**
      * The stderr of this test.
+     *
+     * @return the stderr of this test.
      */
     public String getStderr() {
         return "";
@@ -216,6 +228,8 @@ public abstract class TestResult extends TestObject {
 
     /**
      * If there was an error or a failure, this is the stack trace, or otherwise null.
+     *
+     * @return the stack trace of the error or failure.
      */
     public String getErrorStackTrace() {
         return "";
@@ -223,6 +237,8 @@ public abstract class TestResult extends TestObject {
 
     /**
      * If there was an error or a failure, this is the text from the message.
+     *
+     * @return the message of the error or failure.
      */
     public String getErrorDetails() {
         return ""; 
@@ -250,7 +266,9 @@ public abstract class TestResult extends TestObject {
 
     /**
      * Annotate some text -- what does this do? 
-     * @param text
+     * @param text Text to use to annotate the actions.
+     *
+     * @return the provided text HTML-escaped.
      */
     public String annotate(String text) {
         if (text == null)

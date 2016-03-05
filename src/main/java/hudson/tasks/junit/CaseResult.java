@@ -204,8 +204,11 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
 
     /**
      * Used to create a fake failure, when Hudson fails to load data from XML files.
-     *
      * Public since 1.526.
+     *
+     * @param parent Parent result.
+     * @param testName Test name.
+     * @param errorStackTrace Error stack trace.
      */
     public CaseResult(SuiteResult parent, String testName, String errorStackTrace) {
         this.className = parent == null ? "unnamed" : parent.getName();
@@ -313,6 +316,8 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
 
     /**
      * Gets the class name of a test class.
+     *
+     * @return the class name of a test class.
      */
     @Exported(visibility=9)
     public String getClassName() {
@@ -321,6 +326,8 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
 
     /**
      * Gets the simple (not qualified) class name.
+     *
+     * @return the simple (not qualified) class name.
      */
     public String getSimpleName() {
         int idx = className.lastIndexOf('.');
@@ -328,7 +335,9 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     }
 
     /**
-     * Gets the package name of a test case
+     * Gets the package name of a test case.
+     *
+     * @return the package name of a test case.
      */
     public String getPackageName() {
         int idx = className.lastIndexOf('.');
@@ -392,6 +401,8 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     /**
      * Gets the number of consecutive builds (including this)
      * that this test case has been failing.
+     *
+     * @return the number of consecutive failing builds.
      */
     @Exported(visibility=9)
     public int getAge() {
