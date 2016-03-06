@@ -23,6 +23,7 @@
  */
 package hudson.tasks.junit;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.util.TextFile;
 import org.apache.commons.io.FileUtils;
 import org.jvnet.localizer.Localizable;
@@ -69,8 +70,10 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     private final String skippedMessage;
     private final String errorStackTrace;
     private final String errorDetails;
+    @SuppressFBWarnings(value = "SE_TRANSIENT_FIELD_NOT_RESTORED", justification = "Specific method to restore it")
     private transient SuiteResult parent;
 
+    @SuppressFBWarnings(value = "IS2_INCONSISTENT_SYNC", justification = "Not guarded, though read in synchronized blocks")
     private transient ClassResult classResult;
 
     /**
@@ -162,6 +165,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     /**
      * Flavor of {@link #possiblyTrimStdio(Collection, boolean, String)} that doesn't try to read the whole thing into memory.
      */
+    @SuppressFBWarnings(value = "DM_DEFAULT_ENCODING", justification = "Expected behavior")
     static String possiblyTrimStdio(Collection<CaseResult> results, boolean keepLongStdio, File stdio) throws IOException {
         long len = stdio.length();
         if (keepLongStdio && len < 1024 * 1024) {
@@ -592,7 +596,29 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     }
 
     public int compareTo(CaseResult that) {
-        return this.getFullName().compareTo(that.getFullName());
+        if (this == that) {
+            return 0;
+        }
+        int r = this.getFullName().compareTo(that.getFullName());
+        if (r != 0) {
+            return r;
+        }
+        // Only equals is exact reference
+        return System.identityHashCode(this) >= System.identityHashCode(that) ? 1 : -1;
+    }
+
+    // Method overridden to provide explicit declaration of the equivalence relation used
+    // as Comparable is also implemented
+    @Override
+    public boolean equals(Object obj) {
+        return (this == obj);
+    }
+
+    // Method overridden to provide explicit declaration of the equivalence relation used
+    // as Comparable is also implemented
+    @Override
+    public int hashCode() {
+        return System.identityHashCode(this);
     }
 
     @Exported(name="status",visibility=9) // because stapler notices suffix 's' and remove it

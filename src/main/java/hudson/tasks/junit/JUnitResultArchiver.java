@@ -131,7 +131,11 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
     protected TestResult parse(String expandedTestResults, AbstractBuild build, Launcher launcher, BuildListener listener)
             throws IOException, InterruptedException
     {
-        return parse(expandedTestResults, build, build.getWorkspace(), launcher, listener);
+        final FilePath workspace = build.getWorkspace();
+        if (workspace == null) {
+            throw new IllegalArgumentException("The provided build has no workspace");
+        }
+        return parse(expandedTestResults, build, workspace, launcher, listener);
     }
 
     @Override

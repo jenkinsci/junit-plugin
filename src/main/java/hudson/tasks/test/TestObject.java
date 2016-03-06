@@ -24,9 +24,11 @@
  */
 package hudson.tasks.test;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Util;
 import hudson.Functions;
 import hudson.model.*;
+import hudson.tasks.junit.Helper;
 import hudson.tasks.junit.History;
 import hudson.tasks.junit.TestAction;
 import hudson.tasks.junit.TestResultAction;
@@ -53,6 +55,7 @@ import java.util.logging.Logger;
  * @author Kohsuke Kawaguchi
  */
 @ExportedBean
+@SuppressFBWarnings(value = "NM_SAME_SIMPLE_NAME_AS_SUPERCLASS", justification = "Accepted")
 public abstract class TestObject extends hudson.tasks.junit.TestObject {
 
     private static final Logger LOGGER = Logger.getLogger(TestObject.class.getName());
@@ -185,7 +188,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
             } else {
                 // We're not in a stapler request. Okay, give up.
                 LOGGER.info("trying to get relative path, but it is not my ancestor, and we're not in a stapler request. Trying absolute hudson url...");
-                String hudsonRootUrl = Jenkins.getInstance().getRootUrl();
+                String hudsonRootUrl = Helper.getActiveInstance().getRootUrl();
                 if (hudsonRootUrl==null||hudsonRootUrl.length()==0) {
                     LOGGER.warning("Can't find anything like a decent hudson url. Punting, returning empty string."); 
                     return "";

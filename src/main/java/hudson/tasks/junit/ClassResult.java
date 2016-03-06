@@ -203,7 +203,29 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
     }
 
     public int compareTo(ClassResult that) {
-        return this.className.compareTo(that.className);
+        if (this.equals(that)) {
+            return 0;
+        }
+        int r = this.className.compareTo(that.className);
+        if (r != 0) {
+            return r;
+        }
+        // Only equals is exact reference
+        return System.identityHashCode(this) >= System.identityHashCode(that) ? 1 : -1;
+    }
+
+    // Method overridden to provide explicit declaration of the equivalence relation used
+    // as Comparable is also implemented
+    @Override
+    public boolean equals(Object obj) {
+        return (this == obj);
+    }
+
+    // Method overridden to provide explicit declaration of the equivalence relation used
+    // as Comparable is also implemented
+    @Override
+    public int hashCode() {
+        return System.identityHashCode(this);
     }
 
     public String getDisplayName() {
@@ -233,4 +255,6 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
             return super.getRelativePathFrom(it);
         }
     }
+
+    private static final long serialVersionUID = 1L;
 }
