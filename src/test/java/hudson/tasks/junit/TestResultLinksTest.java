@@ -23,13 +23,17 @@
  */
 package hudson.tasks.junit;
 
-import org.jvnet.hudson.test.HudsonTestCase;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 
 import java.util.concurrent.TimeUnit;
 
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.JenkinsRule.WebClient;
 import org.jvnet.hudson.test.TouchBuilder;
 import org.jvnet.hudson.test.recipes.LocalData;
 
@@ -37,50 +41,54 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
 import com.gargoylesoftware.htmlunit.Page;
 
+import static org.junit.Assert.*;
+
 /**
  * User: Benjamin Shine bshine@yahoo-inc.com
  * Date: Dec 7, 2009
  * Time: 7:52:55 PM
  */
-public class TestResultLinksTest extends HudsonTestCase {
+public class TestResultLinksTest {
+    @Rule
+    public final JenkinsRule rule = new JenkinsRule();
 
     private FreeStyleProject project;
     private JUnitResultArchiver archiver;
     
 
-   @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        project = createFreeStyleProject("taqueria");
+    @Before
+    public void setUp() throws Exception {
+        project = rule.createFreeStyleProject("taqueria");
         archiver = new JUnitResultArchiver("*.xml");
         project.getPublishersList().add(archiver);
         project.getBuildersList().add(new TouchBuilder());
     }
 
     @LocalData
+    @Test
     public void testFailureLinks() throws Exception {
         FreeStyleBuild build = project.scheduleBuild2(0).get(10, TimeUnit.SECONDS);
-        assertBuildStatus(Result.UNSTABLE, build);
+        rule.assertBuildStatus(Result.UNSTABLE, build);
 
         TestResult theOverallTestResult =   build.getAction(TestResultAction.class).getResult();
         CaseResult theFailedTestCase = theOverallTestResult.getFailedTests().get(0);
         String relativePath = theFailedTestCase.getRelativePathFrom(theOverallTestResult);
         System.out.println("relative path seems to be: " + relativePath); 
 
-        HudsonTestCase.WebClient wc = new HudsonTestCase.WebClient();
+        WebClient wc = rule.createWebClient();
 
         String testReportPageUrl =  project.getLastBuild().getUrl() + "/testReport";
         HtmlPage testReportPage = wc.goTo( testReportPageUrl );
 
         Page packagePage = testReportPage.getAnchorByText("tacoshack.meals").click();
-        assertGoodStatus(packagePage); // I expect this to work; just checking that my use of the APIs is correct.
+        rule.assertGoodStatus(packagePage); // I expect this to work; just checking that my use of the APIs is correct.
 
         // Now we're on that page. We should be able to find a link to the failed test in there.
         HtmlAnchor anchor = testReportPage.getAnchorByText("tacoshack.meals.NachosTest.testBeanDip");
         String href = anchor.getHrefAttribute();
         System.out.println("link is : " + href);
         Page failureFromLink = anchor.click();
-        assertGoodStatus(failureFromLink);
+        rule.assertGoodStatus(failureFromLink);
 
         // Now check the >>> link -- this is harder, because we can't do the javascript click handler properly
         // The summary page is just tack on /summary to the url for the test
@@ -89,9 +97,10 @@ public class TestResultLinksTest extends HudsonTestCase {
 
     // Exercises the b-is-not-a-descendant-of-a path.
     @LocalData
+    @Test
     public void testNonDescendantRelativePath() throws Exception {
         FreeStyleBuild build = project.scheduleBuild2(0).get(10, TimeUnit.MINUTES); // leave time for interactive debugging
-        assertBuildStatus(Result.UNSTABLE, build);
+        rule.assertBuildStatus(Result.UNSTABLE, build);
         TestResult theOverallTestResult =   build.getAction(TestResultAction.class).getResult();
         CaseResult theFailedTestCase = theOverallTestResult.getFailedTests().get(0);
         String relativePath = theFailedTestCase.getRelativePathFrom(theOverallTestResult);
@@ -105,7 +114,7 @@ public class TestResultLinksTest extends HudsonTestCase {
         // I know that in a HudsonTestCase we don't have a meaningful root url, so I expect an empty string here.
         // If somehow we start being able to produce a root url, then I'll also tolerate a url that starts with that.
         boolean pathIsEmptyOrNull = relativePath2 == null || relativePath2.isEmpty();
-        boolean pathStartsWithRootUrl = !pathIsEmptyOrNull && relativePath2.startsWith(jenkins.getRootUrl());
+        boolean pathStartsWithRootUrl = !pathIsEmptyOrNull && relativePath2.startsWith(rule.jenkins.getRootUrl());
         assertTrue("relative path is empty OR begins with the app root", pathIsEmptyOrNull || pathStartsWithRootUrl ); 
     }
 }

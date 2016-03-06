@@ -33,18 +33,20 @@ import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.List;
 
-import junit.framework.TestCase;
-
+import org.junit.Test;
 import org.jvnet.hudson.test.Bug;
 
 import com.thoughtworks.xstream.XStream;
+import org.jvnet.hudson.test.Issue;
+
+import static org.junit.Assert.*;
 
 /**
  * Tests the JUnit result XML file parsing in {@link TestResult}.
  *
  * @author dty
  */
-public class TestResultTest extends TestCase {
+public class TestResultTest {
     private File getDataFile(String name) throws URISyntaxException {
         return new File(TestResultTest.class.getResource(name).toURI());
     }
@@ -53,6 +55,7 @@ public class TestResultTest extends TestCase {
      * Verifies that all suites of an Eclipse Plug-in Test Suite are collected.
      * These suites don't differ by name (and timestamp), the y differ by 'id'.
      */
+    @Test
     public void testIpsTests() throws Exception {
         TestResult testResult = new TestResult();
         testResult.parse(getDataFile("eclipse-plugin-test-report.xml"));
@@ -72,6 +75,7 @@ public class TestResultTest extends TestCase {
      * 
      * @throws Exception
      */
+    @Test
     public void testXmlCompatibility() throws Exception {
         XmlFile xmlFile = new XmlFile(XSTREAM, getDataFile("junitResult.xml"));
         TestResult result = (TestResult)xmlFile.read();
@@ -104,7 +108,8 @@ public class TestResultTest extends TestCase {
      * When test methods are parametrized, they can occur multiple times in the testresults XMLs.
      * Test that these are counted correctly.
      */
-    @Bug(13214)
+    @Issue("JENKINS-13214")
+    @Test
     public void testDuplicateTestMethods() throws IOException, URISyntaxException {
         TestResult testResult = new TestResult();
         testResult.parse(getDataFile("JENKINS-13214/27449.xml"));

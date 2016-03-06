@@ -29,19 +29,24 @@ import hudson.model.BuildListener;
 import hudson.model.Result;
 import hudson.model.FreeStyleBuild;
 import hudson.Launcher;
-import org.jvnet.hudson.test.HudsonTestCase;
+import org.junit.Rule;
+import org.junit.Test;
 import org.jvnet.hudson.test.Email;
-import org.jvnet.hudson.test.Bug;
+import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.JenkinsRule.WebClient;
 import org.jvnet.hudson.test.TestBuilder;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.xml.XmlPage;
 import java.io.IOException;
 
+import static org.junit.Assert.*;
+
 /**
  * @author Kohsuke Kawaguchi
  */
-public class CaseResultTest extends HudsonTestCase {
+public class CaseResultTest {
 //    /**
 //     * Verifies that Hudson can capture the stdout/stderr output from Maven surefire.
 //     */
@@ -59,7 +64,11 @@ public class CaseResultTest extends HudsonTestCase {
 //        assertTrue(tc.getStdout().contains("stdout"));
 //    }
 
+    @Rule
+    public final JenkinsRule rule = new JenkinsRule();
+
     @Email("http://www.nabble.com/NPE-%28Fatal%3A-Null%29-in-recording-junit-test-results-td23562964.html")
+    @Test
     public void testIssue20090516() throws Exception {
         FreeStyleBuild b = configureTestBuild(null);
         TestResult tr = b.getAction(TestResultAction.class).getResult();
@@ -95,7 +104,8 @@ public class CaseResultTest extends HudsonTestCase {
     /**
      * Verifies that the error message and stacktrace from a failed junit test actually render properly.
      */
-    @Bug(4257)
+    @Issue("JENKINS-4257")
+    @Test
     public void testFreestyleErrorMsgAndStacktraceRender() throws Exception {
         FreeStyleBuild b = configureTestBuild("render-test");
         TestResult tr = b.getAction(TestResultAction.class).getResult();
@@ -108,7 +118,7 @@ public class CaseResultTest extends HudsonTestCase {
 
 	String testUrl = cr.getRelativePathFrom(tr);
 	
-	HtmlPage page = new WebClient().goTo("job/render-test/1/testReport/" + testUrl);
+	HtmlPage page = rule.createWebClient().goTo("job/render-test/1/testReport/" + testUrl);
 
 	HtmlElement errorMsg = (HtmlElement) page.getByXPath("//h3[text()='Error Message']/following-sibling::*").get(0);
 
@@ -128,10 +138,11 @@ public class CaseResultTest extends HudsonTestCase {
     private static final String[] OTHER_FIELDS = { "duration", "className", "failedSince", "age", "skipped", "status" };
 
     @Email("http://jenkins.361315.n4.nabble.com/Change-remote-API-visibility-for-CaseResult-getStdout-getStderr-td395102.html")
+    @Test
     public void testRemoteApiDefaultVisibility() throws Exception {
         FreeStyleBuild b = configureTestBuild("test-remoteapi");
 
-        XmlPage page = (XmlPage) new WebClient().goTo("job/test-remoteapi/1/testReport/org.twia.vendor/VendorManagerTest/testCreateAdjustingFirm/api/xml","application/xml");
+        XmlPage page = (XmlPage)rule.createWebClient().goTo("job/test-remoteapi/1/testReport/org.twia.vendor/VendorManagerTest/testCreateAdjustingFirm/api/xml","application/xml");
 
         int found = 0;
 
@@ -146,10 +157,11 @@ public class CaseResultTest extends HudsonTestCase {
     }
     
     @Email("http://jenkins.361315.n4.nabble.com/Change-remote-API-visibility-for-CaseResult-getStdout-getStderr-td395102.html")
+    @Test
     public void testRemoteApiNoDetails() throws Exception {
         FreeStyleBuild b = configureTestBuild("test-remoteapi");
 
-        XmlPage page = (XmlPage) new WebClient().goTo("job/test-remoteapi/1/testReport/org.twia.vendor/VendorManagerTest/testCreateAdjustingFirm/api/xml?depth=-1","application/xml");
+        XmlPage page = (XmlPage)rule.createWebClient().goTo("job/test-remoteapi/1/testReport/org.twia.vendor/VendorManagerTest/testCreateAdjustingFirm/api/xml?depth=-1","application/xml");
 
         int found = 0;
 
@@ -164,10 +176,11 @@ public class CaseResultTest extends HudsonTestCase {
    }
     
     @Email("http://jenkins.361315.n4.nabble.com/Change-remote-API-visibility-for-CaseResult-getStdout-getStderr-td395102.html")
+    @Test
     public void testRemoteApiNameOnly() throws Exception {
         FreeStyleBuild b = configureTestBuild("test-remoteapi");
 
-        XmlPage page = (XmlPage) new WebClient().goTo("job/test-remoteapi/1/testReport/org.twia.vendor/VendorManagerTest/testCreateAdjustingFirm/api/xml?depth=-10","application/xml");
+        XmlPage page = (XmlPage)rule.createWebClient().goTo("job/test-remoteapi/1/testReport/org.twia.vendor/VendorManagerTest/testCreateAdjustingFirm/api/xml?depth=-10","application/xml");
 
         int found = 0;
 
@@ -185,17 +198,18 @@ public class CaseResultTest extends HudsonTestCase {
      * Makes sure the summary page remains text/plain (see commit 7089a81 in JENKINS-1544) but
      * the index page must be in text/html.
      */
-    @Bug(21261)
+    @Issue("JENKINS-21261")
+    @Test
     public void testContentType() throws Exception {
         configureTestBuild("foo");
-        WebClient wc = createWebClient();
+        WebClient wc = rule.createWebClient();
         wc.goTo("job/foo/1/testReport/org.twia.vendor/VendorManagerTest/testCreateAdjustingFirm/","text/html");
 
         wc.goTo("job/foo/1/testReport/org.twia.vendor/VendorManagerTest/testCreateAdjustingFirm/summary","text/plain");
     }
 
     private FreeStyleBuild configureTestBuild(String projectName) throws Exception {
-        FreeStyleProject p = projectName == null ? createFreeStyleProject() : createFreeStyleProject(projectName);
+        FreeStyleProject p = projectName == null ? rule.createFreeStyleProject() : rule.createFreeStyleProject(projectName);
         p.getBuildersList().add(new TestBuilder() {
             public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
                 build.getWorkspace().child("junit.xml").copyFrom(
@@ -204,7 +218,7 @@ public class CaseResultTest extends HudsonTestCase {
             }
         });
         p.getPublishersList().add(new JUnitResultArchiver("*.xml"));
-        return assertBuildStatus(Result.UNSTABLE, p.scheduleBuild2(0).get());
+        return rule.assertBuildStatus(Result.UNSTABLE, p.scheduleBuild2(0).get());
     }
 
     private String composeXPath(String[] fields) throws Exception {
