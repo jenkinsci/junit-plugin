@@ -122,7 +122,7 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
     }
 
     @Deprecated
-    public void setResult(TestResult result, BuildListener listener) {
+    public synchronized void setResult(TestResult result, BuildListener listener) {
         setResult(result, (TaskListener) listener);
     }
 
@@ -130,6 +130,7 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         return new XmlFile(XSTREAM, new File(run.getRootDir(), "junitResult.xml"));
     }
 
+    @Override
     public synchronized TestResult getResult() {
         TestResult r;
         if(result==null) {
@@ -152,21 +153,21 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
     }
 
     @Override
-    public int getFailCount() {
+    public synchronized int getFailCount() {
         if(totalCount==null)
             getResult();    // this will compute the result
         return failCount;
     }
 
     @Override
-    public int getSkipCount() {
+    public synchronized int getSkipCount() {
         if(totalCount==null)
             getResult();    // this will compute the result
         return skipCount;
     }
 
     @Override
-    public int getTotalCount() {
+    public synchronized int getTotalCount() {
         if(totalCount==null)
             getResult();    // this will compute the result
         return totalCount;

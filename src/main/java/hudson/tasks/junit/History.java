@@ -39,6 +39,7 @@ import java.awt.Color;
 import java.awt.Paint;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.CheckForNull;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
@@ -248,6 +249,7 @@ public class History {
             this.url = null;
         }
 
+        @CheckForNull
         public String getUrl() {
             if (this.url == null) generateUrl();
             return url;
@@ -257,7 +259,11 @@ public class History {
             Run<?,?> build = o.getRun();
             String buildLink = build.getUrl();
             String actionUrl = o.getTestResultAction().getUrlName();
-            this.url = Jenkins.getInstance().getRootUrl() + buildLink + actionUrl + o.getUrl();
+            final Jenkins jenkins = Jenkins.getInstance();
+            if (jenkins == null) {
+                return; // We don't update the field if Jenkins is not ready
+            }
+            this.url = jenkins.getRootUrl() + buildLink + actionUrl + o.getUrl();
         }
 
         public int compareTo(ChartLabel that) {

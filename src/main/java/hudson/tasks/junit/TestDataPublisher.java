@@ -81,7 +81,13 @@ public abstract class TestDataPublisher extends AbstractDescribableImpl<TestData
     }
 
 	public static DescriptorExtensionList<TestDataPublisher, Descriptor<TestDataPublisher>> all() {
-		return Jenkins.getInstance().<TestDataPublisher, Descriptor<TestDataPublisher>>getDescriptorList(TestDataPublisher.class);
+            final Jenkins jenkins = Jenkins.getInstance();
+            if (jenkins != null) {
+		return jenkins.<TestDataPublisher, Descriptor<TestDataPublisher>>getDescriptorList(TestDataPublisher.class);
+            } else {
+                //TODO: Strange all() implementation does not allow to create a list from scratch
+                throw new IllegalStateException("Jenkins instance is not ready");
+            }
 	}
 
 }

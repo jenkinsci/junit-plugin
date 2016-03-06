@@ -163,9 +163,13 @@ public class AggregatedTestResultPublisher extends Recorder {
          */
         public Collection<AbstractProject> getJobs() {
             List<AbstractProject> r = new ArrayList<AbstractProject>();
+            final Jenkins jenkins = Jenkins.getInstance();
+            if (jenkins == null || jobs == null) {
+                return r;
+            }
             for (String job : Util.tokenize(jobs,",")) {
                 try {
-                    AbstractProject j = Jenkins.getInstance().getItemByFullName(job.trim(), AbstractProject.class);
+                    AbstractProject j = jenkins.getItemByFullName(job.trim(), AbstractProject.class);
                     if (j != null) {
                         r.add(j);
                     }
@@ -288,7 +292,8 @@ public class AggregatedTestResultPublisher extends Recorder {
                             targetResult = Result.UNSTABLE;
                         }
                         
-                        if(b.isBuilding() || b.getResult().isWorseThan(targetResult))
+                        final Result result = b.getResult();
+                        if(b.isBuilding() || result == null || result.isWorseThan(targetResult))
                             continue;   // don't count them
 
                         for( AbstractTestResultAction ta : b.getActions(AbstractTestResultAction.class)) {
@@ -342,13 +347,20 @@ public class AggregatedTestResultPublisher extends Recorder {
         }
 
         public FormValidation doCheck(@AncestorInPath AbstractProject project, @QueryParameter String value) {
+            final Jenkins jenkins = Jenkins.getInstance();
+            if (jenkins == null) {
+                return FormValidation.error("Jenkins instance is not ready");
+            }
+            
             // Require CONFIGURE permission on this project
             if(!project.hasPermission(Item.CONFIGURE))  return FormValidation.ok();
 
             for (String name : Util.tokenize(fixNull(value), ",")) {
                 name = name.trim();
-                if(Jenkins.getInstance().getItem(name,project)==null)
-                    return FormValidation.error(hudson.tasks.Messages.BuildTrigger_NoSuchProject(name,AbstractProject.findNearest(name).getName()));
+                if(jenkins.getItem(name,project)==null) {
+                    final AbstractProject nearest = AbstractProject.findNearest(name);
+                    return FormValidation.error(hudson.tasks.Messages.BuildTrigger_NoSuchProject(name,nearest != null ? nearest.getName() : "none"));
+                }
             }
             
             return FormValidation.ok();

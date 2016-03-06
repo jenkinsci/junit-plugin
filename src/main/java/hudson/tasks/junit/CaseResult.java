@@ -35,6 +35,7 @@ import org.kohsuke.stapler.export.Exported;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.util.Collection;
@@ -44,6 +45,7 @@ import java.util.logging.Logger;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import javax.annotation.CheckForNull;
 
 /**
  * One test result.
@@ -69,9 +71,12 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     private final String skippedMessage;
     private final String errorStackTrace;
     private final String errorDetails;
-    private transient SuiteResult parent;
+    
+    @CheckForNull
+    private transient SuiteResult parent = null;
 
-    private transient ClassResult classResult;
+    @CheckForNull
+    private transient ClassResult classResult = null;
 
     /**
      * Some tools report stdout and stderr at testcase level (such as Maven surefire plugin), others do so at
@@ -178,13 +183,14 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         String head = tx.head(halfMaxSize);
         String tail = tx.fastTail(halfMaxSize);
 
-        int headBytes = head.getBytes().length;
-        int tailBytes = tail.getBytes().length;
+        //TODO: consider using UTF-8
+        int headBytes = head.getBytes(Charset.defaultCharset()).length;
+        int tailBytes = tail.getBytes(Charset.defaultCharset()).length;
 
         middle = len - (headBytes+tailBytes);
         if (middle<=0) {
             // if it turns out that we didn't have any middle section, just return the whole thing
-            return FileUtils.readFileToString(stdio);
+            return FileUtils.readFileToString(stdio, Charset.defaultCharset());
         }
 
         return head + "\n...[truncated " + middle + " bytes]...\n" + tail;
@@ -220,7 +226,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         this.skippedMessage = null;
     }
     
-    public ClassResult getParent() {
+    public synchronized ClassResult getParent() {
     	return classResult;
     }
 
@@ -584,6 +590,32 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         return this.getFullName().compareTo(that.getFullName());
     }
 
+    @Override
+    public int hashCode() {
+        int hash = 5;
+        hash = 53 * hash + (this.className != null ? this.className.hashCode() : 0);
+        hash = 53 * hash + (this.testName != null ? this.testName.hashCode() : 0);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final CaseResult other = (CaseResult) obj;
+        if ((this.className == null) ? (other.className != null) : !this.className.equals(other.className)) {
+            return false;
+        }
+        if ((this.testName == null) ? (other.testName != null) : !this.testName.equals(other.testName)) {
+            return false;
+        }
+        return true;
+    }
+    
     @Exported(name="status",visibility=9) // because stapler notices suffix 's' and remove it
     public Status getStatus() {
         if (skipped) {
@@ -601,7 +633,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         }
     }
 
-    /*package*/ void setClass(ClassResult classResult) {
+    /*package*/ synchronized void setClass(ClassResult classResult) {
         this.classResult = classResult;
     }
     

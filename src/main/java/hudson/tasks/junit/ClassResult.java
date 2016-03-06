@@ -120,7 +120,7 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
     
     public CaseResult getCaseResult(String name) {
         for (CaseResult c : cases) {
-            if(c.getSafeName().equals(name))
+            if(c.getName().equals(name))
                 return c;
         }
         return null;
@@ -204,10 +204,33 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
     	return className;
     }
 
+    @Override
     public int compareTo(ClassResult that) {
         return this.className.compareTo(that.className);
     }
 
+    @Override
+    public int hashCode() {
+        int hash = 7;
+        hash = 13 * hash + (this.className != null ? this.className.hashCode() : 0);
+        return hash;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        final ClassResult other = (ClassResult) obj;
+        if ((this.className == null) ? (other.className != null) : !this.className.equals(other.className)) {
+            return false;
+        }
+        return true;
+    }
+    
     public String getDisplayName() {
         return TestNameTransformer.getTransformedName(getName());
     }
