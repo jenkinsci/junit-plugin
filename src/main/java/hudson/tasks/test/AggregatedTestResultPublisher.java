@@ -363,11 +363,17 @@ public class AggregatedTestResultPublisher extends Recorder {
 
         @Override
         public AggregatedTestResultPublisher newInstance(StaplerRequest req, JSONObject formData) throws FormException {
+            // Starting in 1.640, Descriptor#newInstance is
+            // newInstance(@CheckForNull StaplerRequest req, @Nonnull JSONObject formData)
+            if (formData == null) {
+                // Should not happen. See above
+                throw new AssertionError("Null parameters to Descriptor#newInstance");
+            }
             JSONObject s = formData.getJSONObject("specify");
             if(s.isNullObject())
-                return new AggregatedTestResultPublisher(null, req.getParameter("includeFailedBuilds") != null);
+                return new AggregatedTestResultPublisher(null, req != null && req.getParameter("includeFailedBuilds") != null);
             else
-                return new AggregatedTestResultPublisher(s.getString("jobs"), req.getParameter("includeFailedBuilds") != null);
+                return new AggregatedTestResultPublisher(s.getString("jobs"), req != null && req.getParameter("includeFailedBuilds") != null);
         }
 
         public AutoCompletionCandidates doAutoCompleteJobs(@QueryParameter String value, @AncestorInPath Item self, @AncestorInPath ItemGroup container) {
