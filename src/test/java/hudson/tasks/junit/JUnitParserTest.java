@@ -31,20 +31,29 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.tasks.Builder;
 import hudson.tasks.test.TestResult;
-import org.jvnet.hudson.test.HudsonTestCase;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.recipes.LocalData;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.*;
+
+import static org.junit.Assert.*;
 
 /**
  * Test the mechanism for calling a JUnitParser separately
  * from the JUnitResultsArchiver
  *
  */
-public class JUnitParserTest extends HudsonTestCase {
+public class JUnitParserTest {
+    @Rule
+    public final JenkinsRule rule = new JenkinsRule();
     static hudson.tasks.junit.TestResult theResult = null;
 
     public static final class JUnitParserTestBuilder extends Builder implements Serializable {
@@ -81,15 +90,15 @@ public class JUnitParserTest extends HudsonTestCase {
     private FreeStyleProject project;
     private String projectName =  "junit_parser_test";
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        theResult = null; 
-        project = createFreeStyleProject(projectName);
+    @Before
+    public void setUp() throws Exception {
+        theResult = null;
+        project = rule.createFreeStyleProject(projectName);
         project.getBuildersList().add(new JUnitParserTestBuilder("*.xml"));
     }
 
     @LocalData
+    @Test
     public void testJustParsing() throws Exception {
         FreeStyleBuild build = project.scheduleBuild2(0).get(100, TimeUnit.MINUTES);
         assertNotNull(build);
@@ -115,7 +124,7 @@ public class JUnitParserTest extends HudsonTestCase {
 
         Collection<? extends TestResult> failingTests = theResult.getFailedTests();
         assertEquals("should have one failed test", 1, failingTests.size());
-        Map<String, TestResult> failedTestsByName = new HashMap<String, hudson.tasks.test.TestResult>();
+        Map<String, TestResult> failedTestsByName = new HashMap<String, TestResult>();
         for (TestResult r: failingTests) {
             failedTestsByName.put(r.getName(), r);  
         }

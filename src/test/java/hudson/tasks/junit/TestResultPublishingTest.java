@@ -37,39 +37,47 @@ import hudson.model.Result;
 import hudson.model.Run;
 import hudson.slaves.DumbSlave;
 import hudson.tasks.Builder;
-import org.jvnet.hudson.test.Bug;
-import org.jvnet.hudson.test.HudsonTestCase;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.JenkinsRule.WebClient;
 import org.jvnet.hudson.test.TouchBuilder;
 import org.jvnet.hudson.test.recipes.LocalData;
 import org.xml.sax.SAXException;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class TestResultPublishingTest extends HudsonTestCase {
+import static org.junit.Assert.*;
+
+public class TestResultPublishingTest {
+    @Rule
+    public final JenkinsRule rule = new JenkinsRule();
+
     private FreeStyleProject project;
     private JUnitResultArchiver archiver;
     private final String BASIC_TEST_PROJECT = "percival";
     private final String TEST_PROJECT_WITH_HISTORY = "wonky";
 
 
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-        project = createFreeStyleProject(BASIC_TEST_PROJECT);
+    @Before
+    public void setUp() throws Exception {
+        project = rule.createFreeStyleProject(BASIC_TEST_PROJECT);
         archiver = new JUnitResultArchiver("*.xml");
         project.getPublishersList().add(archiver);
         project.getBuildersList().add(new TouchBuilder());
     }
 
     @LocalData
+    @Test
     public void testBasic() throws Exception {
         FreeStyleBuild build = project.scheduleBuild2(0).get(30, TimeUnit.SECONDS);
 
         assertTestResults(build);
 
-        HudsonTestCase.WebClient wc = new HudsonTestCase.WebClient();
+        WebClient wc = rule.createWebClient();
         wc.getPage(project); // project page
         wc.getPage(build); // build page
         wc.getPage(build, "testReport");  // test report
@@ -80,11 +88,12 @@ public class TestResultPublishingTest extends HudsonTestCase {
 
 
     @LocalData
+    @Test
     public void testSlave() throws Exception {
-        DumbSlave s = createOnlineSlave();
+        DumbSlave s = rule.createOnlineSlave();
         project.setAssignedLabel(s.getSelfLabel());
 
-        FilePath src = new FilePath(jenkins.getRootPath(), "jobs/" + BASIC_TEST_PROJECT + "/workspace/");
+        FilePath src = new FilePath(rule.jenkins.getRootPath(), "jobs/" + BASIC_TEST_PROJECT + "/workspace/");
         assertNotNull(src);
         FilePath dest = s.getWorkspaceFor(project);
         assertNotNull(dest);
@@ -103,32 +112,28 @@ public class TestResultPublishingTest extends HudsonTestCase {
      * - Old testReport URLs should still work
      */
     @LocalData
+    @Test
     public void testOpenJUnitPublishing() throws IOException, SAXException {
-        List<Project> projects = this.jenkins.getProjects();
-        // Make sure there's a project named TEST_PROJECT_WITH_HISTORY
-        Project proj = null;
-        for (Project p : projects) {
-            if (p.getName().equals(TEST_PROJECT_WITH_HISTORY)) proj = p;
-        }
+        Project proj = (Project)rule.jenkins.getItem(TEST_PROJECT_WITH_HISTORY);
         assertNotNull("We should have a project named " + TEST_PROJECT_WITH_HISTORY, proj);
 
         // Validate that there are test results where I expect them to be:
-        HudsonTestCase.WebClient wc = new HudsonTestCase.WebClient();
+        WebClient wc = rule.createWebClient();
 
         // On the project page:
         HtmlPage projectPage = wc.getPage(proj);
         //      we should have a link that reads "Latest Test Result"
         //      that link should go to http://localhost:8080/job/breakable/lastBuild/testReport/
-        assertXPath(projectPage, "//a[@href='lastCompletedBuild/testReport/']");
-        assertXPathValue(projectPage, "//a[@href='lastCompletedBuild/testReport/']", "Latest Test Result");
-        assertXPathValueContains(projectPage, "//a[@href='lastCompletedBuild/testReport/']", "Latest Test Result");
+        rule.assertXPath(projectPage, "//a[@href='lastCompletedBuild/testReport/']");
+        rule.assertXPathValue(projectPage, "//a[@href='lastCompletedBuild/testReport/']", "Latest Test Result");
+        rule.assertXPathValueContains(projectPage, "//a[@href='lastCompletedBuild/testReport/']", "Latest Test Result");
         //      after "Latest Test Result" it should say "no failures"
-        assertXPathResultsContainText(projectPage, "//td", "(no failures)");
+        rule.assertXPathResultsContainText(projectPage, "//td", "(no failures)");
         //      there should be a test result trend graph
-        assertXPath(projectPage, "//img[@src='test/trend']");
+        rule.assertXPath(projectPage, "//img[@src='test/trend']");
         // the trend graph should be served up with a good http status
         Page trendGraphPage = wc.goTo(proj.getUrl() + "/test/trend", "image/png");
-        assertGoodStatus(trendGraphPage);
+        rule.assertGoodStatus(trendGraphPage);
 
         // The trend graph should be clickable and take us to a run details page
         Object imageNode = projectPage.getFirstByXPath("//img[@src='test/trend']");
@@ -137,44 +142,44 @@ public class TestResultPublishingTest extends HudsonTestCase {
         // TODO: Check that we can click on the graph and get to a particular run. How do I do this with HtmlUnit?
 
         XmlPage xmlProjectPage = wc.goToXml(proj.getUrl() + "/lastBuild/testReport/api/xml");
-        assertXPath(xmlProjectPage, "/testResult");
-        assertXPath(xmlProjectPage, "/testResult/suite");
-        assertXPath(xmlProjectPage, "/testResult/failCount");
-        assertXPathValue(xmlProjectPage, "/testResult/failCount", "0");
-        assertXPathValue(xmlProjectPage, "/testResult/passCount", "4");
-        assertXPathValue(xmlProjectPage, "/testResult/skipCount", "0");
+        rule.assertXPath(xmlProjectPage, "/testResult");
+        rule.assertXPath(xmlProjectPage, "/testResult/suite");
+        rule.assertXPath(xmlProjectPage, "/testResult/failCount");
+        rule.assertXPathValue(xmlProjectPage, "/testResult/failCount", "0");
+        rule.assertXPathValue(xmlProjectPage, "/testResult/passCount", "4");
+        rule.assertXPathValue(xmlProjectPage, "/testResult/skipCount", "0");
         String[] packages = {"org.jvnet.hudson.examples.small.AppTest", "org.jvnet.hudson.examples.small.MiscTest", "org.jvnet.hudson.examples.small.deep.DeepTest"};
         for (String packageName : packages) {
-            assertXPath(xmlProjectPage, "/testResult/suite/case/className[text()='" + packageName + "']");
+            rule.assertXPath(xmlProjectPage, "/testResult/suite/case/className[text()='" + packageName + "']");
         }
 
         // Go to a page that we know has a failure
         HtmlPage buildPage = wc.getPage(proj.getBuildByNumber(3));
-        assertGoodStatus(buildPage);
+        rule.assertGoodStatus(buildPage);
         // We expect to see one failure, for com.yahoo.breakable.misc.UglyTest.becomeUglier
         // which should link to http://localhost:8080/job/wonky/3/testReport/org.jvnet.hudson.examples.small/MiscTest/testEleanor/
-        assertXPathResultsContainText(buildPage, "//a", "org.jvnet.hudson.examples.small.MiscTest.testEleanor");
-        HtmlAnchor failingTestLink = buildPage.getFirstAnchorByText("org.jvnet.hudson.examples.small.MiscTest.testEleanor");
+        rule.assertXPathResultsContainText(buildPage, "//a", "org.jvnet.hudson.examples.small.MiscTest.testEleanor");
+        HtmlAnchor failingTestLink = buildPage.getAnchorByText("org.jvnet.hudson.examples.small.MiscTest.testEleanor");
         assertNotNull(failingTestLink);
         Page failingTestPage = failingTestLink.click();
-        assertGoodStatus(failingTestPage);
+        rule.assertGoodStatus(failingTestPage);
 
         // Go to the xml page for a build we know has failures
         XmlPage xmlBuildPage = wc.goToXml(proj.getBuildByNumber(3).getUrl() + "/api/xml");
-        assertXPathValue(xmlBuildPage, "//failCount", "2");
-        assertXPathValue(xmlBuildPage, "//skipCount", "0");
-        assertXPathValue(xmlBuildPage, "//totalCount", "4");
-        assertXPathValue(xmlBuildPage, "//result", "FAILURE");
+        rule.assertXPathValue(xmlBuildPage, "//failCount", "2");
+        rule.assertXPathValue(xmlBuildPage, "//skipCount", "0");
+        rule.assertXPathValue(xmlBuildPage, "//totalCount", "4");
+        rule.assertXPathValue(xmlBuildPage, "//result", "FAILURE");
 
         // Check overall test result counts
         XmlPage xmlTestReportPage = wc.goToXml(proj.getBuildByNumber(3).getUrl() + "/testReport/api/xml");
-        assertXPathValue(xmlTestReportPage, "/testResult/failCount", "2");
-        assertXPathValue(xmlTestReportPage, "/testResult/passCount", "2");
-        assertXPathValue(xmlTestReportPage, "/testResult/skipCount", "0");
+        rule.assertXPathValue(xmlTestReportPage, "/testResult/failCount", "2");
+        rule.assertXPathValue(xmlTestReportPage, "/testResult/passCount", "2");
+        rule.assertXPathValue(xmlTestReportPage, "/testResult/skipCount", "0");
 
         // Make sure the right tests passed and failed
-        assertXPathValue(xmlTestReportPage, "/testResult/suite/case[className/text()='org.jvnet.hudson.examples.small.AppTest']/status", "PASSED");
-        assertXPathValue(xmlTestReportPage, "/testResult/suite/case[name/text()='testEleanor']/status", "FAILED");
+        rule.assertXPathValue(xmlTestReportPage, "/testResult/suite/case[className/text()='org.jvnet.hudson.examples.small.AppTest']/status", "PASSED");
+        rule.assertXPathValue(xmlTestReportPage, "/testResult/suite/case[name/text()='testEleanor']/status", "FAILED");
 
 
         // TODO: implement more of these tests
@@ -210,19 +215,15 @@ public class TestResultPublishingTest extends HudsonTestCase {
     /**
      * Test to demonstrate bug HUDSON-5246, inter-build diffs for junit test results are wrong
      */
-    @Bug(5246)
+    @Issue("JENKINS-5246")
     @LocalData
+    @Test
     public void testInterBuildDiffs() throws IOException, SAXException {
-        List<Project> projects = this.jenkins.getProjects();
-        // Make sure there's a project named TEST_PROJECT_WITH_HISTORY
-        Project proj = null;
-        for (Project p : projects) {
-            if (p.getName().equals(TEST_PROJECT_WITH_HISTORY)) proj = p;
-        }
+        Project proj = (Project)rule.jenkins.getItem(TEST_PROJECT_WITH_HISTORY);
         assertNotNull("We should have a project named " + TEST_PROJECT_WITH_HISTORY, proj);
 
         // Validate that there are test results where I expect them to be:
-        HudsonTestCase.WebClient wc = new HudsonTestCase.WebClient();
+        WebClient wc = rule.createWebClient();
         Run theRun = proj.getBuildByNumber(4);
         assertTestResultsAsExpected(wc, theRun, "/testReport",
                         "org.jvnet.hudson.examples.small", "12 ms", "FAILURE",
@@ -239,26 +240,19 @@ public class TestResultPublishingTest extends HudsonTestCase {
      * @throws SAXException
      */
     @LocalData
+    @Test
     public void testHistoryPageOpenJunit() throws IOException, SAXException {
-        List<Project> projects = this.jenkins.getProjects();
-        // Make sure there's a project named breakable
-        Project proj = null;
-        for (Project p : projects) {
-            if (p.getName().equals(TEST_PROJECT_WITH_HISTORY)) {
-                proj = p;
-                break;
-            }
-        }
+        Project proj = (Project)rule.jenkins.getItem(TEST_PROJECT_WITH_HISTORY);
         assertNotNull("We should have a project named " + TEST_PROJECT_WITH_HISTORY, proj);
 
         // Validate that there are test results where I expect them to be:
-        HudsonTestCase.WebClient wc = new HudsonTestCase.WebClient();
+        WebClient wc = rule.createWebClient();
 
         HtmlPage historyPage = wc.getPage(proj.getBuildByNumber(7),"/testReport/history/");
-        assertGoodStatus(historyPage);
-        assertXPath(historyPage, "//img[@id='graph']");
-        assertXPath(historyPage, "//table[@id='testresult']");
-        HtmlElement wholeTable = historyPage.getElementById("testresult");
+        rule.assertGoodStatus(historyPage);
+        rule.assertXPath(historyPage, "//img[@id='graph']");
+        rule.assertXPath(historyPage, "//table[@id='testresult']");
+        DomElement wholeTable = historyPage.getElementById("testresult");
         assertNotNull("table with id 'testresult' exists", wholeTable);
         assertTrue("wholeTable is a table", wholeTable instanceof HtmlTable);
         HtmlTable table = (HtmlTable) wholeTable;
@@ -280,12 +274,13 @@ public class TestResultPublishingTest extends HudsonTestCase {
                 tableText.contains("4 ms"));
     }
 
-    @Bug(19186)
+    @Issue("JENKINS-19186")
+    @Test
     public void testBrokenResultFile() throws Exception {
-        FreeStyleProject p = createFreeStyleProject();
+        FreeStyleProject p = rule.createFreeStyleProject();
         p.getBuildersList().add(new TestBuilder());
         p.getPublishersList().add(new JUnitResultArchiver("TEST-foo.xml", false, null));
-        assertBuildStatus(Result.UNSTABLE, p.scheduleBuild2(0).get());
+        rule.assertBuildStatus(Result.UNSTABLE, p.scheduleBuild2(0).get());
     }
     private static final class TestBuilder extends Builder {
         @Override public boolean perform(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
@@ -328,10 +323,10 @@ public class TestResultPublishingTest extends HudsonTestCase {
         XmlPage xmlPage = wc.goToXml(run.getUrl() + restOfUrl + "/" + packageName + "/api/xml");
         int expectedPassCount = expectedTotalTests - expectedFailCount - expectedSkipCount;
         // Verify xml results
-        assertXPathValue(xmlPage, "/packageResult/failCount", Integer.toString(expectedFailCount));
-        assertXPathValue(xmlPage, "/packageResult/skipCount", Integer.toString(expectedSkipCount));
-        assertXPathValue(xmlPage, "/packageResult/passCount", Integer.toString(expectedPassCount));
-        assertXPathValue(xmlPage, "/packageResult/name", packageName);
+        rule.assertXPathValue(xmlPage, "/packageResult/failCount", Integer.toString(expectedFailCount));
+        rule.assertXPathValue(xmlPage, "/packageResult/skipCount", Integer.toString(expectedSkipCount));
+        rule.assertXPathValue(xmlPage, "/packageResult/passCount", Integer.toString(expectedPassCount));
+        rule.assertXPathValue(xmlPage, "/packageResult/name", packageName);
 
         // TODO: verify html results
         HtmlPage testResultPage =   wc.getPage(run, restOfUrl);

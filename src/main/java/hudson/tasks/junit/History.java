@@ -94,6 +94,8 @@ public class History {
 
     /**
      * Graph of duration of tests over time.
+     *
+     * @return a graph of duration of tests over time.
      */
     public Graph getDurationGraph() {
        return new GraphImpl("seconds") {
@@ -131,6 +133,8 @@ public class History {
 
     /**
      * Graph of # of tests over time.
+     *
+     * @return a graph of number of tests over time.
      */
     public Graph getCountGraph() {
         return new GraphImpl("") {
@@ -253,11 +257,15 @@ public class History {
             return url;
         }
 
-         private void generateUrl() {
+        private void generateUrl() {
             Run<?,?> build = o.getRun();
             String buildLink = build.getUrl();
             String actionUrl = o.getTestResultAction().getUrlName();
-            this.url = Jenkins.getInstance().getRootUrl() + buildLink + actionUrl + o.getUrl();
+            final String rootUrl = Helper.getActiveInstance().getRootUrl();
+            if (rootUrl == null) {
+                throw new IllegalStateException("Jenkins root URL not available");
+            }
+            this.url = rootUrl + buildLink + actionUrl + o.getUrl();
         }
 
         public int compareTo(ChartLabel that) {

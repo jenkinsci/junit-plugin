@@ -24,6 +24,7 @@
 package hudson.tasks.junit;
 
 import com.thoughtworks.xstream.XStream;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Util;
 import hudson.XmlFile;
 import hudson.model.AbstractBuild;
@@ -59,6 +60,7 @@ import jenkins.tasks.SimpleBuildStep;
  *
  * @author Kohsuke Kawaguchi
  */
+@SuppressFBWarnings(value = "UG_SYNC_SET_UNSYNC_GET", justification = "False positive")
 public class TestResultAction extends AbstractTestResultAction<TestResultAction> implements StaplerProxy, SimpleBuildStep.LastBuildAction {
     private transient WeakReference<TestResult> result;
 
@@ -152,21 +154,21 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
     }
 
     @Override
-    public int getFailCount() {
+    public synchronized int getFailCount() {
         if(totalCount==null)
             getResult();    // this will compute the result
         return failCount;
     }
 
     @Override
-    public int getSkipCount() {
+    public synchronized int getSkipCount() {
         if(totalCount==null)
             getResult();    // this will compute the result
         return skipCount;
     }
 
     @Override
-    public int getTotalCount() {
+    public synchronized int getTotalCount() {
         if(totalCount==null)
             getResult();    // this will compute the result
         return totalCount;

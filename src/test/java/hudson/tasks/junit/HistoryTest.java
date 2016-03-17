@@ -27,45 +27,49 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Project;
 import hudson.model.Result;
-import org.jvnet.hudson.test.HudsonTestCase;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.recipes.LocalData;
 
 import java.util.List;
 
-public class HistoryTest extends HudsonTestCase {
-     private FreeStyleProject project;
+import static org.junit.Assert.*;
+
+public class HistoryTest {
+    @Rule
+    public final JenkinsRule rule = new JenkinsRule();
+
+    private FreeStyleProject project;
 
     private static final String PROJECT_NAME = "wonky";
 
-
-    @Override
-    protected void setUp() throws Exception {
-        super.setUp();
-
-        List<Project> projects = this.jenkins.getProjects();
+    @Before
+    public void setUp() throws Exception {
+        List<FreeStyleProject> projects = rule.jenkins.getAllItems(FreeStyleProject.class);
         Project theProject = null;
         for (Project p : projects) {
             if (p.getName().equals(PROJECT_NAME)) theProject = p;
         }
         assertNotNull("We should have a project named " + PROJECT_NAME, theProject);
-
-        assertTrue( theProject instanceof FreeStyleProject);
         project = (FreeStyleProject) theProject;
     }
 
 
     @LocalData
+    @Test
     public void testFailedSince() throws Exception {
         assertNotNull("project should exist", project);
 
         // Check the status of a few builds
         FreeStyleBuild build4 = project.getBuildByNumber(4);
         assertNotNull("build4", build4);
-        assertBuildStatus(Result.FAILURE, build4);
+        rule.assertBuildStatus(Result.FAILURE, build4);
 
         FreeStyleBuild build7 = project.getBuildByNumber(7);
         assertNotNull("build7", build7);
-        assertBuildStatus(Result.SUCCESS, build7);
+        rule.assertBuildStatus(Result.SUCCESS, build7);
 
         TestResult tr = build4.getAction(TestResultAction.class).getResult();
         assertEquals(2,tr.getFailedTests().size());

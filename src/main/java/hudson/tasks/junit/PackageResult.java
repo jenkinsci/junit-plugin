@@ -188,6 +188,8 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
 
     /**
      * Returns a list of the failed cases, sorted by age.
+     *
+     * @return a list of the failed cases, sorted by age.
      */
     public List<CaseResult> getFailedTestsSortedByAge() {
         List<CaseResult> failedTests = getFailedTests();
@@ -297,10 +299,34 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
     }
 
     public int compareTo(PackageResult that) {
-        return this.packageName.compareTo(that.packageName);
+        if (this.equals(that)) {
+            return 0;
+        }
+        int r = this.packageName.compareTo(that.packageName);
+        if (r != 0) {
+            return r;
+        }
+        // Only equals is exact reference
+        return System.identityHashCode(this) >= System.identityHashCode(that) ? 1 : -1;
+    }
+
+    // Method overridden to provide explicit declaration of the equivalence relation used
+    // as Comparable is also implemented
+    @Override
+    public boolean equals(Object obj) {
+        return (this == obj);
+    }
+
+    // Method overridden to provide explicit declaration of the equivalence relation used
+    // as Comparable is also implemented
+    @Override
+    public int hashCode() {
+        return System.identityHashCode(this);
     }
 
     public String getDisplayName() {
         return TestNameTransformer.getTransformedName(packageName);
     }
+
+    private static final long serialVersionUID = 1L;
 }

@@ -24,9 +24,11 @@
  */
 package hudson.tasks.test;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Util;
 import hudson.Functions;
 import hudson.model.*;
+import hudson.tasks.junit.Helper;
 import hudson.tasks.junit.History;
 import hudson.tasks.junit.TestAction;
 import hudson.tasks.junit.TestResultAction;
@@ -53,6 +55,7 @@ import java.util.logging.Logger;
  * @author Kohsuke Kawaguchi
  */
 @ExportedBean
+@SuppressFBWarnings(value = "NM_SAME_SIMPLE_NAME_AS_SUPERCLASS", justification = "Accepted")
 public abstract class TestObject extends hudson.tasks.junit.TestObject {
 
     private static final Logger LOGGER = Logger.getLogger(TestObject.class.getName());
@@ -60,6 +63,8 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
 
     /**
      * Reverse pointer of {@link TabulatedResult#getChildren()}.
+     *
+     * @return the parent {@link TestObject}.
      */
     public abstract TestObject getParent();
 
@@ -109,6 +114,8 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
 
     /**
      * Returns the top level test result data.
+     *
+     * @return the top level test result data.
      */    
     public TestResult getTopLevelTestResult() {
         TestObject parent = getParent();
@@ -120,6 +127,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
      * Computes the relative path to get to this test object from <code>it</code>. If
      * <code>it</code> does not appear in the parent chain for this object, a
      * relative path from the server root will be returned.
+     * @param it Target test object.
      *
      * @return A relative path to this object, potentially from the top of the
      * Hudson object model
@@ -180,7 +188,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
             } else {
                 // We're not in a stapler request. Okay, give up.
                 LOGGER.info("trying to get relative path, but it is not my ancestor, and we're not in a stapler request. Trying absolute hudson url...");
-                String hudsonRootUrl = Jenkins.getInstance().getRootUrl();
+                String hudsonRootUrl = Helper.getActiveInstance().getRootUrl();
                 if (hudsonRootUrl==null||hudsonRootUrl.length()==0) {
                     LOGGER.warning("Can't find anything like a decent hudson url. Punting, returning empty string."); 
                     return "";
@@ -231,7 +239,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
 
     /**
      * Gets a test action of the class passed in. 
-     * @param klazz
+     * @param klazz Type of the action to return.
      * @param <T> an instance of the class passed in
      */
     @Override
@@ -266,7 +274,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
     }
 
     /**
-     * Find the test result corresponding to the one identified by <code>id></code>
+     * Find the test result corresponding to the one identified by <code>id</code>
      * within this test result.
      *
      * @param id The path to the original test result
@@ -324,6 +332,8 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
 
     /**
      * Gets the full name of this object.
+     *
+     * @return the full name of this object.
      * @since 1.551
      */
     public String getFullName() {
@@ -351,6 +361,10 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
 
     /**
      * #2988: uniquifies a {@link #getSafeName} amongst children of the parent.
+     * @param siblings Siblings of the current
+     * @param base Prefix to use for the name.
+     *
+     * @return an unique name amongst children of the parent.
      */
     protected final String uniquifyName(Collection<? extends TestObject> siblings, String base) {
         synchronized (UNIQUIFIED_NAMES) {
@@ -374,9 +388,11 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
 
     /**
      * Replaces URL-unsafe characters.
-     *
      * If s is an empty string, returns "(empty)" otherwise the generated URL would contain
-     * two slashes one after the other and getDynamic() would fail
+     * two slashes one after the other and getDynamic() would fail.
+     * @param s String to process.
+     *
+     * @return the string with the unsafe characters replaced.
      */
     public static String safe(String s) {
         if (StringUtils.isEmpty(s)) {

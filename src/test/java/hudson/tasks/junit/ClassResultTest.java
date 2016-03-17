@@ -2,9 +2,13 @@ package hudson.tasks.junit;
 
 import hudson.tasks.test.TestResult;
 import junit.framework.TestCase;
+import org.junit.Test;
 
-public class ClassResultTest extends TestCase {
-	
+import static org.junit.Assert.assertEquals;
+
+public class ClassResultTest {
+
+	@Test
 	public void testFindCorrespondingResult() {
 		ClassResult classResult = new ClassResult(null, "com.example.ExampleTest");
 	
@@ -16,6 +20,7 @@ public class ClassResultTest extends TestCase {
 		assertEquals(caseResult, result);
 	}
 
+	@Test
 	public void testFindCorrespondingResultWhereClassResultNameIsNotSubstring() {
 		ClassResult classResult = new ClassResult(null, "aaaa");
 	
@@ -27,6 +32,7 @@ public class ClassResultTest extends TestCase {
 		assertEquals(caseResult, result);
 	}
 
+	@Test
 	public void testFindCorrespondingResultWhereClassResultNameIsLastInCaseResultName() {
 		ClassResult classResult = new ClassResult(null, "aaaa");
 	

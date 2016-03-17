@@ -23,6 +23,7 @@
  */
 package hudson.tasks.test;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.AutoCompletionCandidates;
@@ -35,6 +36,7 @@ import hudson.model.BuildListener;
 import hudson.model.Fingerprint.RangeSet;
 import hudson.model.InvisibleAction;
 import hudson.model.ItemGroup;
+import hudson.tasks.junit.Helper;
 import jenkins.model.Jenkins;
 import hudson.model.Item;
 import hudson.model.Job;
@@ -163,14 +165,16 @@ public class AggregatedTestResultPublisher extends Recorder {
          */
         public Collection<AbstractProject> getJobs() {
             List<AbstractProject> r = new ArrayList<AbstractProject>();
-            for (String job : Util.tokenize(jobs,",")) {
-                try {
-                    AbstractProject j = Jenkins.getInstance().getItemByFullName(job.trim(), AbstractProject.class);
-                    if (j != null) {
-                        r.add(j);
+            if (jobs != null) {
+                for (String job : Util.tokenize(jobs,",")) {
+                    try {
+                        AbstractProject j = Helper.getActiveInstance().getItemByFullName(job.trim(), AbstractProject.class);
+                        if (j != null) {
+                            r.add(j);
+                        }
+                    } catch (AccessDeniedException x) {
+                        // just skip it
                     }
-                } catch (AccessDeniedException x) {
-                    // just skip it
                 }
             }
             return r;
@@ -250,6 +254,7 @@ public class AggregatedTestResultPublisher extends Recorder {
         /**
          * Makes sure that the data fields are up to date.
          */
+        @SuppressFBWarnings(value = "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification = "False positive. Short-circuited")
         private synchronized void upToDateCheck() {
             // up to date check
             if(lastUpdated>lastChanged)     return;
@@ -288,7 +293,7 @@ public class AggregatedTestResultPublisher extends Recorder {
                             targetResult = Result.UNSTABLE;
                         }
                         
-                        if(b.isBuilding() || b.getResult().isWorseThan(targetResult))
+                        if(b.isBuilding() || b.getResult() == null || b.getResult().isWorseThan(targetResult))
                             continue;   // don't count them
 
                         for( AbstractTestResultAction ta : b.getActions(AbstractTestResultAction.class)) {
@@ -347,8 +352,10 @@ public class AggregatedTestResultPublisher extends Recorder {
 
             for (String name : Util.tokenize(fixNull(value), ",")) {
                 name = name.trim();
-                if(Jenkins.getInstance().getItem(name,project)==null)
-                    return FormValidation.error(hudson.tasks.Messages.BuildTrigger_NoSuchProject(name,AbstractProject.findNearest(name).getName()));
+                if (Helper.getActiveInstance().getItem(name,project) == null) {
+                    final AbstractProject<?,?> nearest = AbstractProject.findNearest(name);
+                    return FormValidation.error(hudson.tasks.Messages.BuildTrigger_NoSuchProject(name, nearest != null ? nearest.getName() : null));
+                }
             }
             
             return FormValidation.ok();
@@ -356,11 +363,17 @@ public class AggregatedTestResultPublisher extends Recorder {
 
         @Override
         public AggregatedTestResultPublisher newInstance(StaplerRequest req, JSONObject formData) throws FormException {
+            // Starting in 1.640, Descriptor#newInstance is
+            // newInstance(@CheckForNull StaplerRequest req, @Nonnull JSONObject formData)
+            if (formData == null) {
+                // Should not happen. See above
+                throw new AssertionError("Null parameters to Descriptor#newInstance");
+            }
             JSONObject s = formData.getJSONObject("specify");
             if(s.isNullObject())
-                return new AggregatedTestResultPublisher(null, req.getParameter("includeFailedBuilds") != null);
+                return new AggregatedTestResultPublisher(null, req != null && req.getParameter("includeFailedBuilds") != null);
             else
-                return new AggregatedTestResultPublisher(s.getString("jobs"), req.getParameter("includeFailedBuilds") != null);
+                return new AggregatedTestResultPublisher(s.getString("jobs"), req != null && req.getParameter("includeFailedBuilds") != null);
         }
 
         public AutoCompletionCandidates doAutoCompleteJobs(@QueryParameter String value, @AncestorInPath Item self, @AncestorInPath ItemGroup container) {

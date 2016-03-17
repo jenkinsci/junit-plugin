@@ -26,18 +26,21 @@ package hudson.tasks.junit;
 
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicReference;
-import junit.framework.TestCase;
+import org.junit.Test;
 import org.jvnet.hudson.test.For;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.localizer.LocaleProvider;
 
+import static org.junit.Assert.assertEquals;
+
 @For(CaseResult.class)
-public class CaseResultUnitTest extends TestCase {
+public class CaseResultUnitTest {
     
-    public CaseResultUnitTest(String name) {
-        super(name);
+    public CaseResultUnitTest() {
     }
     
-    // @Bug(6824)
+    @Issue("JENKINS-6824")
+    @Test
     public void testLocalizationOfStatus() throws Exception {
         LocaleProvider old = LocaleProvider.getProvider();
         try {

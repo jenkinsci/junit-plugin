@@ -143,6 +143,10 @@ public final class TestResult extends MetaTabulatedResult {
     /**
      * Collect reports from the given {@link DirectoryScanner}, while
      * filtering out all files that were created before the given time.
+     * @param buildTime Build time.
+     * @param results Directory scanner.
+     *
+     * @throws IOException if an error occurs.
      */
     public void parse(long buildTime, DirectoryScanner results) throws IOException {
         String[] includedFiles = results.getIncludedFiles();
@@ -153,7 +157,11 @@ public final class TestResult extends MetaTabulatedResult {
     /**
      * Collect reports from the given report files, while
      * filtering out all files that were created before the given time.
-     * 
+     * @param buildTime Build time.
+     * @param baseDir Base directory.
+     * @param reportFiles Report files.
+     *
+     * @throws IOException if an error occurs.
      * @since 1.426
      */
     public void parse(long buildTime, File baseDir, String[] reportFiles) throws IOException {
@@ -189,7 +197,11 @@ public final class TestResult extends MetaTabulatedResult {
     
     /**
      * Collect reports from the given report files
-     * 
+     *
+     * @param buildTime Build time.
+     * @param reportFiles Report files.
+     *
+     * @throws IOException if an error occurs.
      * @since 1.500
      */
     public void parse(long buildTime, Iterable<File> reportFiles) throws IOException {
@@ -280,6 +292,9 @@ public final class TestResult extends MetaTabulatedResult {
 
     /**
      * Parses an additional report file.
+     * @param reportFile Report file to parse.
+     *
+     * @throws IOException if an error occurs.
      */
     public void parse(File reportFile) throws IOException {
         try {
@@ -397,7 +412,9 @@ public final class TestResult extends MetaTabulatedResult {
     }
     
     /**
-     * Returns <tt>true</tt> if this doesn't have any any test results. 
+     * Returns <tt>true</tt> if this doesn't have any any test results.
+     *
+     * @return whether this doesn't contain any test results.
      * @since 1.511
      */
     @Exported(visibility=999)
@@ -472,14 +489,12 @@ public final class TestResult extends MetaTabulatedResult {
 
     /**
      * The stdout of this test.
-     * <p/>
-     * <p/>
+     * <p>
      * Depending on the tool that produced the XML report, this method works somewhat inconsistently.
      * With some tools (such as Maven surefire plugin), you get the accurate information, that is
      * the stdout from this test case. With some other tools (such as the JUnit task in Ant), this
      * method returns the stdout produced by the entire test suite.
-     * <p/>
-     * <p/>
+     * </p>
      * If you need to know which is the case, compare this output from {@link SuiteResult#getStdout()}.
      *
      * @since 1.294

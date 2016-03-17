@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>1.580.1</version>
+        <version>2.3</version>
     </parent>
     <artifactId>junit</artifactId>
     <version>1.12-SNAPSHOT</version>
@@ -11,6 +11,10 @@
     <name>JUnit Plugin</name>
     <description>Allows JUnit-format test results to be published.</description>
     <url>http://wiki.jenkins-ci.org/display/JENKINS/JUnit+Plugin</url>
+    <properties>
+        <jenkins.version>1.580.1</jenkins.version>
+        <java.level>6</java.level>
+    </properties>
     <licenses>
         <license>
             <name>MIT</name>
@@ -48,10 +52,6 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <!--
-            Override beta version declared by jenkins-test-harness.
-            TODO: Reomve once depending on 1.600 or newer: f987f9ce89952c79e045f6125c08bfd7c6b9aa99
-        -->
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>matrix-project</artifactId>

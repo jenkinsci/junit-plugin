@@ -246,6 +246,7 @@ public final class SuiteResult implements Serializable {
     /**
      * The stdout of this test.
      *
+     * @return the stdout of this test.
      * @since 1.281
      * @see CaseResult#getStdout()
      */
@@ -257,6 +258,7 @@ public final class SuiteResult implements Serializable {
     /**
      * The stderr of this test.
      *
+     * @return the stderr of this test.
      * @since 1.281
      * @see CaseResult#getStderr()
      */
@@ -267,6 +269,8 @@ public final class SuiteResult implements Serializable {
 
     /**
      * The absolute path to the original test report. OS-dependent.
+     *
+     * @return the sabsolute path to the original test report.
      */
     public String getFile() {
 		return file;
@@ -302,9 +306,13 @@ public final class SuiteResult implements Serializable {
     /**
      * Returns the {@link CaseResult} whose {@link CaseResult#getName()}
      * is the same as the given string.
-     *
      * <p>
      * Note that test name needs not be unique.
+     * </p>
+     *
+     * @param name The case name.
+     *
+     * @return the {@link CaseResult} with the provided name.
      */
     public CaseResult getCase(String name) {
         return casesByName().get(name);

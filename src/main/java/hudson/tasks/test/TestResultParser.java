@@ -61,6 +61,8 @@ import javax.annotation.Nonnull;
 public abstract class TestResultParser implements ExtensionPoint {
     /**
      * Returns a human readable name of the parser, like "JUnit Parser".
+     *
+     * @return a human readable name of the parser, like "JUnit Parser".
      */
     public String getDisplayName() {
         return "Unknown Parser"; 
@@ -69,13 +71,17 @@ public abstract class TestResultParser implements ExtensionPoint {
     /**
      * This text is used in the UI prompt for the GLOB that specifies files to be parsed by this parser.
      * For example, "JUnit XML reports:"
+     *
+     * @return the text is used in the UI prompt for the GLOB that specifies files to be parsed by this parser.
      */
     public String getTestResultLocationMessage() {
         return "Paths to results files to parse:";
     }
 
     /**
-     * All registered {@link TestResultParser}s
+     * All registered {@link TestResultParser}s.
+     *
+     * @return all registered {@link TestResultParser}s.
      */
     public static ExtensionList<TestResultParser> all() {
         return ExtensionList.lookup(TestResultParser.class);
@@ -109,6 +115,8 @@ public abstract class TestResultParser implements ExtensionPoint {
      *      Can be used to fork processes on the machine where the build is running. Never null.
      * @param listener
      *      Use this to report progress and other problems. Never null.
+     *
+     * @return a {@link TestResult} object representing the provided files and builds.
      *
      * @throws InterruptedException
      *      If the user cancels the build, it will be received as a thread interruption. Do not catch

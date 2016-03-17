@@ -23,6 +23,7 @@
  */
 package hudson.tasks.junit;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.util.TextFile;
 import org.apache.commons.io.FileUtils;
 import org.jvnet.localizer.Localizable;
@@ -69,8 +70,10 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     private final String skippedMessage;
     private final String errorStackTrace;
     private final String errorDetails;
+    @SuppressFBWarnings(value = "SE_TRANSIENT_FIELD_NOT_RESTORED", justification = "Specific method to restore it")
     private transient SuiteResult parent;
 
+    @SuppressFBWarnings(value = "IS2_INCONSISTENT_SYNC", justification = "Not guarded, though read in synchronized blocks")
     private transient ClassResult classResult;
 
     /**
@@ -162,6 +165,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     /**
      * Flavor of {@link #possiblyTrimStdio(Collection, boolean, String)} that doesn't try to read the whole thing into memory.
      */
+    @SuppressFBWarnings(value = "DM_DEFAULT_ENCODING", justification = "Expected behavior")
     static String possiblyTrimStdio(Collection<CaseResult> results, boolean keepLongStdio, File stdio) throws IOException {
         long len = stdio.length();
         if (keepLongStdio && len < 1024 * 1024) {
@@ -204,8 +208,11 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
 
     /**
      * Used to create a fake failure, when Hudson fails to load data from XML files.
-     *
      * Public since 1.526.
+     *
+     * @param parent Parent result.
+     * @param testName Test name.
+     * @param errorStackTrace Error stack trace.
      */
     public CaseResult(SuiteResult parent, String testName, String errorStackTrace) {
         this.className = parent == null ? "unnamed" : parent.getName();
@@ -313,6 +320,8 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
 
     /**
      * Gets the class name of a test class.
+     *
+     * @return the class name of a test class.
      */
     @Exported(visibility=9)
     public String getClassName() {
@@ -321,6 +330,8 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
 
     /**
      * Gets the simple (not qualified) class name.
+     *
+     * @return the simple (not qualified) class name.
      */
     public String getSimpleName() {
         int idx = className.lastIndexOf('.');
@@ -328,7 +339,9 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     }
 
     /**
-     * Gets the package name of a test case
+     * Gets the package name of a test case.
+     *
+     * @return the package name of a test case.
      */
     public String getPackageName() {
         int idx = className.lastIndexOf('.');
@@ -392,6 +405,8 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     /**
      * Gets the number of consecutive builds (including this)
      * that this test case has been failing.
+     *
+     * @return the number of consecutive failing builds.
      */
     @Exported(visibility=9)
     public int getAge() {
@@ -581,7 +596,29 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     }
 
     public int compareTo(CaseResult that) {
-        return this.getFullName().compareTo(that.getFullName());
+        if (this == that) {
+            return 0;
+        }
+        int r = this.getFullName().compareTo(that.getFullName());
+        if (r != 0) {
+            return r;
+        }
+        // Only equals is exact reference
+        return System.identityHashCode(this) >= System.identityHashCode(that) ? 1 : -1;
+    }
+
+    // Method overridden to provide explicit declaration of the equivalence relation used
+    // as Comparable is also implemented
+    @Override
+    public boolean equals(Object obj) {
+        return (this == obj);
+    }
+
+    // Method overridden to provide explicit declaration of the equivalence relation used
+    // as Comparable is also implemented
+    @Override
+    public int hashCode() {
+        return System.identityHashCode(this);
     }
 
     @Exported(name="status",visibility=9) // because stapler notices suffix 's' and remove it

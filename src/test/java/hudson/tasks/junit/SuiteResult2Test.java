@@ -24,7 +24,7 @@
 
 package hudson.tasks.junit;
 
-import edu.umd.cs.findbugs.annotations.SuppressWarnings;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
@@ -36,7 +36,7 @@ import org.junit.Test;
 
 public class SuiteResult2Test {
 
-    @SuppressWarnings({"DM_DEFAULT_ENCODING", "OS_OPEN_STREAM", "RV_RETURN_VALUE_IGNORED_BAD_PRACTICE"})
+    @SuppressFBWarnings({"DM_DEFAULT_ENCODING", "OS_OPEN_STREAM", "RV_RETURN_VALUE_IGNORED_BAD_PRACTICE"})
     @Test public void sizeSurefire() throws Exception {
         File data = File.createTempFile("TEST-", ".xml");
         try {
