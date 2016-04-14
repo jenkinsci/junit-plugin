@@ -199,6 +199,17 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
     }
 
 
+    @Override
+    public boolean shouldCalculatePreviousResults() {
+        JobTestResultDisplayProperty settings = run.getParent().getProperty(JobTestResultDisplayProperty.class);
+        if ( settings != null ) {
+            return !settings.getDisableHistoricalResults();
+        }
+        else {
+            return super.shouldCalculatePreviousResults();
+        }
+    }
+
     /**
      * Loads a {@link TestResult} from disk.
      */

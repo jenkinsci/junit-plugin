@@ -24,6 +24,7 @@
 package hudson.tasks.junit;
 
 import hudson.model.AbstractBuild;
+import hudson.model.Job;
 import hudson.model.Run;
 import jenkins.model.Jenkins;
 import hudson.tasks.test.TestObject;
@@ -69,10 +70,9 @@ public class History {
 	}
 	
     public boolean historyAvailable() {
-       if (testObject.getRun().getParent().getBuilds().size() > 1)
-           return true;
-        else
-           return false; 
+        Job<?,?> job  = testObject.getRun().getParent();
+        JobTestResultDisplayProperty settings = job.getProperty(JobTestResultDisplayProperty.class);
+        return (settings == null || !settings.getDisableHistoricalResults()) && job.getBuilds().size() > 1;
     }
 	
     public List<TestResult> getList(int start, int end) {

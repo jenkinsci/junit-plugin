@@ -142,10 +142,15 @@ public abstract class TestResult extends TestObject {
             if(b==null)
                 return null;
             AbstractTestResultAction r = b.getAction(getParentAction().getClass());
-            if(r!=null) {
-                TestResult result = r.findCorrespondingResult(this.getId());
-                if (result!=null)
-                    return result;
+            if ( r.shouldCalculatePreviousResults() ) {
+                if(r!=null) {
+                    TestResult result = r.findCorrespondingResult(this.getId());
+                    if (result!=null)
+                        return result;
+                }
+            }
+            else {
+                return null;
             }
         }
     }
