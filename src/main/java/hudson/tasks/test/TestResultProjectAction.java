@@ -156,7 +156,7 @@ public class TestResultProjectAction implements Action, AsyncTrendChart {
     @Deprecated
     public void doTrend( StaplerRequest req, StaplerResponse rsp ) throws IOException, ServletException {
         AbstractTestResultAction a = getLastTestResultAction();
-        if(a!=null)
+        if(a!=null && a.shouldCalculatePreviousResults())
             a.doGraph(req,rsp);
         else
             rsp.setStatus(HttpServletResponse.SC_NOT_FOUND);
