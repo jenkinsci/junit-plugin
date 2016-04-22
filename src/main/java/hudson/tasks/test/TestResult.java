@@ -137,18 +137,20 @@ public abstract class TestResult extends TestObject {
         if (b == null) {
             return null;
         }
+
+        // abort if the job is configured to not do this
+        AbstractTestResultAction tra = b.getAction(getParentAction().getClass());
+        if ( tra != null && !tra.shouldCalculatePreviousResults()) return null;
+
         while(true) {
             b = b.getPreviousBuild();
             if(b==null)
                 return null;
             AbstractTestResultAction r = b.getAction(getParentAction().getClass());
-            if ( r != null && r.shouldCalculatePreviousResults() ) {
+            if(r!=null) {
                 TestResult result = r.findCorrespondingResult(this.getId());
                 if (result!=null)
                     return result;
-            }
-            else {
-                return null;
             }
         }
     }
