@@ -36,8 +36,6 @@ import org.kohsuke.stapler.export.Exported;
 
 import java.io.File;
 import java.io.IOException;
-import java.text.DecimalFormat;
-import java.text.ParseException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -94,19 +92,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
 
     private static float parseTime(Element testCase) {
         String time = testCase.attributeValue("time");
-        if(time!=null) {
-            time = time.replace(",","");
-            try {
-                return Float.parseFloat(time);
-            } catch (NumberFormatException e) {
-                try {
-                    return new DecimalFormat().parse(time).floatValue();
-                } catch (ParseException x) {
-                    // hmm, don't know what this format is.
-                }
-            }
-        }
-        return 0.0f;
+        return new TimeToFloat(time).parse();
     }
 
     CaseResult(SuiteResult parent, Element testCase, String testClassName, boolean keepLongStdio) {
@@ -705,4 +691,5 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     };
 
     private static final long serialVersionUID = 1L;
+
 }

@@ -164,10 +164,9 @@ public final class SuiteResult implements Serializable {
         this.name = TestObject.safe(name);
         this.timestamp = suite.attributeValue("timestamp");
         this.id = suite.attributeValue("id");
-        
         // check for test suite time attribute
         if( ( this.time = suite.attributeValue("time") ) != null ){
-            duration = Float.parseFloat(this.time);
+            duration = new TimeToFloat(this.time).parse();
         }
         
         Element ex = suite.element("error");
