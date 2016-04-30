@@ -327,12 +327,14 @@ public class SuiteResultTest {
             assertEquals(1, result.getCases().size());
         }
     }
+
+    @Test
     public void testTestSuiteTimeAttribute() throws Exception {
         // A report with blocks of testsuites some with and some without time attrs  
         List<SuiteResult> results = parseSuites(getDataFile("junit-report-testsuite-time-attrs.xml"));
-        assertEquals(results.get(0).getDuration(),25.0f); //testsuit time
-        assertEquals(results.get(1).getDuration(),22.0f); //sum of test cases time
-        assertEquals(results.get(2).getDuration(),40.0f); //testsuit time 
-        assertEquals(results.get(3).getDuration(),20.0f); //sum of test cases time
+        assertEquals(2503.1f, results.get(0).getDuration(), 2); //testsuit time
+        assertEquals(22.0f, results.get(1).getDuration(),2); //sum of test cases time
+        assertEquals(40.0f, results.get(2).getDuration(), 2); //testsuit time
+        assertEquals(20.0f, results.get(3).getDuration(), 2); //sum of test cases time
     }
 }

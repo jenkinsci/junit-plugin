@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites name="Automation Tests" tests="8" errors="0" failures="0" ignored="0">
-    <testsuite name="test.fs.FileSystemTests" time="25">
+    <testsuite name="test.fs.FileSystemTests" time="2,503.1">
       <testcase name="testPrefix" classname="test.fs.FileSystemTest1" time="10"/>
       <testcase name="testPrefix" classname="test.fs.FileSystemTest2" time="11"/>
     </testsuite>
