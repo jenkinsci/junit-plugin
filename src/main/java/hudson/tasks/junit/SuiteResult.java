@@ -165,7 +165,8 @@ public final class SuiteResult implements Serializable {
         this.timestamp = suite.attributeValue("timestamp");
         this.id = suite.attributeValue("id");
         // check for test suite time attribute
-        if( ( this.time = suite.attributeValue("time") ) != null ){
+        this.time = suite.attributeValue("time");
+        if(this.time!=null &&  !this.time.equals("")){
             duration = new TimeToFloat(this.time).parse();
         }
         
@@ -227,7 +228,7 @@ public final class SuiteResult implements Serializable {
         casesByName().put(cr.getName(), cr);
         
         //if suite time was not specified use sum of the cases' times
-        if(this.time == null){
+        if(this.time == null || this.time.equals("")){
             duration += cr.getDuration();
         }
     }
