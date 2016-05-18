@@ -36,6 +36,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.Nonnull;
 import jenkins.model.RunAction2;
 import jenkins.model.lazy.LazyBuildMixIn;
@@ -66,6 +68,8 @@ import org.kohsuke.stapler.export.ExportedBean;
  */
 @ExportedBean
 public abstract class AbstractTestResultAction<T extends AbstractTestResultAction> implements HealthReportingAction, RunAction2 {
+
+    private static final Logger LOGGER = Logger.getLogger(AbstractTestResultAction.class.getName());
 
     /**
      * @since 1.2-beta-1
@@ -330,13 +334,20 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
 
         DataSetBuilder<String,NumberOnlyBuildLabel> dsb = new DataSetBuilder<String,NumberOnlyBuildLabel>();
 
+        int cap = Integer.getInteger(AbstractTestResultAction.class.getName() + ".test.trend.max", Integer.MAX_VALUE);
+        int count = 0;
         for (AbstractTestResultAction<?> a = this; a != null; a = a.getPreviousResult(AbstractTestResultAction.class, false)) {
+            if (++count > cap) {
+                LOGGER.log(Level.FINE, "capping test trend for {0} at {1}", new Object[] {run, cap});
+                break;
+            }
             dsb.add( a.getFailCount(), "failed", new NumberOnlyBuildLabel(a.run));
             if(!failureOnly) {
                 dsb.add( a.getSkipCount(), "skipped", new NumberOnlyBuildLabel(a.run));
                 dsb.add( a.getTotalCount()-a.getFailCount()-a.getSkipCount(),"total", new NumberOnlyBuildLabel(a.run));
             }
         }
+        LOGGER.log(Level.FINER, "total test trend count for {0}: {1}", new Object[] {run, count});
         return dsb.build();
     }
 
