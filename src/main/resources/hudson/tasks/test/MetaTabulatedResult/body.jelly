@@ -35,7 +35,7 @@ THE SOFTWARE.
       </tr>
       <j:forEach var="f" items="${it.failedTests}" varStatus="i">
         <tr>
-          <td class="pane"><t:failed-test result="${f}" url="${f.getRelativePathFrom(it)}"/></td>
+          <td class="pane no-wrap"><t:failed-test result="${f}" url="${f.getRelativePathFrom(it)}"/></td>
           <td class="pane no-wrap" style="text-align:right;" data="${f.duration}">
             ${f.durationString}
           </td>
