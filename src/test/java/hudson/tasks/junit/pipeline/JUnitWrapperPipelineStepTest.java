@@ -33,16 +33,31 @@ import org.junit.runners.model.Statement;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-public class JUnitPipelineStepTest extends AbstractJUnitPipelineTest {
+public class JUnitWrapperPipelineStepTest extends AbstractJUnitPipelineTest {
     @Test
     public void testPassingBuild() throws Exception {
-        prepRepoWithJenkinsfileAndZip("pipelineStepPassingBuild", "JUnitResultArchiverTest.zip");
+        prepRepoWithJenkinsfileAndZip("wrapperPassingBuild", "JUnitResultArchiverTest.zip");
         story.addStep(new Statement() {
             @Override
             public void evaluate() throws Throwable {
                 WorkflowRun b = getAndStartBuild();
                 story.j.assertLogContains("hello",
                         story.j.assertBuildStatus(Result.UNSTABLE, story.j.waitForCompletion(b)));
+
+                assertTestResults(b);
+            }
+        });
+    }
+
+    @Test
+    public void testFailingBuild() throws Exception {
+        prepRepoWithJenkinsfileAndZip("wrapperFailingBuild", "JUnitResultArchiverTest.zip");
+        story.addStep(new Statement() {
+            @Override
+            public void evaluate() throws Throwable {
+                WorkflowRun b = getAndStartBuild();
+                story.j.assertLogContains("ERROR: FAIL OUT",
+                        story.j.assertBuildStatus(Result.FAILURE, story.j.waitForCompletion(b)));
 
                 assertTestResults(b);
             }

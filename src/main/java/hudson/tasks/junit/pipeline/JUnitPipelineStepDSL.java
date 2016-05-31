@@ -35,7 +35,7 @@ import java.io.IOException;
 public class JUnitPipelineStepDSL extends GlobalVariable {
     @Override
     public String getName() {
-        return "junitArchiver";
+        return "junit";
     }
 
     @Override
@@ -47,7 +47,7 @@ public class JUnitPipelineStepDSL extends GlobalVariable {
                 .newInstance(script);
     }
 
-    @Extension
+    @Extension(optional = true)
     public static class JUnitPipelineStepWhitelist extends ProxyWhitelist {
         public JUnitPipelineStepWhitelist() throws IOException {
             super(new StaticWhitelist(
@@ -55,6 +55,4 @@ public class JUnitPipelineStepDSL extends GlobalVariable {
             ));
         }
     }
-
-
 }

@@ -21,27 +21,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package hudson.tasks.junit.pipeline
+ 
 
-import org.jenkinsci.plugins.workflow.cps.CpsScript
+node {
+    checkout scm
 
-class JUnitPipelineStep implements Serializable {
-    CpsScript script
+    sh "unzip JUnitResultArchiverTest.zip"
 
-    JUnitPipelineStep(CpsScript script) {
-        this.script = script
-    }
+    // Next two lines needed to make sure the test files are new enough.
+    sh "mkdir -p target/surefire-results"
+    sh "cp jobs/junit/workspace/* target/surefire-results"
 
-    def call(Map args) {
-        String testResults = args.containsKey("testResults") ? args.testResults : ""
-        boolean keepLongStdio = args.containsKey("keepLongStdio") ? args.keepLongStdio : false
-        boolean allowEmptyResults = args.containsKey("allowEmptyResults") ? args.allowEmptyResults : false
-        Double healthScaleFactor = args.containsKey("healthScaleFactor") ? args.healthScaleFactor : 1.0
+    echo "hello"
 
-        script.step($class: "JUnitResultArchiver",
-            testResults: testResults,
-            keepLongStdio: keepLongStdio,
-            allowEmptyResults: allowEmptyResults,
-            healthScaleFactor: healthScaleFactor)
-    }
+    junit(testResults: "target/surefire-results/TEST*.xml")
 }

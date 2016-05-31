@@ -21,27 +21,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package hudson.tasks.junit.pipeline
+package hudson.tasks.junit.pipeline;
 
-import org.jenkinsci.plugins.workflow.cps.CpsScript
+import hudson.Extension;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.ProxyWhitelist;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.StaticWhitelist;
+import org.jenkinsci.plugins.workflow.cps.CpsScript;
+import org.jenkinsci.plugins.workflow.cps.GlobalVariable;
 
-class JUnitPipelineStep implements Serializable {
-    CpsScript script
+import java.io.IOException;
 
-    JUnitPipelineStep(CpsScript script) {
-        this.script = script
+@Extension(optional = true)
+public class JUnitWrapperPipelineStepDSL extends GlobalVariable {
+    @Override
+    public String getName() {
+        return "junitWrapper";
     }
 
-    def call(Map args) {
-        String testResults = args.containsKey("testResults") ? args.testResults : ""
-        boolean keepLongStdio = args.containsKey("keepLongStdio") ? args.keepLongStdio : false
-        boolean allowEmptyResults = args.containsKey("allowEmptyResults") ? args.allowEmptyResults : false
-        Double healthScaleFactor = args.containsKey("healthScaleFactor") ? args.healthScaleFactor : 1.0
-
-        script.step($class: "JUnitResultArchiver",
-            testResults: testResults,
-            keepLongStdio: keepLongStdio,
-            allowEmptyResults: allowEmptyResults,
-            healthScaleFactor: healthScaleFactor)
+    @Override
+    public Object getValue(CpsScript script) throws Exception {
+        return script.getClass()
+                .getClassLoader()
+                .loadClass("hudson.tasks.junit.pipeline.JUnitWrapperPipelineStep")
+                .getConstructor(CpsScript.class)
+                .newInstance(script);
     }
 }
