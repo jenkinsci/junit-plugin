@@ -4,10 +4,67 @@ import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
+
+import hudson.model.Run;
 import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.MockSettings;
+import org.mockito.Mockito;
+
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.*;
 
 public class TestObjectTest {
+
+    public static class TestObjectImpl extends TestObject {
+        public TestObjectImpl() {
+        }
+
+        @Override
+        public TestObject getParent() {
+            return null;
+        }
+
+        @Override
+        public TestResult getPreviousResult() {
+            return null;
+        }
+
+        @Override
+        public TestResult findCorrespondingResult(String id) {
+            return null;
+        }
+
+        @Override
+        public float getDuration() {
+            return 0;
+        }
+
+        @Override
+        public String getName() {
+            return "dummy";
+        }
+
+        @Override
+        public int getPassCount() {
+            return 0;
+        }
+
+        @Override
+        public int getFailCount() {
+            return 0;
+        }
+
+        @Override
+        public int getSkipCount() {
+            return 0;
+        }
+
+        @Override
+        public String getDisplayName() {
+            return null;
+        }
+    }
 
     @Test
     public void testSafe() {
@@ -37,12 +94,21 @@ public class TestObjectTest {
             for (TestObject t : ts) {
                 names.add(t.getSafeName());
             }
-            Assert.assertEquals("[t0, t1, t1_2, t1_3, t2, t2_2, t2_3, t2_4, t2_5, t3]", names.toString());
+            assertEquals("[t0, t1, t1_2, t1_3, t2, t2_2, t2_3, t2_4, t2_5, t3]", names.toString());
             Reference<?> r = new WeakReference<Object>(ts.get(4)); // arbitrarily
             ts.clear();
             System.gc();
             Assert.assertNull(r.get());
         }
+    }
+
+    @Test
+    public void getUrlShouldBeRelativeToContextRoot() {
+        TestObject testObject = spy(new TestObjectImpl());
+        Run run = mock(Run.class);
+        doReturn("job/abc/123/").when(run).getUrl();
+        doReturn(run).when(testObject).getRun();
+        assertEquals("job/abc/123/testReport/dummy", testObject.getUrl());
     }
     
 }
