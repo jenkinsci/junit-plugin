@@ -45,6 +45,7 @@ import hudson.util.DescribableList;
 import hudson.util.FormValidation;
 import org.apache.tools.ant.DirectoryScanner;
 import org.apache.tools.ant.types.FileSet;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -277,7 +278,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
 
     private static final long serialVersionUID = 1L;
 
-    @Extension
+    @Extension @Symbol("junit")
     public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
         public String getDisplayName() {
             return Messages.JUnitResultArchiver_DisplayName();
