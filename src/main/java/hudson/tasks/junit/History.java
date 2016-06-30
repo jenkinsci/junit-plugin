@@ -258,14 +258,11 @@ public class History {
         }
 
         private void generateUrl() {
-            Run<?,?> build = o.getRun();
-            String buildLink = build.getUrl();
-            String actionUrl = o.getTestResultAction().getUrlName();
             final String rootUrl = Helper.getActiveInstance().getRootUrl();
             if (rootUrl == null) {
                 throw new IllegalStateException("Jenkins root URL not available");
             }
-            this.url = rootUrl + buildLink + actionUrl + o.getUrl();
+            this.url = rootUrl + o.getUrl();
         }
 
         public int compareTo(ChartLabel that) {

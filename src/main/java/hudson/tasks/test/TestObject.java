@@ -89,7 +89,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
 
     @Override
     public String getUrl() {
-        return getRun().getUrl() + "testReport/" + getId();
+        return getRun().getUrl() + getTestResultAction().getUrlName() + "/" + getId();
     }
 
     public String getFullDisplayName() {
