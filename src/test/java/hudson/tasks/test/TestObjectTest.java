@@ -11,6 +11,7 @@ import org.junit.Test;
 import org.mockito.MockSettings;
 import org.mockito.Mockito;
 
+import static org.bouncycastle.asn1.x500.style.RFC4519Style.owner;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 
@@ -106,6 +107,9 @@ public class TestObjectTest {
     public void getUrlShouldBeRelativeToContextRoot() {
         TestObject testObject = spy(new TestObjectImpl());
         Run run = mock(Run.class);
+        AbstractTestResultAction testResultAction = mock(AbstractTestResultAction.class);
+        doCallRealMethod().when(testResultAction).getUrlName();
+        doReturn(testResultAction).when(run).getAction(eq(AbstractTestResultAction.class));
         doReturn("job/abc/123/").when(run).getUrl();
         doReturn(run).when(testObject).getRun();
         assertEquals("job/abc/123/testReport/dummy", testObject.getUrl());
