@@ -354,23 +354,19 @@ public class JUnitResultArchiverTest {
         assertTrue(j.getTestDataPublishers().isEmpty());
         assertEquals(args, model.uninstantiate(model.instantiate(args)));
 
-        // Test roundtripping of an instantiated list of test data publishers.
-        args.put("testDataPublishers", Collections.<TestDataPublisher>singletonList(new MockTestDataPublisher("test")));
-        Map<String,Object> explicit = model.uninstantiate(model.instantiate(args));
-        JUnitResultArchiver j2 = model.instantiate(explicit);
-        assertFalse(j2.getTestDataPublishers().isEmpty());
-
-        assertEquals(explicit, model.uninstantiate(model.instantiate(explicit)));
-
         // Test roundtripping from a Pipeline-style describing of the publisher.
-        Map<String,String> describedPublisher = new HashMap<String, String>();
+        Map<String,Object> describedPublisher = new HashMap<String, Object>();
         describedPublisher.put("$class", "MockTestDataPublisher");
         describedPublisher.put("name", "test");
         args.put("testDataPublishers", Collections.singletonList(describedPublisher));
 
         Map<String,Object> described = model.uninstantiate(model.instantiate(args));
-        JUnitResultArchiver j3 = model.instantiate(described);
-        assertFalse(j3.getTestDataPublishers().isEmpty());
+        JUnitResultArchiver j2 = model.instantiate(described);
+        List<TestDataPublisher> testDataPublishers = j2.getTestDataPublishers();
+        assertFalse(testDataPublishers.isEmpty());
+        assertEquals(1, testDataPublishers.size());
+        assertEquals(MockTestDataPublisher.class, testDataPublishers.get(0).getClass());
+        assertEquals("test", ((MockTestDataPublisher)testDataPublishers.get(0)).getName());
 
         assertEquals(described, model.uninstantiate(model.instantiate(described)));
     }
