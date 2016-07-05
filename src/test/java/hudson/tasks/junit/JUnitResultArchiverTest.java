@@ -33,8 +33,13 @@ import hudson.model.FreeStyleProject;
 import hudson.slaves.DumbSlave;
 import hudson.tasks.test.TestObject;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
+import org.jenkinsci.plugins.structs.describable.DescribableModel;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.TouchBuilder;
 import org.jvnet.hudson.test.recipes.LocalData;
 
@@ -260,7 +265,7 @@ public class JUnitResultArchiverTest {
     @Test public void configRoundTrip() throws Exception {
         JUnitResultArchiver a = new JUnitResultArchiver("TEST-*.xml");
         a.setKeepLongStdio(true);
-        a.setTestDataPublishers(Collections.singletonList(new MockTestDataPublisher("testing")));
+        a.setTestDataPublishers(Collections.<TestDataPublisher>singletonList(new MockTestDataPublisher("testing")));
         a.setHealthScaleFactor(0.77);
         a = j.configRoundtrip(a);
         assertEquals("TEST-*.xml", a.getTestResults());
@@ -271,6 +276,7 @@ public class JUnitResultArchiverTest {
         assertEquals("testing", ((MockTestDataPublisher) testDataPublishers.get(0)).getName());
         assertEquals(0.77, a.getHealthScaleFactor(), 0.01);
     }
+
     public static class MockTestDataPublisher extends TestDataPublisher {
         private final String name;
         @DataBoundConstructor public MockTestDataPublisher(String name) {
@@ -282,7 +288,9 @@ public class JUnitResultArchiverTest {
         @Override public TestResultAction.Data contributeTestData(Run<?,?> run, FilePath workspace, Launcher launcher, TaskListener listener, TestResult testResult) throws IOException, InterruptedException {
             return null;
         }
-        @TestExtension("configRoundTrip") public static class DescriptorImpl extends Descriptor<TestDataPublisher> {
+
+        // Needed to make this extension available to all tests for {@link #testDescribableRoundTrip()}
+        @TestExtension public static class DescriptorImpl extends Descriptor<TestDataPublisher> {
             @Override public String getDisplayName() {
                 return "MockTestDataPublisher";
             }
@@ -329,5 +337,37 @@ public class JUnitResultArchiverTest {
         ((HtmlAnchor) page.getElementById(ID_PREFIX + "-hidelink")).click();
         wc.waitForBackgroundJavaScript(10000L);
         assertThat(page.asText(), not(containsString(EXPECTED)));
+    }
+
+    @Issue("JENKINS-26535")
+    @Test
+    public void testDescribableRoundTrip() throws Exception {
+        DescribableModel<JUnitResultArchiver> model = new DescribableModel<JUnitResultArchiver>(JUnitResultArchiver.class);
+        Map<String,Object> args = new TreeMap<String,Object>();
+
+        args.put("testResults", "**/TEST-*.xml");
+        JUnitResultArchiver j = model.instantiate(args);
+        assertEquals("**/TEST-*.xml", j.getTestResults());
+        assertFalse(j.isAllowEmptyResults());
+        assertFalse(j.isKeepLongStdio());
+        assertEquals(1.0, j.getHealthScaleFactor(), 0);
+        assertTrue(j.getTestDataPublishers().isEmpty());
+        assertEquals(args, model.uninstantiate(model.instantiate(args)));
+
+        // Test roundtripping from a Pipeline-style describing of the publisher.
+        Map<String,Object> describedPublisher = new HashMap<String, Object>();
+        describedPublisher.put("$class", "MockTestDataPublisher");
+        describedPublisher.put("name", "test");
+        args.put("testDataPublishers", Collections.singletonList(describedPublisher));
+
+        Map<String,Object> described = model.uninstantiate(model.instantiate(args));
+        JUnitResultArchiver j2 = model.instantiate(described);
+        List<TestDataPublisher> testDataPublishers = j2.getTestDataPublishers();
+        assertFalse(testDataPublishers.isEmpty());
+        assertEquals(1, testDataPublishers.size());
+        assertEquals(MockTestDataPublisher.class, testDataPublishers.get(0).getClass());
+        assertEquals("test", ((MockTestDataPublisher)testDataPublishers.get(0)).getName());
+
+        assertEquals(described, model.uninstantiate(model.instantiate(described)));
     }
 }

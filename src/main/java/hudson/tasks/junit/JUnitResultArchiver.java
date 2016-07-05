@@ -232,7 +232,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
         this.healthScaleFactor = Math.max(0.0, healthScaleFactor);
     }
 
-    public @Nonnull List<? extends TestDataPublisher> getTestDataPublishers() {
+    public @Nonnull List<TestDataPublisher> getTestDataPublishers() {
         return testDataPublishers == null ? Collections.<TestDataPublisher>emptyList() : testDataPublishers;
     }
 
@@ -241,7 +241,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
      *
      * @since 1.2
      */
-    @DataBoundSetter public final void setTestDataPublishers(@Nonnull List<? extends TestDataPublisher> testDataPublishers) {
+    @DataBoundSetter public final void setTestDataPublishers(@Nonnull List<TestDataPublisher> testDataPublishers) {
         this.testDataPublishers = new DescribableList<TestDataPublisher,Descriptor<TestDataPublisher>>(Saveable.NOOP);
         this.testDataPublishers.addAll(testDataPublishers);
     }
