@@ -1,17 +1,14 @@
 package hudson.tasks.test;
 
+import hudson.model.Run;
+import org.junit.Assert;
+import org.junit.Test;
+
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
-import hudson.model.Run;
-import org.junit.Assert;
-import org.junit.Test;
-import org.mockito.MockSettings;
-import org.mockito.Mockito;
-
-import static org.bouncycastle.asn1.x500.style.RFC4519Style.owner;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
 
