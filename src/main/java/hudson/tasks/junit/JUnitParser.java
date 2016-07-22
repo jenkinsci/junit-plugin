@@ -46,6 +46,7 @@ public class JUnitParser extends TestResultParser {
 
     private final boolean keepLongStdio;
     private final boolean allowEmptyResults;
+    private final boolean allowOldResults;
 
     /** TODO TestResultParser.all does not seem to ever be called so why must this be an Extension? */
     @Deprecated
@@ -59,8 +60,7 @@ public class JUnitParser extends TestResultParser {
      */
     @Deprecated
     public JUnitParser(boolean keepLongStdio) {
-        this.keepLongStdio = keepLongStdio;
-        this.allowEmptyResults = false;
+        this(keepLongStdio, false, false);
     }
 
     /**
@@ -69,8 +69,19 @@ public class JUnitParser extends TestResultParser {
      * @since 1.10
      */
     public JUnitParser(boolean keepLongStdio, boolean allowEmptyResults) {
-        this.keepLongStdio = keepLongStdio;
-        this.allowEmptyResults = allowEmptyResults;
+        this(keepLongStdio, allowEmptyResults, false);
+    }
+    
+    /**
+     * @param keepLongStdio if true, retain a suite's complete stdout/stderr even if this is huge and the suite passed
+     * @param allowEmptyResults if true, empty results are allowed
+     * @param allowOldResults
+     * @since 1.16
+     */
+    public JUnitParser(boolean keepLongStdio, boolean allowEmptyResults, boolean allowOldResults) {
+      this.keepLongStdio = keepLongStdio;
+      this.allowEmptyResults = allowEmptyResults;
+      this.allowOldResults = allowEmptyResults;
     }
 
     @Override
@@ -101,7 +112,7 @@ public class JUnitParser extends TestResultParser {
         // also get code that deals with testDataPublishers from JUnitResultArchiver.perform
 
         return workspace.act(new ParseResultCallable(testResultLocations, buildTime,
-                                                     timeOnMaster, keepLongStdio, allowEmptyResults));
+                                                     timeOnMaster, keepLongStdio, allowEmptyResults, allowOldResults));
     }
 
     private static final class ParseResultCallable extends MasterToSlaveFileCallable<TestResult> {
@@ -110,14 +121,16 @@ public class JUnitParser extends TestResultParser {
         private final long nowMaster;
         private final boolean keepLongStdio;
         private final boolean allowEmptyResults;
+        private final boolean allowOldResults;
 
         private ParseResultCallable(String testResults, long buildTime, long nowMaster,
-                                    boolean keepLongStdio, boolean allowEmptyResults) {
+                                    boolean keepLongStdio, boolean allowEmptyResults, boolean allowOldResults) {
             this.buildTime = buildTime;
             this.testResults = testResults;
             this.nowMaster = nowMaster;
             this.keepLongStdio = keepLongStdio;
             this.allowEmptyResults = allowEmptyResults;
+            this.allowOldResults = allowOldResults;
         }
 
         public TestResult invoke(File ws, VirtualChannel channel) throws IOException {
