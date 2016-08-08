@@ -41,10 +41,9 @@
     </pluginRepositories>
     <dependencies>
         <dependency>
-            <groupId>org.jenkins-ci</groupId>
-            <artifactId>symbol-annotation</artifactId>
+            <groupId>org.jenkins-ci.plugins</groupId>
+            <artifactId>structs</artifactId>
             <version>1.2</version>
-            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
@@ -62,12 +61,6 @@
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>matrix-project</artifactId>
             <version>1.3</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jenkins-ci.plugins</groupId>
-            <artifactId>structs</artifactId>
-            <version>1.2</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
