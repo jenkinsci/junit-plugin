@@ -6,7 +6,7 @@
         <version>2.4</version>
     </parent>
     <artifactId>junit</artifactId>
-    <version>1.16-SNAPSHOT</version>
+    <version>1.16</version>
     <packaging>hpi</packaging>
     <name>JUnit Plugin</name>
     <description>Allows JUnit-format test results to be published.</description>
@@ -25,7 +25,7 @@
         <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
         <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
         <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
-      <tag>HEAD</tag>
+      <tag>junit-1.16</tag>
     </scm>
     <repositories>
         <repository>
