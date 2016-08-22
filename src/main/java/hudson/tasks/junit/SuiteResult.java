@@ -72,8 +72,8 @@ public final class SuiteResult implements Serializable {
     /** Optional ID attribute of a test suite. E.g., Eclipse plug-ins tests always have the name 'tests' but a different id. **/
     private String id;
 
-    /** Optional time attribute of a test suite. E.g., Suites can use their own time attribute or the sum of their cases' times as before.**/
-    private String time;
+    /** Optional true if time attribute is present. E.g., Suites can use their own time attribute or the sum of their cases' times as before.**/
+    private boolean hasTimeAttr;
 
     /**
      * All test cases.
@@ -165,10 +165,11 @@ public final class SuiteResult implements Serializable {
         this.timestamp = suite.attributeValue("timestamp");
         this.id = suite.attributeValue("id");
         // check for test suite time attribute
-        if( ( this.time = suite.attributeValue("time") ) != null ){
-            duration = new TimeToFloat(this.time).parse();
+        this.hasTimeAttr = suite.attributeValue("time")!=null;
+        if( hasTimeAttr ) {
+            duration = new TimeToFloat(suite.attributeValue("time")).parse();
         }
-        
+
         Element ex = suite.element("error");
         if(ex!=null) {
             // according to junit-noframes.xsl l.229, this happens when the test class failed to load
@@ -227,7 +228,7 @@ public final class SuiteResult implements Serializable {
         casesByName().put(cr.getName(), cr);
         
         //if suite time was not specified use sum of the cases' times
-        if(this.time == null){
+        if( !hasTimeAttr ){
             duration += cr.getDuration();
         }
     }
@@ -348,4 +349,22 @@ public final class SuiteResult implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private static final Pattern SUREFIRE_FILENAME = Pattern.compile("TEST-(.+)\\.xml");
+
+    /**
+     * Merges another SuiteResult into this one.
+     * 
+     * @param sr
+     */
+    public void merge(SuiteResult sr) {
+        if (sr.hasTimeAttr ^ hasTimeAttr){
+            throw new IllegalStateException("Merging of suiteresults with incompatible time attribute usage is not supported.( "+getFile()+", "+sr.getFile()+")");
+        }
+        if (hasTimeAttr) {
+            duration += sr.getDuration();
+        }
+        for (CaseResult cr : sr.getCases()) {
+            addCase(cr);
+            cr.replaceParent(this);
+        }
+    }
 }
