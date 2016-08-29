@@ -35,7 +35,7 @@ THE SOFTWARE.
         <j:otherwise>
           <test:bar/>
           <h2>${%Drill Down}</h2>
-          <table class="pane sortable">
+          <table class="pane sortable stripped">
             <tr>
               <td class="pane-header">${%Test}</td>
               <td class="pane-header" style="text-align:right">${%Fail}</td>
