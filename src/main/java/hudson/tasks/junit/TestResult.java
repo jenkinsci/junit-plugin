@@ -95,6 +95,7 @@ public final class TestResult extends MetaTabulatedResult {
     private transient List<CaseResult> failedTests;
 
     private final boolean keepLongStdio;
+    private final boolean allowOldResults;
 
     /**
      * Creates an empty result.
@@ -108,6 +109,15 @@ public final class TestResult extends MetaTabulatedResult {
      */
     public TestResult(boolean keepLongStdio) {
         this.keepLongStdio = keepLongStdio;
+        this.allowOldResults = false;
+    }
+    
+    /**
+     * @since 1.6
+     */
+    public TestResult(boolean keepLongStdio, boolean allowOldResults) {
+        this.keepLongStdio = keepLongStdio;
+        this.allowOldResults = allowOldResults;
     }
 
     @Deprecated
@@ -123,6 +133,7 @@ public final class TestResult extends MetaTabulatedResult {
      */
     public TestResult(long buildTime, DirectoryScanner results, boolean keepLongStdio) throws IOException {
         this.keepLongStdio = keepLongStdio;
+        this.allowOldResults = false;
         parse(buildTime, results);
     }
 
@@ -170,8 +181,8 @@ public final class TestResult extends MetaTabulatedResult {
 
         for (String value : reportFiles) {
             File reportFile = new File(baseDir, value);
-            // only count files that were actually updated during this build
-            if (buildTime-3000/*error margin*/ <= reportFile.lastModified()) {
+            // only count files that were actually updated during this build, unless configured to include all
+            if (buildTime-3000/*error margin*/ <= reportFile.lastModified() || allowOldResults) {
                 parsePossiblyEmpty(reportFile);
                 parsed = true;
             }
