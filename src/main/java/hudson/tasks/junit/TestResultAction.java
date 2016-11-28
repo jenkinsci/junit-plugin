@@ -38,6 +38,7 @@ import hudson.tasks.test.TestObject;
 import hudson.tasks.test.TestResultProjectAction;
 import hudson.util.HeapSpaceStringConverter;
 import hudson.util.XStream2;
+import jenkins.tasks.SimpleBuildStep;
 import org.kohsuke.stapler.StaplerProxy;
 
 import java.io.File;
@@ -49,7 +50,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import jenkins.tasks.SimpleBuildStep;
 
 /**
  * {@link Action} that displays the JUnit test result.
@@ -97,7 +97,7 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
             // JENKINS-26077: someone like XUnitPublisher already added one
             return Collections.emptySet();
         }
-        return Collections.singleton(new TestResultProjectAction(job));
+        return Collections.singleton(new JUnitTestResultProjectAction(job));
     }
 
     /**

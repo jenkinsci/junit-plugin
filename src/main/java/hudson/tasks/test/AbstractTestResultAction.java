@@ -336,7 +336,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
 
         int cap = Integer.getInteger(AbstractTestResultAction.class.getName() + ".test.trend.max", Integer.MAX_VALUE);
         int count = 0;
-        for (AbstractTestResultAction<?> a = this; a != null; a = a.getPreviousResult(AbstractTestResultAction.class, false)) {
+        for (AbstractTestResultAction<?> a = this; a != null; a = a.getPreviousResult(getClass(), false)) {
             if (++count > cap) {
                 LOGGER.log(Level.FINE, "capping test trend for {0} at {1}", new Object[] {run, cap});
                 break;
@@ -396,6 +396,8 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
         final NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
         rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
 
+        final Class<? extends AbstractTestResultAction> actionClass = getClass();
+
         StackedAreaRenderer ar = new StackedAreaRenderer2() {
             @Override
             public String generateURL(CategoryDataset dataset, int row, int column) {
@@ -406,7 +408,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
             @Override
             public String generateToolTip(CategoryDataset dataset, int row, int column) {
                 NumberOnlyBuildLabel label = (NumberOnlyBuildLabel) dataset.getColumnKey(column);
-                AbstractTestResultAction a = label.getRun().getAction(AbstractTestResultAction.class);
+                AbstractTestResultAction a = label.getRun().getAction(actionClass);
                 switch (row) {
                     case 0:
                         return String.valueOf(Messages.AbstractTestResultAction_fail(label.getRun().getDisplayName(), a.getFailCount()));

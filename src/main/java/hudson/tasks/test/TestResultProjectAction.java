@@ -47,7 +47,7 @@ import java.util.List;
  *
  * @author Kohsuke Kawaguchi
  */
-public class TestResultProjectAction implements Action {
+public class TestResultProjectAction<T extends AbstractTestResultAction> implements Action {
     /**
      * Project that owns this action.
      * @since 1.2-beta-1
@@ -85,12 +85,12 @@ public class TestResultProjectAction implements Action {
         return "test";
     }
 
-    public AbstractTestResultAction getLastTestResultAction() {
+    public T getLastTestResultAction() {
         final Run<?,?> tb = job.getLastSuccessfulBuild();
 
         Run<?,?> b = job.getLastBuild();
         while(b!=null) {
-            AbstractTestResultAction a = b.getAction(AbstractTestResultAction.class);
+            T a = b.getAction(getTestResultActionClass());
             if(a!=null && (!b.isBuilding())) return a;
             if(b==tb)
                 // if even the last successful build didn't produce the test result,
@@ -100,6 +100,12 @@ public class TestResultProjectAction implements Action {
         }
 
         return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    public Class<T> getTestResultActionClass() {
+        // To keep backward compatibility.
+        return (Class<T>) AbstractTestResultAction.class;
     }
 
     /**
