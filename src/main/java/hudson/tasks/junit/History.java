@@ -113,7 +113,7 @@ public class History {
                }
                
 			for (hudson.tasks.test.TestResult o: list) {
-                   data.add(((double) o.getDuration()) / (1000), "", new ChartLabel(o)  {
+                   data.add(((double) o.getDuration()), "", new ChartLabel(o)  {
                        @Override
                        public Color getColor() {
                            if (o.getFailCount() > 0)
