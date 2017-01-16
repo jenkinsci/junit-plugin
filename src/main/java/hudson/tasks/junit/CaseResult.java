@@ -68,6 +68,8 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     private final String skippedMessage;
     private final String errorStackTrace;
     private final String errorDetails;
+    private final String failureStackTrace;
+    private final String failureDetails;
     @SuppressFBWarnings(value = "SE_TRANSIENT_FIELD_NOT_RESTORED", justification = "Specific method to restore it")
     private transient SuiteResult parent;
 
@@ -122,6 +124,8 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         testName = nameAttr;
         errorStackTrace = getError(testCase);
         errorDetails = getErrorMessage(testCase);
+        failureStackTrace = getFailure(testCase);
+        failureDetails = getFailureMessage(testCase);
         this.parent = parent;
         duration = parseTime(testCase);
         skipped = isMarkedAsSkipped(testCase);
@@ -200,11 +204,14 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      * @param testName Test name.
      * @param errorStackTrace Error stack trace.
      */
-    public CaseResult(SuiteResult parent, String testName, String errorStackTrace) {
+    public CaseResult(SuiteResult parent, String testName,
+                      String errorStackTrace, String failureStackTrace) {
         this.className = parent == null ? "unnamed" : parent.getName();
         this.testName = testName;
         this.errorStackTrace = errorStackTrace;
         this.errorDetails = "";
+        this.failureStackTrace = failureStackTrace;
+        this.failureDetails = "";
         this.parent = parent;
         this.stdout = null;
         this.stderr = null;
@@ -218,9 +225,10 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     }
 
     private static String getError(Element testCase) {
-        String msg = testCase.elementText("error");
-        if(msg!=null)
-            return msg;
+        return testCase.elementText("error");
+    }
+
+    private static String getFailure(Element testCase) {
         return testCase.elementText("failure");
     }
 
@@ -228,10 +236,16 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
 
         Element msg = testCase.element("error");
         if (msg == null) {
-            msg = testCase.element("failure");
+            return null;
         }
+        return msg.attributeValue("message");
+    }
+
+    private static String getFailureMessage(Element testCase) {
+
+        Element msg = testCase.element("failure");
         if (msg == null) {
-            return null; // no error or failure elements! damn!
+            return null;
         }
 
         return msg.attributeValue("message");
@@ -506,6 +520,11 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         return errorStackTrace;
     }
 
+    @Exported
+    public String getFailureStackTrace() {
+        return failureStackTrace;
+    }
+
     /**
      * If there was an error or a failure, this is the text from the message.
      */
@@ -514,11 +533,16 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         return errorDetails;
     }
 
+    @Exported
+    public String getFailureDetails() {
+        return failureDetails;
+    }
+
     /**
      * @return true if the test was not skipped and did not fail, false otherwise.
      */
     public boolean isPassed() {
-        return !skipped && errorStackTrace==null;
+        return !skipped && errorStackTrace==null && failureStackTrace==null;
     }
 
     /**

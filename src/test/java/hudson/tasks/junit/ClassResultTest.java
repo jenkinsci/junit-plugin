@@ -12,7 +12,7 @@ public class ClassResultTest {
 	public void testFindCorrespondingResult() {
 		ClassResult classResult = new ClassResult(null, "com.example.ExampleTest");
 	
-		CaseResult caseResult = new CaseResult(null, "testCase", null);
+		CaseResult caseResult = new CaseResult(null, "testCase", null, null);
 	
 		classResult.add(caseResult);
 	
@@ -24,7 +24,7 @@ public class ClassResultTest {
 	public void testFindCorrespondingResultWhereClassResultNameIsNotSubstring() {
 		ClassResult classResult = new ClassResult(null, "aaaa");
 	
-		CaseResult caseResult = new CaseResult(null, "tc_bbbb", null);
+		CaseResult caseResult = new CaseResult(null, "tc_bbbb", null, null);
 	
 		classResult.add(caseResult);
 	
@@ -36,7 +36,7 @@ public class ClassResultTest {
 	public void testFindCorrespondingResultWhereClassResultNameIsLastInCaseResultName() {
 		ClassResult classResult = new ClassResult(null, "aaaa");
 	
-		CaseResult caseResult = new CaseResult(null, "tc_aaaa", null);
+		CaseResult caseResult = new CaseResult(null, "tc_aaaa", null, null);
 	
 		classResult.add(caseResult);
 	

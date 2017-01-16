@@ -150,6 +150,22 @@ public class TestResultTest {
         assertEquals("Wrong duration for test result", 1.0, testResult.getDuration(), 0.01);
     }
 
+    /**
+     * Check result when test failed with both error and failure messages,
+     * for example, with Error in teardown phase but with failure on the call
+     */
+    @Test
+    public void testErrorAndFailMessages() throws Exception {
+        TestResult testResult = new TestResult();
+        testResult.parse(getDataFile("junit-report-error-failure-details.xml"));
+        testResult.tally();
+
+        assertEquals("Just one test failed", 1, testResult.getFailCount());
+        CaseResult cr = testResult.getFailedTests().get(0);
+        assertEquals("Wrong error stacktrace", "error message for test WhooHoo", cr.getErrorDetails());
+        assertEquals("Wrong failure stacktrace", "failure message for test WhooHoo", cr.getFailureDetails());
+    }
+
     private static final XStream XSTREAM = new XStream2();
 
     static {
