@@ -161,6 +161,14 @@ public class TestResultTest {
         assertEquals("Fail count should be 0", 0, first.getFailCount());
         first.merge(second);
         assertEquals("Fail count should now be 1", 1, first.getFailCount());
+
+        first = new TestResult();
+        second = new TestResult();
+        first.parse(getDataFile("JENKINS-41134/TestSuite_first.xml"));
+        second.parse(getDataFile("JENKINS-41134/TestSuite_second_dup_first.xml"));
+        assertEquals("Fail count should be 0", 0, first.getFailCount());
+        first.merge(second);
+        assertEquals("Fail count should now be 1", 1, first.getFailCount());
     }
 
     private static final XStream XSTREAM = new XStream2();
