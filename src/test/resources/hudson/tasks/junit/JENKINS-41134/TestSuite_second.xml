@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+    <testsuite name="TestSuite_second" tests="1" errors="0" failures="1" skip="0" timestamp="2012-04-05T10:50:00">
+        <testcase classname="TestFoo2" name="bar2" time="123.980">
+            <failure message="PROGRAM.cbl:2 Use a program name that matches the source file name" type="WARNING">
+                WARNING: Use a program name that matches the source file name
+                Category: COBOL Code Review – Naming Conventions
+                File: /project/PROGRAM.cbl
+                Line: 2
+            </failure>
+        </testcase>
+    </testsuite>
+</testsuites>

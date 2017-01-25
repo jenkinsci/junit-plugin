@@ -150,6 +150,19 @@ public class TestResultTest {
         assertEquals("Wrong duration for test result", 1.0, testResult.getDuration(), 0.01);
     }
 
+    @Issue("JENKINS-41134")
+    @Test
+    public void testMerge() throws IOException, URISyntaxException {
+        TestResult first = new TestResult();
+        TestResult second = new TestResult();
+
+        first.parse(getDataFile("JENKINS-41134/TestSuite_first.xml"));
+        second.parse(getDataFile("JENKINS-41134/TestSuite_second.xml"));
+        assertEquals("Fail count should be 0", 0, first.getFailCount());
+        first.merge(second);
+        assertEquals("Fail count should now be 1", 1, first.getFailCount());
+    }
+
     private static final XStream XSTREAM = new XStream2();
 
     static {
