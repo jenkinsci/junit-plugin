@@ -278,6 +278,7 @@ public final class TestResult extends MetaTabulatedResult {
             suite.setParent(null); // otherwise freeze ignores it
             add(suite);
         }
+        tally();
     }
     
     private boolean strictEq(Object lhs, Object rhs) {
