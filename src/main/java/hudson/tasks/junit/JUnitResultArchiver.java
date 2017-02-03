@@ -28,10 +28,13 @@ import hudson.AbortException;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
+import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
+import hudson.model.BuildableItem;
 import hudson.model.Descriptor;
+import hudson.model.Job;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.Saveable;
@@ -89,6 +92,8 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
      */
     private boolean allowEmptyResults;
 
+    private String testRunName;
+
     @DataBoundConstructor
     public JUnitResultArchiver(String testResults) {
         this.testResults = testResults;
@@ -125,7 +130,9 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
             throws IOException, InterruptedException
     {
         return new JUnitParser(this.isKeepLongStdio(),
-                               this.isAllowEmptyResults()).parseResult(expandedTestResults, run, workspace, launcher, listener);
+                               this.isAllowEmptyResults(),
+                               this.getTestRunName())
+                .parseResult(expandedTestResults, run, workspace, launcher, listener);
     }
 
     @Deprecated
@@ -275,6 +282,14 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
         this.allowEmptyResults = allowEmptyResults;
     }
 
+    public String getTestRunName() {
+        return testRunName;
+    }
+
+    @DataBoundSetter
+    public void setTestRunName(String testRunName) {
+        this.testRunName = Util.fixEmptyAndTrim(testRunName);
+    }
 
     private static final long serialVersionUID = 1L;
 
@@ -313,6 +328,15 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
                     5,
                     (int) (100.0 - Math.max(0.0, Math.min(100.0, 5 * value)))
             ));
+        }
+
+        public boolean hasMultipleTestRunCapability(Job<?,?> job) {
+            if (job instanceof AbstractProject) {
+                // you can only have one publisher instance per job
+                return false;
+            }
+            // TODO a more specific workflow test
+            return job instanceof BuildableItem;
         }
     }
 }
