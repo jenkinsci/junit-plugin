@@ -102,6 +102,26 @@ public class TestResultProjectAction<T extends AbstractTestResultAction> impleme
         return null;
     }
 
+    /**
+     * <p>
+     * Plugins implementing junit-plugin API should override this method to indicate test result action type to look
+     * for when drawing their own plots.
+     * </p>
+     * <p>
+     * A sample use case: a project uses 2 plugins derived from junit-plugin, say A and B, both produce test result
+     * actions during a build. When A and B are about to draw their respective test trend plots, they fetch last test
+     * result action via {@link #getLastTestResultAction()}. The latter method should therefore be capable to understand
+     * which test result action is relevant, hence this method is introduced.
+     * </p>
+     * <p>
+     * Related <a href="https://github.com/jenkinsci/tap-plugin/pull/14#issuecomment-249346957">bug discussion</a>
+     * </p>
+     * <p>
+     * For backward compatibility reason, this default implementation returns {@link AbstractTestResultAction} class.
+     * </p>
+     *
+     * @return test result action class which this plugin produces.
+     */
     @SuppressWarnings("unchecked")
     public Class<T> getTestResultActionClass() {
         // To keep backward compatibility.
