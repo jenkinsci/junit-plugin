@@ -41,6 +41,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -59,6 +60,7 @@ import java.util.regex.Pattern;
  */
 @ExportedBean
 public final class SuiteResult implements Serializable {
+    private static final Logger LOGGER = Logger.getLogger(SuiteResult.class.getName());
     private final String file;
     private final String name;
     private final String stdout;
@@ -72,8 +74,8 @@ public final class SuiteResult implements Serializable {
     /** Optional ID attribute of a test suite. E.g., Eclipse plug-ins tests always have the name 'tests' but a different id. **/
     private String id;
 
-    /** Optional true if time attribute is present. E.g., Suites can use their own time attribute or the sum of their cases' times as before.**/
-    private boolean hasTimeAttr;
+    /** Optional time attribute of a test suite. E.g., Suites can use their own time attribute or the sum of their cases' times as before.**/
+    private String time;
 
     /**
      * All test cases.
@@ -165,9 +167,8 @@ public final class SuiteResult implements Serializable {
         this.timestamp = suite.attributeValue("timestamp");
         this.id = suite.attributeValue("id");
         // check for test suite time attribute
-        this.hasTimeAttr = suite.attributeValue("time")!=null;
-        if( hasTimeAttr ) {
-            duration = new TimeToFloat(suite.attributeValue("time")).parse();
+        if( ( this.time = suite.attributeValue("time") ) != null ){
+            duration = new TimeToFloat(this.time).parse();
         }
 
         Element ex = suite.element("error");
@@ -228,9 +229,16 @@ public final class SuiteResult implements Serializable {
         casesByName().put(cr.getName(), cr);
         
         //if suite time was not specified use sum of the cases' times
-        if( !hasTimeAttr ){
+        if( !hasTimeAttr() ){
             duration += cr.getDuration();
         }
+    }
+
+    /**
+     * Returns true if the time attribute is present in this Suite.
+     */
+    private boolean hasTimeAttr() {
+        return time != null;
     }
 
     @Exported(visibility=9)
@@ -353,13 +361,13 @@ public final class SuiteResult implements Serializable {
     /**
      * Merges another SuiteResult into this one.
      * 
-     * @param sr
+     * @param sr the SuiteResult to merge into this one
      */
     public void merge(SuiteResult sr) {
-        if (sr.hasTimeAttr ^ hasTimeAttr){
-            throw new IllegalStateException("Merging of suiteresults with incompatible time attribute usage is not supported.( "+getFile()+", "+sr.getFile()+")");
+        if (sr.hasTimeAttr() ^ hasTimeAttr()){
+            LOGGER.warning("Merging of suiteresults with incompatible time attribute may lead to incorrect durations in reports.( "+getFile()+", "+sr.getFile()+")");
         }
-        if (hasTimeAttr) {
+        if (hasTimeAttr()) {
             duration += sr.getDuration();
         }
         for (CaseResult cr : sr.getCases()) {

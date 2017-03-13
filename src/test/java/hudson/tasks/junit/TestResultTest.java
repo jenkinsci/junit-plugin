@@ -197,14 +197,6 @@ public class TestResultTest {
         assertEquals(30, suite.getDuration(), 2);
     }
 
-    @Issue("JENKINS-37598")
-    @Test(expected=Exception.class)
-    public void testMergeWithInconsistency() throws Exception {
-        TestResult testResult = new TestResult();
-        testResult.parse(getDataFile("junit-report-time-aggregation-invalid.xml"));
-        testResult.tally();
-    }
-
     private static final XStream XSTREAM = new XStream2();
 
     static {
