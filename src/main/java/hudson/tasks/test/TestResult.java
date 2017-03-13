@@ -227,21 +227,39 @@ public abstract class TestResult extends TestObject {
     }
 
     /**
-     * If there was an error or a failure, this is the stack trace, or otherwise null.
+     * If there was an error, this is the stack trace, or otherwise null.
      *
-     * @return the stack trace of the error or failure.
+     * @return the stack trace of the error.
      */
     public String getErrorStackTrace() {
         return "";
     }
 
     /**
-     * If there was an error or a failure, this is the text from the message.
+     * If there was an error, this is the text from the message.
      *
-     * @return the message of the error or failure.
+     * @return the message of the error.
      */
     public String getErrorDetails() {
         return ""; 
+    }
+
+    /**
+     * If there was a failure, this is the stack trace, or otherwise null.
+     *
+     * @return the stack trace of the failure.
+     */
+    public String getFailureStackTrace() {
+        return "";
+    }
+
+    /**
+     * If there was a failure, this is the text from the message.
+     *
+     * @return the message of the failure.
+     */
+    public String getFailureDetails() {
+        return "";
     }
 
     /**

@@ -238,7 +238,8 @@ public final class TestResult extends MetaTabulatedResult {
         if(reportFile.length()==0) {
             // this is a typical problem when JVM quits abnormally, like OutOfMemoryError during a test.
             SuiteResult sr = new SuiteResult(reportFile.getName(), "", "");
-            sr.addCase(new CaseResult(sr,"[empty]","Test report file "+reportFile.getAbsolutePath()+" was length 0"));
+            sr.addCase(new CaseResult(sr,"[empty]",
+                                      "Test report file "+reportFile.getAbsolutePath()+" was length 0", null));
             add(sr);
         } else {
             parse(reportFile);
@@ -314,7 +315,7 @@ public final class TestResult extends MetaTabulatedResult {
                 StringWriter writer = new StringWriter();
                 e.printStackTrace(new PrintWriter(writer));
                 String error = "Failed to read test report file "+reportFile.getAbsolutePath()+"\n"+writer.toString();
-                sr.addCase(new CaseResult(sr,"[failed-to-read]",error));
+                sr.addCase(new CaseResult(sr,"[failed-to-read]", error, null));
                 add(sr);
             }
         }

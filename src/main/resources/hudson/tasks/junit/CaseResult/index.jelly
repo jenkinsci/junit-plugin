@@ -83,6 +83,17 @@ THE SOFTWARE.
         <pre><j:out value="${it.annotate(it.errorStackTrace)}"/></pre>
       </j:if>
 
+      <j:if test="${!empty(it.failureDetails)}">
+        <br></br>
+        <h3>${%Failure Message}</h3>
+        <pre><j:out value="${it.annotate(it.failureDetails)}"/></pre>
+      </j:if>
+
+      <j:if test="${!empty(it.failureStackTrace)}">
+        <h3>${%Stacktrace}</h3>
+        <pre><j:out value="${it.annotate(it.failureStackTrace)}"/></pre>
+      </j:if>
+
       <j:if test="${!empty(it.stdout)}">
         <h3>${%Standard Output}</h3>
         <pre><j:out value="${it.annotate(it.stdout)}"/></pre>
