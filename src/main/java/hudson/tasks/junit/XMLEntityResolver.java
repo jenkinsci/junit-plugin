@@ -23,10 +23,6 @@
  */
 package hudson.tasks.junit;
 
-import hudson.Extension;
-import hudson.tasks.junit.SuiteResult.SuiteResultParserConfigurationContext;
-import hudson.util.io.ParserConfigurator;
-import org.dom4j.io.SAXReader;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -48,8 +44,7 @@ import java.util.logging.Logger;
  *
  * @author Mikael Carneholm
  */
-@Extension
-public class XMLEntityResolver extends ParserConfigurator implements EntityResolver {
+public class XMLEntityResolver implements EntityResolver {
 
     private static final String TESTNG_NAMESPACE = "http://testng.org/";
 
@@ -73,16 +68,6 @@ public class XMLEntityResolver extends ParserConfigurator implements EntityResol
         }
         // Default fallback
         return null;
-    }
-
-    /**
-     * Install EntityResolver for resolving DTDs, which are in files created by TestNG.
-     */
-    @Override
-    public void configure(SAXReader reader, Object context) {
-        if (context instanceof SuiteResultParserConfigurationContext) {
-            reader.setEntityResolver(this);
-        }
     }
 
     private static final Logger LOGGER = Logger.getLogger(XMLEntityResolver.class.getName());

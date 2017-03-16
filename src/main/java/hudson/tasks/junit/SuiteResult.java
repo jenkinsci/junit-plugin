@@ -121,7 +121,7 @@ public final class SuiteResult implements Serializable {
 
         // parse into DOM
         SAXReader saxReader = new SAXReader();
-        ParserConfigurator.applyConfiguration(saxReader,new SuiteResultParserConfigurationContext(xmlReport));
+        saxReader.setEntityResolver(new XMLEntityResolver());
 
         Document result = saxReader.read(xmlReport);
         Element root = result.getRootElement();
