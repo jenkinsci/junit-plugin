@@ -254,7 +254,9 @@ public final class TestResult extends MetaTabulatedResult {
                 // In that case consider the result file as a duplicate and discard it.
                 // see http://jenkins.361315.n4.nabble.com/Problem-with-duplicate-build-execution-td371616.html for discussion.
                 if(strictEq(s.getTimestamp(),sr.getTimestamp())) {
-                    return;
+                    if(sr.includesTestsFrom(s)) {
+                        return;
+                    }
                 }
             
                 for (CaseResult cr: sr.getCases()) {

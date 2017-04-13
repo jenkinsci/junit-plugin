@@ -302,6 +302,20 @@ public final class SuiteResult implements Serializable {
         return null;
     }
 
+     /**
+     * Check if all the tests exists for the suiteResult
+     * @param suiteResult
+     * @return true if all the tests were found, false otherwise
+     */
+    public boolean includesTestsFrom(SuiteResult suiteResult) {
+        for (CaseResult caseResult : getCases()) {
+            if (suiteResult.getCase(caseResult.getName()) == null) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     /**
      * Returns the {@link CaseResult} whose {@link CaseResult#getName()}
      * is the same as the given string.
