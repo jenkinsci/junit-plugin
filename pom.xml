@@ -14,7 +14,7 @@
     <url>http://wiki.jenkins-ci.org/display/JENKINS/JUnit+Plugin</url>
     <properties>
         <jenkins.version>1.580.1</jenkins.version>
-        <java.level>6</java.level>
+        <java.level>7</java.level>
     </properties>
     <licenses>
         <license>
@@ -45,6 +45,11 @@
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>structs</artifactId>
             <version>1.2</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jenkins.blueocean</groupId>
+            <artifactId>blueocean-rest</artifactId>
+            <version>1.1.0-beta-2-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
