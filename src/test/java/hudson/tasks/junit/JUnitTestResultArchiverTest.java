@@ -78,7 +78,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-public class BlueJUnitTestResultArchiverTest {
+public class JUnitTestResultArchiverTest {
 
     @Rule public JenkinsRule j = new JenkinsRule();
     private FreeStyleProject project;
