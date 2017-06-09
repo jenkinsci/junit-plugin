@@ -230,7 +230,7 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         return Collections.unmodifiableList(result);
     }
 
-    List<Data> getData() {
+    public List<Data> getData() {
         return testData;
     }
 
