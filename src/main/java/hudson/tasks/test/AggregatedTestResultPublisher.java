@@ -27,12 +27,14 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.AutoCompletionCandidates;
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.Util;
 import static hudson.Util.fixNull;
 import hudson.model.Action;
 import hudson.model.BuildListener;
+import hudson.model.DependencyGraph;
 import hudson.model.Fingerprint.RangeSet;
 import hudson.model.InvisibleAction;
 import hudson.model.ItemGroup;
@@ -51,6 +53,7 @@ import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
 import net.sf.json.JSONObject;
+
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -60,7 +63,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+
 import javax.annotation.CheckForNull;
+
 import org.acegisecurity.AccessDeniedException;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -95,8 +100,19 @@ public class AggregatedTestResultPublisher extends Recorder {
 
     public boolean perform(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
         // add a TestResult just so that it can show up later.
-        build.addAction(new TestResultAction(jobs, includeFailedBuilds, build));
+    	// Expand the jobs String as it can contain variable
+    	String expandedJobs = this.getJobs(build.getEnvironment(listener));
+    	build.addAction(new TestResultAction(expandedJobs, includeFailedBuilds, build));
         return true;
+    }
+ 
+    /**
+     * Return the expanded job list
+     * @param env
+     * @return
+     */
+    public String getJobs(EnvVars env) {
+        return (env != null ? env.expand(this.jobs) : this.jobs);
     }
 
     public BuildStepMonitor getRequiredMonitorService() {
