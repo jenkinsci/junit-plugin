@@ -34,7 +34,6 @@ import hudson.Util;
 import static hudson.Util.fixNull;
 import hudson.model.Action;
 import hudson.model.BuildListener;
-import hudson.model.DependencyGraph;
 import hudson.model.Fingerprint.RangeSet;
 import hudson.model.InvisibleAction;
 import hudson.model.ItemGroup;
@@ -53,7 +52,6 @@ import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
 import net.sf.json.JSONObject;
-
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -63,9 +61,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-
 import javax.annotation.CheckForNull;
-
 import org.acegisecurity.AccessDeniedException;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
