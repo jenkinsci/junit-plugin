@@ -234,12 +234,24 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         return testData;
     }
 
+    /**
+     * Replaces to collection of test data associated with this action.
+     *
+     * <p>
+     * This method will not automatically persist the data at the time of addition.
+     *
+     */
     public void setData(List<Data> testData) {
 	this.testData = testData;
     }
 
     /**
-     * Adds a {@link Data} to the collection data associated with this action.
+     * Adds a {@link Data} to the test data associated with this action.
+     *
+     * <p>
+     * This method will not automatically persist the data at the time of addition.
+     *
+     * @since TODO
      */
     public void addData(Data data) {
         this.testData.add(data);
