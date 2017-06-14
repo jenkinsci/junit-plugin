@@ -230,12 +230,19 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         return Collections.unmodifiableList(result);
     }
 
-    public List<Data> getData() {
+    List<Data> getData() {
         return testData;
     }
 
     public void setData(List<Data> testData) {
 	this.testData = testData;
+    }
+
+    /**
+     * Adds a {@link Data} to the collection data associated with this action.
+     */
+    public void addData(Data data) {
+        this.testData.add(data);
     }
 
     /**
