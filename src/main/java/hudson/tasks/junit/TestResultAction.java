@@ -222,10 +222,12 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         List<TestAction> result = new ArrayList<TestAction>();
         // Added check for null testData to avoid NPE from issue 4257.
         if (testData != null) {
-            for (Data data : testData)
-                for (TestAction ta : data.getTestAction(object))
-                    if (ta != null)
-                        result.add(ta);
+            synchronized (testData) {
+                for (Data data : testData)
+                    for (TestAction ta : data.getTestAction(object))
+                        if (ta != null)
+                            result.add(ta);
+            }
         }
         return Collections.unmodifiableList(result);
     }
@@ -242,7 +244,7 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
      *
      */
     public void setData(List<Data> testData) {
-	this.testData = testData;
+	      this.testData = testData;
     }
 
     /**
@@ -254,7 +256,9 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
      * @since TODO
      */
     public void addData(Data data) {
-        this.testData.add(data);
+        synchronized (testData) {
+            this.testData.add(data);
+        }
     }
 
     /**
@@ -277,7 +281,7 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
     public static abstract class Data {
     	/**
     	 * Returns all TestActions for the testObject.
-         * 
+         *
          * @return
          *      Can be empty but never null. The caller must assume that the returned list is read-only.
     	 */
@@ -289,10 +293,10 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
     	if (testData == null) {
     		testData = new ArrayList<Data>(0);
     	}
-    	
+
     	return this;
     }
-    
+
     private static final Logger logger = Logger.getLogger(TestResultAction.class.getName());
 
     private static final XStream XSTREAM = new XStream2();
