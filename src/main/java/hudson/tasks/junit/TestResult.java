@@ -23,6 +23,9 @@
  */
 package hudson.tasks.junit;
 
+import static com.google.common.io.Files.toByteArray;
+import static hudson.remoting.HexDump.toHex;
+import static java.util.logging.Level.SEVERE;
 import hudson.AbortException;
 import hudson.Util;
 import hudson.model.Run;
@@ -36,6 +39,7 @@ import hudson.tasks.test.TestObject;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.RandomAccessFile;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -44,6 +48,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.logging.Logger;
 
 import org.apache.tools.ant.DirectoryScanner;
 import org.dom4j.DocumentException;
@@ -52,6 +57,7 @@ import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
 
 import javax.annotation.Nonnull;
+import com.google.common.annotations.VisibleForTesting;
 
 /**
  * Root of all the test results for one build.
@@ -59,6 +65,9 @@ import javax.annotation.Nonnull;
  * @author Kohsuke Kawaguchi
  */
 public final class TestResult extends MetaTabulatedResult {
+    private static final Logger LOGGER = Logger.getLogger(TestResult.class.getName());
+
+    static final int MAX_NBR_BYTES = 100;
 
     /**
      * List of all {@link SuiteResult}s in this test.
@@ -144,7 +153,7 @@ public final class TestResult extends MetaTabulatedResult {
     }
 
     public TestObject getParent() {
-    	return parent;
+        return parent;
     }
 
     @Override
@@ -154,7 +163,7 @@ public final class TestResult extends MetaTabulatedResult {
 
     @Override
     public TestResult getTestResult() {
-    	return this;
+        return this;
     }
 
     @Deprecated
@@ -352,16 +361,49 @@ public final class TestResult extends MetaTabulatedResult {
         } catch (RuntimeException e) {
             throw new IOException("Failed to read "+reportFile,e);
         } catch (DocumentException e) {
+            final String reportFileLastLinesContent = getLastLines(reportFile,
+                    MAX_NBR_BYTES);
             if (!reportFile.getPath().endsWith(".xml")) {
-                throw new IOException("Failed to read "+reportFile+"\n"+
-                    "Is this really a JUnit report file? Your configuration must be matching too many files",e);
+                throw new IOException(
+                        "Failed to parse " + reportFile + "\n"
+                                + "Is this really a JUnit report file? Your configuration may be matching too many files? The last "
+                                + MAX_NBR_BYTES + " lines of the file contains:\n\n" + reportFileLastLinesContent + "\n\n", e);
             } else {
                 SuiteResult sr = new SuiteResult(reportFile.getName(), "", "", null);
                 StringWriter writer = new StringWriter();
                 e.printStackTrace(new PrintWriter(writer));
-                String error = "Failed to read test report file "+reportFile.getAbsolutePath()+"\n"+writer.toString();
+                String error = "Failed to parse test report file "+reportFile.getAbsolutePath()+"\n The last "
+                                + MAX_NBR_BYTES + " lines of the file contains:\n\n" + reportFileLastLinesContent + "\n\n"+writer.toString();
                 sr.addCase(new CaseResult(sr,"[failed-to-read]",error));
                 add(sr);
+            }
+        }
+    }
+
+    @VisibleForTesting
+    String getLastLines(File file, int maxNbrBytes) {
+        RandomAccessFile raf = null;
+        try {
+            byte[] readBytes = null;
+            if (file.length() > maxNbrBytes) {
+                raf = new RandomAccessFile(file, "r");
+                raf.seek(file.length() - maxNbrBytes);
+                readBytes = new byte[maxNbrBytes];
+                raf.read(readBytes, 0, maxNbrBytes);
+            } else {
+                readBytes = toByteArray(file);
+            }
+            return toHex(readBytes);
+        } catch (final IOException e) {
+            LOGGER.log(SEVERE, e.getMessage(), e);
+            return "";
+        } finally {
+            if (raf != null) {
+                try {
+                    raf.close();
+                } catch (final IOException e) {
+                    LOGGER.log(SEVERE, e.getMessage(), e);
+                }
             }
         }
     }
@@ -628,9 +670,9 @@ public final class TestResult extends MetaTabulatedResult {
 
         PackageResult result = byPackage(token);
         if (result != null) {
-        	return result;
+            return result;
         } else {
-        	return super.getDynamic(token, req, rsp);
+            return super.getDynamic(token, req, rsp);
         }
     }
 

@@ -23,6 +23,14 @@
  */
 package hudson.tasks.junit;
 
+import static com.google.common.io.Resources.getResource;
+import static hudson.tasks.junit.TestResult.MAX_NBR_BYTES;
+import static org.hamcrest.Matchers.endsWith;
+import static org.hamcrest.Matchers.startsWith;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
 import hudson.XmlFile;
 import hudson.tasks.test.PipelineTestDetails;
 import hudson.util.HeapSpaceStringConverter;
@@ -36,11 +44,10 @@ import java.util.List;
 
 import org.junit.Test;
 import org.jvnet.hudson.test.Bug;
-
-import com.thoughtworks.xstream.XStream;
 import org.jvnet.hudson.test.Issue;
 
-import static org.junit.Assert.*;
+import com.thoughtworks.xstream.XStream;
+
 
 /**
  * Tests the JUnit result XML file parsing in {@link TestResult}.
@@ -50,6 +57,20 @@ import static org.junit.Assert.*;
 public class TestResultTest {
     private File getDataFile(String name) throws URISyntaxException {
         return new File(TestResultTest.class.getResource(name).toURI());
+    }
+
+    @Test
+    public void testReadLastLines() throws URISyntaxException {
+        final TestResult testResult = new TestResult();
+        final File file = new File(getResource(
+                "hudson/tasks/junit/junitResult.xml").toURI());
+        final int maxNbrLines = MAX_NBR_BYTES;
+
+        final String actualLastLines = testResult.getLastLines(file,
+                maxNbrLines);
+
+        //assertThat(actualLastLines, startsWith("'ince>'"));
+        assertThat(actualLastLines, endsWith("'</result>'"));
     }
 
     /**
