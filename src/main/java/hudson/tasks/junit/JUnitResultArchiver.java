@@ -89,6 +89,11 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
      */
     private boolean allowEmptyResults;
 
+    /**
+     * If true, don't ignore test results created before the build was run
+     */
+    private boolean allowOldResults;
+
     @DataBoundConstructor
     public JUnitResultArchiver(String testResults) {
         this.testResults = testResults;
@@ -125,7 +130,8 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
             throws IOException, InterruptedException
     {
         return new JUnitParser(this.isKeepLongStdio(),
-                               this.isAllowEmptyResults()).parseResult(expandedTestResults, run, workspace, launcher, listener);
+                               this.isAllowEmptyResults(),
+                               this.isAllowOldResults()).parseResult(expandedTestResults, run, workspace, launcher, listener);
     }
 
     @Deprecated
@@ -275,6 +281,17 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
         this.allowEmptyResults = allowEmptyResults;
     }
 
+    /**
+     *
+     * @return the allowOldResults
+     */
+    public boolean isAllowOldResults() {
+        return allowOldResults;
+    }
+
+    @DataBoundSetter public final void setAllowOldResults(boolean allowOldResults) {
+        this.allowOldResults = allowOldResults;
+    }
 
     private static final long serialVersionUID = 1L;
 

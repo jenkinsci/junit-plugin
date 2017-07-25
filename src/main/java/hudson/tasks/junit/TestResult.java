@@ -95,6 +95,7 @@ public final class TestResult extends MetaTabulatedResult {
     private transient List<CaseResult> failedTests;
 
     private final boolean keepLongStdio;
+    private final boolean allowOldResults;
 
     /**
      * Creates an empty result.
@@ -108,6 +109,15 @@ public final class TestResult extends MetaTabulatedResult {
      */
     public TestResult(boolean keepLongStdio) {
         this.keepLongStdio = keepLongStdio;
+        this.allowOldResults = false;
+    }
+
+    /**
+     * @since 1.6
+     */
+    public TestResult(boolean keepLongStdio, boolean allowOldResults) {
+        this.keepLongStdio = keepLongStdio;
+        this.allowOldResults = allowOldResults;
     }
 
     @Deprecated
@@ -122,7 +132,18 @@ public final class TestResult extends MetaTabulatedResult {
      * @since 1.358
      */
     public TestResult(long buildTime, DirectoryScanner results, boolean keepLongStdio) throws IOException {
+        this(buildTime, results, keepLongStdio, false);
+    }
+
+    /**
+     * Collect reports from the given {@link DirectoryScanner}, while
+     * filtering out all files that were created before the given time.
+     * @param keepLongStdio if true, retain a suite's complete stdout/stderr even if this is huge and the suite passed
+     * @param allowOldResults if true, do not ignore test results generated before the build start time
+     */
+    public TestResult(long buildTime, DirectoryScanner results, boolean keepLongStdio, boolean allowOldResults) throws IOException {
         this.keepLongStdio = keepLongStdio;
+        this.allowOldResults = allowOldResults;
         parse(buildTime, results);
     }
 
@@ -170,8 +191,8 @@ public final class TestResult extends MetaTabulatedResult {
 
         for (String value : reportFiles) {
             File reportFile = new File(baseDir, value);
-            // only count files that were actually updated during this build
-            if (buildTime-3000/*error margin*/ <= reportFile.lastModified()) {
+            // only count files that were actually updated during this build, unless configured to include all
+            if (allowOldResults || buildTime-3000/*error margin*/ <= reportFile.lastModified()) {
                 parsePossiblyEmpty(reportFile);
                 parsed = true;
             }
@@ -208,8 +229,8 @@ public final class TestResult extends MetaTabulatedResult {
         boolean parsed=false;
 
         for (File reportFile : reportFiles) {
-            // only count files that were actually updated during this build
-            if (buildTime-3000/*error margin*/ <= reportFile.lastModified()) {
+            // only count files that were actually updated during this build, unless configured to include all
+            if (allowOldResults || buildTime-3000/*error margin*/ <= reportFile.lastModified()) {
                 parsePossiblyEmpty(reportFile);
                 parsed = true;
             }
@@ -602,10 +623,10 @@ public final class TestResult extends MetaTabulatedResult {
         tally(); // I want to be sure to inform our children when we get an action.
      }
 
-     @Override
-     public AbstractTestResultAction getParentAction() {
-         return this.parentAction;
-     }
+    @Override
+    public AbstractTestResultAction getParentAction() {
+        return this.parentAction;
+    }
 
     /**
      * Recount my children.
