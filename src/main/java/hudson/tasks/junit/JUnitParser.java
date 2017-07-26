@@ -46,6 +46,7 @@ public class JUnitParser extends TestResultParser {
 
     private final boolean keepLongStdio;
     private final boolean allowEmptyResults;
+    private String testRunName;
 
     /** TODO TestResultParser.all does not seem to ever be called so why must this be an Extension? */
     @Deprecated
@@ -71,6 +72,18 @@ public class JUnitParser extends TestResultParser {
     public JUnitParser(boolean keepLongStdio, boolean allowEmptyResults) {
         this.keepLongStdio = keepLongStdio;
         this.allowEmptyResults = allowEmptyResults;
+    }
+
+    /**
+     * @param keepLongStdio if true, retain a suite's complete stdout/stderr even if this is huge and the suite passed
+     * @param allowEmptyResults if true, empty results are allowed
+     * @param testRunName if non-{@code null}, the name of the test run to append to case results.
+     * @since FIXME
+     */
+    public JUnitParser(boolean keepLongStdio, boolean allowEmptyResults, String testRunName) {
+        this.keepLongStdio = keepLongStdio;
+        this.allowEmptyResults = allowEmptyResults;
+        this.testRunName = testRunName;
     }
 
     @Override
@@ -101,7 +114,8 @@ public class JUnitParser extends TestResultParser {
         // also get code that deals with testDataPublishers from JUnitResultArchiver.perform
 
         return workspace.act(new ParseResultCallable(testResultLocations, buildTime,
-                                                     timeOnMaster, keepLongStdio, allowEmptyResults));
+                                                     timeOnMaster, keepLongStdio, allowEmptyResults,
+                testRunName));
     }
 
     private static final class ParseResultCallable extends MasterToSlaveFileCallable<TestResult> {
@@ -110,14 +124,17 @@ public class JUnitParser extends TestResultParser {
         private final long nowMaster;
         private final boolean keepLongStdio;
         private final boolean allowEmptyResults;
+        private final String testRunName;
 
         private ParseResultCallable(String testResults, long buildTime, long nowMaster,
-                                    boolean keepLongStdio, boolean allowEmptyResults) {
+                                    boolean keepLongStdio, boolean allowEmptyResults,
+                                    String testRunName) {
             this.buildTime = buildTime;
             this.testResults = testResults;
             this.nowMaster = nowMaster;
             this.keepLongStdio = keepLongStdio;
             this.allowEmptyResults = allowEmptyResults;
+            this.testRunName = testRunName;
         }
 
         public TestResult invoke(File ws, VirtualChannel channel) throws IOException {
@@ -129,7 +146,7 @@ public class JUnitParser extends TestResultParser {
 
             String[] files = ds.getIncludedFiles();
             if (files.length > 0) {
-                result = new TestResult(buildTime + (nowSlave - nowMaster), ds, keepLongStdio);
+                result = new TestResult(testRunName, buildTime + (nowSlave - nowMaster), ds, keepLongStdio);
                 result.tally();
             } else {
                 if (this.allowEmptyResults) {

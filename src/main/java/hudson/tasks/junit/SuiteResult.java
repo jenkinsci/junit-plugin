@@ -116,7 +116,7 @@ public final class SuiteResult implements Serializable {
      * This method returns a collection, as a single XML may have multiple &lt;testsuite>
      * elements wrapped into the top-level &lt;testsuites>.
      */
-    static List<SuiteResult> parse(File xmlReport, boolean keepLongStdio) throws DocumentException, IOException, InterruptedException {
+    static List<SuiteResult> parse(File xmlReport, boolean keepLongStdio, String testRunName) throws DocumentException, IOException, InterruptedException {
         List<SuiteResult> r = new ArrayList<SuiteResult>();
 
         // parse into DOM
@@ -126,22 +126,23 @@ public final class SuiteResult implements Serializable {
         Document result = saxReader.read(xmlReport);
         Element root = result.getRootElement();
 
-        parseSuite(xmlReport,keepLongStdio,r,root);
+        parseSuite(xmlReport,keepLongStdio,r,root, testRunName);
 
         return r;
     }
 
-    private static void parseSuite(File xmlReport, boolean keepLongStdio, List<SuiteResult> r, Element root) throws DocumentException, IOException {
+    private static void parseSuite(File xmlReport, boolean keepLongStdio, List<SuiteResult> r, Element root,
+                                   String testRunName) throws DocumentException, IOException {
         // nested test suites
         @SuppressWarnings("unchecked")
         List<Element> testSuites = (List<Element>)root.elements("testsuite");
         for (Element suite : testSuites)
-            parseSuite(xmlReport, keepLongStdio, r, suite);
+            parseSuite(xmlReport, keepLongStdio, r, suite, testRunName);
 
         // child test cases
         // FIXME: do this also if no testcases!
         if (root.element("testcase")!=null || root.element("error")!=null)
-            r.add(new SuiteResult(xmlReport, root, keepLongStdio));
+            r.add(new SuiteResult(xmlReport, root, keepLongStdio, testRunName));
     }
 
     /**
@@ -150,7 +151,7 @@ public final class SuiteResult implements Serializable {
      * @param suite
      *      The parsed result of {@code xmlReport}
      */
-    private SuiteResult(File xmlReport, Element suite, boolean keepLongStdio) throws DocumentException, IOException {
+    private SuiteResult(File xmlReport, Element suite, boolean keepLongStdio, String testRunName) throws DocumentException, IOException {
     	this.file = xmlReport.getAbsolutePath();
         String name = suite.attributeValue("name");
         if(name==null)
@@ -172,7 +173,7 @@ public final class SuiteResult implements Serializable {
         Element ex = suite.element("error");
         if(ex!=null) {
             // according to junit-noframes.xsl l.229, this happens when the test class failed to load
-            addCase(new CaseResult(this, suite, "<init>", keepLongStdio));
+            addCase(new CaseResult(this, suite, "<init>", keepLongStdio, testRunName));
         }
         
         @SuppressWarnings("unchecked")
@@ -197,7 +198,7 @@ public final class SuiteResult implements Serializable {
             // one wants to use @name from <testsuite>,
             // the other wants to use @classname from <testcase>.
 
-            addCase(new CaseResult(this, e, classname, keepLongStdio));
+            addCase(new CaseResult(this, e, classname, keepLongStdio, testRunName));
         }
 
         String stdout = CaseResult.possiblyTrimStdio(cases, keepLongStdio, suite.elementText("system-out"));

@@ -109,6 +109,25 @@ public class JUnitResultArchiverTest {
 
     }
 
+    @LocalData
+    @Test
+    public void basicAnnotated() throws Exception {
+        archiver.setTestRunName("annotated");
+        FreeStyleBuild build = project.scheduleBuild2(0).get(10, TimeUnit.SECONDS);
+
+        assertTestResults(build);
+
+        WebClient wc = j.new WebClient();
+        wc.getPage(project); // project page
+        wc.getPage(build); // build page
+        wc.getPage(build, "testReport");  // test report
+        wc.getPage(build, "testReport/hudson.security"); // package
+        wc.getPage(build, "testReport/hudson.security/HudsonPrivateSecurityRealmTest/"); // class
+        wc.getPage(build, "testReport/hudson.security/HudsonPrivateSecurityRealmTest/testDataCompatibilityWith1_282__annotated_/"); // method
+
+
+    }
+
     @RandomlyFails("TimeoutException from basic")
    @LocalData
    @Test public void slave() throws Exception {

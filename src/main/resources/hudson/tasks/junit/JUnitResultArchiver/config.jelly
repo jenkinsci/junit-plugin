@@ -46,4 +46,9 @@ THE SOFTWARE.
     <f:entry title="${%Allow empty results}" field="allowEmptyResults">
         <f:checkbox default="false" title="${%Do not fail the build on empty test results}"/>
     </f:entry>
+    <j:if test="${descriptor.hasMultipleTestRunCapability(it)}">
+        <f:entry field="testRunName" title="${%Optional test run name}">
+            <f:textbox/>
+        </f:entry>
+    </j:if>
 </j:jelly>

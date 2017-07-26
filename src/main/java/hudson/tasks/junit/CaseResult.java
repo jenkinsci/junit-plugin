@@ -95,7 +95,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         return new TimeToFloat(time).parse();
     }
 
-    CaseResult(SuiteResult parent, Element testCase, String testClassName, boolean keepLongStdio) {
+    CaseResult(SuiteResult parent, Element testCase, String testClassName, boolean keepLongStdio, String testRunName) {
         // schema for JUnit report XML format is not available in Ant,
         // so I don't know for sure what means what.
         // reports in http://www.nabble.com/difference-in-junit-publisher-and-ant-junitreport-tf4308604.html#a12265700
@@ -119,7 +119,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         }
 
         className = testClassName;
-        testName = nameAttr;
+        testName = testRunName == null ? nameAttr : nameAttr + " (" + testRunName + ")";
         errorStackTrace = getError(testCase);
         errorDetails = getErrorMessage(testCase);
         this.parent = parent;
@@ -200,9 +200,22 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      * @param testName Test name.
      * @param errorStackTrace Error stack trace.
      */
+    @Deprecated
     public CaseResult(SuiteResult parent, String testName, String errorStackTrace) {
+        this(parent, testName, errorStackTrace, null);
+    }
+    
+    /**
+     * Used to create a fake failure, when Hudson fails to load data from XML files.
+     *
+     * @param parent Parent result.
+     * @param testName Test name.
+     * @param errorStackTrace Error stack trace.
+     * @since FIXME
+     */
+    public CaseResult(SuiteResult parent, String testName, String errorStackTrace, String testRunName) {
         this.className = parent == null ? "unnamed" : parent.getName();
-        this.testName = testName;
+        this.testName = testRunName == null ? testName : testName + " (" + testRunName + ")";
         this.errorStackTrace = errorStackTrace;
         this.errorDetails = "";
         this.parent = parent;
@@ -212,7 +225,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         this.skipped = false;
         this.skippedMessage = null;
     }
-    
+
     public ClassResult getParent() {
     	return classResult;
     }
