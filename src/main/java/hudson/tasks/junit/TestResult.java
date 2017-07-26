@@ -121,9 +121,20 @@ public final class TestResult extends MetaTabulatedResult {
      * @param keepLongStdio if true, retain a suite's complete stdout/stderr even if this is huge and the suite passed
      * @since 1.358
      */
+    @Deprecated
     public TestResult(long buildTime, DirectoryScanner results, boolean keepLongStdio) throws IOException {
+        this(null, buildTime, results, keepLongStdio);
+    }
+
+    /**
+     * Collect reports from the given {@link DirectoryScanner}, while
+     * filtering out all files that were created before the given time.
+     * @param keepLongStdio if true, retain a suite's complete stdout/stderr even if this is huge and the suite passed
+     * @since FIXME
+     */
+    public TestResult(String testRunName, long buildTime, DirectoryScanner results, boolean keepLongStdio) throws IOException {
         this.keepLongStdio = keepLongStdio;
-        parse(buildTime, results);
+        parse(testRunName, buildTime, results);
     }
 
     public TestObject getParent() {
@@ -148,12 +159,26 @@ public final class TestResult extends MetaTabulatedResult {
      *
      * @throws IOException if an error occurs.
      */
+    @Deprecated
     public void parse(long buildTime, DirectoryScanner results) throws IOException {
-        String[] includedFiles = results.getIncludedFiles();
-        File baseDir = results.getBasedir();
-        parse(buildTime,baseDir,includedFiles);
+        parse(null, buildTime, results);
     }
         
+    /**
+     * Collect reports from the given {@link DirectoryScanner}, while
+     * filtering out all files that were created before the given time.
+     * @param buildTime Build time.
+     * @param results Directory scanner.
+     *
+     * @throws IOException if an error occurs.
+     * @since FIXME
+     */
+    public void parse(String testRunName, long buildTime, DirectoryScanner results) throws IOException {
+        String[] includedFiles = results.getIncludedFiles();
+        File baseDir = results.getBasedir();
+        parse(testRunName, buildTime, baseDir,includedFiles);
+    }
+
     /**
      * Collect reports from the given report files, while
      * filtering out all files that were created before the given time.
@@ -164,7 +189,22 @@ public final class TestResult extends MetaTabulatedResult {
      * @throws IOException if an error occurs.
      * @since 1.426
      */
+    @Deprecated
     public void parse(long buildTime, File baseDir, String[] reportFiles) throws IOException {
+        parse(null, buildTime, baseDir, reportFiles);
+    }
+
+    /**
+     * Collect reports from the given report files, while
+     * filtering out all files that were created before the given time.
+     * @param buildTime Build time.
+     * @param baseDir Base directory.
+     * @param reportFiles Report files.
+     *
+     * @throws IOException if an error occurs.
+     * @since 1.426
+     */
+    public void parse(String testRunName, long buildTime, File baseDir, String[] reportFiles) throws IOException {
 
         boolean parsed=false;
 
@@ -172,7 +212,7 @@ public final class TestResult extends MetaTabulatedResult {
             File reportFile = new File(baseDir, value);
             // only count files that were actually updated during this build
             if (buildTime-3000/*error margin*/ <= reportFile.lastModified()) {
-                parsePossiblyEmpty(reportFile);
+                parsePossiblyEmpty(testRunName, reportFile);
                 parsed = true;
             }
         }
@@ -205,12 +245,26 @@ public final class TestResult extends MetaTabulatedResult {
      * @since 1.500
      */
     public void parse(long buildTime, Iterable<File> reportFiles) throws IOException {
+        parse(null, buildTime, reportFiles);
+    }
+
+    /**
+     * Collect reports from the given report files
+     *
+     * @param testRunName Optional name of the test run.
+     * @param buildTime Build time.
+     * @param reportFiles Report files.
+     *
+     * @throws IOException if an error occurs.
+     * @since FIXME
+     */
+    public void parse(String testRunName, long buildTime, Iterable<File> reportFiles) throws IOException {
         boolean parsed=false;
 
         for (File reportFile : reportFiles) {
             // only count files that were actually updated during this build
             if (buildTime-3000/*error margin*/ <= reportFile.lastModified()) {
-                parsePossiblyEmpty(reportFile);
+                parsePossiblyEmpty(testRunName, reportFile);
                 parsed = true;
             }
         }
@@ -234,14 +288,15 @@ public final class TestResult extends MetaTabulatedResult {
         
     }
     
-    private void parsePossiblyEmpty(File reportFile) throws IOException {
+    private void parsePossiblyEmpty(String testRunName, File reportFile) throws IOException {
         if(reportFile.length()==0) {
             // this is a typical problem when JVM quits abnormally, like OutOfMemoryError during a test.
             SuiteResult sr = new SuiteResult(reportFile.getName(), "", "");
-            sr.addCase(new CaseResult(sr,"[empty]","Test report file "+reportFile.getAbsolutePath()+" was length 0"));
+            sr.addCase(new CaseResult(sr,"[empty]","Test report file "+reportFile.getAbsolutePath()+" was length 0",
+                    testRunName));
             add(sr);
         } else {
-            parse(reportFile);
+            parse(testRunName, reportFile);
         }
     }
     
@@ -298,8 +353,19 @@ public final class TestResult extends MetaTabulatedResult {
      * @throws IOException if an error occurs.
      */
     public void parse(File reportFile) throws IOException {
+        parse(null, reportFile);
+    }
+
+    /**
+     * Parses an additional report file.
+     * @param testRunName Optiona test run name
+     * @param reportFile Report file to parse.
+     *
+     * @throws IOException if an error occurs.
+     */
+    public void parse(String testRunName, File reportFile) throws IOException {
         try {
-            for (SuiteResult suiteResult : SuiteResult.parse(reportFile, keepLongStdio))
+            for (SuiteResult suiteResult : SuiteResult.parse(reportFile, keepLongStdio, testRunName))
                 add(suiteResult);
         } catch (InterruptedException e) {
             throw new IOException("Failed to read "+reportFile,e);
@@ -314,7 +380,7 @@ public final class TestResult extends MetaTabulatedResult {
                 StringWriter writer = new StringWriter();
                 e.printStackTrace(new PrintWriter(writer));
                 String error = "Failed to read test report file "+reportFile.getAbsolutePath()+"\n"+writer.toString();
-                sr.addCase(new CaseResult(sr,"[failed-to-read]",error));
+                sr.addCase(new CaseResult(sr,"[failed-to-read]",error, testRunName));
                 add(sr);
             }
         }
