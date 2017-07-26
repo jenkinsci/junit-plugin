@@ -92,7 +92,7 @@ public class JUnitResultArchiverTest {
         project.getBuildersList().add(new TouchBuilder());
     }
 
-    @LocalData
+    @LocalData("testData")
     @Test public void basic() throws Exception {
         FreeStyleBuild build = project.scheduleBuild2(0).get(10, TimeUnit.SECONDS);
 
@@ -110,8 +110,8 @@ public class JUnitResultArchiverTest {
     }
 
     @RandomlyFails("TimeoutException from basic")
-   @LocalData
-   @Test public void slave() throws Exception {
+    @LocalData("testData")
+    @Test public void slave() throws Exception {
         DumbSlave s = j.createOnlineSlave();
         project.setAssignedLabel(s.getSelfLabel());
 
@@ -138,7 +138,7 @@ public class JUnitResultArchiverTest {
         assertEquals("should have 132 total tests", 132, result.getTotalCount());
     }
 
-    @LocalData
+    @LocalData("testData")
     @Test public void persistence() throws Exception {
         project.scheduleBuild2(0).get(60, TimeUnit.SECONDS);
 
@@ -154,7 +154,7 @@ public class JUnitResultArchiverTest {
         project = (FreeStyleProject) j.jenkins.getItem("junit");
     }
 
-    @LocalData
+    @LocalData("testData")
     @Test public void setDescription() throws Exception {
         FreeStyleBuild build = project.scheduleBuild2(0).get(10, TimeUnit.SECONDS);
 

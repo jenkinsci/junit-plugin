@@ -53,6 +53,7 @@ import org.kohsuke.stapler.QueryParameter;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import jenkins.tasks.SimpleBuildStep;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -62,7 +63,7 @@ import org.kohsuke.stapler.DataBoundSetter;
  *
  * @author Kohsuke Kawaguchi
  */
-public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
+public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JUnitTask {
 
     /**
      * {@link FileSet} "includes" string, like "foo/bar/*.xml"
@@ -124,8 +125,15 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
     private TestResult parse(String expandedTestResults, Run<?,?> run, @Nonnull FilePath workspace, Launcher launcher, TaskListener listener)
             throws IOException, InterruptedException
     {
-        return new JUnitParser(this.isKeepLongStdio(),
-                               this.isAllowEmptyResults()).parseResult(expandedTestResults, run, workspace, launcher, listener);
+        return parse(this, null, expandedTestResults, run, workspace, launcher, listener);
+
+    }
+
+    private static TestResult parse(@Nonnull JUnitTask task, String nodeId, String expandedTestResults, Run<?,?> run,
+                                    @Nonnull FilePath workspace, Launcher launcher, TaskListener listener)
+            throws IOException, InterruptedException {
+        return new JUnitParser(task.isKeepLongStdio(), task.isAllowEmptyResults())
+                .parseResult(expandedTestResults, run, nodeId, workspace, launcher, listener);
     }
 
     @Deprecated
@@ -142,11 +150,19 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
     @Override
     public void perform(Run build, FilePath workspace, Launcher launcher,
             TaskListener listener) throws InterruptedException, IOException {
+        TestResultAction action = parseAndAttach(this, null, build, workspace, launcher, listener);
+
+        if (action != null && action.getResult().getFailCount() > 0)
+            build.setResult(Result.UNSTABLE);
+    }
+
+    public static TestResultAction parseAndAttach(@Nonnull JUnitTask task, String nodeId, Run build, FilePath workspace,
+                                                  Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
         listener.getLogger().println(Messages.JUnitResultArchiver_Recording());
 
-        final String testResults = build.getEnvironment(listener).expand(this.testResults);
+        final String testResults = build.getEnvironment(listener).expand(task.getTestResults());
 
-        TestResult result = parse(testResults, build, workspace, launcher, listener);
+        TestResult result = parse(task, nodeId, testResults, build, workspace, launcher, listener);
 
         synchronized (build) {
             // TODO can the build argument be omitted now, or is it used prior to the call to addAction?
@@ -160,17 +176,17 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
                 result.freeze(action);
                 action.mergeResult(result, listener);
             }
-            action.setHealthScaleFactor(getHealthScaleFactor()); // overwrites previous value if appending
+            action.setHealthScaleFactor(task.getHealthScaleFactor()); // overwrites previous value if appending
             if (result.isEmpty()) {
                 if (build.getResult() == Result.FAILURE) {
                     // most likely a build failed before it gets to the test phase.
                     // don't report confusing error message.
-                    return;
+                    return null;
                 }
-                if (this.allowEmptyResults) {
+                if (task.isAllowEmptyResults()) {
                     // User allow empty results
                     listener.getLogger().println(Messages.JUnitResultArchiver_ResultIsEmpty());
-                    return;
+                    return null;
                 }
                 // most likely a configuration error in the job - e.g. false pattern to match the JUnit result files
                 throw new AbortException(Messages.JUnitResultArchiver_ResultIsEmpty());
@@ -178,8 +194,8 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
 
             // TODO: Move into JUnitParser [BUG 3123310]
             List<Data> data = action.getData();
-            if (testDataPublishers != null) {
-                for (TestDataPublisher tdp : testDataPublishers) {
+            if (task.getTestDataPublishers() != null) {
+                for (TestDataPublisher tdp : task.getTestDataPublishers()) {
                     Data d = tdp.contributeTestData(build, workspace, launcher, listener, result);
                     if (d != null) {
                         data.add(d);
@@ -193,8 +209,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
                 build.addAction(action);
             }
 
-        if (action.getResult().getFailCount() > 0)
-            build.setResult(Result.UNSTABLE);
+            return action;
         }
     }
 

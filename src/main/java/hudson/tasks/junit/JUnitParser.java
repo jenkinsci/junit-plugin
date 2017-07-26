@@ -88,12 +88,18 @@ public class JUnitParser extends TestResultParser {
         return (TestResult) super.parse(testResultLocations, build, launcher, listener);
     }
 
+    @Deprecated
     @Override
-    public TestResult parseResult(String testResultLocations,
-                                       Run<?,?> build, FilePath workspace, Launcher launcher,
-                                       TaskListener listener)
-            throws InterruptedException, IOException
-    {
+    public TestResult parseResult(String testResultLocations, Run<?,?> build, FilePath workspace,
+                                  Launcher launcher, TaskListener listener)
+            throws InterruptedException, IOException {
+        return parseResult(testResultLocations, build, null, workspace, launcher, listener);
+    }
+
+    @Override
+    public TestResult parseResult(String testResultLocations, Run<?,?> build, String nodeId, FilePath workspace,
+                                  Launcher launcher, TaskListener listener)
+            throws InterruptedException, IOException {
         final long buildTime = build.getTimestamp().getTimeInMillis();
         final long timeOnMaster = System.currentTimeMillis();
 
@@ -101,7 +107,8 @@ public class JUnitParser extends TestResultParser {
         // also get code that deals with testDataPublishers from JUnitResultArchiver.perform
 
         return workspace.act(new ParseResultCallable(testResultLocations, buildTime,
-                                                     timeOnMaster, keepLongStdio, allowEmptyResults));
+                timeOnMaster, keepLongStdio, allowEmptyResults,
+                build.getExternalizableId(), nodeId));
     }
 
     private static final class ParseResultCallable extends MasterToSlaveFileCallable<TestResult> {
@@ -110,14 +117,18 @@ public class JUnitParser extends TestResultParser {
         private final long nowMaster;
         private final boolean keepLongStdio;
         private final boolean allowEmptyResults;
+        private final String runId;
+        private final String nodeId;
 
         private ParseResultCallable(String testResults, long buildTime, long nowMaster,
-                                    boolean keepLongStdio, boolean allowEmptyResults) {
+                                    boolean keepLongStdio, boolean allowEmptyResults, String runId, String nodeId) {
             this.buildTime = buildTime;
             this.testResults = testResults;
             this.nowMaster = nowMaster;
             this.keepLongStdio = keepLongStdio;
             this.allowEmptyResults = allowEmptyResults;
+            this.runId = runId;
+            this.nodeId = nodeId;
         }
 
         public TestResult invoke(File ws, VirtualChannel channel) throws IOException {
@@ -129,7 +140,7 @@ public class JUnitParser extends TestResultParser {
 
             String[] files = ds.getIncludedFiles();
             if (files.length > 0) {
-                result = new TestResult(buildTime + (nowSlave - nowMaster), ds, keepLongStdio);
+                result = new TestResult(buildTime + (nowSlave - nowMaster), ds, keepLongStdio, runId, nodeId);
                 result.tally();
             } else {
                 if (this.allowEmptyResults) {

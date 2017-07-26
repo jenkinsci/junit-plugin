@@ -23,12 +23,14 @@
  */
 package hudson.tasks.junit;
 
+import hudson.model.Run;
 import hudson.tasks.test.TestObject;
 import hudson.util.io.ParserConfigurator;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
+import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
@@ -76,16 +78,41 @@ public final class SuiteResult implements Serializable {
     private String time;
 
     /**
+     * Optional {@link Run#getExternalizableId()} this suite was generated in.
+     */
+    private String runId;
+
+    /**
+     * Optional {@link FlowNode#getId()} this suite was generated in.
+     */
+    private String nodeId;
+
+    /**
      * All test cases.
      */
     private final List<CaseResult> cases = new ArrayList<CaseResult>();
     private transient Map<String,CaseResult> casesByName;
     private transient hudson.tasks.junit.TestResult parent;
 
+    @Deprecated
     SuiteResult(String name, String stdout, String stderr) {
+        this(name, stdout, stderr, null, null);
+    }
+
+    /**
+     * @since 1.21
+     */
+    SuiteResult(String name, String stdout, String stderr, String runId, String nodeId) {
         this.name = name;
         this.stderr = stderr;
         this.stdout = stdout;
+        if (runId != null && nodeId != null) {
+            this.runId = runId;
+            this.nodeId = nodeId;
+        } else {
+            this.runId = null;
+            this.nodeId = null;
+        }
         this.file = null;
     }
 
@@ -116,7 +143,8 @@ public final class SuiteResult implements Serializable {
      * This method returns a collection, as a single XML may have multiple &lt;testsuite>
      * elements wrapped into the top-level &lt;testsuites>.
      */
-    static List<SuiteResult> parse(File xmlReport, boolean keepLongStdio) throws DocumentException, IOException, InterruptedException {
+    static List<SuiteResult> parse(File xmlReport, boolean keepLongStdio, String runId, String nodeId)
+            throws DocumentException, IOException, InterruptedException {
         List<SuiteResult> r = new ArrayList<SuiteResult>();
 
         // parse into DOM
@@ -126,22 +154,23 @@ public final class SuiteResult implements Serializable {
         Document result = saxReader.read(xmlReport);
         Element root = result.getRootElement();
 
-        parseSuite(xmlReport,keepLongStdio,r,root);
+        parseSuite(xmlReport,keepLongStdio,r,root, runId, nodeId);
 
         return r;
     }
 
-    private static void parseSuite(File xmlReport, boolean keepLongStdio, List<SuiteResult> r, Element root) throws DocumentException, IOException {
+    private static void parseSuite(File xmlReport, boolean keepLongStdio, List<SuiteResult> r, Element root, String runId,
+                                   String nodeId) throws DocumentException, IOException {
         // nested test suites
         @SuppressWarnings("unchecked")
         List<Element> testSuites = (List<Element>)root.elements("testsuite");
         for (Element suite : testSuites)
-            parseSuite(xmlReport, keepLongStdio, r, suite);
+            parseSuite(xmlReport, keepLongStdio, r, suite, runId, nodeId);
 
         // child test cases
         // FIXME: do this also if no testcases!
         if (root.element("testcase")!=null || root.element("error")!=null)
-            r.add(new SuiteResult(xmlReport, root, keepLongStdio));
+            r.add(new SuiteResult(xmlReport, root, keepLongStdio, runId, nodeId));
     }
 
     /**
@@ -150,7 +179,8 @@ public final class SuiteResult implements Serializable {
      * @param suite
      *      The parsed result of {@code xmlReport}
      */
-    private SuiteResult(File xmlReport, Element suite, boolean keepLongStdio) throws DocumentException, IOException {
+    private SuiteResult(File xmlReport, Element suite, boolean keepLongStdio, String runId, String nodeId)
+            throws DocumentException, IOException {
     	this.file = xmlReport.getAbsolutePath();
         String name = suite.attributeValue("name");
         if(name==null)
@@ -164,6 +194,10 @@ public final class SuiteResult implements Serializable {
         this.name = TestObject.safe(name);
         this.timestamp = suite.attributeValue("timestamp");
         this.id = suite.attributeValue("id");
+        if (runId != null && nodeId != null) {
+            this.runId = runId;
+            this.nodeId = nodeId;
+        }
         // check for test suite time attribute
         if( ( this.time = suite.attributeValue("time") ) != null ){
             duration = new TimeToFloat(this.time).parse();
@@ -240,6 +274,26 @@ public final class SuiteResult implements Serializable {
     @Exported(visibility=9)
     public float getDuration() {
         return duration;
+    }
+
+    /**
+     * The possibly-null {@link Run#getExternalizableId()} this suite was generated in.
+     *
+     * @since 1.21
+     */
+    @Exported(visibility=9)
+    public String getRunId() {
+        return runId;
+    }
+
+    /**
+     * The possibly-null {@link FlowNode#id} this suite was generated in.
+     *
+     * @since 1.21
+     */
+    @Exported(visibility=9)
+    public String getNodeId() {
+        return nodeId;
     }
 
     /**
