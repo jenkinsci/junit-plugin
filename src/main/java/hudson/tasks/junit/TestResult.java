@@ -73,7 +73,7 @@ public final class TestResult extends MetaTabulatedResult {
     /**
      * {@link #suites} keyed by their run ID and node ID for faster lookup. May be empty.
      */
-    private transient Map<String,Map<String,SuiteResult>> suitesByRunAndNode;
+    private transient Map<String,Map<String,List<SuiteResult>>> suitesByRunAndNode;
 
     /**
      * Results tabulated by package.
@@ -639,10 +639,12 @@ public final class TestResult extends MetaTabulatedResult {
         TestResult result = new TestResult();
         if (suitesByRunAndNode.containsKey(runId)) {
             for (String n : nodeIds) {
-                SuiteResult s = suitesByRunAndNode.get(runId).get(n);
-                if (s != null) {
-                    s.setParent(null);
-                    result.add(s);
+                List<SuiteResult> suites = suitesByRunAndNode.get(runId).get(n);
+                if (suites != null) {
+                    for (SuiteResult s : suites) {
+                        s.setParent(null);
+                        result.add(s);
+                    }
                 }
             }
         }
@@ -688,10 +690,7 @@ public final class TestResult extends MetaTabulatedResult {
             s.setParent(this); // kluge to prevent double-counting the results
             suitesByName.put(s.getName(),s);
             if (s.getRunId() != null && s.getNodeId() != null) {
-                if (suitesByRunAndNode.get(s.getRunId()) == null) {
-                    suitesByRunAndNode.put(s.getRunId(), new HashMap<String, SuiteResult>());
-                }
-                suitesByRunAndNode.get(s.getRunId()).put(s.getNodeId(), s);
+                addSuiteByRunAndNode(s);
             }
 
             List<CaseResult> cases = s.getCases();
@@ -744,10 +743,7 @@ public final class TestResult extends MetaTabulatedResult {
             suitesByName.put(s.getName(),s);
 
             if (s.getRunId() != null && s.getNodeId() != null) {
-                if (suitesByRunAndNode.get(s.getRunId()) == null) {
-                    suitesByRunAndNode.put(s.getRunId(), new HashMap<String, SuiteResult>());
-                }
-                suitesByRunAndNode.get(s.getRunId()).put(s.getNodeId(), s);
+                addSuiteByRunAndNode(s);
             }
 
             totalTests += s.getCases().size();
@@ -785,6 +781,16 @@ public final class TestResult extends MetaTabulatedResult {
 
         for (PackageResult pr : byPackages.values())
             pr.freeze();
+    }
+
+    private void addSuiteByRunAndNode(SuiteResult s) {
+        if (suitesByRunAndNode.get(s.getRunId()) == null) {
+            suitesByRunAndNode.put(s.getRunId(), new HashMap<String, List<SuiteResult>>());
+        }
+        if (suitesByRunAndNode.get(s.getRunId()).get(s.getNodeId()) == null) {
+            suitesByRunAndNode.get(s.getRunId()).put(s.getNodeId(), new ArrayList<SuiteResult>());
+        }
+        suitesByRunAndNode.get(s.getRunId()).get(s.getNodeId()).add(s);
     }
 
     private static final long serialVersionUID = 1L;
