@@ -85,10 +85,6 @@ public class JUnitResultsStepTest {
         FlowNode junitNode = execution.getNode("7");
         assertNotNull(junitNode);
 
-        TagsAction tagsAction = junitNode.getAction(TagsAction.class);
-        assertNotNull(tagsAction);
-        assertEquals("true", tagsAction.getTagValue(JUnitResultsStep.HAS_TEST_RESULTS_TAG_NAME));
-
         TestResult nodeTests = action.getResult().getResultByRunAndNode(r.getExternalizableId(), junitNode.getId());
         assertNotNull(nodeTests);
         assertEquals(1, nodeTests.getSuites().size());
@@ -124,19 +120,12 @@ public class JUnitResultsStepTest {
         FlowNode secondNode = execution.getNode("8");
         assertNotNull(firstNode);
 
-        TagsAction firstTags = firstNode.getAction(TagsAction.class);
-        assertNotNull(firstTags);
-        assertEquals("true", firstTags.getTagValue(JUnitResultsStep.HAS_TEST_RESULTS_TAG_NAME));
-
         TestResult firstTests = action.getResult().getResultByRunAndNode(r.getExternalizableId(), firstNode.getId());
         assertNotNull(firstTests);
         assertEquals(1, firstTests.getSuites().size());
         assertEquals(6, firstTests.getTotalCount());
 
         assertNotNull(secondNode);
-        TagsAction secondTags = secondNode.getAction(TagsAction.class);
-        assertNotNull(secondTags);
-        assertEquals("true", secondTags.getTagValue(JUnitResultsStep.HAS_TEST_RESULTS_TAG_NAME));
 
         TestResult secondTests = action.getResult().getResultByRunAndNode(r.getExternalizableId(), secondNode.getId());
         assertNotNull(secondTests);
