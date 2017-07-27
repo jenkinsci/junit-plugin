@@ -95,7 +95,7 @@ public class JUnitResultsStepTest {
 
     @Test
     public void twoSteps() throws Exception {
-        WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "singleStep");
+        WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "twoSteps");
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
                 "  node {\n" +
                 "    junitResults(testResults: 'first-result.xml')\n" +
