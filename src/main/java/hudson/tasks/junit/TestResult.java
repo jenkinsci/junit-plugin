@@ -159,7 +159,7 @@ public final class TestResult extends MetaTabulatedResult {
 
     @Deprecated
     public void parse(long buildTime, DirectoryScanner results) throws IOException {
-        parse(buildTime, results);
+        parse(buildTime, results, null, null);
     }
 
     /**
