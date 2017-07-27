@@ -648,12 +648,12 @@ public final class TestResult extends MetaTabulatedResult {
         return suitesByName.get(name);
     }
 
-    @CheckForNull
+    @Nonnull
     public TestResult getResultByRunAndNode(@Nonnull String runId, @Nonnull String nodeId) {
         return getResultByRunAndNodes(runId, Collections.singletonList(nodeId));
     }
 
-    @CheckForNull
+    @Nonnull
     public TestResult getResultByRunAndNodes(@Nonnull String runId, @Nonnull List<String> nodeIds) {
         TestResult result = new TestResult();
         if (suitesByRunAndNode.containsKey(runId)) {
@@ -669,11 +669,7 @@ public final class TestResult extends MetaTabulatedResult {
         }
         result.tally();
 
-        if (result.totalTests > 0) {
-            return result;
-        } else {
-            return null;
-        }
+        return result;
     }
 
      @Override

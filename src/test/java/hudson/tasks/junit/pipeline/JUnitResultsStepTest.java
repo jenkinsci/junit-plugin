@@ -51,7 +51,8 @@ public class JUnitResultsStepTest {
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
                 "  node {\n" +
                 "    sh 'echo hi'\n" +
-                "    junitResults(testResults: '*.xml', allowEmptyResults: true)\n" +
+                "    def results = junitResults(testResults: '*.xml', allowEmptyResults: true)\n" +
+                "    assert results.totalCount == 0\n" +
                 "  }\n" +
                 "}\n", true));
 
@@ -65,7 +66,8 @@ public class JUnitResultsStepTest {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "singleStep");
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
                 "  node {\n" +
-                "    junitResults(testResults: '*.xml')\n" +
+                "    def results = junitResults(testResults: '*.xml')\n" +
+                "    assert results.totalCount == 6\n" +
                 "  }\n" +
                 "}\n", true));
         FilePath ws = rule.jenkins.getWorkspaceFor(j);
@@ -98,8 +100,10 @@ public class JUnitResultsStepTest {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "twoSteps");
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
                 "  node {\n" +
-                "    junitResults(testResults: 'first-result.xml')\n" +
-                "    junitResults(testResults: 'second-result.xml')\n" +
+                "    def first = junitResults(testResults: 'first-result.xml')\n" +
+                "    def second = junitResults(testResults: 'second-result.xml')\n" +
+                "    assert first.totalCount == 6\n" +
+                "    assert second.totalCount == 1\n" +
                 "  }\n" +
                 "}\n", true));
         FilePath ws = rule.jenkins.getWorkspaceFor(j);

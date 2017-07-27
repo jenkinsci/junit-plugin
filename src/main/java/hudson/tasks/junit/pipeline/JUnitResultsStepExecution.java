@@ -8,6 +8,7 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.junit.JUnitResultArchiver;
 import hudson.tasks.junit.TestResultAction;
+import hudson.tasks.junit.TestResultSummary;
 import org.jenkinsci.plugins.workflow.actions.TagsAction;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
@@ -15,7 +16,7 @@ import org.jenkinsci.plugins.workflow.steps.SynchronousNonBlockingStepExecution;
 
 import javax.annotation.Nonnull;
 
-public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecution<Void> {
+public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecution<TestResultSummary> {
 
     private transient final JUnitResultsStep step;
 
@@ -25,7 +26,7 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
     }
 
     @Override
-    protected Void run() throws Exception {
+    protected TestResultSummary run() throws Exception {
         FilePath workspace = getContext().get(FilePath.class);
         workspace.mkdirs();
         Run<?,?> run = getContext().get(Run.class);
@@ -52,9 +53,11 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
                 tagsAction.addTag(JUnitResultsStep.HAS_TEST_RESULTS_TAG_NAME, "true");
                 node.addAction(tagsAction);
             }
+
+            return new TestResultSummary(testResultAction.getResult().getResultByRunAndNode(run.getExternalizableId(), nodeId));
         }
 
-        return null;
+        return new TestResultSummary();
     }
 
     private static final long serialVersionUID = 1L;
