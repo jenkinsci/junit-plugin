@@ -157,6 +157,11 @@ public final class TestResult extends MetaTabulatedResult {
     	return this;
     }
 
+    @Deprecated
+    public void parse(long buildTime, DirectoryScanner results) throws IOException {
+        parse(buildTime, results);
+    }
+
     /**
      * Collect reports from the given {@link DirectoryScanner}, while
      * filtering out all files that were created before the given time.
@@ -166,13 +171,20 @@ public final class TestResult extends MetaTabulatedResult {
      * @param nodeId Optional {@link FlowNode#getId()}
      *
      * @throws IOException if an error occurs.
+     * @since 1.21
      */
     public void parse(long buildTime, DirectoryScanner results, String runId, String nodeId) throws IOException {
         String[] includedFiles = results.getIncludedFiles();
         File baseDir = results.getBasedir();
         parse(buildTime,baseDir,runId,nodeId,includedFiles);
     }
-        
+
+    @Deprecated
+    public void parse(long buildTime, File baseDir, String[] reportFiles)
+            throws IOException {
+        parse(buildTime, baseDir, null, null, reportFiles);
+    }
+
     /**
      * Collect reports from the given report files, while
      * filtering out all files that were created before the given time.
@@ -183,7 +195,7 @@ public final class TestResult extends MetaTabulatedResult {
      * @param reportFiles Report files.
      *
      * @throws IOException if an error occurs.
-     * @since 1.426
+     * @since 1.21
      */
     public void parse(long buildTime, File baseDir, String runId, String nodeId, String[] reportFiles)
             throws IOException {
@@ -216,7 +228,12 @@ public final class TestResult extends MetaTabulatedResult {
                 Util.getTimeSpanString(buildTime-f.lastModified())));
         }
     }
-    
+
+    @Deprecated
+    public void parse(long buildTime, Iterable<File> reportFiles) throws IOException {
+        parse(buildTime, reportFiles, null, null);
+    }
+
     /**
      * Collect reports from the given report files
      *
@@ -226,7 +243,7 @@ public final class TestResult extends MetaTabulatedResult {
      * @param nodeId Optional, possibly null {@link FlowNode#getId()}
      *
      * @throws IOException if an error occurs.
-     * @since 1.500
+     * @since 1.21
      */
     public void parse(long buildTime, Iterable<File> reportFiles, String runId, String nodeId) throws IOException {
         boolean parsed=false;
@@ -318,6 +335,7 @@ public final class TestResult extends MetaTabulatedResult {
         return lhs.equals(rhs);
     }
 
+    @Deprecated
     public void parse(File reportFile) throws IOException {
         parse(reportFile, null, null);
     }
@@ -329,6 +347,7 @@ public final class TestResult extends MetaTabulatedResult {
      * @param nodeId Optional, possibly null {@link FlowNode#getId()}
      *
      * @throws IOException if an error occurs.
+     * @since 1.21
      */
     public void parse(File reportFile, String runId, String nodeId) throws IOException {
         try {
