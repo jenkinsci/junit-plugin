@@ -82,7 +82,7 @@ public class JUnitResultsStepTest {
 
         FlowNode junitNode = execution.getNode("7");
         assertNotNull(junitNode);
-        System.err.println(junitNode.getActions());
+
         TagsAction tagsAction = junitNode.getAction(TagsAction.class);
         assertNotNull(tagsAction);
         assertEquals("true", tagsAction.getTagValue(JUnitResultsStep.HAS_TEST_RESULTS_TAG_NAME));
