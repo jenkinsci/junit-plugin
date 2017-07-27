@@ -241,7 +241,7 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
     /**
      * Merges an additional test result into this one.
      */
-    void mergeResult(TestResult additionalResult, TaskListener listener) {
+    public void mergeResult(TestResult additionalResult, TaskListener listener) {
         TestResult original = getResult();
         original.merge(additionalResult);
         setResult(original, listener);
