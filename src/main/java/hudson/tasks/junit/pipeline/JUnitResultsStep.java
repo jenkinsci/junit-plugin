@@ -30,8 +30,6 @@ import java.util.List;
 import java.util.Set;
 
 public class JUnitResultsStep extends Step implements JUnitTask {
-    public static final String HAS_TEST_RESULTS_TAG_NAME = "has-test-results";
-
     /**
      * {@link FileSet} "includes" string, like "foo/bar/*.xml"
      */

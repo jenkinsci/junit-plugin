@@ -43,17 +43,6 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
             if (testResultAction.getResult().getFailCount() > 0) {
                 getContext().setResult(Result.UNSTABLE);
             }
-
-            TagsAction tagsAction = node.getAction(TagsAction.class);
-            if (tagsAction != null) {
-                tagsAction.addTag(JUnitResultsStep.HAS_TEST_RESULTS_TAG_NAME, "true");
-                node.save();
-            } else {
-                tagsAction = new TagsAction();
-                tagsAction.addTag(JUnitResultsStep.HAS_TEST_RESULTS_TAG_NAME, "true");
-                node.addAction(tagsAction);
-            }
-
             return new TestResultSummary(testResultAction.getResult().getResultByRunAndNode(run.getExternalizableId(), nodeId));
         }
 
