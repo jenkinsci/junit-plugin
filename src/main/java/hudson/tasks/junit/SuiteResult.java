@@ -34,6 +34,7 @@ import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
+import javax.annotation.CheckForNull;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
@@ -102,10 +103,11 @@ public final class SuiteResult implements Serializable {
     /**
      * @since 1.21
      */
-    SuiteResult(String name, String stdout, String stderr, String runId, String nodeId) {
+    SuiteResult(String name, String stdout, String stderr, @CheckForNull String runId, @CheckForNull String nodeId) {
         this.name = name;
         this.stderr = stderr;
         this.stdout = stdout;
+        // runId is generally going to be not null, but we only care about it if both it and nodeId are not null.
         if (runId != null && nodeId != null) {
             this.runId = runId;
             this.nodeId = nodeId;
@@ -179,7 +181,8 @@ public final class SuiteResult implements Serializable {
      * @param suite
      *      The parsed result of {@code xmlReport}
      */
-    private SuiteResult(File xmlReport, Element suite, boolean keepLongStdio, String runId, String nodeId)
+    private SuiteResult(File xmlReport, Element suite, boolean keepLongStdio, @CheckForNull String runId,
+                        @CheckForNull String nodeId)
             throws DocumentException, IOException {
     	this.file = xmlReport.getAbsolutePath();
         String name = suite.attributeValue("name");
@@ -281,6 +284,7 @@ public final class SuiteResult implements Serializable {
      *
      * @since 1.21
      */
+    @CheckForNull
     @Exported(visibility=9)
     public String getRunId() {
         return runId;
@@ -292,6 +296,7 @@ public final class SuiteResult implements Serializable {
      * @since 1.21
      */
     @Exported(visibility=9)
+    @CheckForNull
     public String getNodeId() {
         return nodeId;
     }

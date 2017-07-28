@@ -661,7 +661,6 @@ public final class TestResult extends MetaTabulatedResult {
                 List<SuiteResult> suites = suitesByRunAndNode.get(runId).get(n);
                 if (suites != null) {
                     for (SuiteResult s : suites) {
-                        s.setParent(null);
                         result.add(s);
                     }
                 }
@@ -799,12 +798,15 @@ public final class TestResult extends MetaTabulatedResult {
     }
 
     private void addSuiteByRunAndNode(SuiteResult s) {
+        // If we don't already have an entry for this run ID, initialize a map for it.
         if (suitesByRunAndNode.get(s.getRunId()) == null) {
             suitesByRunAndNode.put(s.getRunId(), new HashMap<String, List<SuiteResult>>());
         }
+        // If we don't already have an entry in the run's map for this node, initialize a list for it.
         if (suitesByRunAndNode.get(s.getRunId()).get(s.getNodeId()) == null) {
             suitesByRunAndNode.get(s.getRunId()).put(s.getNodeId(), new ArrayList<SuiteResult>());
         }
+        // Add the suite to the list for the node in the map for the run. Phew.
         suitesByRunAndNode.get(s.getRunId()).get(s.getNodeId()).add(s);
     }
 
