@@ -37,6 +37,8 @@ import jenkins.MasterToSlaveFileCallable;
 import org.apache.tools.ant.types.FileSet;
 import org.apache.tools.ant.DirectoryScanner;
 
+import javax.annotation.CheckForNull;
+
 /**
  * Parse some JUnit xml files and generate a TestResult containing all the
  * results parsed.
@@ -97,7 +99,7 @@ public class JUnitParser extends TestResultParser {
     }
 
     @Override
-    public TestResult parseResult(String testResultLocations, Run<?,?> build, String nodeId, FilePath workspace,
+    public TestResult parseResult(String testResultLocations, Run<?,?> build, @CheckForNull String nodeId, FilePath workspace,
                                   Launcher launcher, TaskListener listener)
             throws InterruptedException, IOException {
         final long buildTime = build.getTimestamp().getTimeInMillis();
@@ -121,7 +123,7 @@ public class JUnitParser extends TestResultParser {
         private final String nodeId;
 
         private ParseResultCallable(String testResults, long buildTime, long nowMaster,
-                                    boolean keepLongStdio, boolean allowEmptyResults, String runId, String nodeId) {
+                                    boolean keepLongStdio, boolean allowEmptyResults, String runId, @CheckForNull String nodeId) {
             this.buildTime = buildTime;
             this.testResults = testResults;
             this.nowMaster = nowMaster;

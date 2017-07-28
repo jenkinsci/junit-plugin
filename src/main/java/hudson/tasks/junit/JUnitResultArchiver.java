@@ -129,7 +129,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
 
     }
 
-    private static TestResult parse(@Nonnull JUnitTask task, String nodeId, String expandedTestResults, Run<?,?> run,
+    private static TestResult parse(@Nonnull JUnitTask task, @CheckForNull String nodeId, String expandedTestResults, Run<?,?> run,
                                     @Nonnull FilePath workspace, Launcher launcher, TaskListener listener)
             throws IOException, InterruptedException {
         return new JUnitParser(task.isKeepLongStdio(), task.isAllowEmptyResults())
@@ -156,7 +156,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
             build.setResult(Result.UNSTABLE);
     }
 
-    public static TestResultAction parseAndAttach(@Nonnull JUnitTask task, String nodeId, Run build, FilePath workspace,
+    public static TestResultAction parseAndAttach(@Nonnull JUnitTask task, @CheckForNull String nodeId, Run build, FilePath workspace,
                                                   Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
         listener.getLogger().println(Messages.JUnitResultArchiver_Recording());
 
