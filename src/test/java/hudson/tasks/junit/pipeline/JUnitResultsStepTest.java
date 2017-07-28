@@ -2,10 +2,10 @@ package hudson.tasks.junit.pipeline;
 
 import hudson.FilePath;
 import hudson.model.Result;
+import hudson.model.Run;
 import hudson.tasks.junit.TestResult;
 import hudson.tasks.junit.TestResultAction;
 import hudson.tasks.junit.TestResultTest;
-import org.jenkinsci.plugins.workflow.actions.TagsAction;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
@@ -66,7 +66,7 @@ public class JUnitResultsStepTest {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "singleStep");
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
                 "  node {\n" +
-                "    def results = junitResults(testResults: '*.xml')\n" +
+                "    def results = junitResults(testResults: '*.xml')\n" + // node id 7
                 "    assert results.totalCount == 6\n" +
                 "  }\n" +
                 "}\n", true));
@@ -80,15 +80,7 @@ public class JUnitResultsStepTest {
         assertEquals(1, action.getResult().getSuites().size());
         assertEquals(6, action.getTotalCount());
 
-        FlowExecution execution = r.getExecution();
-
-        FlowNode junitNode = execution.getNode("7");
-        assertNotNull(junitNode);
-
-        TestResult nodeTests = action.getResult().getResultByRunAndNode(r.getExternalizableId(), junitNode.getId());
-        assertNotNull(nodeTests);
-        assertEquals(1, nodeTests.getSuites().size());
-        assertEquals(6, nodeTests.getTotalCount());
+        assertExpectedResults(r, 1, 6, "7");
     }
 
     @Test
@@ -96,8 +88,8 @@ public class JUnitResultsStepTest {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "twoSteps");
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
                 "  node {\n" +
-                "    def first = junitResults(testResults: 'first-result.xml')\n" +
-                "    def second = junitResults(testResults: 'second-result.xml')\n" +
+                "    def first = junitResults(testResults: 'first-result.xml')\n" +    // node id 7
+                "    def second = junitResults(testResults: 'second-result.xml')\n" +  // node id 8
                 "    assert first.totalCount == 6\n" +
                 "    assert second.totalCount == 1\n" +
                 "  }\n" +
@@ -114,28 +106,66 @@ public class JUnitResultsStepTest {
         assertEquals(2, action.getResult().getSuites().size());
         assertEquals(7, action.getTotalCount());
 
-        FlowExecution execution = r.getExecution();
+        // First call
+        assertExpectedResults(r, 1, 6, "7");
 
-        FlowNode firstNode = execution.getNode("7");
-        FlowNode secondNode = execution.getNode("8");
-        assertNotNull(firstNode);
+        // Second call
+        assertExpectedResults(r, 1, 1, "8");
 
-        TestResult firstTests = action.getResult().getResultByRunAndNode(r.getExternalizableId(), firstNode.getId());
-        assertNotNull(firstTests);
-        assertEquals(1, firstTests.getSuites().size());
-        assertEquals(6, firstTests.getTotalCount());
+        // Combined calls
+        assertExpectedResults(r, 2, 7, "7", "8");
+    }
 
-        assertNotNull(secondNode);
+    @Test
+    public void threeSteps() throws Exception {
+        WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "threeSteps");
+        j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
+                "  node {\n" +
+                "    def first = junitResults(testResults: 'first-result.xml')\n" +    // node id 7
+                "    def second = junitResults(testResults: 'second-result.xml')\n" +  // node id 8
+                "    def third = junitResults(testResults: 'third-result.xml')\n" +    // node id 9
+                "    assert first.totalCount == 6\n" +
+                "    assert second.totalCount == 1\n" +
+                "  }\n" +
+                "}\n", true));
+        FilePath ws = rule.jenkins.getWorkspaceFor(j);
+        FilePath testFile = ws.child("first-result.xml");
+        testFile.copyFrom(TestResultTest.class.getResource("junit-report-1463.xml"));
+        FilePath secondTestFile = ws.child("second-result.xml");
+        secondTestFile.copyFrom(TestResultTest.class.getResource("junit-report-2874.xml"));
+        FilePath thirdTestFile = ws.child("third-result.xml");
+        thirdTestFile.copyFrom(TestResultTest.class.getResource("junit-report-nested-testsuites.xml"));
 
-        TestResult secondTests = action.getResult().getResultByRunAndNode(r.getExternalizableId(), secondNode.getId());
-        assertNotNull(secondTests);
-        assertEquals(1, secondTests.getSuites().size());
-        assertEquals(1, secondTests.getTotalCount());
+        WorkflowRun r = rule.assertBuildStatus(Result.UNSTABLE,
+                rule.waitForCompletion(j.scheduleBuild2(0).waitForStart()));
+        TestResultAction action = r.getAction(TestResultAction.class);
+        assertNotNull(action);
+        assertEquals(5, action.getResult().getSuites().size());
+        assertEquals(10, action.getTotalCount());
 
-        TestResult combinedTests = action.getResult().getResultByRunAndNodes(r.getExternalizableId(),
-                Arrays.asList(firstNode.getId(), secondNode.getId()));
-        assertNotNull(combinedTests);
-        assertEquals(2, combinedTests.getSuites().size());
-        assertEquals(7, combinedTests.getTotalCount());
+        // First call
+        assertExpectedResults(r, 1, 6, "7");
+
+        // Second call
+        assertExpectedResults(r, 1, 1, "8");
+
+        // Third call
+        assertExpectedResults(r, 3, 3, "9");
+
+        // Combined first and second calls
+        assertExpectedResults(r, 2, 7, "7", "8");
+
+        // Combined first and third calls
+        assertExpectedResults(r, 4, 9, "7", "9");
+    }
+
+    private void assertExpectedResults(Run<?,?> run, int suiteCount, int testCount, String... nodeIds) throws Exception {
+        TestResultAction action = run.getAction(TestResultAction.class);
+        assertNotNull(action);
+
+        TestResult result = action.getResult().getResultByRunAndNodes(run.getExternalizableId(), Arrays.asList(nodeIds));
+        assertNotNull(result);
+        assertEquals(suiteCount, result.getSuites().size());
+        assertEquals(testCount, result.getTotalCount());
     }
 }
