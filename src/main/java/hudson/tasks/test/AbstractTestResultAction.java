@@ -265,7 +265,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
      * A shortcut for scripting
      * 
      * @return List of passed tests from associated test result.
-     * @since TODO
+     * @since 1.10
      */
     @Nonnull
     public List<? extends TestResult> getPassedTests() {
@@ -276,7 +276,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
      * A shortcut for scripting
      * 
      * @return List of skipped tests from associated test result.
-     * @since TODO
+     * @since 1.10
      */
     @Nonnull
     public List<? extends TestResult> getSkippedTests() {
