@@ -33,6 +33,7 @@ import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -123,10 +124,19 @@ public final class SuiteResult implements Serializable {
         SAXReader saxReader = new SAXReader();
         saxReader.setEntityResolver(new XMLEntityResolver());
 
-        Document result = saxReader.read(xmlReport);
-        Element root = result.getRootElement();
+        FileInputStream xmlReportStream = null;
+        try {
+            xmlReportStream = new FileInputStream(xmlReport);
 
-        parseSuite(xmlReport,keepLongStdio,r,root);
+            Document result = saxReader.read(xmlReportStream);
+            Element root = result.getRootElement();
+
+            parseSuite(xmlReport,keepLongStdio,r,root);
+        } finally {
+            if (xmlReportStream != null) {
+                xmlReportStream.close();
+            }
+        }
 
         return r;
     }
