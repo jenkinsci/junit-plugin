@@ -103,7 +103,9 @@ public final class SuiteResult implements Serializable {
     /**
      * Passed to {@link ParserConfigurator}.
      * @since 1.416
+     * @deprecated with no replacement.
      */
+    @Deprecated
     public static class SuiteResultParserConfigurationContext {
         public final File xmlReport;
 
