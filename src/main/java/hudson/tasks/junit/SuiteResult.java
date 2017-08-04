@@ -124,18 +124,15 @@ public final class SuiteResult implements Serializable {
         SAXReader saxReader = new SAXReader();
         saxReader.setEntityResolver(new XMLEntityResolver());
 
-        FileInputStream xmlReportStream = null;
+        FileInputStream xmlReportStream = new FileInputStream(xmlReport);
         try {
-            xmlReportStream = new FileInputStream(xmlReport);
 
             Document result = saxReader.read(xmlReportStream);
             Element root = result.getRootElement();
 
             parseSuite(xmlReport,keepLongStdio,r,root);
         } finally {
-            if (xmlReportStream != null) {
-                xmlReportStream.close();
-            }
+            xmlReportStream.close();
         }
 
         return r;
