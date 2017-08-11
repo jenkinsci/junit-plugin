@@ -42,6 +42,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -60,6 +61,7 @@ import java.util.regex.Pattern;
  */
 @ExportedBean
 public final class SuiteResult implements Serializable {
+    private static final Logger LOGGER = Logger.getLogger(SuiteResult.class.getName());
     private final String file;
     private final String name;
     private final String stdout;
@@ -177,7 +179,7 @@ public final class SuiteResult implements Serializable {
         if( ( this.time = suite.attributeValue("time") ) != null ){
             duration = new TimeToFloat(this.time).parse();
         }
-        
+
         Element ex = suite.element("error");
         if(ex!=null) {
             // according to junit-noframes.xsl l.229, this happens when the test class failed to load
@@ -236,9 +238,16 @@ public final class SuiteResult implements Serializable {
         casesByName().put(cr.getName(), cr);
         
         //if suite time was not specified use sum of the cases' times
-        if(this.time == null){
+        if( !hasTimeAttr() ){
             duration += cr.getDuration();
         }
+    }
+
+    /**
+     * Returns true if the time attribute is present in this Suite.
+     */
+    private boolean hasTimeAttr() {
+        return time != null;
     }
 
     @Exported(visibility=9)
@@ -357,4 +366,22 @@ public final class SuiteResult implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private static final Pattern SUREFIRE_FILENAME = Pattern.compile("TEST-(.+)\\.xml");
+
+    /**
+     * Merges another SuiteResult into this one.
+     * 
+     * @param sr the SuiteResult to merge into this one
+     */
+    public void merge(SuiteResult sr) {
+        if (sr.hasTimeAttr() ^ hasTimeAttr()){
+            LOGGER.warning("Merging of suiteresults with incompatible time attribute may lead to incorrect durations in reports.( "+getFile()+", "+sr.getFile()+")");
+        }
+        if (hasTimeAttr()) {
+            duration += sr.getDuration();
+        }
+        for (CaseResult cr : sr.getCases()) {
+            addCase(cr);
+            cr.replaceParent(this);
+        }
+    }
 }

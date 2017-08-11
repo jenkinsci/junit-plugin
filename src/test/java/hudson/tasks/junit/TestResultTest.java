@@ -171,6 +171,32 @@ public class TestResultTest {
         assertEquals("Fail count should now be 1", 1, first.getFailCount());
     }
 
+    @Issue("JENKINS-37598")
+    @Test
+    public void testMergeWithTime() throws Exception {
+        TestResult testResult = new TestResult();
+        testResult.parse(getDataFile("junit-report-time-aggregation.xml"));
+        testResult.tally();
+
+        assertEquals(1, testResult.getSuites().size());
+        SuiteResult suite = testResult.getSuite("test.fs.FileSystemTests");
+        assertEquals(3, suite.getCases().size());
+        assertEquals(100, suite.getDuration(), 2);
+    }
+
+    @Issue("JENKINS-37598")
+    @Test
+    public void testMergeWithoutTime() throws Exception {
+        TestResult testResult = new TestResult();
+        testResult.parse(getDataFile("junit-report-time-aggregation2.xml"));
+        testResult.tally();
+
+        assertEquals(1, testResult.getSuites().size());
+        SuiteResult suite = testResult.getSuite("test.fs.FileSystemTests");
+        assertEquals(3, suite.getCases().size());
+        assertEquals(30, suite.getDuration(), 2);
+    }
+
     private static final XStream XSTREAM = new XStream2();
 
     static {

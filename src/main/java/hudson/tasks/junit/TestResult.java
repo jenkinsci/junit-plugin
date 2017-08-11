@@ -256,12 +256,9 @@ public final class TestResult extends MetaTabulatedResult {
                 if(strictEq(s.getTimestamp(),sr.getTimestamp())) {
                     return;
                 }
-            
-                for (CaseResult cr: sr.getCases()) {
-                    s.addCase(cr);
-                    cr.replaceParent(s);
-                }
+
                 duration += sr.getDuration();
+                s.merge(sr);
                 return;
             }
         }
