@@ -222,10 +222,12 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         List<TestAction> result = new ArrayList<TestAction>();
         // Added check for null testData to avoid NPE from issue 4257.
         if (testData != null) {
-            for (Data data : testData)
-                for (TestAction ta : data.getTestAction(object))
-                    if (ta != null)
-                        result.add(ta);
+            synchronized (testData) {
+                for (Data data : testData)
+                    for (TestAction ta : data.getTestAction(object))
+                        if (ta != null)
+                            result.add(ta);
+            }
         }
         return Collections.unmodifiableList(result);
     }
@@ -234,8 +236,29 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         return testData;
     }
 
+    /**
+     * Replaces to collection of test data associated with this action.
+     *
+     * <p>
+     * This method will not automatically persist the data at the time of addition.
+     *
+     */
     public void setData(List<Data> testData) {
-	this.testData = testData;
+	      this.testData = testData;
+    }
+
+    /**
+     * Adds a {@link Data} to the test data associated with this action.
+     *
+     * <p>
+     * This method will not automatically persist the data at the time of addition.
+     *
+     * @since 1.21
+     */
+    public void addData(Data data) {
+        synchronized (testData) {
+            this.testData.add(data);
+        }
     }
 
     /**
@@ -258,7 +281,7 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
     public static abstract class Data {
     	/**
     	 * Returns all TestActions for the testObject.
-         * 
+         *
          * @return
          *      Can be empty but never null. The caller must assume that the returned list is read-only.
     	 */
@@ -270,10 +293,10 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
     	if (testData == null) {
     		testData = new ArrayList<Data>(0);
     	}
-    	
+
     	return this;
     }
-    
+
     private static final Logger logger = Logger.getLogger(TestResultAction.class.getName());
 
     private static final XStream XSTREAM = new XStream2();

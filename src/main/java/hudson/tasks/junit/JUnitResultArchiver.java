@@ -195,12 +195,11 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
             }
 
             // TODO: Move into JUnitParser [BUG 3123310]
-            List<Data> data = action.getData();
             if (task.getTestDataPublishers() != null) {
                 for (TestDataPublisher tdp : task.getTestDataPublishers()) {
                     Data d = tdp.contributeTestData(build, workspace, launcher, listener, result);
                     if (d != null) {
-                        data.add(d);
+                        action.addData(d);
                     }
                 }
             }

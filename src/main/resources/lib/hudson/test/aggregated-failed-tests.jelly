@@ -47,8 +47,8 @@ THE SOFTWARE.
         <table class="pane sortable bigtable stripped">
           <tr>
             <td class="pane-header">Test Name</td>
-            <td class="pane-header" style="width:4em">Duration</td>
-            <td class="pane-header" style="width:4em">Age</td>
+            <td class="pane-header" style="width:4em; text-align:right;">Duration</td>
+            <td class="pane-header" style="width:4em; text-align:right;">Age</td>
           </tr>
           <j:forEach var="f" items="${report.result.failedTests}" varStatus="i">
             <tr>
