@@ -1,6 +1,7 @@
 package hudson.tasks.junit.pipeline;
 
 
+import com.google.common.base.Predicate;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.Result;
@@ -9,12 +10,20 @@ import hudson.model.TaskListener;
 import hudson.tasks.junit.JUnitResultArchiver;
 import hudson.tasks.junit.TestResultAction;
 import hudson.tasks.junit.TestResultSummary;
-import org.jenkinsci.plugins.workflow.actions.TagsAction;
+import org.jenkinsci.plugins.workflow.actions.LabelAction;
+import org.jenkinsci.plugins.workflow.actions.ThreadNameAction;
+import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
+import org.jenkinsci.plugins.workflow.graphanalysis.Filterator;
+import org.jenkinsci.plugins.workflow.graphanalysis.FlowScanningUtils;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.SynchronousNonBlockingStepExecution;
+import org.jenkinsci.plugins.workflow.support.steps.StageStep;
 
 import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
 
 public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecution<TestResultSummary> {
 
@@ -36,7 +45,8 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
 
         String nodeId = node.getId();
 
-        TestResultAction testResultAction = JUnitResultArchiver.parseAndAttach(step, nodeId, run, workspace, launcher, listener);
+        TestResultAction testResultAction = JUnitResultArchiver.parseAndAttach(step, nodeId, getEnclosingStagesAndParallels(node),
+                run, workspace, launcher, listener);
 
         if (testResultAction != null) {
             // TODO: Once JENKINS-43995 lands, update this to set the step status instead of the entire build.
@@ -47,6 +57,34 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
         }
 
         return new TestResultSummary();
+    }
+
+    /**
+     * Get the stage and parallel branch start node IDs (not the body nodes) for this node, innermost first.
+     * @param node A flownode.
+     * @return A nonnull, possibly empty list of stage/parallel branch start node IDs, innermost first.
+     */
+    @Nonnull
+    public static List<String> getEnclosingStagesAndParallels(FlowNode node) {
+        List<String> enclosingBlocks = new ArrayList<>();
+        Filterator<FlowNode> enclosingFilter = FlowScanningUtils.fetchEnclosingBlocks(node).filter(new Predicate<FlowNode>() {
+            @Override
+            public boolean apply(@Nullable FlowNode input) {
+                if (input != null && input.getAction(LabelAction.class) != null) {
+                    if (input instanceof StepStartNode && ((StepStartNode) input).getDescriptor() instanceof StageStep.DescriptorImpl) {
+                        return true;
+                    } else if (input.getAction(ThreadNameAction.class) != null) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        });
+        while (enclosingFilter.hasNext()) {
+            enclosingBlocks.add(enclosingFilter.next().getId());
+        }
+
+        return enclosingBlocks;
     }
 
     private static final long serialVersionUID = 1L;

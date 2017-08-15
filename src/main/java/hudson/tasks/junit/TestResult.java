@@ -33,6 +33,7 @@ import hudson.tasks.test.TestObject;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.Serializable;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -40,7 +41,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 import org.apache.tools.ant.DirectoryScanner;
 import org.dom4j.DocumentException;
@@ -76,6 +79,11 @@ public final class TestResult extends MetaTabulatedResult {
     private transient Map<String,Map<String,List<SuiteResult>>> suitesByRunAndNode;
 
     /**
+     * TODO: javadoc
+     */
+    private transient Map<String,Map<String,BlocksWithChildren>> testsByRunAndBlock;
+
+    /**
      * Results tabulated by package.
      */
     private transient Map<String,PackageResult> byPackages;
@@ -86,7 +94,7 @@ public final class TestResult extends MetaTabulatedResult {
     private transient TestObject parent;
 
     /**
-     * Number of all tests.
+     * Number of all leafNodes.
      */
     private transient int totalTests;
 
@@ -99,7 +107,7 @@ public final class TestResult extends MetaTabulatedResult {
     private float duration;
 
     /**
-     * Number of failed/error tests.
+     * Number of failed/error leafNodes.
      */
     private transient List<CaseResult> failedTests;
 
@@ -126,7 +134,7 @@ public final class TestResult extends MetaTabulatedResult {
 
     @Deprecated
     public TestResult(long buildTime, DirectoryScanner results, boolean keepLongStdio) throws IOException {
-        this(buildTime, results, keepLongStdio, null, null);
+        this(buildTime, results, keepLongStdio, null, null, null);
     }
 
     /**
@@ -135,12 +143,13 @@ public final class TestResult extends MetaTabulatedResult {
      * @param keepLongStdio if true, retain a suite's complete stdout/stderr even if this is huge and the suite passed
      * @param runId an optional {@link Run#getExternalizableId()} this test result was initially generated in.
      * @param nodeId an optional {@link org.jenkinsci.plugins.workflow.graph.FlowNode#id} for mapping between suite results and step executions.
+     * @param enclosingBlocks Optional, possibly null list of enclosing {@link FlowNode#getId()}
      * @since 1.21
      */
-    public TestResult(long buildTime, DirectoryScanner results, boolean keepLongStdio, String runId, String nodeId)
-            throws IOException {
+    public TestResult(long buildTime, DirectoryScanner results, boolean keepLongStdio, String runId, String nodeId,
+                      List<String> enclosingBlocks) throws IOException {
         this.keepLongStdio = keepLongStdio;
-        parse(buildTime, results, runId, nodeId);
+        parse(buildTime, results, runId, nodeId, enclosingBlocks);
     }
 
     public TestObject getParent() {
@@ -159,7 +168,7 @@ public final class TestResult extends MetaTabulatedResult {
 
     @Deprecated
     public void parse(long buildTime, DirectoryScanner results) throws IOException {
-        parse(buildTime, results, null, null);
+        parse(buildTime, results, null, null, null);
     }
 
     /**
@@ -169,20 +178,22 @@ public final class TestResult extends MetaTabulatedResult {
      * @param results Directory scanner.
      * @param runId Optional {@link Run#getExternalizableId()}
      * @param nodeId Optional {@link FlowNode#getId()}
+     * @param enclosingBlocks Optional, possibly null list of enclosing {@link FlowNode#getId()}
      *
      * @throws IOException if an error occurs.
      * @since 1.21
      */
-    public void parse(long buildTime, DirectoryScanner results, String runId, String nodeId) throws IOException {
+    public void parse(long buildTime, DirectoryScanner results, String runId, String nodeId, List<String> enclosingBlocks)
+            throws IOException {
         String[] includedFiles = results.getIncludedFiles();
         File baseDir = results.getBasedir();
-        parse(buildTime,baseDir,runId,nodeId,includedFiles);
+        parse(buildTime,baseDir,runId,nodeId,enclosingBlocks,includedFiles);
     }
 
     @Deprecated
     public void parse(long buildTime, File baseDir, String[] reportFiles)
             throws IOException {
-        parse(buildTime, baseDir, null, null, reportFiles);
+        parse(buildTime, baseDir, null, null, null, reportFiles);
     }
 
     /**
@@ -192,13 +203,14 @@ public final class TestResult extends MetaTabulatedResult {
      * @param baseDir Base directory.
      * @param runId Optional, possibly null {@link Run#getExternalizableId()}
      * @param nodeId Optional, possibly null {@link FlowNode#getId()}
+     * @param enclosingBlocks Optional, possibly null list of enclosing {@link FlowNode#getId()}
      * @param reportFiles Report files.
      *
      * @throws IOException if an error occurs.
      * @since 1.21
      */
-    public void parse(long buildTime, File baseDir, String runId, String nodeId, String[] reportFiles)
-            throws IOException {
+    public void parse(long buildTime, File baseDir, String runId, String nodeId, List<String> enclosingBlocks,
+                      String[] reportFiles) throws IOException {
 
         boolean parsed=false;
 
@@ -206,7 +218,7 @@ public final class TestResult extends MetaTabulatedResult {
             File reportFile = new File(baseDir, value);
             // only count files that were actually updated during this build
             if (buildTime-3000/*error margin*/ <= reportFile.lastModified()) {
-                parsePossiblyEmpty(reportFile, runId, nodeId);
+                parsePossiblyEmpty(reportFile, runId, nodeId, enclosingBlocks);
                 parsed = true;
             }
         }
@@ -223,7 +235,7 @@ public final class TestResult extends MetaTabulatedResult {
             File f = new File(baseDir,reportFiles[0]);
             throw new AbortException(
                 String.format(
-                "Test reports were found but none of them are new. Did tests run? %n"+
+                "Test reports were found but none of them are new. Did leafNodes run? %n"+
                 "For example, %s is %s old%n", f,
                 Util.getTimeSpanString(buildTime-f.lastModified())));
         }
@@ -231,7 +243,7 @@ public final class TestResult extends MetaTabulatedResult {
 
     @Deprecated
     public void parse(long buildTime, Iterable<File> reportFiles) throws IOException {
-        parse(buildTime, reportFiles, null, null);
+        parse(buildTime, reportFiles, null, null, null);
     }
 
     /**
@@ -241,17 +253,19 @@ public final class TestResult extends MetaTabulatedResult {
      * @param reportFiles Report files.
      * @param runId Optional, possibly null {@link Run#getExternalizableId()}
      * @param nodeId Optional, possibly null {@link FlowNode#getId()}
+     * @param enclosingBlocks Optional, possibly null list of enclosing {@link FlowNode#getId()}
      *
      * @throws IOException if an error occurs.
      * @since 1.21
      */
-    public void parse(long buildTime, Iterable<File> reportFiles, String runId, String nodeId) throws IOException {
+    public void parse(long buildTime, Iterable<File> reportFiles, String runId, String nodeId, List<String> enclosingBlocks)
+            throws IOException {
         boolean parsed=false;
 
         for (File reportFile : reportFiles) {
             // only count files that were actually updated during this build
             if (buildTime-3000/*error margin*/ <= reportFile.lastModified()) {
-                parsePossiblyEmpty(reportFile, runId, nodeId);
+                parsePossiblyEmpty(reportFile, runId, nodeId, enclosingBlocks);
                 parsed = true;
             }
         }
@@ -268,21 +282,21 @@ public final class TestResult extends MetaTabulatedResult {
             File f = reportFiles.iterator().next();
             throw new AbortException(
                 String.format(
-                "Test reports were found but none of them are new. Did tests run? %n"+
+                "Test reports were found but none of them are new. Did leafNodes run? %n"+
                 "For example, %s is %s old%n", f,
                 Util.getTimeSpanString(buildTime-f.lastModified())));
         }
         
     }
     
-    private void parsePossiblyEmpty(File reportFile, String runId, String nodeId) throws IOException {
+    private void parsePossiblyEmpty(File reportFile, String runId, String nodeId, List<String> enclosingBlocks) throws IOException {
         if(reportFile.length()==0) {
             // this is a typical problem when JVM quits abnormally, like OutOfMemoryError during a test.
-            SuiteResult sr = new SuiteResult(reportFile.getName(), "", "", runId, nodeId);
+            SuiteResult sr = new SuiteResult(reportFile.getName(), "", "", runId, nodeId, enclosingBlocks);
             sr.addCase(new CaseResult(sr,"[empty]","Test report file "+reportFile.getAbsolutePath()+" was length 0"));
             add(sr);
         } else {
-            parse(reportFile, runId, nodeId);
+            parse(reportFile, runId, nodeId, enclosingBlocks);
         }
     }
     
@@ -292,7 +306,8 @@ public final class TestResult extends MetaTabulatedResult {
             if(s.getName().equals(sr.getName()) &&
                     nullSafeEq(s.getId(),sr.getId()) &&
                     nullSafeEq(s.getRunId(),sr.getRunId()) &&
-                    nullSafeEq(s.getNodeId(),sr.getNodeId())) {
+                    nullSafeEq(s.getNodeId(),sr.getNodeId()) &&
+                    nullSafeEq(s.getEnclosingBlocks(),sr.getEnclosingBlocks())) {
             
                 // However, a common problem is that people parse TEST-*.xml as well as TESTS-TestSuite.xml.
                 // In that case consider the result file as a duplicate and discard it.
@@ -309,12 +324,13 @@ public final class TestResult extends MetaTabulatedResult {
                 return;
             }
         }
+
         suites.add(sr);
         duration += sr.getDuration();
     }
 
     /**
-     * Adds the suites from another test result to this one.
+     * Adds the leafNodes from another test result to this one.
      */
     void merge(TestResult other) {
         for (SuiteResult suite : other.suites) {
@@ -337,7 +353,7 @@ public final class TestResult extends MetaTabulatedResult {
 
     @Deprecated
     public void parse(File reportFile) throws IOException {
-        parse(reportFile, null, null);
+        parse(reportFile, null, null, null);
     }
 
     /**
@@ -345,13 +361,14 @@ public final class TestResult extends MetaTabulatedResult {
      * @param reportFile Report file to parse.
      * @param runId Optional, possibly null {@link Run#getExternalizableId()}
      * @param nodeId Optional, possibly null {@link FlowNode#getId()}
+     * @param enclosingBlocks Optional, possibly null list of enclosing {@link FlowNode#getId()}
      *
      * @throws IOException if an error occurs.
      * @since 1.21
      */
-    public void parse(File reportFile, String runId, String nodeId) throws IOException {
+    public void parse(File reportFile, String runId, String nodeId, List<String> enclosingBlocks) throws IOException {
         try {
-            for (SuiteResult suiteResult : SuiteResult.parse(reportFile, keepLongStdio, runId, nodeId))
+            for (SuiteResult suiteResult : SuiteResult.parse(reportFile, keepLongStdio, runId, nodeId, enclosingBlocks))
                 add(suiteResult);
         } catch (InterruptedException e) {
             throw new IOException("Failed to read "+reportFile,e);
@@ -362,7 +379,7 @@ public final class TestResult extends MetaTabulatedResult {
                 throw new IOException("Failed to read "+reportFile+"\n"+
                     "Is this really a JUnit report file? Your configuration must be matching too many files",e);
             } else {
-                SuiteResult sr = new SuiteResult(reportFile.getName(), "", "");
+                SuiteResult sr = new SuiteResult(reportFile.getName(), "", "", null, null, null);
                 StringWriter writer = new StringWriter();
                 e.printStackTrace(new PrintWriter(writer));
                 String error = "Failed to read test report file "+reportFile.getAbsolutePath()+"\n"+writer.toString();
@@ -583,7 +600,7 @@ public final class TestResult extends MetaTabulatedResult {
      */
     @Override
     public String getErrorStackTrace() {
-        return "No error stack traces available at this level. Drill down to individual tests to find stack traces.";
+        return "No error stack traces available at this level. Drill down to individual leafNodes to find stack traces.";
     }
 
     /**
@@ -591,7 +608,7 @@ public final class TestResult extends MetaTabulatedResult {
      */
     @Override
     public String getErrorDetails() {
-        return "No error details available at this level. Drill down to individual tests to find details.";
+        return "No error details available at this level. Drill down to individual leafNodes to find details.";
     }
 
     /**
@@ -648,6 +665,22 @@ public final class TestResult extends MetaTabulatedResult {
         return suitesByName.get(name);
     }
 
+    public boolean hasMultipleBlocksForRun(@Nonnull String runId) {
+        Map<String,BlocksWithChildren> blocksForRun = testsByRunAndBlock.get(runId);
+        if (blocksForRun != null && blocksForRun.size() > 1) {
+            // Check for nested runs.
+            int nonNested = 0;
+            for (BlocksWithChildren b : blocksForRun.values()) {
+                if (!b.leafNodes.isEmpty()) {
+                    nonNested++;
+                }
+            }
+            return nonNested > 1;
+        }
+
+        return false;
+    }
+
     @Nonnull
     public TestResult getResultByRunAndNode(@Nonnull String runId, @Nonnull String nodeId) {
         return getResultByRunAndNodes(runId, Collections.singletonList(nodeId));
@@ -666,7 +699,7 @@ public final class TestResult extends MetaTabulatedResult {
                 }
             }
         }
-        result.tally();
+        result.setParentAction(parentAction);
 
         return result;
     }
@@ -691,6 +724,7 @@ public final class TestResult extends MetaTabulatedResult {
         // TODO: free children? memmory leak?
         suitesByName = new HashMap<String,SuiteResult>();
         suitesByRunAndNode = new HashMap<>();
+        testsByRunAndBlock = new HashMap<>();
         failedTests = new ArrayList<CaseResult>();
         skippedTests = null;
         passedTests = null;
@@ -743,6 +777,7 @@ public final class TestResult extends MetaTabulatedResult {
             // freeze for the first time
             suitesByName = new HashMap<String,SuiteResult>();
             suitesByRunAndNode = new HashMap<>();
+            testsByRunAndBlock = new HashMap<>();
             totalTests = 0;
             failedTests = new ArrayList<CaseResult>();
             skippedTests = null;
@@ -798,18 +833,174 @@ public final class TestResult extends MetaTabulatedResult {
     }
 
     private void addSuiteByRunAndNode(SuiteResult s) {
-        // If we don't already have an entry for this run ID, initialize a map for it.
-        if (suitesByRunAndNode.get(s.getRunId()) == null) {
-            suitesByRunAndNode.put(s.getRunId(), new HashMap<String, List<SuiteResult>>());
+        String runId = s.getRunId();
+        String nodeId = s.getNodeId();
+
+        if (runId != null && nodeId != null) {
+            // If we don't already have an entry for this run ID, initialize a map for it.
+            if (suitesByRunAndNode.get(runId) == null) {
+                suitesByRunAndNode.put(runId, new HashMap<String, List<SuiteResult>>());
+            }
+            // If we don't already have an entry in the run's map for this node, initialize a list for it.
+            if (suitesByRunAndNode.get(runId).get(nodeId) == null) {
+                suitesByRunAndNode.get(runId).put(nodeId, new ArrayList<SuiteResult>());
+            }
+            // Add the suite to the list for the node in the map for the run. Phew.
+            suitesByRunAndNode.get(runId).get(nodeId).add(s);
+
+            List<String> enclosingBlocks = new ArrayList<>(s.getEnclosingBlocks());
+            if (!enclosingBlocks.isEmpty()) {
+                if (testsByRunAndBlock.get(runId) == null) {
+                    testsByRunAndBlock.put(runId, new HashMap<String, BlocksWithChildren>());
+                }
+                populateBlocks(runId, enclosingBlocks, nodeId, null);
+            }
         }
-        // If we don't already have an entry in the run's map for this node, initialize a list for it.
-        if (suitesByRunAndNode.get(s.getRunId()).get(s.getNodeId()) == null) {
-            suitesByRunAndNode.get(s.getRunId()).put(s.getNodeId(), new ArrayList<SuiteResult>());
+    }
+
+    private void addOrMergeBlock(@Nonnull String runId, @Nonnull BlocksWithChildren b) {
+        if (testsByRunAndBlock.get(runId).containsKey(b.getBlockId())) {
+            testsByRunAndBlock.get(runId).get(b.getBlockId()).merge(b);
+        } else {
+            testsByRunAndBlock.get(runId).put(b.getBlockId(), b);
         }
-        // Add the suite to the list for the node in the map for the run. Phew.
-        suitesByRunAndNode.get(s.getRunId()).get(s.getNodeId()).add(s);
+
+    }
+
+    @CheckForNull
+    public BlocksWithChildren getBlockWithChildren(@Nonnull String runId, @Nonnull String blockId) {
+        if (testsByRunAndBlock.containsKey(runId)) {
+            Map<String,BlocksWithChildren> runBlocks = testsByRunAndBlock.get(runId);
+
+            if (runBlocks.containsKey(blockId)) {
+                return runBlocks.get(blockId);
+            }
+        }
+        return null;
+    }
+
+    private void populateBlocks(@Nonnull String runId, @Nonnull List<String> innermostFirst,
+                                @Nonnull String nodeId, @CheckForNull BlocksWithChildren nested) {
+        if (innermostFirst.isEmpty()) {
+            if (nested != null) {
+                addOrMergeBlock(runId, nested);
+            }
+        } else {
+            String innermost = innermostFirst.remove(0);
+            if (nested == null) {
+                nested = new BlocksWithChildren(innermost);
+                nested.addLeafNode(nodeId);
+                addOrMergeBlock(runId, nested);
+                populateBlocks(runId, innermostFirst, nodeId, nested);
+            } else {
+                BlocksWithChildren nextLevel = new BlocksWithChildren(innermost);
+                nextLevel.addChildBlock(nested);
+                addOrMergeBlock(runId, nextLevel);
+                populateBlocks(runId, innermostFirst, nodeId, nextLevel);
+            }
+        }
     }
 
     private static final long serialVersionUID = 1L;
 
+    public static class BlocksWithChildren implements Serializable {
+        private final String blockId;
+        private final Map<String,BlocksWithChildren> childBlocks = new TreeMap<>();
+        private final Set<String> leafNodes = new TreeSet<>();
+
+        public BlocksWithChildren(@Nonnull String blockId) {
+            this.blockId = blockId;
+        }
+
+        @Nonnull
+        public String getBlockId() {
+            return blockId;
+        }
+
+        @Nonnull
+        public Map<String,BlocksWithChildren> getChildBlocks() {
+            return childBlocks;
+        }
+
+        @Nonnull
+        public Set<String> getLeafNodes() {
+            return leafNodes;
+        }
+
+        public void addChildBlock(@Nonnull BlocksWithChildren child) {
+            childBlocks.put(child.getBlockId(), child);
+        }
+        
+        public void addLeafNode(@Nonnull String leafNode)  {
+            leafNodes.add(leafNode);
+        }
+
+        public void merge(@Nonnull BlocksWithChildren toMerge) {
+            if (toMerge.getBlockId().equals(blockId)) {
+                if (!this.equals(toMerge)) {
+                    for (String childId : toMerge.getChildBlocks().keySet()) {
+                        if (!childBlocks.containsKey(childId)) {
+                            childBlocks.put(childId, toMerge.getChildBlocks().get(childId));
+                        } else {
+                            childBlocks.get(childId).merge(toMerge.getChildBlocks().get(childId));
+                        }
+                    }
+                    leafNodes.addAll(toMerge.getLeafNodes());
+                }
+            }
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
+            if (!super.equals(o)) {
+                return false;
+            }
+            BlocksWithChildren that = (BlocksWithChildren) o;
+
+            return that.getBlockId().equals(getBlockId()) &&
+                    that.getChildBlocks().equals(getChildBlocks()) &&
+                    that.getLeafNodes().equals(getLeafNodes());
+        }
+
+        @Nonnull
+        public Set<String> nodesWithTests() {
+            Set<String> nodes = new TreeSet<>();
+
+            nodes.addAll(leafNodes);
+            for (BlocksWithChildren child : childBlocks.values()) {
+                nodes.addAll(child.nodesWithTests());
+            }
+
+            return nodes;
+        }
+
+        /**
+         * Get an aggregated {@link TestResult} for all test results in this block and any children it may have.
+         */
+        @Nonnull
+        public TestResult toTestResult(@Nonnull String runId, @Nonnull TestResult fullResult) {
+            TestResult result = new TestResult();
+            for (BlocksWithChildren child : childBlocks.values()) {
+                TestResult childResult = child.toTestResult(runId, fullResult);
+                for (SuiteResult s : childResult.getSuites()) {
+                    result.add(s);
+                }
+            }
+            TestResult leafResult = fullResult.getResultByRunAndNodes(runId, new ArrayList<>(leafNodes));
+            for (SuiteResult s : leafResult.getSuites()) {
+                result.add(s);
+            }
+            result.setParentAction(fullResult.parentAction);
+
+            return result;
+        }
+
+        private static final long serialVersionUID = 1L;
+    }
 }

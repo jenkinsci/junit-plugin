@@ -31,11 +31,12 @@ import hudson.Launcher;
 import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.Run;
-import jenkins.model.Jenkins;
 import hudson.model.TaskListener;
 import hudson.tasks.Publisher;
+import org.jenkinsci.plugins.workflow.graph.FlowNode;
 
 import java.io.IOException;
+import java.util.List;
 import javax.annotation.Nonnull;
 
 /**
@@ -92,7 +93,7 @@ public abstract class TestResultParser implements ExtensionPoint {
                                   Run<?,?> run, @Nonnull FilePath workspace, Launcher launcher,
                                   TaskListener listener)
             throws InterruptedException, IOException {
-        return parseResult(testResultLocations, run, null, workspace, launcher, listener);
+        return parseResult(testResultLocations, run, null, null, workspace, launcher, listener);
     }
 
     /**
@@ -120,6 +121,7 @@ public abstract class TestResultParser implements ExtensionPoint {
      *      Build for which these tests are parsed. Never null.
      * @param nodeId
      *      Possibly null FlowNode ID for the step where these tests were parsed.
+     * @param enclosingBlocks Optional, possibly null list of enclosing {@link FlowNode#getId()}
      * @param workspace the workspace in which tests can be found
      * @param launcher
      *      Can be used to fork processes on the machine where the build is running. Never null.
@@ -140,8 +142,8 @@ public abstract class TestResultParser implements ExtensionPoint {
      * @since 1.21
      */
     public TestResult parseResult(String testResultLocations,
-                                       Run<?,?> run, String nodeId, @Nonnull FilePath workspace, Launcher launcher,
-                                       TaskListener listener)
+                                  Run<?,?> run, String nodeId, List<String> enclosingBlocks, @Nonnull FilePath workspace,
+                                  Launcher launcher, TaskListener listener)
             throws InterruptedException, IOException {
         if (run instanceof AbstractBuild) {
             return parse(testResultLocations, (AbstractBuild) run, launcher, listener);
