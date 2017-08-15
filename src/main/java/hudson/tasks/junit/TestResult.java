@@ -965,6 +965,16 @@ public final class TestResult extends MetaTabulatedResult {
                     that.getLeafNodes().equals(getLeafNodes());
         }
 
+        @Override
+        public int hashCode() {
+            int result = super.hashCode();
+            result = 31 * result + getBlockId().hashCode();
+            result = 31 * result + getChildBlocks().hashCode();
+            result = 31 * result + getLeafNodes().hashCode();
+
+            return result;
+        }
+
         @Nonnull
         public Set<String> nodesWithTests() {
             Set<String> nodes = new TreeSet<>();

@@ -309,17 +309,21 @@ public final class SuiteResult implements Serializable {
     @Nonnull
     private String getEnclosingNodeDisplayName(@Nonnull WorkflowRun run, @Nonnull String nodeId) {
         FlowExecution execution = run.getExecution();
-        try {
-            FlowNode node = execution.getNode(nodeId);
-            if (node.getAction(LabelAction.class) != null) {
-                ThreadNameAction threadNameAction = node.getAction(ThreadNameAction.class);
-                if (threadNameAction != null) {
-                    return threadNameAction.getThreadName();
+        if (execution != null) {
+            try {
+                FlowNode node = execution.getNode(nodeId);
+                if (node != null) {
+                    if (node.getAction(LabelAction.class) != null) {
+                        ThreadNameAction threadNameAction = node.getAction(ThreadNameAction.class);
+                        if (threadNameAction != null) {
+                            return threadNameAction.getThreadName();
+                        }
+                    }
+                    return node.getDisplayName();
                 }
+            } catch (Exception e) {
+                // TODO: Something in that odd case where we can get an NPE
             }
-            return node.getDisplayName();
-        } catch (Exception e) {
-            // TODO: Something in that odd case where we can get an NPE
         }
         return "";
     }
