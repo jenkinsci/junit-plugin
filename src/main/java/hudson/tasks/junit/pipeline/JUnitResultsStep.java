@@ -130,7 +130,7 @@ public class JUnitResultsStep extends Step implements JUnitTask {
     public static class DescriptorImpl extends StepDescriptor {
         @Override
         public String getFunctionName() {
-            return "junitResults";
+            return "junit";
         }
 
         @Override

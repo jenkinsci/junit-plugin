@@ -46,7 +46,7 @@ public class JUnitResultsStepTest {
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
                 "  node {\n" +
                 "    sh 'echo hi'\n" +
-                "    junitResults('*.xml')\n" +
+                "    junit('*.xml')\n" +
                 "  }\n" +
                 "}\n", true));
 
@@ -61,7 +61,7 @@ public class JUnitResultsStepTest {
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
                 "  node {\n" +
                 "    sh 'echo hi'\n" +
-                "    def results = junitResults(testResults: '*.xml', allowEmptyResults: true)\n" +
+                "    def results = junit(testResults: '*.xml', allowEmptyResults: true)\n" +
                 "    assert results.totalCount == 0\n" +
                 "  }\n" +
                 "}\n", true));
@@ -76,7 +76,7 @@ public class JUnitResultsStepTest {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "singleStep");
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
                 "  node {\n" +
-                "    def results = junitResults(testResults: '*.xml')\n" + // node id 7
+                "    def results = junit(testResults: '*.xml')\n" + // node id 7
                 "    assert results.totalCount == 6\n" +
                 "  }\n" +
                 "}\n", true));
@@ -103,8 +103,8 @@ public class JUnitResultsStepTest {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "twoSteps");
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
                 "  node {\n" +
-                "    def first = junitResults(testResults: 'first-result.xml')\n" +    // node id 7
-                "    def second = junitResults(testResults: 'second-result.xml')\n" +  // node id 8
+                "    def first = junit(testResults: 'first-result.xml')\n" +    // node id 7
+                "    def second = junit(testResults: 'second-result.xml')\n" +  // node id 8
                 "    assert first.totalCount == 6\n" +
                 "    assert second.totalCount == 1\n" +
                 "  }\n" +
@@ -141,9 +141,9 @@ public class JUnitResultsStepTest {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "threeSteps");
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
                 "  node {\n" +
-                "    def first = junitResults(testResults: 'first-result.xml')\n" +    // node id 7
-                "    def second = junitResults(testResults: 'second-result.xml')\n" +  // node id 8
-                "    def third = junitResults(testResults: 'third-result.xml')\n" +    // node id 9
+                "    def first = junit(testResults: 'first-result.xml')\n" +    // node id 7
+                "    def second = junit(testResults: 'second-result.xml')\n" +  // node id 8
+                "    def third = junit(testResults: 'third-result.xml')\n" +    // node id 9
                 "    assert first.totalCount == 6\n" +
                 "    assert second.totalCount == 1\n" +
                 "  }\n" +
@@ -197,9 +197,9 @@ public class JUnitResultsStepTest {
 
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
                 "  node {\n" +
-                "    parallel(a: { def first = junitResults(testResults: 'first-result.xml'); assert first.totalCount == 6 },\n" +
-                "             b: { def second = junitResults(testResults: 'second-result.xml'); assert second.totalCount == 1 },\n" +
-                "             c: { def third = junitResults(testResults: 'third-result.xml'); assert third.totalCount == 3 })\n" +
+                "    parallel(a: { def first = junit(testResults: 'first-result.xml'); assert first.totalCount == 6 },\n" +
+                "             b: { def second = junit(testResults: 'second-result.xml'); assert second.totalCount == 1 },\n" +
+                "             c: { def third = junit(testResults: 'third-result.xml'); assert third.totalCount == 3 })\n" +
                 "  }\n" +
                 "}\n", true
         ));
