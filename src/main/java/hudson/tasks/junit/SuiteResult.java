@@ -168,8 +168,8 @@ public final class SuiteResult implements Serializable {
      * This method returns a collection, as a single XML may have multiple &lt;testsuite>
      * elements wrapped into the top-level &lt;testsuites>.
      */
-    static List<SuiteResult> parse(File xmlReport, boolean keepLongStdio, String runId, String nodeId,
-                                   List<String> enclosingBlocks)
+    static List<SuiteResult> parse(File xmlReport, boolean keepLongStdio, @CheckForNull String runId, @CheckForNull String nodeId,
+                                   @CheckForNull List<String> enclosingBlocks)
             throws DocumentException, IOException, InterruptedException {
         List<SuiteResult> r = new ArrayList<SuiteResult>();
 
@@ -190,8 +190,8 @@ public final class SuiteResult implements Serializable {
         return r;
     }
 
-    private static void parseSuite(File xmlReport, boolean keepLongStdio, List<SuiteResult> r, Element root, String runId,
-                                   String nodeId, List<String> enclosingBlocks) throws DocumentException, IOException {
+    private static void parseSuite(File xmlReport, boolean keepLongStdio, List<SuiteResult> r, Element root, @CheckForNull String runId,
+                                   @CheckForNull String nodeId, @CheckForNull List<String> enclosingBlocks) throws DocumentException, IOException {
         // nested test suites
         @SuppressWarnings("unchecked")
         List<Element> testSuites = (List<Element>) root.elements("testsuite");

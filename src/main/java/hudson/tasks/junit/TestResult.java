@@ -146,8 +146,8 @@ public final class TestResult extends MetaTabulatedResult {
      * @param enclosingBlocks Optional, possibly null list of enclosing {@link FlowNode#getId()}
      * @since 1.21
      */
-    public TestResult(long buildTime, DirectoryScanner results, boolean keepLongStdio, String runId, String nodeId,
-                      List<String> enclosingBlocks) throws IOException {
+    public TestResult(long buildTime, DirectoryScanner results, boolean keepLongStdio, @CheckForNull String runId,
+                      @CheckForNull String nodeId, @CheckForNull List<String> enclosingBlocks) throws IOException {
         this.keepLongStdio = keepLongStdio;
         parse(buildTime, results, runId, nodeId, enclosingBlocks);
     }
@@ -183,8 +183,8 @@ public final class TestResult extends MetaTabulatedResult {
      * @throws IOException if an error occurs.
      * @since 1.21
      */
-    public void parse(long buildTime, DirectoryScanner results, String runId, String nodeId, List<String> enclosingBlocks)
-            throws IOException {
+    public void parse(long buildTime, DirectoryScanner results, @CheckForNull String runId, @CheckForNull String nodeId,
+                      @CheckForNull List<String> enclosingBlocks) throws IOException {
         String[] includedFiles = results.getIncludedFiles();
         File baseDir = results.getBasedir();
         parse(buildTime,baseDir,runId,nodeId,enclosingBlocks,includedFiles);
@@ -209,8 +209,8 @@ public final class TestResult extends MetaTabulatedResult {
      * @throws IOException if an error occurs.
      * @since 1.21
      */
-    public void parse(long buildTime, File baseDir, String runId, String nodeId, List<String> enclosingBlocks,
-                      String[] reportFiles) throws IOException {
+    public void parse(long buildTime, File baseDir, @CheckForNull String runId, @CheckForNull String nodeId,
+                      @CheckForNull List<String> enclosingBlocks, String[] reportFiles) throws IOException {
 
         boolean parsed=false;
 
@@ -258,8 +258,8 @@ public final class TestResult extends MetaTabulatedResult {
      * @throws IOException if an error occurs.
      * @since 1.21
      */
-    public void parse(long buildTime, Iterable<File> reportFiles, String runId, String nodeId, List<String> enclosingBlocks)
-            throws IOException {
+    public void parse(long buildTime, Iterable<File> reportFiles, @CheckForNull String runId, @CheckForNull String nodeId,
+                      @CheckForNull List<String> enclosingBlocks) throws IOException {
         boolean parsed=false;
 
         for (File reportFile : reportFiles) {
@@ -289,7 +289,8 @@ public final class TestResult extends MetaTabulatedResult {
         
     }
     
-    private void parsePossiblyEmpty(File reportFile, String runId, String nodeId, List<String> enclosingBlocks) throws IOException {
+    private void parsePossiblyEmpty(File reportFile, @CheckForNull String runId, @CheckForNull String nodeId,
+                                    @CheckForNull List<String> enclosingBlocks) throws IOException {
         if(reportFile.length()==0) {
             // this is a typical problem when JVM quits abnormally, like OutOfMemoryError during a test.
             SuiteResult sr = new SuiteResult(reportFile.getName(), "", "", runId, nodeId, enclosingBlocks);
@@ -363,7 +364,8 @@ public final class TestResult extends MetaTabulatedResult {
      * @throws IOException if an error occurs.
      * @since 1.21
      */
-    public void parse(File reportFile, String runId, String nodeId, List<String> enclosingBlocks) throws IOException {
+    public void parse(File reportFile, @CheckForNull String runId, @CheckForNull String nodeId,
+                      @CheckForNull List<String> enclosingBlocks) throws IOException {
         try {
             for (SuiteResult suiteResult : SuiteResult.parse(reportFile, keepLongStdio, runId, nodeId, enclosingBlocks))
                 add(suiteResult);
