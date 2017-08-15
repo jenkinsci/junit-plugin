@@ -216,7 +216,7 @@ public class JUnitResultsStepTest {
         assertStageResults(r, 5, 10, "first");
     }
 
-    private Predicate<FlowNode> branchForName(final String name) {
+    private static Predicate<FlowNode> branchForName(final String name) {
         return new Predicate<FlowNode>() {
             @Override
             public boolean apply(@Nullable FlowNode input) {
@@ -228,7 +228,7 @@ public class JUnitResultsStepTest {
         };
     }
 
-    private Predicate<FlowNode> stageForName(final String name) {
+    private static Predicate<FlowNode> stageForName(final String name) {
         return new Predicate<FlowNode>() {
             @Override
             public boolean apply(@Nullable FlowNode input) {
@@ -239,7 +239,7 @@ public class JUnitResultsStepTest {
         };
     }
 
-    private void assertBranchResults(WorkflowRun run, int suiteCount, int testCount, String branchName, String stageName) {
+    public static void assertBranchResults(WorkflowRun run, int suiteCount, int testCount, String branchName, String stageName) {
         FlowExecution execution = run.getExecution();
         DepthFirstScanner scanner = new DepthFirstScanner();
         FlowNode aBranch = scanner.findFirstMatch(execution, branchForName(branchName));
@@ -250,7 +250,7 @@ public class JUnitResultsStepTest {
         }
     }
 
-    private void assertStageResults(WorkflowRun run, int suiteCount, int testCount, String stageName) {
+    public static void assertStageResults(WorkflowRun run, int suiteCount, int testCount, String stageName) {
         FlowExecution execution = run.getExecution();
         DepthFirstScanner scanner = new DepthFirstScanner();
         FlowNode aStage = scanner.findFirstMatch(execution, stageForName(stageName));
@@ -258,7 +258,7 @@ public class JUnitResultsStepTest {
         assertBlockResults(run, suiteCount, testCount, aStage);
     }
 
-    private TestResult assertBlockResults(WorkflowRun run, int suiteCount, int testCount, FlowNode blockNode) {
+    private static TestResult assertBlockResults(WorkflowRun run, int suiteCount, int testCount, FlowNode blockNode) {
         assertNotNull(blockNode);
 
         TestResultAction action = run.getAction(TestResultAction.class);
