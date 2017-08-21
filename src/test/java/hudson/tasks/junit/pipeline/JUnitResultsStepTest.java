@@ -2,15 +2,20 @@ package hudson.tasks.junit.pipeline;
 
 import com.google.common.base.Predicate;
 import hudson.FilePath;
+import hudson.Launcher;
+import hudson.model.Descriptor;
 import hudson.model.Result;
 import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.tasks.junit.CaseResult;
+import hudson.tasks.junit.TestDataPublisher;
 import hudson.tasks.junit.TestResult;
 import hudson.tasks.junit.TestResultAction;
 import hudson.tasks.junit.TestResultTest;
 import org.jenkinsci.plugins.workflow.actions.LabelAction;
 import org.jenkinsci.plugins.workflow.actions.ThreadNameAction;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.cps.SnippetizerTester;
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
@@ -23,10 +28,14 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.TestExtension;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.Nullable;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -39,6 +48,20 @@ public class JUnitResultsStepTest {
 
     @ClassRule
     public final static BuildWatcher buildWatcher = new BuildWatcher();
+
+    @Test
+    public void configRoundTrip() throws Exception {
+        SnippetizerTester st = new SnippetizerTester(rule);
+        JUnitResultsStep step = new JUnitResultsStep("**/target/surefire-reports/TEST-*.xml");
+        st.assertRoundTrip(step, "junit '**/target/surefire-reports/TEST-*.xml'");
+        step.setAllowEmptyResults(true);
+        st.assertRoundTrip(step, "junit allowEmptyResults: true, testResults: '**/target/surefire-reports/TEST-*.xml'");
+        step.setHealthScaleFactor(2.0);
+        st.assertRoundTrip(step, "junit allowEmptyResults: true, healthScaleFactor: 2.0, testResults: '**/target/surefire-reports/TEST-*.xml'");
+        MockTestDataPublisher publisher = new MockTestDataPublisher("testing");
+        step.setTestDataPublishers(Collections.<TestDataPublisher>singletonList(publisher));
+        st.assertRoundTrip(step, "junit allowEmptyResults: true, healthScaleFactor: 2.0, testDataPublishers: [[$class: 'MockTestDataPublisher', name: 'testing']], testResults: '**/target/surefire-reports/TEST-*.xml'");
+    }
 
     @Test
     public void emptyFails() throws Exception {
@@ -292,5 +315,27 @@ public class JUnitResultsStepTest {
         assertNotNull(result);
         assertEquals(suiteCount, result.getSuites().size());
         assertEquals(testCount, result.getTotalCount());
+    }
+
+    public static class MockTestDataPublisher extends TestDataPublisher {
+        private final String name;
+        @DataBoundConstructor
+        public MockTestDataPublisher(String name) {
+            this.name = name;
+        }
+        public String getName() {
+            return name;
+        }
+        @Override public TestResultAction.Data contributeTestData(Run<?,?> run, FilePath workspace, Launcher launcher, TaskListener listener, TestResult testResult) throws IOException, InterruptedException {
+            return null;
+        }
+
+        // Needed to make this extension available to all tests for {@link #testDescribableRoundTrip()}
+        @TestExtension
+        public static class DescriptorImpl extends Descriptor<TestDataPublisher> {
+            @Override public String getDisplayName() {
+                return "MockTestDataPublisher";
+            }
+        }
     }
 }
