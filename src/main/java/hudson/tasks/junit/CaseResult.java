@@ -467,7 +467,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         if (parent == null) return null;
         SuiteResult pr = parent.getPreviousResult();
         if(pr==null)    return null;
-        return pr.getCase(getName());
+        return pr.getCase(getDisplayName());
     }
     
     /**

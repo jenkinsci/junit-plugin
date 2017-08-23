@@ -45,6 +45,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -140,9 +141,9 @@ public final class SuiteResult implements Serializable {
 
     private synchronized Map<String, CaseResult> casesByName() {
         if (casesByName == null) {
-            casesByName = new HashMap<String, CaseResult>();
+            casesByName = new HashMap<>();
             for (CaseResult c : cases) {
-                casesByName.put(c.getName(), c);
+                casesByName.put(c.getDisplayName(), c);
             }
         }
         return casesByName;
@@ -298,7 +299,7 @@ public final class SuiteResult implements Serializable {
 
     /*package*/ void addCase(CaseResult cr) {
         cases.add(cr);
-        casesByName().put(cr.getName(), cr);
+        casesByName().put(cr.getDisplayName(), cr);
 
         //if suite time was not specified use sum of the cases' times
         if( !hasTimeAttr() ){
@@ -375,7 +376,11 @@ public final class SuiteResult implements Serializable {
     @Exported(visibility=9)
     @Nonnull
     public List<String> getEnclosingBlocks() {
-        return enclosingBlocks;
+        if (enclosingBlocks != null) {
+            return Collections.unmodifiableList(enclosingBlocks);
+        } else {
+            return Collections.emptyList();
+        }
     }
 
     /**
@@ -386,7 +391,11 @@ public final class SuiteResult implements Serializable {
     @Exported(visibility=9)
     @Nonnull
     public List<String> getEnclosingBlockNames() {
-        return enclosingBlockNames;
+        if (enclosingBlockNames != null) {
+            return Collections.unmodifiableList(enclosingBlockNames);
+        } else {
+            return Collections.emptyList();
+        }
     }
 
     /**
@@ -450,7 +459,7 @@ public final class SuiteResult implements Serializable {
     }
 
     /**
-     * Returns the {@link CaseResult} whose {@link CaseResult#getName()}
+     * Returns the {@link CaseResult} whose {@link CaseResult#getDisplayName()}
      * is the same as the given string.
      * <p>
      * Note that test name needs not be unique.
