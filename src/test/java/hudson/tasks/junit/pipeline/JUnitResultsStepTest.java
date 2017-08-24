@@ -239,6 +239,50 @@ public class JUnitResultsStepTest {
         assertStageResults(r, 5, 10, "first");
     }
 
+    @Test
+    public void testTrends() throws Exception {
+        WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "testTrends");
+        j.setDefinition(new CpsFlowDefinition("node {\n" +
+                "  stage('first') {\n" +
+                "    def first = junit(testResults: \"junit-report-testTrends-first-${env.BUILD_NUMBER}.xml\")\n" +
+                "  }\n" +
+                "  stage('second') {\n" +
+                "    def second = junit(testResults: \"junit-report-testTrends-second-${env.BUILD_NUMBER}.xml\")\n" +
+                "  }\n" +
+                "}\n", true));
+        FilePath ws = rule.jenkins.getWorkspaceFor(j);
+        for (int i = 1; i < 4; i++) {
+            FilePath firstFile = ws.child("junit-report-testTrends-first-" + i + ".xml");
+            firstFile.copyFrom(JUnitResultsStepTest.class.getResource("junit-report-testTrends-first-" + i + ".xml"));
+            FilePath secondFile = ws.child("junit-report-testTrends-second-" + i + ".xml");
+            secondFile.copyFrom(JUnitResultsStepTest.class.getResource("junit-report-testTrends-second-" + i + ".xml"));
+        }
+
+        WorkflowRun firstRun = rule.buildAndAssertSuccess(j);
+        assertStageResults(firstRun, 1, 8, 0, "first");
+        assertStageResults(firstRun, 1, 1, 0, "second");
+        WorkflowRun secondRun = rule.assertBuildStatus(Result.UNSTABLE, rule.waitForCompletion(j.scheduleBuild2(0).waitForStart()));
+        assertStageResults(secondRun, 1, 8, 3, "first");
+        assertStageResults(secondRun, 1, 1, 0, "second");
+        WorkflowRun thirdRun = rule.assertBuildStatus(Result.UNSTABLE, rule.waitForCompletion(j.scheduleBuild2(0).waitForStart()));
+        assertStageResults(thirdRun, 1, 8, 3, "first");
+        assertStageResults(thirdRun, 1, 1, 0, "second");
+        TestResultAction thirdAction = thirdRun.getAction(TestResultAction.class);
+        assertNotNull(thirdAction);
+
+        for (CaseResult failed : thirdAction.getFailedTests()) {
+            if (failed.getDisplayName() != null) {
+                if (failed.getDisplayName().equals("first / org.twia.vendor.VendorManagerTest.testGetVendorFirmKeyForVendorRep") ||
+                        failed.getDisplayName().equals("first / org.twia.vendor.VendorManagerTest.testCreateAdjustingFirm")) {
+                    assertEquals(2, failed.getFailedSince());
+                } else if (failed.getDisplayName().equals("first / org.twia.vendor.VendorManagerTest.testCreateVendorFirm")) {
+                    assertEquals(3, failed.getFailedSince());
+                }
+            }
+        }
+    }
+
+
     private static Predicate<FlowNode> branchForName(final String name) {
         return new Predicate<FlowNode>() {
             @Override
@@ -263,25 +307,33 @@ public class JUnitResultsStepTest {
     }
 
     public static void assertBranchResults(WorkflowRun run, int suiteCount, int testCount, String branchName, String stageName) {
+        assertBranchResults(run, suiteCount, testCount, -1, branchName, stageName);
+    }
+
+    public static void assertBranchResults(WorkflowRun run, int suiteCount, int testCount, int failCount, String branchName, String stageName) {
         FlowExecution execution = run.getExecution();
         DepthFirstScanner scanner = new DepthFirstScanner();
         FlowNode aBranch = scanner.findFirstMatch(execution, branchForName(branchName));
         assertNotNull(aBranch);
-        TestResult branchResult = assertBlockResults(run, suiteCount, testCount, aBranch);
+        TestResult branchResult = assertBlockResults(run, suiteCount, testCount, failCount, aBranch);
         for (CaseResult c : branchResult.getPassedTests()) {
             assertEquals(stageName + " / " + branchName + " / " + c.getTransformedTestName(), c.getDisplayName());
         }
     }
 
     public static void assertStageResults(WorkflowRun run, int suiteCount, int testCount, String stageName) {
+        assertStageResults(run, suiteCount, testCount, -1, stageName);
+    }
+
+    public static void assertStageResults(WorkflowRun run, int suiteCount, int testCount, int failCount, String stageName) {
         FlowExecution execution = run.getExecution();
         DepthFirstScanner scanner = new DepthFirstScanner();
         FlowNode aStage = scanner.findFirstMatch(execution, stageForName(stageName));
         assertNotNull(aStage);
-        assertBlockResults(run, suiteCount, testCount, aStage);
+        assertBlockResults(run, suiteCount, testCount, failCount, aStage);
     }
 
-    private static TestResult assertBlockResults(WorkflowRun run, int suiteCount, int testCount, FlowNode blockNode) {
+    private static TestResult assertBlockResults(WorkflowRun run, int suiteCount, int testCount, int failCount, FlowNode blockNode) {
         assertNotNull(blockNode);
 
         TestResultAction action = run.getAction(TestResultAction.class);
@@ -295,6 +347,9 @@ public class JUnitResultsStepTest {
 
         assertEquals(suiteCount, aResult.getSuites().size());
         assertEquals(testCount, aResult.getTotalCount());
+        if (failCount > -1) {
+            assertEquals(failCount, aResult.getFailCount());
+        }
 
         List<String> aTestNodes = new ArrayList<>(aBlock.nodesWithTests());
         TestResult aFromNodes = action.getResult().getResultByRunAndNodes(run.getExternalizableId(), aTestNodes);

@@ -315,7 +315,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         if (safeName != null) {
             return safeName;
         }
-        StringBuilder buf = new StringBuilder(testName);
+        StringBuilder buf = new StringBuilder(getDisplayName());
         for( int i=0; i<buf.length(); i++ ) {
             char ch = buf.charAt(i);
             if(!Character.isJavaIdentifierPart(ch))
