@@ -118,6 +118,16 @@ public abstract class TabulatedResult extends TestResult {
         }
     }
 
+    /**
+     * Get an aggregated {@link TabulatedResult} for all test results in a {@link PipelineBlockWithTests} and any children it may have.
+     *
+     * Default implementation just returns the original.
+     */
+    @Nonnull
+    public TabulatedResult blockToTestResult(@Nonnull PipelineBlockWithTests block, @Nonnull String runId,
+                                             @Nonnull TabulatedResult fullResult) {
+        return fullResult;
+    }
 
     public String getChildTitle() {
         return "";

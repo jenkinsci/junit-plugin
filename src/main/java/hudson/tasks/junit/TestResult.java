@@ -29,6 +29,7 @@ import hudson.model.Run;
 import hudson.tasks.test.AbstractTestResultAction;
 import hudson.tasks.test.PipelineBlockWithTests;
 import hudson.tasks.test.MetaTabulatedResult;
+import hudson.tasks.test.TabulatedResult;
 import hudson.tasks.test.TestObject;
 
 import java.io.File;
@@ -835,28 +836,33 @@ public final class TestResult extends MetaTabulatedResult {
     public TestResult getResultForPipelineBlock(@Nonnull String runId, @Nonnull String blockId) {
         PipelineBlockWithTests block = getPipelineBlockWithTests(runId, blockId);
         if (block != null) {
-            return blockToTestResult(block, runId, this);
+            return (TestResult)blockToTestResult(block, runId, this);
         } else {
-            return new TestResult();
+            return this;
         }
     }
 
     /**
      * Get an aggregated {@link TestResult} for all test results in a {@link PipelineBlockWithTests} and any children it may have.
      */
+    @Override
     @Nonnull
-    public static TestResult blockToTestResult(@Nonnull PipelineBlockWithTests block, @Nonnull String runId,
-                                               @Nonnull TestResult fullResult) {
+    public TabulatedResult blockToTestResult(@Nonnull PipelineBlockWithTests block, @Nonnull String runId,
+                                             @Nonnull TabulatedResult fullResult) {
         TestResult result = new TestResult();
         for (PipelineBlockWithTests child : block.getChildBlocks().values()) {
-            TestResult childResult = blockToTestResult(child, runId, fullResult);
-            for (SuiteResult s : childResult.getSuites()) {
-                result.add(s);
+            TabulatedResult childResult = blockToTestResult(child, runId, fullResult);
+            if (childResult instanceof TestResult) {
+                for (SuiteResult s : ((TestResult) childResult).getSuites()) {
+                    result.add(s);
+                }
             }
         }
-        TestResult leafResult = fullResult.getResultByRunAndNodes(runId, new ArrayList<>(block.getLeafNodes()));
-        for (SuiteResult s : leafResult.getSuites()) {
-            result.add(s);
+        if (fullResult instanceof TestResult) {
+            TestResult leafResult = ((TestResult) fullResult).getResultByRunAndNodes(runId, new ArrayList<>(block.getLeafNodes()));
+            for (SuiteResult s : leafResult.getSuites()) {
+                result.add(s);
+            }
         }
         result.setParentAction(fullResult.getParentAction());
 
