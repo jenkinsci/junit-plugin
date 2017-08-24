@@ -27,13 +27,13 @@ import hudson.AbortException;
 import hudson.Util;
 import hudson.model.Run;
 import hudson.tasks.test.AbstractTestResultAction;
+import hudson.tasks.test.PipelineBlockWithTests;
 import hudson.tasks.test.MetaTabulatedResult;
 import hudson.tasks.test.TestObject;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.Serializable;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -41,9 +41,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
 import org.apache.tools.ant.DirectoryScanner;
 import org.dom4j.DocumentException;
@@ -77,11 +75,6 @@ public final class TestResult extends MetaTabulatedResult {
      * {@link #suites} keyed by their run ID and node ID for faster lookup. May be empty.
      */
     private transient Map<String,Map<String,List<SuiteResult>>> suitesByRunAndNode;
-
-    /**
-     * TODO: javadoc
-     */
-    private transient Map<String,Map<String,BlocksWithChildren>> testsByRunAndBlock;
 
     /**
      * Results tabulated by package.
@@ -664,22 +657,6 @@ public final class TestResult extends MetaTabulatedResult {
         return suitesByName.get(name);
     }
 
-    public boolean hasMultipleBlocksForRun(@Nonnull String runId) {
-        Map<String,BlocksWithChildren> blocksForRun = testsByRunAndBlock.get(runId);
-        if (blocksForRun != null && blocksForRun.size() > 1) {
-            // Check for nested runs.
-            int nonNested = 0;
-            for (BlocksWithChildren b : blocksForRun.values()) {
-                if (!b.leafNodes.isEmpty()) {
-                    nonNested++;
-                }
-            }
-            return nonNested > 1;
-        }
-
-        return false;
-    }
-
     @Nonnull
     public TestResult getResultByRunAndNode(@Nonnull String runId, @Nonnull String nodeId) {
         return getResultByRunAndNodes(runId, Collections.singletonList(nodeId));
@@ -849,167 +826,43 @@ public final class TestResult extends MetaTabulatedResult {
 
             List<String> enclosingBlocks = new ArrayList<>(s.getEnclosingBlocks());
             if (!enclosingBlocks.isEmpty()) {
-                if (testsByRunAndBlock.get(runId) == null) {
-                    testsByRunAndBlock.put(runId, new HashMap<String, BlocksWithChildren>());
-                }
                 populateBlocks(runId, enclosingBlocks, nodeId, null);
             }
         }
     }
 
-    private void addOrMergeBlock(@Nonnull String runId, @Nonnull BlocksWithChildren b) {
-        if (testsByRunAndBlock.get(runId).containsKey(b.getBlockId())) {
-            testsByRunAndBlock.get(runId).get(b.getBlockId()).merge(b);
+    @Nonnull
+    public TestResult getResultForPipelineBlock(@Nonnull String runId, @Nonnull String blockId) {
+        PipelineBlockWithTests block = getPipelineBlockWithTests(runId, blockId);
+        if (block != null) {
+            return blockToTestResult(block, runId, this);
         } else {
-            testsByRunAndBlock.get(runId).put(b.getBlockId(), b);
+            return new TestResult();
         }
-
     }
 
-    @CheckForNull
-    public BlocksWithChildren getBlockWithChildren(@Nonnull String runId, @Nonnull String blockId) {
-        if (testsByRunAndBlock.containsKey(runId)) {
-            Map<String,BlocksWithChildren> runBlocks = testsByRunAndBlock.get(runId);
-
-            if (runBlocks.containsKey(blockId)) {
-                return runBlocks.get(blockId);
+    /**
+     * Get an aggregated {@link TestResult} for all test results in a {@link PipelineBlockWithTests} and any children it may have.
+     */
+    @Nonnull
+    public static TestResult blockToTestResult(@Nonnull PipelineBlockWithTests block, @Nonnull String runId,
+                                               @Nonnull TestResult fullResult) {
+        TestResult result = new TestResult();
+        for (PipelineBlockWithTests child : block.getChildBlocks().values()) {
+            TestResult childResult = blockToTestResult(child, runId, fullResult);
+            for (SuiteResult s : childResult.getSuites()) {
+                result.add(s);
             }
         }
-        return null;
-    }
-
-    private void populateBlocks(@Nonnull String runId, @Nonnull List<String> innermostFirst,
-                                @Nonnull String nodeId, @CheckForNull BlocksWithChildren nested) {
-        if (innermostFirst.isEmpty()) {
-            if (nested != null) {
-                addOrMergeBlock(runId, nested);
-            }
-        } else {
-            String innermost = innermostFirst.remove(0);
-            if (nested == null) {
-                nested = new BlocksWithChildren(innermost);
-                nested.addLeafNode(nodeId);
-                addOrMergeBlock(runId, nested);
-                populateBlocks(runId, innermostFirst, nodeId, nested);
-            } else {
-                BlocksWithChildren nextLevel = new BlocksWithChildren(innermost);
-                nextLevel.addChildBlock(nested);
-                addOrMergeBlock(runId, nextLevel);
-                populateBlocks(runId, innermostFirst, nodeId, nextLevel);
-            }
+        TestResult leafResult = fullResult.getResultByRunAndNodes(runId, new ArrayList<>(block.getLeafNodes()));
+        for (SuiteResult s : leafResult.getSuites()) {
+            result.add(s);
         }
+        result.setParentAction(fullResult.getParentAction());
+
+        return result;
     }
 
     private static final long serialVersionUID = 1L;
 
-    public static class BlocksWithChildren implements Serializable {
-        private final String blockId;
-        private final Map<String,BlocksWithChildren> childBlocks = new TreeMap<>();
-        private final Set<String> leafNodes = new TreeSet<>();
-
-        public BlocksWithChildren(@Nonnull String blockId) {
-            this.blockId = blockId;
-        }
-
-        @Nonnull
-        public String getBlockId() {
-            return blockId;
-        }
-
-        @Nonnull
-        public Map<String,BlocksWithChildren> getChildBlocks() {
-            return childBlocks;
-        }
-
-        @Nonnull
-        public Set<String> getLeafNodes() {
-            return leafNodes;
-        }
-
-        public void addChildBlock(@Nonnull BlocksWithChildren child) {
-            childBlocks.put(child.getBlockId(), child);
-        }
-        
-        public void addLeafNode(@Nonnull String leafNode)  {
-            leafNodes.add(leafNode);
-        }
-
-        public void merge(@Nonnull BlocksWithChildren toMerge) {
-            if (toMerge.getBlockId().equals(blockId)) {
-                if (!this.equals(toMerge)) {
-                    for (String childId : toMerge.getChildBlocks().keySet()) {
-                        if (!childBlocks.containsKey(childId)) {
-                            childBlocks.put(childId, toMerge.getChildBlocks().get(childId));
-                        } else {
-                            childBlocks.get(childId).merge(toMerge.getChildBlocks().get(childId));
-                        }
-                    }
-                    leafNodes.addAll(toMerge.getLeafNodes());
-                }
-            }
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) {
-                return true;
-            }
-            if (o == null || getClass() != o.getClass()) {
-                return false;
-            }
-            if (!super.equals(o)) {
-                return false;
-            }
-            BlocksWithChildren that = (BlocksWithChildren) o;
-
-            return that.getBlockId().equals(getBlockId()) &&
-                    that.getChildBlocks().equals(getChildBlocks()) &&
-                    that.getLeafNodes().equals(getLeafNodes());
-        }
-
-        @Override
-        public int hashCode() {
-            int result = super.hashCode();
-            result = 31 * result + getBlockId().hashCode();
-            result = 31 * result + getChildBlocks().hashCode();
-            result = 31 * result + getLeafNodes().hashCode();
-
-            return result;
-        }
-
-        @Nonnull
-        public Set<String> nodesWithTests() {
-            Set<String> nodes = new TreeSet<>();
-
-            nodes.addAll(leafNodes);
-            for (BlocksWithChildren child : childBlocks.values()) {
-                nodes.addAll(child.nodesWithTests());
-            }
-
-            return nodes;
-        }
-
-        /**
-         * Get an aggregated {@link TestResult} for all test results in this block and any children it may have.
-         */
-        @Nonnull
-        public TestResult toTestResult(@Nonnull String runId, @Nonnull TestResult fullResult) {
-            TestResult result = new TestResult();
-            for (BlocksWithChildren child : childBlocks.values()) {
-                TestResult childResult = child.toTestResult(runId, fullResult);
-                for (SuiteResult s : childResult.getSuites()) {
-                    result.add(s);
-                }
-            }
-            TestResult leafResult = fullResult.getResultByRunAndNodes(runId, new ArrayList<>(leafNodes));
-            for (SuiteResult s : leafResult.getSuites()) {
-                result.add(s);
-            }
-            result.setParentAction(fullResult.parentAction);
-
-            return result;
-        }
-
-        private static final long serialVersionUID = 1L;
-    }
 }

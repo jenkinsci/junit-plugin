@@ -12,6 +12,7 @@ import hudson.tasks.junit.TestDataPublisher;
 import hudson.tasks.junit.TestResult;
 import hudson.tasks.junit.TestResultAction;
 import hudson.tasks.junit.TestResultTest;
+import hudson.tasks.test.PipelineBlockWithTests;
 import org.jenkinsci.plugins.workflow.actions.LabelAction;
 import org.jenkinsci.plugins.workflow.actions.ThreadNameAction;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
@@ -339,10 +340,7 @@ public class JUnitResultsStepTest {
         TestResultAction action = run.getAction(TestResultAction.class);
         assertNotNull(action);
 
-        TestResult.BlocksWithChildren aBlock = action.getResult().getBlockWithChildren(run.getExternalizableId(), blockNode.getId());
-
-        assertNotNull(aBlock);
-        TestResult aResult = aBlock.toTestResult(run.getExternalizableId(), action.getResult());
+        TestResult aResult = action.getResult().getResultForPipelineBlock(run.getExternalizableId(), blockNode.getId());
         assertNotNull(aResult);
 
         assertEquals(suiteCount, aResult.getSuites().size());
@@ -351,6 +349,9 @@ public class JUnitResultsStepTest {
             assertEquals(failCount, aResult.getFailCount());
         }
 
+        PipelineBlockWithTests aBlock = action.getResult().getPipelineBlockWithTests(run.getExternalizableId(), blockNode.getId());
+
+        assertNotNull(aBlock);
         List<String> aTestNodes = new ArrayList<>(aBlock.nodesWithTests());
         TestResult aFromNodes = action.getResult().getResultByRunAndNodes(run.getExternalizableId(), aTestNodes);
         assertNotNull(aFromNodes);
