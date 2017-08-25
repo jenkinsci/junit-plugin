@@ -608,7 +608,13 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
             LOGGER.warning("In getOwner(), getSuiteResult is null"); return null; }
         hudson.tasks.junit.TestResult tr = sr.getParent();
         if (tr==null) {
-            LOGGER.warning("In getOwner(), suiteResult.getParent() is null."); return null; }
+            if (sr.getRunId() != null) {
+                return Run.fromExternalizableId(sr.getRunId());
+            } else {
+                LOGGER.warning("In getOwner(), suiteResult.getParent() is null and suiteResult.getRunId() is null.");
+                return null;
+            }
+        }
         return tr.getRun();
     }
 

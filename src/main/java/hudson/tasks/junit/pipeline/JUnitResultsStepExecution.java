@@ -67,21 +67,13 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
     @Nonnull
     public static List<String> getEnclosingStagesAndParallels(FlowNode node) {
         List<String> enclosingBlocks = new ArrayList<>();
-        Filterator<FlowNode> enclosingFilter = FlowScanningUtils.fetchEnclosingBlocks(node).filter(new Predicate<FlowNode>() {
-            @Override
-            public boolean apply(@Nullable FlowNode input) {
-                if (input != null && input.getAction(LabelAction.class) != null) {
-                    if (input instanceof StepStartNode && ((StepStartNode) input).getDescriptor() instanceof StageStep.DescriptorImpl) {
-                        return true;
-                    } else if (input.getAction(ThreadNameAction.class) != null) {
-                        return true;
-                    }
+        for (FlowNode enclosing : node.getEnclosingBlocks()) {
+            if (enclosing != null && enclosing.getAction(LabelAction.class) != null) {
+                if ((enclosing instanceof StepStartNode && ((StepStartNode) enclosing).getDescriptor() instanceof StageStep.DescriptorImpl) ||
+                        (enclosing.getAction(ThreadNameAction.class) != null)) {
+                    enclosingBlocks.add(enclosing.getId());
                 }
-                return false;
             }
-        });
-        while (enclosingFilter.hasNext()) {
-            enclosingBlocks.add(enclosingFilter.next().getId());
         }
 
         return enclosingBlocks;
