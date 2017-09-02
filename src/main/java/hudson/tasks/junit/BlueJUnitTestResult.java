@@ -115,7 +115,7 @@ public class BlueJUnitTestResult extends BlueTestResult {
         return log;
     }
 
-    @Extension
+    @Extension(optional = true)
     public static class FactoryImpl extends BlueTestResultFactory {
         @Override
         public Result getBlueTestResults(Run<?, ?> run, final Reachable parent) {
