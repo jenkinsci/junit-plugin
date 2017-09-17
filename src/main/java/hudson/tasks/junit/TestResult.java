@@ -93,13 +93,13 @@ public final class TestResult extends MetaTabulatedResult {
      */
     private transient List<CaseResult> failedTests;
 
-    private final PluginConfig config;
+    private final KeepStdioConfig config;
 
     /**
      * Creates an empty result.
      */
     public TestResult() {
-        this(PluginConfig.defaults());
+        this(KeepStdioConfig.defaults());
     }
 
     /**
@@ -107,13 +107,13 @@ public final class TestResult extends MetaTabulatedResult {
      */
     @Deprecated
     public TestResult(boolean keepLongStdio) {
-        this(PluginConfig.defaults(keepLongStdio));
+        this(KeepStdioConfig.defaults(keepLongStdio));
     }
 
     /**
      * @since 1.23
      */
-    public TestResult(PluginConfig config) {
+    public TestResult(KeepStdioConfig config) {
         this.config = config;
     }
 
@@ -127,11 +127,11 @@ public final class TestResult extends MetaTabulatedResult {
      * filtering out all files that were created before the given time.
      * @param keepLongStdio if true, retain a suite's complete stdout/stderr even if this is huge and the suite passed
      * @since 1.358
-     * @deprecated in favor of {@link #TestResult(long, DirectoryScanner, PluginConfig)}.
+     * @deprecated in favor of {@link #TestResult(long, DirectoryScanner, KeepStdioConfig)}.
      */
     @Deprecated
     public TestResult(long buildTime, DirectoryScanner results, boolean keepLongStdio) throws IOException {
-        this(buildTime, results, PluginConfig.defaults(keepLongStdio));
+        this(buildTime, results, KeepStdioConfig.defaults(keepLongStdio));
     }
 
     /**
@@ -140,7 +140,7 @@ public final class TestResult extends MetaTabulatedResult {
      * @param config plugin configuration.
      * @since 1.6
      */
-    public TestResult(long buildTime, DirectoryScanner results, PluginConfig config) throws IOException {
+    public TestResult(long buildTime, DirectoryScanner results, KeepStdioConfig config) throws IOException {
         this.config = config;
         parse(buildTime, results);
     }

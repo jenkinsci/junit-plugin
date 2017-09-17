@@ -47,7 +47,7 @@ import java.io.IOException;
 @Extension
 public class JUnitParser extends TestResultParser {
 
-    private final PluginConfig config;
+    private final KeepStdioConfig config;
     private final boolean allowEmptyResults;
 
     /** TODO TestResultParser.all does not seem to ever be called so why must this be an Extension? */
@@ -62,7 +62,7 @@ public class JUnitParser extends TestResultParser {
      */
     @Deprecated
     public JUnitParser(boolean keepLongStdio) {
-        this.config = PluginConfig.defaults(keepLongStdio);
+        this.config = KeepStdioConfig.defaults(keepLongStdio);
         this.allowEmptyResults = false;
     }
 
@@ -71,7 +71,7 @@ public class JUnitParser extends TestResultParser {
      * @param allowEmptyResults if true, empty results are allowed
      * @since 1.23
      */
-    public JUnitParser(PluginConfig config, boolean allowEmptyResults) {
+    public JUnitParser(KeepStdioConfig config, boolean allowEmptyResults) {
         this.config = config;
         this.allowEmptyResults = allowEmptyResults;
     }
@@ -82,7 +82,7 @@ public class JUnitParser extends TestResultParser {
      * @since 1.10
      */
     public JUnitParser(boolean keepLongStdio, boolean allowEmptyResults) {
-        this.config = PluginConfig.defaults(keepLongStdio);
+        this.config = KeepStdioConfig.defaults(keepLongStdio);
         this.allowEmptyResults = allowEmptyResults;
     }
 
@@ -121,10 +121,10 @@ public class JUnitParser extends TestResultParser {
         private final long buildTime;
         private final String testResults;
         private final long nowMaster;
-        private final PluginConfig config;
+        private final KeepStdioConfig config;
         private final boolean allowEmptyResults;
 
-        private ParseResultCallable(String testResults, long buildTime, long nowMaster, PluginConfig config,
+        private ParseResultCallable(String testResults, long buildTime, long nowMaster, KeepStdioConfig config,
                                     boolean allowEmptyResults) {
             this.buildTime = buildTime;
             this.testResults = testResults;

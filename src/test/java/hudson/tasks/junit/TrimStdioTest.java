@@ -35,15 +35,15 @@ public class TrimStdioTest {
     public String name;
 
     @Parameterized.Parameter(value = 1)
-    public PluginConfig config;
+    public KeepStdioConfig config;
 
     @Parameterized.Parameters(name = "{0}")
     public static List<Object[]> parameters() {
         ArrayList<Object[]> list = new ArrayList<Object[]>(5);
-        list.add(new Object[] { "defaults", PluginConfig.defaults() });
-        list.add(new Object[] { "keep all", PluginConfig.defaults(true) });
-        list.add(new Object[] { "maxPassed=10, maxFailed=100", new PluginConfig(false, 10, 100)});
-        list.add(new Object[] { "maxPassed=0, maxFailed=all", new PluginConfig(false, 0, -1)});
+        list.add(new Object[] { "defaults", KeepStdioConfig.defaults() });
+        list.add(new Object[] { "keep all", KeepStdioConfig.defaults(true) });
+        list.add(new Object[] { "maxPassed=10, maxFailed=100", new KeepStdioConfig(false, 10, 100)});
+        list.add(new Object[] { "maxPassed=0, maxFailed=all", new KeepStdioConfig(false, 0, -1)});
         return list;
     }
 

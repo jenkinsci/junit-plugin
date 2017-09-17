@@ -94,17 +94,17 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     }
 
     /**
-     * @deprecated in favor of {@link #CaseResult(SuiteResult, Element, String, PluginConfig)}.
+     * @deprecated in favor of {@link #CaseResult(SuiteResult, Element, String, KeepStdioConfig)}.
      */
     @Deprecated
     CaseResult(SuiteResult parent, Element testCase, String testClassName, boolean keepLongStdio) {
-        this(parent, testCase, testClassName, PluginConfig.defaults(keepLongStdio));
+        this(parent, testCase, testClassName, KeepStdioConfig.defaults(keepLongStdio));
     }
 
     /**
      * @since 1.23
      */
-    CaseResult(SuiteResult parent, Element testCase, String testClassName, PluginConfig config) {
+    CaseResult(SuiteResult parent, Element testCase, String testClassName, KeepStdioConfig config) {
         // schema for JUnit report XML format is not available in Ant,
         // so I don't know for sure what means what.
         // reports in http://www.nabble.com/difference-in-junit-publisher-and-ant-junitreport-tf4308604.html#a12265700
@@ -141,7 +141,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         stderr = possiblyTrimStdio(_this, config, testCase.elementText("system-err"));
     }
 
-    static String possiblyTrimStdio(Collection<CaseResult> results, PluginConfig config, String stdio) { // HUDSON-6516
+    static String possiblyTrimStdio(Collection<CaseResult> results, KeepStdioConfig config, String stdio) { // HUDSON-6516
         if (stdio == null) {
             return null;
         }
@@ -168,10 +168,10 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     }
 
     /**
-     * Flavor of {@link #possiblyTrimStdio(Collection, PluginConfig, String)} that doesn't try to read the whole thing into memory.
+     * Flavor of {@link #possiblyTrimStdio(Collection, KeepStdioConfig, String)} that doesn't try to read the whole thing into memory.
      */
     @SuppressFBWarnings(value = "DM_DEFAULT_ENCODING", justification = "Expected behavior")
-    static String possiblyTrimStdio(Collection<CaseResult> results, PluginConfig config, File stdio) throws IOException {
+    static String possiblyTrimStdio(Collection<CaseResult> results, KeepStdioConfig config, File stdio) throws IOException {
         long len = stdio.length();
         if (config.isKeepLongStdio() && len < 1024 * 1024) {
             return FileUtils.readFileToString(stdio);

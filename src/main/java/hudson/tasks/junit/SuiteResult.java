@@ -115,10 +115,10 @@ public final class SuiteResult implements Serializable {
      * Parses the JUnit XML file into {@link SuiteResult}s.
      * This method returns a collection, as a single XML may have multiple &lt;testsuite>
      * elements wrapped into the top-level &lt;testsuites>.
-     * @deprecated in favor of {@link #parse(File, PluginConfig)}
+     * @deprecated in favor of {@link #parse(File, KeepStdioConfig)}
      */
     static List<SuiteResult> parse(File xmlReport, boolean keepLongStdio) throws DocumentException, IOException, InterruptedException {
-        return parse(xmlReport, PluginConfig.defaults(keepLongStdio));
+        return parse(xmlReport, KeepStdioConfig.defaults(keepLongStdio));
     }
 
     /**
@@ -127,7 +127,7 @@ public final class SuiteResult implements Serializable {
      * elements wrapped into the top-level &lt;testsuites>.
      * @since 1.6
      */
-    static List<SuiteResult> parse(File xmlReport, PluginConfig config) throws DocumentException, IOException, InterruptedException {
+    static List<SuiteResult> parse(File xmlReport, KeepStdioConfig config) throws DocumentException, IOException, InterruptedException {
         List<SuiteResult> r = new ArrayList<SuiteResult>();
 
         // parse into DOM
@@ -148,7 +148,7 @@ public final class SuiteResult implements Serializable {
         return r;
     }
 
-    private static void parseSuite(File xmlReport, PluginConfig config, List<SuiteResult> r, Element root) throws DocumentException, IOException {
+    private static void parseSuite(File xmlReport, KeepStdioConfig config, List<SuiteResult> r, Element root) throws DocumentException, IOException {
         // nested test suites
         @SuppressWarnings("unchecked")
         List<Element> testSuites = (List<Element>)root.elements("testsuite");
@@ -167,7 +167,7 @@ public final class SuiteResult implements Serializable {
      * @param suite
      *      The parsed result of {@code xmlReport}
      */
-    private SuiteResult(File xmlReport, Element suite, PluginConfig config) throws DocumentException, IOException {
+    private SuiteResult(File xmlReport, Element suite, KeepStdioConfig config) throws DocumentException, IOException {
     	this.file = xmlReport.getAbsolutePath();
         String name = suite.attributeValue("name");
         if(name==null)
