@@ -137,8 +137,8 @@ public final class TestResult extends MetaTabulatedResult {
     /**
      * Collect reports from the given {@link DirectoryScanner}, while
      * filtering out all files that were created before the given time.
-     * @param config plugin configuration.
-     * @since 1.6
+     * @param config stdio configuration.
+     * @since 1.23
      */
     public TestResult(long buildTime, DirectoryScanner results, KeepStdioConfig config) throws IOException {
         this.config = config;

@@ -75,8 +75,16 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
      */
     private boolean keepLongStdio;
 
+    /**
+     * Size of stdout/stderr to keep for a succeeded test.
+     * @since 1.23
+     */
     private int maxSucceededSize;
 
+    /**
+     * Size of stdout/stderr to keep for a failed test.
+     * @since 1.23
+     */
     private int maxFailedSize;
 
     /**
@@ -129,8 +137,8 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
             throws IOException, InterruptedException
     {
         return new JUnitParser(new KeepStdioConfig(this.isKeepLongStdio(),
-                                                this.getMaxSucceededSize(),
-                                                this.getMaxFailedSize()),
+                                                   this.getMaxSucceededSize(),
+                                                   this.getMaxFailedSize()),
                                this.isAllowEmptyResults())
                 .parseResult(expandedTestResults, run, workspace, launcher, listener);
     }
