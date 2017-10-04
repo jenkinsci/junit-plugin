@@ -33,6 +33,14 @@ THE SOFTWARE.
     <f:entry field="keepLongStdio" title="">
         <f:checkbox name="keepLongStdio" title="${%Retain long standard output/error}"/>
     </f:entry>
+    <f:advanced>
+		<f:entry field="maxSucceededSize" title="${%Max kept size for a succeeding test}">
+			<f:number default="1000"/>
+		</f:entry>
+		<f:entry field="maxFailedSize" title="${%Max kept size for a failing test}">
+			<f:number default="100000"/>
+		</f:entry>
+	</f:advanced>
     <f:entry field="healthScaleFactor" title="${%Health report amplification factor}">
         <f:number default="1.0" min="0" step="0.1" size="10"/>
     </f:entry>

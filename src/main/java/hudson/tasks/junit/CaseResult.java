@@ -24,14 +24,12 @@
 package hudson.tasks.junit;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import hudson.util.TextFile;
-import org.apache.commons.io.FileUtils;
-import org.jvnet.localizer.Localizable;
-
 import hudson.model.Run;
 import hudson.tasks.test.TestResult;
-
+import hudson.util.TextFile;
+import org.apache.commons.io.FileUtils;
 import org.dom4j.Element;
+import org.jvnet.localizer.Localizable;
 import org.kohsuke.stapler.export.Exported;
 
 import java.io.File;
@@ -95,7 +93,18 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         return new TimeToFloat(time).parse();
     }
 
+    /**
+     * @deprecated in favor of {@link #CaseResult(SuiteResult, Element, String, KeepStdioConfig)}.
+     */
+    @Deprecated
     CaseResult(SuiteResult parent, Element testCase, String testClassName, boolean keepLongStdio) {
+        this(parent, testCase, testClassName, KeepStdioConfig.defaults(keepLongStdio));
+    }
+
+    /**
+     * @since 1.23
+     */
+    CaseResult(SuiteResult parent, Element testCase, String testClassName, KeepStdioConfig config) {
         // schema for JUnit report XML format is not available in Ant,
         // so I don't know for sure what means what.
         // reports in http://www.nabble.com/difference-in-junit-publisher-and-ant-junitreport-tf4308604.html#a12265700
@@ -128,42 +137,59 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         skippedMessage = getSkippedMessage(testCase);
         @SuppressWarnings("LeakingThisInConstructor")
         Collection<CaseResult> _this = Collections.singleton(this);
-        stdout = possiblyTrimStdio(_this, keepLongStdio, testCase.elementText("system-out"));
-        stderr = possiblyTrimStdio(_this, keepLongStdio, testCase.elementText("system-err"));
+        stdout = possiblyTrimStdio(_this, config, testCase.elementText("system-out"));
+        stderr = possiblyTrimStdio(_this, config, testCase.elementText("system-err"));
     }
 
-    static String possiblyTrimStdio(Collection<CaseResult> results, boolean keepLongStdio, String stdio) { // HUDSON-6516
+    static String possiblyTrimStdio(Collection<CaseResult> results, KeepStdioConfig config, String stdio) { // HUDSON-6516
         if (stdio == null) {
             return null;
         }
-        if (keepLongStdio) {
+        if (config.isKeepLongStdio()) {
             return stdio;
         }
         int len = stdio.length();
-        int halfMaxSize = halfMaxSize(results);
-        int middle = len - halfMaxSize * 2;
+
+        int maxSize = config.getMaxSize(hasFailed(results));
+        if (maxSize < 0) {
+            return stdio;
+        }
+        if (maxSize == 0) {
+            return null;
+        }
+
+        int middle = len - maxSize;
         if (middle <= 0) {
             return stdio;
         }
+
+        int halfMaxSize = maxSize / 2;
         return stdio.subSequence(0, halfMaxSize) + "\n...[truncated " + middle + " chars]...\n" + stdio.subSequence(len - halfMaxSize, len);
     }
 
     /**
-     * Flavor of {@link #possiblyTrimStdio(Collection, boolean, String)} that doesn't try to read the whole thing into memory.
+     * Flavor of {@link #possiblyTrimStdio(Collection, KeepStdioConfig, String)} that doesn't try to read the whole thing into memory.
      */
     @SuppressFBWarnings(value = "DM_DEFAULT_ENCODING", justification = "Expected behavior")
-    static String possiblyTrimStdio(Collection<CaseResult> results, boolean keepLongStdio, File stdio) throws IOException {
+    static String possiblyTrimStdio(Collection<CaseResult> results, KeepStdioConfig config, File stdio) throws IOException {
         long len = stdio.length();
-        if (keepLongStdio && len < 1024 * 1024) {
+        if (config.isKeepLongStdio() && len < 1024 * 1024) {
             return FileUtils.readFileToString(stdio);
         }
-        int halfMaxSize = halfMaxSize(results);
+        int maxSize = config.getMaxSize(hasFailed(results));
+        if (maxSize < 0) {
+            return FileUtils.readFileToString(stdio);
+        }
+        if (maxSize == 0) {
+            return null;
+        }
 
-        long middle = len - halfMaxSize * 2;
+        long middle = len - maxSize;
         if (middle <= 0) {
             return FileUtils.readFileToString(stdio);
         }
 
+        int halfMaxSize = maxSize / 2;
         TextFile tx = new TextFile(stdio);
         String head = tx.head(halfMaxSize);
         String tail = tx.fastTail(halfMaxSize);
@@ -180,15 +206,13 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         return head + "\n...[truncated " + middle + " bytes]...\n" + tail;
     }
 
-    private static final int HALF_MAX_SIZE = 500;
-    private static final int HALF_MAX_FAILING_SIZE = 50000;
-    private static int halfMaxSize(Collection<CaseResult> results) {
+    private static boolean hasFailed(Collection<CaseResult> results) {
         for (CaseResult result : results) {
             if (result.errorStackTrace != null) {
-                return HALF_MAX_FAILING_SIZE;
+                return true;
             }
         }
-        return HALF_MAX_SIZE;
+        return false;
     }
 
 

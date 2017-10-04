@@ -43,19 +43,19 @@ import hudson.tasks.Recorder;
 import hudson.tasks.junit.TestResultAction.Data;
 import hudson.util.DescribableList;
 import hudson.util.FormValidation;
+import jenkins.tasks.SimpleBuildStep;
 import org.apache.tools.ant.DirectoryScanner;
 import org.apache.tools.ant.types.FileSet;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import javax.annotation.Nonnull;
-import jenkins.tasks.SimpleBuildStep;
-import org.kohsuke.stapler.DataBoundSetter;
 
 /**
  * Generates HTML report from JUnit test result XML files.
@@ -74,6 +74,18 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
      * @since 1.358
      */
     private boolean keepLongStdio;
+
+    /**
+     * Size of stdout/stderr to keep for a succeeded test.
+     * @since 1.23
+     */
+    private int maxSucceededSize;
+
+    /**
+     * Size of stdout/stderr to keep for a failed test.
+     * @since 1.23
+     */
+    private int maxFailedSize;
 
     /**
      * {@link TestDataPublisher}s configured for this archiver, to process the recorded data.
@@ -124,8 +136,11 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
     private TestResult parse(String expandedTestResults, Run<?,?> run, @Nonnull FilePath workspace, Launcher launcher, TaskListener listener)
             throws IOException, InterruptedException
     {
-        return new JUnitParser(this.isKeepLongStdio(),
-                               this.isAllowEmptyResults()).parseResult(expandedTestResults, run, workspace, launcher, listener);
+        return new JUnitParser(new KeepStdioConfig(this.isKeepLongStdio(),
+                                                   this.getMaxSucceededSize(),
+                                                   this.getMaxFailedSize()),
+                               this.isAllowEmptyResults())
+                .parseResult(expandedTestResults, run, workspace, launcher, listener);
     }
 
     @Deprecated
@@ -262,6 +277,16 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
         this.keepLongStdio = keepLongStdio;
     }
 
+    /** @since 1.23 */
+    @DataBoundSetter public final void setMaxSucceededSize(int size) {
+        this.maxSucceededSize = size;
+    }
+
+    /** @since 1.23 */
+    @DataBoundSetter public final void setMaxFailedSize(int size) {
+        this.maxFailedSize = size;
+    }
+
     /**
      *
      * @return the allowEmptyResults
@@ -276,6 +301,14 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
 
 
     private static final long serialVersionUID = 1L;
+
+    public int getMaxSucceededSize() {
+        return maxSucceededSize;
+    }
+
+    public int getMaxFailedSize() {
+        return maxFailedSize;
+    }
 
     @Extension @Symbol("junit")
     public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
