@@ -1,10 +1,8 @@
 package hudson.tasks.junit.pipeline;
 
 import com.google.common.collect.ImmutableSet;
-import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
-import hudson.Util;
 import hudson.model.Descriptor;
 import hudson.model.Saveable;
 import hudson.model.TaskListener;
@@ -14,6 +12,7 @@ import hudson.tasks.junit.TestDataPublisher;
 import hudson.util.DescribableList;
 import hudson.util.FormValidation;
 import org.apache.tools.ant.types.FileSet;
+import org.jenkinsci.plugins.variant.OptionalExtension;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
@@ -24,7 +23,6 @@ import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
 import javax.annotation.Nonnull;
-import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -126,7 +124,7 @@ public class JUnitResultsStep extends Step implements JUnitTask {
         return new JUnitResultsStepExecution(this, context);
     }
 
-    @Extension
+    @OptionalExtension(requirePlugins = {"pipeline-stage-step","workflow-cps","workflow-job"})
     public static class DescriptorImpl extends StepDescriptor {
         @Override
         public String getFunctionName() {
