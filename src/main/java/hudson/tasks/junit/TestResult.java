@@ -94,6 +94,11 @@ public final class TestResult extends MetaTabulatedResult {
      */
     private transient List<CaseResult> failedTests;
 
+    /**
+     * Number of old tests.
+     */
+    private final List<File> oldTests = new ArrayList<File>();
+
     private final boolean keepLongStdio;
 
     /**
@@ -174,6 +179,8 @@ public final class TestResult extends MetaTabulatedResult {
             if (buildTime-3000/*error margin*/ <= reportFile.lastModified()) {
                 parsePossiblyEmpty(reportFile);
                 parsed = true;
+            } else {
+                oldTests.add(reportFile);
             }
         }
 
@@ -186,12 +193,14 @@ public final class TestResult extends MetaTabulatedResult {
                     "I can't figure out what test results are new and what are old.\n" +
                     "Please keep the slave clock in sync with the master.");
 
+/*
             File f = new File(baseDir,reportFiles[0]);
             throw new AbortException(
                 String.format(
                 "Test reports were found but none of them are new. Did tests run? %n"+
                 "For example, %s is %s old%n", f,
                 Util.getTimeSpanString(buildTime-f.lastModified())));
+*/
         }
     }
     
@@ -212,26 +221,20 @@ public final class TestResult extends MetaTabulatedResult {
             if (buildTime-3000/*error margin*/ <= reportFile.lastModified()) {
                 parsePossiblyEmpty(reportFile);
                 parsed = true;
+            } else {
+                this.oldTests.add(reportFile);
             }
         }
 
         if(!parsed) {
             long localTime = System.currentTimeMillis();
-            if(localTime < buildTime-1000) /*margin*/
+            if (localTime < buildTime - 1000) /*margin*/
                 // build time is in the the future. clock on this slave must be running behind
                 throw new AbortException(
                     "Clock on this slave is out of sync with the master, and therefore \n" +
                     "I can't figure out what test results are new and what are old.\n" +
                     "Please keep the slave clock in sync with the master.");
-
-            File f = reportFiles.iterator().next();
-            throw new AbortException(
-                String.format(
-                "Test reports were found but none of them are new. Did tests run? %n"+
-                "For example, %s is %s old%n", f,
-                Util.getTimeSpanString(buildTime-f.lastModified())));
         }
-        
     }
     
     private void parsePossiblyEmpty(File reportFile) throws IOException {
@@ -711,4 +714,7 @@ public final class TestResult extends MetaTabulatedResult {
 
     private static final long serialVersionUID = 1L;
 
+    public List<File> getOldTests() {
+        return oldTests;
+    }
 }
