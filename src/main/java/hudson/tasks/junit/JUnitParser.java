@@ -131,6 +131,14 @@ public class JUnitParser extends TestResultParser {
             if (files.length > 0) {
                 result = new TestResult(buildTime + (nowSlave - nowMaster), ds, keepLongStdio);
                 result.tally();
+                if(result.isEmpty() && !allowEmptyResults && !result.getOldTests().isEmpty()) {
+                    File f = result.getOldTests().iterator().next();
+                    throw new AbortException(
+                        String.format(
+                            "Test reports were found but none of them are new. Did tests run? %n"+
+                            "For example, %s is %s old%n", f,
+                            Util.getTimeSpanString(buildTime-f.lastModified())));
+                }
             } else {
                 if (this.allowEmptyResults) {
                     result = new TestResult();

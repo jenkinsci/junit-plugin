@@ -124,8 +124,8 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
     private TestResult parse(String expandedTestResults, Run<?,?> run, @Nonnull FilePath workspace, Launcher launcher, TaskListener listener)
             throws IOException, InterruptedException
     {
-        return new JUnitParser(this.isKeepLongStdio(),
-                               this.isAllowEmptyResults()).parseResult(expandedTestResults, run, workspace, launcher, listener);
+        return new JUnitParser(this.isKeepLongStdio(), this.isAllowEmptyResults())
+            .parseResult(expandedTestResults, run, workspace, launcher, listener);
     }
 
     @Deprecated
