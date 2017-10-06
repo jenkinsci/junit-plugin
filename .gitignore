@@ -6,6 +6,7 @@ work/
 *.ipr
 *.iws
 .idea/
+out/
 
 # eclipse project files
 .classpath
