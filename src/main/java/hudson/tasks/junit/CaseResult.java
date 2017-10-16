@@ -201,10 +201,14 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      * @param errorStackTrace Error stack trace.
      */
     public CaseResult(SuiteResult parent, String testName, String errorStackTrace) {
+    	this(parent, testName, errorStackTrace, "");
+    }
+    
+    public CaseResult(SuiteResult parent, String testName, String errorStackTrace, String errorDetails) {
         this.className = parent == null ? "unnamed" : parent.getName();
         this.testName = testName;
         this.errorStackTrace = errorStackTrace;
-        this.errorDetails = "";
+        this.errorDetails = errorDetails;
         this.parent = parent;
         this.stdout = null;
         this.stderr = null;
