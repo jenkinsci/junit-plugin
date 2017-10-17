@@ -23,7 +23,12 @@
  */
 package hudson.tasks.test;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Cumulated result of multiple tests.
@@ -37,6 +42,11 @@ import java.util.Collection;
 public abstract class TabulatedResult extends TestResult {
 
     /**
+     * TODO: javadoc
+     */
+    protected transient Map<String,Map<String,PipelineBlockWithTests>> testsByRunAndBlock;
+
+    /**
      * Gets the child test result objects.
      *
      * @return the child test result objects.
@@ -45,6 +55,79 @@ public abstract class TabulatedResult extends TestResult {
     public abstract Collection<? extends TestResult> getChildren();
 
     public abstract boolean hasChildren();
+
+    public boolean hasMultipleBlocksForRun(@Nonnull String runId) {
+        Map<String,PipelineBlockWithTests> blocksForRun = testsByRunAndBlock.get(runId);
+        if (blocksForRun != null && blocksForRun.size() > 1) {
+            // Check for nested runs.
+            int nonNested = 0;
+            for (PipelineBlockWithTests b : blocksForRun.values()) {
+                if (!b.getLeafNodes().isEmpty()) {
+                    nonNested++;
+                }
+            }
+            return nonNested > 1;
+        }
+
+        return false;
+    }
+
+    @CheckForNull
+    public PipelineBlockWithTests getPipelineBlockWithTests(@Nonnull String runId, @Nonnull String blockId) {
+        if (testsByRunAndBlock.containsKey(runId)) {
+            Map<String,PipelineBlockWithTests> runBlocks = testsByRunAndBlock.get(runId);
+
+            if (runBlocks.containsKey(blockId)) {
+                return runBlocks.get(blockId);
+            }
+        }
+        return null;
+    }
+
+    protected final void populateBlocks(@Nonnull String runId, @Nonnull List<String> innermostFirst,
+                                        @Nonnull String nodeId, @CheckForNull PipelineBlockWithTests nested) {
+        if (testsByRunAndBlock.get(runId) == null) {
+            testsByRunAndBlock.put(runId, new HashMap<String, PipelineBlockWithTests>());
+        }
+
+        if (innermostFirst.isEmpty()) {
+            if (nested != null) {
+                addOrMergeBlock(runId, nested);
+            }
+        } else {
+            String innermost = innermostFirst.remove(0);
+            if (nested == null) {
+                nested = new PipelineBlockWithTests(innermost);
+                nested.addLeafNode(nodeId);
+                addOrMergeBlock(runId, nested);
+                populateBlocks(runId, innermostFirst, nodeId, nested);
+            } else {
+                PipelineBlockWithTests nextLevel = new PipelineBlockWithTests(innermost);
+                nextLevel.addChildBlock(nested);
+                addOrMergeBlock(runId, nextLevel);
+                populateBlocks(runId, innermostFirst, nodeId, nextLevel);
+            }
+        }
+    }
+
+    private void addOrMergeBlock(@Nonnull String runId, @Nonnull PipelineBlockWithTests b) {
+        if (testsByRunAndBlock.get(runId).containsKey(b.getBlockId())) {
+            testsByRunAndBlock.get(runId).get(b.getBlockId()).merge(b);
+        } else {
+            testsByRunAndBlock.get(runId).put(b.getBlockId(), b);
+        }
+    }
+
+    /**
+     * Get an aggregated {@link TabulatedResult} for all test results in a {@link PipelineBlockWithTests} and any children it may have.
+     *
+     * Default implementation just returns the original.
+     */
+    @Nonnull
+    public TabulatedResult blockToTestResult(@Nonnull PipelineBlockWithTests block, @Nonnull String runId,
+                                             @Nonnull TabulatedResult fullResult) {
+        return fullResult;
+    }
 
     public String getChildTitle() {
         return "";
