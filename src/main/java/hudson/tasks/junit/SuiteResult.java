@@ -92,11 +92,6 @@ public final class SuiteResult implements Serializable {
     private String time;
 
     /**
-     * Optional {@link Run#getExternalizableId()} this suite was generated in.
-     */
-    private String runId;
-
-    /**
      * Optional {@link FlowNode#getId()} this suite was generated in.
      */
     private String nodeId;
@@ -118,22 +113,23 @@ public final class SuiteResult implements Serializable {
     }
 
     /**
-     * @since 1.21
+     * @since 1.22
      */
-    SuiteResult(String name, String stdout, String stderr, @CheckForNull String runId, @CheckForNull String nodeId,
-                @CheckForNull List<String> enclosingBlocks) {
+    SuiteResult(String name, String stdout, String stderr, @CheckForNull String nodeId,
+                @CheckForNull List<String> enclosingBlocks, @CheckForNull List<String> enclosingBlockNames) {
         this.name = name;
         this.stderr = stderr;
         this.stdout = stdout;
         // runId is generally going to be not null, but we only care about it if both it and nodeId are not null.
-        if (runId != null && nodeId != null) {
-            this.runId = runId;
+        if (nodeId != null) {
             this.nodeId = nodeId;
             if (enclosingBlocks != null) {
                 this.enclosingBlocks.addAll(enclosingBlocks);
             }
+            if (enclosingBlockNames != null) {
+                this.enclosingBlockNames.addAll(enclosingBlockNames);
+            }
         } else {
-            this.runId = null;
             this.nodeId = null;
         }
         this.file = null;
@@ -169,8 +165,8 @@ public final class SuiteResult implements Serializable {
      * This method returns a collection, as a single XML may have multiple &lt;testsuite>
      * elements wrapped into the top-level &lt;testsuites>.
      */
-    static List<SuiteResult> parse(File xmlReport, boolean keepLongStdio, @CheckForNull String runId, @CheckForNull String nodeId,
-                                   @CheckForNull List<String> enclosingBlocks)
+    static List<SuiteResult> parse(File xmlReport, boolean keepLongStdio, @CheckForNull String nodeId,
+                                   @CheckForNull List<String> enclosingBlocks, @CheckForNull List<String> enclosingBlockNames)
             throws DocumentException, IOException, InterruptedException {
         List<SuiteResult> r = new ArrayList<SuiteResult>();
 
@@ -183,7 +179,7 @@ public final class SuiteResult implements Serializable {
             Document result = saxReader.read(xmlReportStream);
             Element root = result.getRootElement();
 
-            parseSuite(xmlReport, keepLongStdio, r, root, runId, nodeId, enclosingBlocks);
+            parseSuite(xmlReport, keepLongStdio, r, root, nodeId, enclosingBlocks, enclosingBlockNames);
         } finally {
             xmlReportStream.close();
         }
@@ -191,26 +187,27 @@ public final class SuiteResult implements Serializable {
         return r;
     }
 
-    private static void parseSuite(File xmlReport, boolean keepLongStdio, List<SuiteResult> r, Element root, @CheckForNull String runId,
-                                   @CheckForNull String nodeId, @CheckForNull List<String> enclosingBlocks) throws DocumentException, IOException {
+    private static void parseSuite(File xmlReport, boolean keepLongStdio, List<SuiteResult> r, Element root,
+                                   @CheckForNull String nodeId, @CheckForNull List<String> enclosingBlocks,
+                                   @CheckForNull List<String> enclosingBlockNames) throws DocumentException, IOException {
         // nested test suites
         @SuppressWarnings("unchecked")
         List<Element> testSuites = (List<Element>) root.elements("testsuite");
         for (Element suite : testSuites)
-            parseSuite(xmlReport, keepLongStdio, r, suite, runId, nodeId, enclosingBlocks);
+            parseSuite(xmlReport, keepLongStdio, r, suite, nodeId, enclosingBlocks, enclosingBlockNames);
 
         // child test cases
         // FIXME: do this also if no testcases!
         if (root.element("testcase") != null || root.element("error") != null)
-            r.add(new SuiteResult(xmlReport, root, keepLongStdio, runId, nodeId, enclosingBlocks));
+            r.add(new SuiteResult(xmlReport, root, keepLongStdio, nodeId, enclosingBlocks, enclosingBlockNames));
     }
 
     /**
      * @param xmlReport A JUnit XML report file whose top level element is 'testsuite'.
      * @param suite     The parsed result of {@code xmlReport}
      */
-    private SuiteResult(File xmlReport, Element suite, boolean keepLongStdio, @CheckForNull String runId,
-                        @CheckForNull String nodeId, @CheckForNull List<String> enclosingBlocks)
+    private SuiteResult(File xmlReport, Element suite, boolean keepLongStdio, @CheckForNull String nodeId,
+                        @CheckForNull List<String> enclosingBlocks, @CheckForNull List<String> enclosingBlockNames)
             throws DocumentException, IOException {
         this.file = xmlReport.getAbsolutePath();
         String name = suite.attributeValue("name");
@@ -225,17 +222,13 @@ public final class SuiteResult implements Serializable {
         this.name = TestObject.safe(name);
         this.timestamp = suite.attributeValue("timestamp");
         this.id = suite.attributeValue("id");
-        if (runId != null && nodeId != null) {
-            this.runId = runId;
+        if (nodeId != null) {
             this.nodeId = nodeId;
             if (enclosingBlocks != null) {
-                Run<?, ?> r = Run.fromExternalizableId(runId);
-                if (r instanceof WorkflowRun) {
-                    for (String enc : enclosingBlocks) {
-                        this.enclosingBlockNames.add(getEnclosingNodeDisplayName((WorkflowRun)r, enc));
-                    }
-                }
                 this.enclosingBlocks.addAll(enclosingBlocks);
+            }
+            if (enclosingBlockNames != null) {
+                this.enclosingBlockNames.addAll(enclosingBlockNames);
             }
         }
 
@@ -307,28 +300,6 @@ public final class SuiteResult implements Serializable {
         }
     }
 
-    @Nonnull
-    private String getEnclosingNodeDisplayName(@Nonnull WorkflowRun run, @Nonnull String nodeId) {
-        FlowExecution execution = run.getExecution();
-        if (execution != null) {
-            try {
-                FlowNode node = execution.getNode(nodeId);
-                if (node != null) {
-                    if (node.getAction(LabelAction.class) != null) {
-                        ThreadNameAction threadNameAction = node.getAction(ThreadNameAction.class);
-                        if (threadNameAction != null) {
-                            return threadNameAction.getThreadName();
-                        }
-                    }
-                    return node.getDisplayName();
-                }
-            } catch (Exception e) {
-                // TODO: Something in that odd case where we can get an NPE
-            }
-        }
-        return "";
-    }
-
     /**
      * Returns true if the time attribute is present in this Suite.
      */
@@ -347,20 +318,9 @@ public final class SuiteResult implements Serializable {
     }
 
     /**
-     * The possibly-null {@link Run#getExternalizableId()} this suite was generated in.
-     *
-     * @since 1.21
-     */
-    @CheckForNull
-    @Exported(visibility=9)
-    public String getRunId() {
-        return runId;
-    }
-
-    /**
      * The possibly-null {@link FlowNode#id} this suite was generated in.
      *
-     * @since 1.21
+     * @since 1.22
      */
     @Exported(visibility=9)
     @CheckForNull
@@ -371,7 +331,7 @@ public final class SuiteResult implements Serializable {
     /**
      * The possibly-empty list of {@link FlowNode#id}s for enclosing blocks within which this suite was generated.
      *
-     * @since 1.21
+     * @since 1.22
      */
     @Exported(visibility=9)
     @Nonnull
@@ -386,7 +346,7 @@ public final class SuiteResult implements Serializable {
     /**
      * The possibly-empty list of display names of enclosing blocks within which this suite was generated.
      *
-     * @since 1.21
+     * @since 1.22
      */
     @Exported(visibility=9)
     @Nonnull

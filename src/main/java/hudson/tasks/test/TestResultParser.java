@@ -93,7 +93,7 @@ public abstract class TestResultParser implements ExtensionPoint {
                                   Run<?,?> run, @Nonnull FilePath workspace, Launcher launcher,
                                   TaskListener listener)
             throws InterruptedException, IOException {
-        return parseResult(testResultLocations, run, null, null, workspace, launcher, listener);
+        return parseResult(testResultLocations, run, null, null, null, workspace, launcher, listener);
     }
 
     /**
@@ -122,6 +122,7 @@ public abstract class TestResultParser implements ExtensionPoint {
      * @param nodeId
      *      Possibly null FlowNode ID for the step where these tests were parsed.
      * @param enclosingBlocks Optional, possibly null list of enclosing {@link FlowNode#getId()}
+     * @param enclosingBlockNames Optional, possibly null list of enclosing block names
      * @param workspace the workspace in which tests can be found
      * @param launcher
      *      Can be used to fork processes on the machine where the build is running. Never null.
@@ -139,11 +140,11 @@ public abstract class TestResultParser implements ExtensionPoint {
      * @throws AbortException
      *      If you encounter an error that you handled gracefully, throw this exception and Hudson
      *      will not show a stack trace.
-     * @since 1.21
+     * @since 1.22
      */
     public TestResult parseResult(String testResultLocations,
-                                  Run<?,?> run, String nodeId, List<String> enclosingBlocks, @Nonnull FilePath workspace,
-                                  Launcher launcher, TaskListener listener)
+                                  Run<?,?> run, String nodeId, List<String> enclosingBlocks, List<String> enclosingBlockNames,
+                                  @Nonnull FilePath workspace, Launcher launcher, TaskListener listener)
             throws InterruptedException, IOException {
         if (run instanceof AbstractBuild) {
             return parse(testResultLocations, (AbstractBuild) run, launcher, listener);

@@ -76,7 +76,7 @@ public class JUnitParserTest {
 
             System.out.println("...touched everything");
             hudson.tasks.junit.TestResult result = (new JUnitParser()).parseResult(testResultLocation, build, null,
-                    null, build.getWorkspace(), launcher, listener);
+                    null, null, build.getWorkspace(), launcher, listener);
 
             System.out.println("back from parse");
             assertNotNull("we should have a non-null result", result);
