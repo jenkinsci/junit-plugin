@@ -97,7 +97,7 @@ public class SuiteResult2Test {
     }
 
     private SuiteResult parseOne(File file) throws Exception {
-        List<SuiteResult> results = SuiteResult.parse(file, false);
+        List<SuiteResult> results = SuiteResult.parse(file, false, null, null, null);
         assertEquals(1,results.size());
         return results.get(0);
     }

@@ -136,6 +136,11 @@ public class JUnitResultArchiverTest {
 
         assertEquals("should have 132 total tests", 132, testResultAction.getTotalCount());
         assertEquals("should have 132 total tests", 132, result.getTotalCount());
+
+        for (SuiteResult suite : result.getSuites()) {
+            assertNull("No runId should be present on the SuiteResult", suite.getRunId());
+            assertNull("No nodeId should be present on the SuiteResult", suite.getNodeId());
+        }
     }
 
     @LocalData("All")

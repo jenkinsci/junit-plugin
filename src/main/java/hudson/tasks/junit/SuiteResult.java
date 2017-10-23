@@ -23,20 +23,29 @@
  */
 package hudson.tasks.junit;
 
+import hudson.model.Run;
 import hudson.tasks.test.TestObject;
 import hudson.util.io.ParserConfigurator;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
+import org.jenkinsci.plugins.workflow.actions.LabelAction;
+import org.jenkinsci.plugins.workflow.actions.ThreadNameAction;
+import org.jenkinsci.plugins.workflow.flow.FlowExecution;
+import org.jenkinsci.plugins.workflow.graph.FlowNode;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -72,31 +81,69 @@ public final class SuiteResult implements Serializable {
      * AFAICT, this is not a required attribute in XML, so the value may be null.
      */
     private String timestamp;
-    /** Optional ID attribute of a test suite. E.g., Eclipse plug-ins tests always have the name 'tests' but a different id. **/
+    /**
+     * Optional ID attribute of a test suite. E.g., Eclipse plug-ins tests always have the name 'tests' but a different id.
+     **/
     private String id;
 
-    /** Optional time attribute of a test suite. E.g., Suites can use their own time attribute or the sum of their cases' times as before.**/
+    /**
+     * Optional time attribute of a test suite. E.g., Suites can use their own time attribute or the sum of their cases' times as before.
+     **/
     private String time;
+
+    /**
+     * Optional {@link Run#getExternalizableId()} this suite was generated in.
+     */
+    private String runId;
+
+    /**
+     * Optional {@link FlowNode#getId()} this suite was generated in.
+     */
+    private String nodeId;
+
+    private final List<String> enclosingBlocks = new ArrayList<>();
+
+    private final List<String> enclosingBlockNames = new ArrayList<>();
 
     /**
      * All test cases.
      */
     private final List<CaseResult> cases = new ArrayList<CaseResult>();
-    private transient Map<String,CaseResult> casesByName;
+    private transient Map<String, CaseResult> casesByName;
     private transient hudson.tasks.junit.TestResult parent;
 
+    @Deprecated
     SuiteResult(String name, String stdout, String stderr) {
+        this(name, stdout, stderr, null, null, null);
+    }
+
+    /**
+     * @since 1.21
+     */
+    SuiteResult(String name, String stdout, String stderr, @CheckForNull String runId, @CheckForNull String nodeId,
+                @CheckForNull List<String> enclosingBlocks) {
         this.name = name;
         this.stderr = stderr;
         this.stdout = stdout;
+        // runId is generally going to be not null, but we only care about it if both it and nodeId are not null.
+        if (runId != null && nodeId != null) {
+            this.runId = runId;
+            this.nodeId = nodeId;
+            if (enclosingBlocks != null) {
+                this.enclosingBlocks.addAll(enclosingBlocks);
+            }
+        } else {
+            this.runId = null;
+            this.nodeId = null;
+        }
         this.file = null;
     }
 
-    private synchronized Map<String,CaseResult> casesByName() {
+    private synchronized Map<String, CaseResult> casesByName() {
         if (casesByName == null) {
-            casesByName = new HashMap<String,CaseResult>();
+            casesByName = new HashMap<>();
             for (CaseResult c : cases) {
-                casesByName.put(c.getName(), c);
+                casesByName.put(c.getDisplayName(), c);
             }
         }
         return casesByName;
@@ -104,6 +151,7 @@ public final class SuiteResult implements Serializable {
 
     /**
      * Passed to {@link ParserConfigurator}.
+     *
      * @since 1.416
      * @deprecated with no replacement.
      */
@@ -121,7 +169,9 @@ public final class SuiteResult implements Serializable {
      * This method returns a collection, as a single XML may have multiple &lt;testsuite>
      * elements wrapped into the top-level &lt;testsuites>.
      */
-    static List<SuiteResult> parse(File xmlReport, boolean keepLongStdio) throws DocumentException, IOException, InterruptedException {
+    static List<SuiteResult> parse(File xmlReport, boolean keepLongStdio, @CheckForNull String runId, @CheckForNull String nodeId,
+                                   @CheckForNull List<String> enclosingBlocks)
+            throws DocumentException, IOException, InterruptedException {
         List<SuiteResult> r = new ArrayList<SuiteResult>();
 
         // parse into DOM
@@ -130,11 +180,10 @@ public final class SuiteResult implements Serializable {
 
         FileInputStream xmlReportStream = new FileInputStream(xmlReport);
         try {
-
             Document result = saxReader.read(xmlReportStream);
             Element root = result.getRootElement();
 
-            parseSuite(xmlReport,keepLongStdio,r,root);
+            parseSuite(xmlReport, keepLongStdio, r, root, runId, nodeId, enclosingBlocks);
         } finally {
             xmlReportStream.close();
         }
@@ -142,52 +191,67 @@ public final class SuiteResult implements Serializable {
         return r;
     }
 
-    private static void parseSuite(File xmlReport, boolean keepLongStdio, List<SuiteResult> r, Element root) throws DocumentException, IOException {
+    private static void parseSuite(File xmlReport, boolean keepLongStdio, List<SuiteResult> r, Element root, @CheckForNull String runId,
+                                   @CheckForNull String nodeId, @CheckForNull List<String> enclosingBlocks) throws DocumentException, IOException {
         // nested test suites
         @SuppressWarnings("unchecked")
-        List<Element> testSuites = (List<Element>)root.elements("testsuite");
+        List<Element> testSuites = (List<Element>) root.elements("testsuite");
         for (Element suite : testSuites)
-            parseSuite(xmlReport, keepLongStdio, r, suite);
+            parseSuite(xmlReport, keepLongStdio, r, suite, runId, nodeId, enclosingBlocks);
 
         // child test cases
         // FIXME: do this also if no testcases!
-        if (root.element("testcase")!=null || root.element("error")!=null)
-            r.add(new SuiteResult(xmlReport, root, keepLongStdio));
+        if (root.element("testcase") != null || root.element("error") != null)
+            r.add(new SuiteResult(xmlReport, root, keepLongStdio, runId, nodeId, enclosingBlocks));
     }
 
     /**
-     * @param xmlReport
-     *      A JUnit XML report file whose top level element is 'testsuite'.
-     * @param suite
-     *      The parsed result of {@code xmlReport}
+     * @param xmlReport A JUnit XML report file whose top level element is 'testsuite'.
+     * @param suite     The parsed result of {@code xmlReport}
      */
-    private SuiteResult(File xmlReport, Element suite, boolean keepLongStdio) throws DocumentException, IOException {
-    	this.file = xmlReport.getAbsolutePath();
+    private SuiteResult(File xmlReport, Element suite, boolean keepLongStdio, @CheckForNull String runId,
+                        @CheckForNull String nodeId, @CheckForNull List<String> enclosingBlocks)
+            throws DocumentException, IOException {
+        this.file = xmlReport.getAbsolutePath();
         String name = suite.attributeValue("name");
-        if(name==null)
+        if (name == null)
             // some user reported that name is null in their environment.
             // see http://www.nabble.com/Unexpected-Null-Pointer-Exception-in-Hudson-1.131-tf4314802.html
-            name = '('+xmlReport.getName()+')';
+            name = '(' + xmlReport.getName() + ')';
         else {
             String pkg = suite.attributeValue("package");
-            if(pkg!=null&& pkg.length()>0)   name=pkg+'.'+name;
+            if (pkg != null && pkg.length() > 0) name = pkg + '.' + name;
         }
         this.name = TestObject.safe(name);
         this.timestamp = suite.attributeValue("timestamp");
         this.id = suite.attributeValue("id");
+        if (runId != null && nodeId != null) {
+            this.runId = runId;
+            this.nodeId = nodeId;
+            if (enclosingBlocks != null) {
+                Run<?, ?> r = Run.fromExternalizableId(runId);
+                if (r instanceof WorkflowRun) {
+                    for (String enc : enclosingBlocks) {
+                        this.enclosingBlockNames.add(getEnclosingNodeDisplayName((WorkflowRun)r, enc));
+                    }
+                }
+                this.enclosingBlocks.addAll(enclosingBlocks);
+            }
+        }
+
         // check for test suite time attribute
-        if( ( this.time = suite.attributeValue("time") ) != null ){
+        if ((this.time = suite.attributeValue("time")) != null) {
             duration = new TimeToFloat(this.time).parse();
         }
 
         Element ex = suite.element("error");
-        if(ex!=null) {
+        if (ex != null) {
             // according to junit-noframes.xsl l.229, this happens when the test class failed to load
             addCase(new CaseResult(this, suite, "<init>", keepLongStdio));
         }
-        
+
         @SuppressWarnings("unchecked")
-        List<Element> testCases = (List<Element>)suite.elements("testcase");
+        List<Element> testCases = (List<Element>) suite.elements("testcase");
         for (Element e : testCases) {
             // https://issues.jenkins-ci.org/browse/JENKINS-1233 indicates that
             // when <testsuites> is present, we are better off using @classname on the
@@ -213,17 +277,17 @@ public final class SuiteResult implements Serializable {
 
         String stdout = CaseResult.possiblyTrimStdio(cases, keepLongStdio, suite.elementText("system-out"));
         String stderr = CaseResult.possiblyTrimStdio(cases, keepLongStdio, suite.elementText("system-err"));
-        if (stdout==null && stderr==null) {
+        if (stdout == null && stderr == null) {
             // Surefire never puts stdout/stderr in the XML. Instead, it goes to a separate file (when ${maven.test.redirectTestOutputToFile}).
             Matcher m = SUREFIRE_FILENAME.matcher(xmlReport.getName());
             if (m.matches()) {
                 // look for ***-output.txt from TEST-***.xml
-                File mavenOutputFile = new File(xmlReport.getParentFile(),m.group(1)+"-output.txt");
+                File mavenOutputFile = new File(xmlReport.getParentFile(), m.group(1) + "-output.txt");
                 if (mavenOutputFile.exists()) {
                     try {
                         stdout = CaseResult.possiblyTrimStdio(cases, keepLongStdio, mavenOutputFile);
                     } catch (IOException e) {
-                        throw new IOException("Failed to read "+mavenOutputFile,e);
+                        throw new IOException("Failed to read " + mavenOutputFile, e);
                     }
                 }
             }
@@ -235,12 +299,34 @@ public final class SuiteResult implements Serializable {
 
     /*package*/ void addCase(CaseResult cr) {
         cases.add(cr);
-        casesByName().put(cr.getName(), cr);
-        
+        casesByName().put(cr.getDisplayName(), cr);
+
         //if suite time was not specified use sum of the cases' times
         if( !hasTimeAttr() ){
             duration += cr.getDuration();
         }
+    }
+
+    @Nonnull
+    private String getEnclosingNodeDisplayName(@Nonnull WorkflowRun run, @Nonnull String nodeId) {
+        FlowExecution execution = run.getExecution();
+        if (execution != null) {
+            try {
+                FlowNode node = execution.getNode(nodeId);
+                if (node != null) {
+                    if (node.getAction(LabelAction.class) != null) {
+                        ThreadNameAction threadNameAction = node.getAction(ThreadNameAction.class);
+                        if (threadNameAction != null) {
+                            return threadNameAction.getThreadName();
+                        }
+                    }
+                    return node.getDisplayName();
+                }
+            } catch (Exception e) {
+                // TODO: Something in that odd case where we can get an NPE
+            }
+        }
+        return "";
     }
 
     /**
@@ -258,6 +344,58 @@ public final class SuiteResult implements Serializable {
     @Exported(visibility=9)
     public float getDuration() {
         return duration;
+    }
+
+    /**
+     * The possibly-null {@link Run#getExternalizableId()} this suite was generated in.
+     *
+     * @since 1.21
+     */
+    @CheckForNull
+    @Exported(visibility=9)
+    public String getRunId() {
+        return runId;
+    }
+
+    /**
+     * The possibly-null {@link FlowNode#id} this suite was generated in.
+     *
+     * @since 1.21
+     */
+    @Exported(visibility=9)
+    @CheckForNull
+    public String getNodeId() {
+        return nodeId;
+    }
+
+    /**
+     * The possibly-empty list of {@link FlowNode#id}s for enclosing blocks within which this suite was generated.
+     *
+     * @since 1.21
+     */
+    @Exported(visibility=9)
+    @Nonnull
+    public List<String> getEnclosingBlocks() {
+        if (enclosingBlocks != null) {
+            return Collections.unmodifiableList(enclosingBlocks);
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
+    /**
+     * The possibly-empty list of display names of enclosing blocks within which this suite was generated.
+     *
+     * @since 1.21
+     */
+    @Exported(visibility=9)
+    @Nonnull
+    public List<String> getEnclosingBlockNames() {
+        if (enclosingBlockNames != null) {
+            return Collections.unmodifiableList(enclosingBlockNames);
+        } else {
+            return Collections.emptyList();
+        }
     }
 
     /**
@@ -321,7 +459,7 @@ public final class SuiteResult implements Serializable {
     }
 
     /**
-     * Returns the {@link CaseResult} whose {@link CaseResult#getName()}
+     * Returns the {@link CaseResult} whose {@link CaseResult#getDisplayName()}
      * is the same as the given string.
      * <p>
      * Note that test name needs not be unique.

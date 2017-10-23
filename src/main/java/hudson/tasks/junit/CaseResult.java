@@ -25,7 +25,9 @@ package hudson.tasks.junit;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.util.TextFile;
+import org.apache.commons.collections.iterators.ReverseListIterator;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.jvnet.localizer.Localizable;
 
 import hudson.model.Run;
@@ -34,11 +36,15 @@ import hudson.tasks.test.TestResult;
 import org.dom4j.Element;
 import org.kohsuke.stapler.export.Exported;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 import java.util.logging.Logger;
 
 import static java.util.Collections.emptyList;
@@ -260,8 +266,23 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         return message;
     }
 
-    public String getDisplayName() {
+    public String getTransformedTestName() {
         return TestNameTransformer.getTransformedName(testName);
+    }
+
+    public String getDisplayName() {
+        // Only prepend the enclosing flow node names if there are any and the run this is in has multiple blocks directly containing
+        // test results.
+        if (!getEnclosingFlowNodeNames().isEmpty()) {
+            Run<?, ?> r = getRun();
+            if (r != null) {
+                TestResultAction action = r.getAction(TestResultAction.class);
+                if (action != null && action.getResult().hasMultipleBlocksForRun(r.getExternalizableId())) {
+                    return StringUtils.join(new ReverseListIterator(getEnclosingFlowNodeNames()), " / ") + " / " + getTransformedTestName();
+                }
+            }
+        }
+        return getTransformedTestName();
     }
 
     /**
@@ -298,7 +319,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         if (safeName != null) {
             return safeName;
         }
-        StringBuilder buf = new StringBuilder(testName);
+        StringBuilder buf = new StringBuilder(getDisplayName());
         for( int i=0; i<buf.length(); i++ ) {
             char ch = buf.charAt(i);
             if(!Character.isJavaIdentifierPart(ch))
@@ -450,7 +471,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         if (parent == null) return null;
         SuiteResult pr = parent.getPreviousResult();
         if(pr==null)    return null;
-        return pr.getCase(getName());
+        return pr.getCase(getDisplayName());
     }
     
     /**
@@ -557,7 +578,33 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     public SuiteResult getSuiteResult() {
         return parent;
     }
-    
+
+    @CheckForNull
+    public String getFlowNodeId() {
+        if (parent != null) {
+            return parent.getNodeId();
+        }
+        return null;
+    }
+
+    @Nonnull
+    public List<String> getEnclosingFlowNodeIds() {
+        List<String> enclosing = new ArrayList<>();
+        if (parent != null) {
+            enclosing.addAll(parent.getEnclosingBlocks());
+        }
+        return enclosing;
+    }
+
+    @Nonnull
+    public List<String> getEnclosingFlowNodeNames() {
+        List<String> enclosing = new ArrayList<>();
+        if (parent != null) {
+            enclosing.addAll(parent.getEnclosingBlockNames());
+        }
+        return enclosing;
+    }
+
     @Override
     public Run<?,?> getRun() {
         SuiteResult sr = getSuiteResult();
@@ -565,7 +612,13 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
             LOGGER.warning("In getOwner(), getSuiteResult is null"); return null; }
         hudson.tasks.junit.TestResult tr = sr.getParent();
         if (tr==null) {
-            LOGGER.warning("In getOwner(), suiteResult.getParent() is null."); return null; }
+            if (sr.getRunId() != null) {
+                return Run.fromExternalizableId(sr.getRunId());
+            } else {
+                LOGGER.warning("In getOwner(), suiteResult.getParent() is null and suiteResult.getRunId() is null.");
+                return null;
+            }
+        }
         return tr.getRun();
     }
 
