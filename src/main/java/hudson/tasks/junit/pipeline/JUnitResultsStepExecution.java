@@ -11,6 +11,7 @@ import hudson.tasks.junit.JUnitResultArchiver;
 import hudson.tasks.junit.TestResultAction;
 import hudson.tasks.junit.TestResultSummary;
 import org.jenkinsci.plugins.workflow.actions.LabelAction;
+import org.jenkinsci.plugins.workflow.actions.StageAction;
 import org.jenkinsci.plugins.workflow.actions.ThreadNameAction;
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
@@ -92,10 +93,11 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
         List<String> names = new ArrayList<>();
         for (FlowNode n : nodes) {
             ThreadNameAction threadNameAction = n.getAction(ThreadNameAction.class);
-            if (n.getAction(LabelAction.class) != null && threadNameAction != null) {
+            StageAction stageAction = n.getAction(StageAction.class);
+            if (threadNameAction != null) {
                 names.add(threadNameAction.getThreadName());
-            } else {
-                names.add(n.getDisplayName());
+            } else if (stageAction != null) {
+                names.add(stageAction.getStageName());
             }
         }
         return names;
