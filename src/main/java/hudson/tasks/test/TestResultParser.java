@@ -33,10 +33,8 @@ import hudson.model.AbstractBuild;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.Publisher;
-import org.jenkinsci.plugins.workflow.graph.FlowNode;
 
 import java.io.IOException;
-import java.util.List;
 import javax.annotation.Nonnull;
 
 /**
@@ -93,7 +91,7 @@ public abstract class TestResultParser implements ExtensionPoint {
                                   Run<?,?> run, @Nonnull FilePath workspace, Launcher launcher,
                                   TaskListener listener)
             throws InterruptedException, IOException {
-        return parseResult(testResultLocations, run, null, null, null, workspace, launcher, listener);
+        return parseResult(testResultLocations, run, new PipelineArgs(), workspace, launcher, listener);
     }
 
     /**
@@ -119,10 +117,7 @@ public abstract class TestResultParser implements ExtensionPoint {
      *      specifies the locations of the test result files. Never null.
      * @param run
      *      Build for which these tests are parsed. Never null.
-     * @param nodeId
-     *      Possibly null FlowNode ID for the step where these tests were parsed.
-     * @param enclosingBlocks Optional, possibly null list of enclosing {@link FlowNode#getId()}
-     * @param enclosingBlockNames Optional, possibly null list of enclosing block names
+     * @param pipelineArgs A non-null {@link PipelineArgs} instance containing Pipeline-related additional arguments.
      * @param workspace the workspace in which tests can be found
      * @param launcher
      *      Can be used to fork processes on the machine where the build is running. Never null.
@@ -143,7 +138,7 @@ public abstract class TestResultParser implements ExtensionPoint {
      * @since 1.22
      */
     public TestResult parseResult(String testResultLocations,
-                                  Run<?,?> run, String nodeId, List<String> enclosingBlocks, List<String> enclosingBlockNames,
+                                  Run<?,?> run, @Nonnull PipelineArgs pipelineArgs,
                                   @Nonnull FilePath workspace, Launcher launcher, TaskListener listener)
             throws InterruptedException, IOException {
         if (run instanceof AbstractBuild) {

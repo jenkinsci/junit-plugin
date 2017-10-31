@@ -24,6 +24,7 @@
 package hudson.tasks.junit;
 
 import hudson.model.TaskListener;
+import hudson.tasks.test.PipelineArgs;
 import hudson.tasks.test.TestResultParser;
 import hudson.*;
 import hudson.model.AbstractBuild;
@@ -32,14 +33,13 @@ import hudson.remoting.VirtualChannel;
 
 import java.io.IOException;
 import java.io.File;
-import java.util.List;
 
 import jenkins.MasterToSlaveFileCallable;
 
 import org.apache.tools.ant.types.FileSet;
 import org.apache.tools.ant.DirectoryScanner;
 
-import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 
 /**
  * Parse some JUnit xml files and generate a TestResult containing all the
@@ -97,13 +97,13 @@ public class JUnitParser extends TestResultParser {
     public TestResult parseResult(String testResultLocations, Run<?,?> build, FilePath workspace,
                                   Launcher launcher, TaskListener listener)
             throws InterruptedException, IOException {
-        return parseResult(testResultLocations, build, null, null, null, workspace, launcher, listener);
+        return parseResult(testResultLocations, build, new PipelineArgs(), workspace, launcher, listener);
     }
 
     @Override
-    public TestResult parseResult(String testResultLocations, Run<?,?> build, @CheckForNull String nodeId,
-                                  List<String> enclosingBlocks, List<String> enclosingBlockNames, FilePath workspace,
-                                  Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
+    public TestResult parseResult(String testResultLocations, Run<?,?> build, @Nonnull PipelineArgs pipelineArgs,
+                                  FilePath workspace, Launcher launcher, TaskListener listener)
+            throws InterruptedException, IOException {
         final long buildTime = build.getTimestamp().getTimeInMillis();
         final long timeOnMaster = System.currentTimeMillis();
 
@@ -111,7 +111,7 @@ public class JUnitParser extends TestResultParser {
         // also get code that deals with testDataPublishers from JUnitResultArchiver.perform
 
         return workspace.act(new ParseResultCallable(testResultLocations, buildTime, timeOnMaster, keepLongStdio,
-                allowEmptyResults, nodeId, enclosingBlocks, enclosingBlockNames));
+                allowEmptyResults, pipelineArgs));
     }
 
     private static final class ParseResultCallable extends MasterToSlaveFileCallable<TestResult> {
@@ -120,21 +120,17 @@ public class JUnitParser extends TestResultParser {
         private final long nowMaster;
         private final boolean keepLongStdio;
         private final boolean allowEmptyResults;
-        private final String nodeId;
-        private final List<String> enclosingBlocks;
-        private final List<String> enclosingBlockNames;
+        private final PipelineArgs pipelineArgs;
 
         private ParseResultCallable(String testResults, long buildTime, long nowMaster,
-                                    boolean keepLongStdio, boolean allowEmptyResults, @CheckForNull String nodeId,
-                                    List<String> enclosingBlocks, List<String> enclosingBlockNames) {
+                                    boolean keepLongStdio, boolean allowEmptyResults,
+                                    @Nonnull PipelineArgs pipelineArgs) {
             this.buildTime = buildTime;
             this.testResults = testResults;
             this.nowMaster = nowMaster;
             this.keepLongStdio = keepLongStdio;
             this.allowEmptyResults = allowEmptyResults;
-            this.nodeId = nodeId;
-            this.enclosingBlocks = enclosingBlocks;
-            this.enclosingBlockNames = enclosingBlockNames;
+            this.pipelineArgs = pipelineArgs;
         }
 
         public TestResult invoke(File ws, VirtualChannel channel) throws IOException {
@@ -146,8 +142,7 @@ public class JUnitParser extends TestResultParser {
 
             String[] files = ds.getIncludedFiles();
             if (files.length > 0) {
-                result = new TestResult(buildTime + (nowSlave - nowMaster), ds, keepLongStdio, nodeId,
-                        enclosingBlocks, enclosingBlockNames);
+                result = new TestResult(buildTime + (nowSlave - nowMaster), ds, keepLongStdio, pipelineArgs);
                 result.tally();
             } else {
                 if (this.allowEmptyResults) {

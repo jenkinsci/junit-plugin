@@ -1,17 +1,15 @@
 package hudson.tasks.junit.pipeline;
 
-
-import com.google.common.base.Predicate;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.tasks.test.PipelineArgs;
 import hudson.tasks.junit.JUnitResultArchiver;
 import hudson.tasks.junit.TestResultAction;
 import hudson.tasks.junit.TestResultSummary;
 import org.jenkinsci.plugins.workflow.actions.LabelAction;
-import org.jenkinsci.plugins.workflow.actions.StageAction;
 import org.jenkinsci.plugins.workflow.actions.ThreadNameAction;
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
@@ -45,8 +43,11 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
 
         List<FlowNode> enclosingBlocks = getEnclosingStagesAndParallels(node);
 
-        TestResultAction testResultAction = JUnitResultArchiver.parseAndAttach(step, nodeId, getEnclosingBlockIds(enclosingBlocks),
-                getEnclosingBlockNames(enclosingBlocks), run, workspace, launcher, listener);
+        PipelineArgs pipelineArgs = new PipelineArgs();
+        pipelineArgs.setNodeId(nodeId);
+        pipelineArgs.setEnclosingBlocks(getEnclosingBlockIds(enclosingBlocks));
+        pipelineArgs.setEnclosingBlockNames(getEnclosingBlockNames(enclosingBlocks));
+        TestResultAction testResultAction = JUnitResultArchiver.parseAndAttach(step, pipelineArgs, run, workspace, launcher, listener);
 
         if (testResultAction != null) {
             // TODO: Once JENKINS-43995 lands, update this to set the step status instead of the entire build.
@@ -93,11 +94,11 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
         List<String> names = new ArrayList<>();
         for (FlowNode n : nodes) {
             ThreadNameAction threadNameAction = n.getAction(ThreadNameAction.class);
-            StageAction stageAction = n.getAction(StageAction.class);
+            LabelAction labelAction = n.getAction(LabelAction.class);
             if (threadNameAction != null) {
                 names.add(threadNameAction.getThreadName());
-            } else if (stageAction != null) {
-                names.add(stageAction.getStageName());
+            } else if (labelAction != null) {
+                names.add(labelAction.getDisplayName());
             }
         }
         return names;
