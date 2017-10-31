@@ -2,13 +2,14 @@ package hudson.tasks.test;
 
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Builder class for recording additional Pipeline-related arguments needed for test parsing and test results.
  */
-public class PipelineArgs {
+public class PipelineArgs implements Serializable {
     private String nodeId;
     private List<String> enclosingBlocks = new ArrayList<>();
     private List<String> enclosingBlockNames = new ArrayList<>();
@@ -39,4 +40,6 @@ public class PipelineArgs {
     public void setEnclosingBlockNames(@Nonnull List<String> enclosingBlockNames) {
         this.enclosingBlockNames.addAll(enclosingBlockNames);
     }
+
+    private static final long serialVersionUID = 1L;
 }
