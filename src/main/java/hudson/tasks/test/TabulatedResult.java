@@ -44,7 +44,7 @@ public abstract class TabulatedResult extends TestResult {
     /**
      * TODO: javadoc
      */
-    protected transient Map<String,Map<String,PipelineBlockWithTests>> testsByRunAndBlock;
+    protected transient Map<String,PipelineBlockWithTests> testsByBlock;
 
     /**
      * Gets the child test result objects.
@@ -56,12 +56,11 @@ public abstract class TabulatedResult extends TestResult {
 
     public abstract boolean hasChildren();
 
-    public boolean hasMultipleBlocksForRun(@Nonnull String runId) {
-        Map<String,PipelineBlockWithTests> blocksForRun = testsByRunAndBlock.get(runId);
-        if (blocksForRun != null && blocksForRun.size() > 1) {
+    public boolean hasMultipleBlocks() {
+        if (testsByBlock != null && testsByBlock.size() > 1) {
             // Check for nested runs.
             int nonNested = 0;
-            for (PipelineBlockWithTests b : blocksForRun.values()) {
+            for (PipelineBlockWithTests b : testsByBlock.values()) {
                 if (!b.getLeafNodes().isEmpty()) {
                     nonNested++;
                 }
@@ -73,48 +72,40 @@ public abstract class TabulatedResult extends TestResult {
     }
 
     @CheckForNull
-    public PipelineBlockWithTests getPipelineBlockWithTests(@Nonnull String runId, @Nonnull String blockId) {
-        if (testsByRunAndBlock.containsKey(runId)) {
-            Map<String,PipelineBlockWithTests> runBlocks = testsByRunAndBlock.get(runId);
-
-            if (runBlocks.containsKey(blockId)) {
-                return runBlocks.get(blockId);
-            }
+    public PipelineBlockWithTests getPipelineBlockWithTests(@Nonnull String blockId) {
+        if (testsByBlock.containsKey(blockId)) {
+            return testsByBlock.get(blockId);
         }
         return null;
     }
 
-    protected final void populateBlocks(@Nonnull String runId, @Nonnull List<String> innermostFirst,
-                                        @Nonnull String nodeId, @CheckForNull PipelineBlockWithTests nested) {
-        if (testsByRunAndBlock.get(runId) == null) {
-            testsByRunAndBlock.put(runId, new HashMap<String, PipelineBlockWithTests>());
-        }
-
+    protected final void populateBlocks(@Nonnull List<String> innermostFirst, @Nonnull String nodeId,
+                                        @CheckForNull PipelineBlockWithTests nested) {
         if (innermostFirst.isEmpty()) {
             if (nested != null) {
-                addOrMergeBlock(runId, nested);
+                addOrMergeBlock(nested);
             }
         } else {
             String innermost = innermostFirst.remove(0);
             if (nested == null) {
                 nested = new PipelineBlockWithTests(innermost);
                 nested.addLeafNode(nodeId);
-                addOrMergeBlock(runId, nested);
-                populateBlocks(runId, innermostFirst, nodeId, nested);
+                addOrMergeBlock(nested);
+                populateBlocks(innermostFirst, nodeId, nested);
             } else {
                 PipelineBlockWithTests nextLevel = new PipelineBlockWithTests(innermost);
                 nextLevel.addChildBlock(nested);
-                addOrMergeBlock(runId, nextLevel);
-                populateBlocks(runId, innermostFirst, nodeId, nextLevel);
+                addOrMergeBlock(nextLevel);
+                populateBlocks(innermostFirst, nodeId, nextLevel);
             }
         }
     }
 
-    private void addOrMergeBlock(@Nonnull String runId, @Nonnull PipelineBlockWithTests b) {
-        if (testsByRunAndBlock.get(runId).containsKey(b.getBlockId())) {
-            testsByRunAndBlock.get(runId).get(b.getBlockId()).merge(b);
+    private void addOrMergeBlock(@Nonnull PipelineBlockWithTests b) {
+        if (testsByBlock.containsKey(b.getBlockId())) {
+            testsByBlock.get(b.getBlockId()).merge(b);
         } else {
-            testsByRunAndBlock.get(runId).put(b.getBlockId(), b);
+            testsByBlock.put(b.getBlockId(), b);
         }
     }
 
@@ -124,8 +115,7 @@ public abstract class TabulatedResult extends TestResult {
      * Default implementation just returns the original.
      */
     @Nonnull
-    public TabulatedResult blockToTestResult(@Nonnull PipelineBlockWithTests block, @Nonnull String runId,
-                                             @Nonnull TabulatedResult fullResult) {
+    public TabulatedResult blockToTestResult(@Nonnull PipelineBlockWithTests block, @Nonnull TabulatedResult fullResult) {
         return fullResult;
     }
 

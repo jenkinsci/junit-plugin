@@ -340,7 +340,7 @@ public class JUnitResultsStepTest {
         TestResultAction action = run.getAction(TestResultAction.class);
         assertNotNull(action);
 
-        TestResult aResult = action.getResult().getResultForPipelineBlock(run.getExternalizableId(), blockNode.getId());
+        TestResult aResult = action.getResult().getResultForPipelineBlock(blockNode.getId());
         assertNotNull(aResult);
 
         assertEquals(suiteCount, aResult.getSuites().size());
@@ -349,11 +349,11 @@ public class JUnitResultsStepTest {
             assertEquals(failCount, aResult.getFailCount());
         }
 
-        PipelineBlockWithTests aBlock = action.getResult().getPipelineBlockWithTests(run.getExternalizableId(), blockNode.getId());
+        PipelineBlockWithTests aBlock = action.getResult().getPipelineBlockWithTests(blockNode.getId());
 
         assertNotNull(aBlock);
         List<String> aTestNodes = new ArrayList<>(aBlock.nodesWithTests());
-        TestResult aFromNodes = action.getResult().getResultByRunAndNodes(run.getExternalizableId(), aTestNodes);
+        TestResult aFromNodes = action.getResult().getResultByNodes(aTestNodes);
         assertNotNull(aFromNodes);
         assertEquals(aResult.getSuites().size(), aFromNodes.getSuites().size());
         assertEquals(aResult.getFailCount(), aFromNodes.getFailCount());
@@ -367,7 +367,7 @@ public class JUnitResultsStepTest {
         TestResultAction action = run.getAction(TestResultAction.class);
         assertNotNull(action);
 
-        TestResult result = action.getResult().getResultByRunAndNodes(run.getExternalizableId(), Arrays.asList(nodeIds));
+        TestResult result = action.getResult().getResultByNodes(Arrays.asList(nodeIds));
         assertNotNull(result);
         assertEquals(suiteCount, result.getSuites().size());
         assertEquals(testCount, result.getTotalCount());

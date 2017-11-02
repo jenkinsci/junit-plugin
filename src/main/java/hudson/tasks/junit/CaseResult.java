@@ -273,7 +273,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
             Run<?, ?> r = getRun();
             if (r != null) {
                 TestResultAction action = r.getAction(TestResultAction.class);
-                if (action != null && action.getResult().hasMultipleBlocksForRun(r.getExternalizableId())) {
+                if (action != null && action.getResult().hasMultipleBlocks()) {
                     return StringUtils.join(new ReverseListIterator(getEnclosingFlowNodeNames()), " / ") + " / " + getTransformedTestName();
                 }
             }
@@ -605,16 +605,17 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     public Run<?,?> getRun() {
         SuiteResult sr = getSuiteResult();
         if (sr==null) {
-            LOGGER.warning("In getOwner(), getSuiteResult is null"); return null; }
-        hudson.tasks.junit.TestResult tr = sr.getParent();
-        if (tr==null) {
-            if (sr.getRunId() != null) {
-                return Run.fromExternalizableId(sr.getRunId());
-            } else {
-                LOGGER.warning("In getOwner(), suiteResult.getParent() is null and suiteResult.getRunId() is null.");
-                return null;
-            }
+            LOGGER.warning("In getOwner(), getSuiteResult is null");
+            return null;
         }
+
+        hudson.tasks.junit.TestResult tr = sr.getParent();
+
+        if (tr == null) {
+            LOGGER.warning("In getOwner(), suiteResult.getParent() is null.");
+            return null;
+        }
+
         return tr.getRun();
     }
 
