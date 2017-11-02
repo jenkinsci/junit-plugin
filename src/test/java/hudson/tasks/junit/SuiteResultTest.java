@@ -30,7 +30,7 @@ import java.net.URISyntaxException;
 
 import hudson.XmlFile;
 
-import hudson.tasks.test.PipelineArgs;
+import hudson.tasks.test.PipelineTestDetails;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
@@ -55,13 +55,13 @@ public class SuiteResultTest {
     }
 
     private SuiteResult parseOne(File file) throws Exception {
-        List<SuiteResult> results = SuiteResult.parse(file, false, new PipelineArgs());
+        List<SuiteResult> results = SuiteResult.parse(file, false, null);
         assertEquals(1,results.size());
         return results.get(0);
     }
     
     private List<SuiteResult> parseSuites(File file) throws Exception {
-        return SuiteResult.parse(file, false, new PipelineArgs());
+        return SuiteResult.parse(file, false, null);
     }
 
     @Issue("JENKINS-1233")
@@ -102,7 +102,7 @@ public class SuiteResultTest {
     @Issue("JENKINS-1472")
     @Test
     public void testIssue1472() throws Exception {
-        List<SuiteResult> results = SuiteResult.parse(getDataFile("junit-report-1472.xml"), false, new PipelineArgs());
+        List<SuiteResult> results = SuiteResult.parse(getDataFile("junit-report-1472.xml"), false, null);
         assertTrue(results.size()>20); // lots of data here
 
         SuiteResult sr0 = results.get(0);

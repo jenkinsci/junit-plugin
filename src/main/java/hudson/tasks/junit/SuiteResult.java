@@ -23,7 +23,7 @@
  */
 package hudson.tasks.junit;
 
-import hudson.tasks.test.PipelineArgs;
+import hudson.tasks.test.PipelineTestDetails;
 import hudson.tasks.test.TestObject;
 import hudson.util.io.ParserConfigurator;
 import org.dom4j.Document;
@@ -105,21 +105,21 @@ public final class SuiteResult implements Serializable {
 
     @Deprecated
     SuiteResult(String name, String stdout, String stderr) {
-        this(name, stdout, stderr, new PipelineArgs());
+        this(name, stdout, stderr, null);
     }
 
     /**
      * @since 1.22
      */
-    SuiteResult(String name, String stdout, String stderr, @Nonnull PipelineArgs pipelineArgs) {
+    SuiteResult(String name, String stdout, String stderr, @CheckForNull PipelineTestDetails pipelineTestDetails) {
         this.name = name;
         this.stderr = stderr;
         this.stdout = stdout;
         // runId is generally going to be not null, but we only care about it if both it and nodeId are not null.
-        if (pipelineArgs.getNodeId() != null) {
-            this.nodeId = pipelineArgs.getNodeId();
-            this.enclosingBlocks.addAll(pipelineArgs.getEnclosingBlocks());
-            this.enclosingBlockNames.addAll(pipelineArgs.getEnclosingBlockNames());
+        if (pipelineTestDetails != null && pipelineTestDetails.getNodeId() != null) {
+            this.nodeId = pipelineTestDetails.getNodeId();
+            this.enclosingBlocks.addAll(pipelineTestDetails.getEnclosingBlocks());
+            this.enclosingBlockNames.addAll(pipelineTestDetails.getEnclosingBlockNames());
         } else {
             this.nodeId = null;
         }
@@ -156,7 +156,7 @@ public final class SuiteResult implements Serializable {
      * This method returns a collection, as a single XML may have multiple &lt;testsuite>
      * elements wrapped into the top-level &lt;testsuites>.
      */
-    static List<SuiteResult> parse(File xmlReport, boolean keepLongStdio, @Nonnull PipelineArgs pipelineArgs)
+    static List<SuiteResult> parse(File xmlReport, boolean keepLongStdio, PipelineTestDetails pipelineTestDetails)
             throws DocumentException, IOException, InterruptedException {
         List<SuiteResult> r = new ArrayList<SuiteResult>();
 
@@ -169,7 +169,7 @@ public final class SuiteResult implements Serializable {
             Document result = saxReader.read(xmlReportStream);
             Element root = result.getRootElement();
 
-            parseSuite(xmlReport, keepLongStdio, r, root, pipelineArgs);
+            parseSuite(xmlReport, keepLongStdio, r, root, pipelineTestDetails);
         } finally {
             xmlReportStream.close();
         }
@@ -178,24 +178,24 @@ public final class SuiteResult implements Serializable {
     }
 
     private static void parseSuite(File xmlReport, boolean keepLongStdio, List<SuiteResult> r, Element root,
-                                   @Nonnull PipelineArgs pipelineArgs) throws DocumentException, IOException {
+                                   PipelineTestDetails pipelineTestDetails) throws DocumentException, IOException {
         // nested test suites
         @SuppressWarnings("unchecked")
         List<Element> testSuites = (List<Element>) root.elements("testsuite");
         for (Element suite : testSuites)
-            parseSuite(xmlReport, keepLongStdio, r, suite, pipelineArgs);
+            parseSuite(xmlReport, keepLongStdio, r, suite, pipelineTestDetails);
 
         // child test cases
         // FIXME: do this also if no testcases!
         if (root.element("testcase") != null || root.element("error") != null)
-            r.add(new SuiteResult(xmlReport, root, keepLongStdio, pipelineArgs));
+            r.add(new SuiteResult(xmlReport, root, keepLongStdio, pipelineTestDetails));
     }
 
     /**
      * @param xmlReport A JUnit XML report file whose top level element is 'testsuite'.
      * @param suite     The parsed result of {@code xmlReport}
      */
-    private SuiteResult(File xmlReport, Element suite, boolean keepLongStdio, @Nonnull PipelineArgs pipelineArgs)
+    private SuiteResult(File xmlReport, Element suite, boolean keepLongStdio, @CheckForNull PipelineTestDetails pipelineTestDetails)
             throws DocumentException, IOException {
         this.file = xmlReport.getAbsolutePath();
         String name = suite.attributeValue("name");
@@ -210,10 +210,10 @@ public final class SuiteResult implements Serializable {
         this.name = TestObject.safe(name);
         this.timestamp = suite.attributeValue("timestamp");
         this.id = suite.attributeValue("id");
-        if (pipelineArgs.getNodeId() != null) {
-            this.nodeId = pipelineArgs.getNodeId();
-            this.enclosingBlocks.addAll(pipelineArgs.getEnclosingBlocks());
-            this.enclosingBlockNames.addAll(pipelineArgs.getEnclosingBlockNames());
+        if (pipelineTestDetails != null && pipelineTestDetails.getNodeId() != null) {
+            this.nodeId = pipelineTestDetails.getNodeId();
+            this.enclosingBlocks.addAll(pipelineTestDetails.getEnclosingBlocks());
+            this.enclosingBlockNames.addAll(pipelineTestDetails.getEnclosingBlockNames());
         }
 
         // check for test suite time attribute

@@ -27,7 +27,7 @@ import hudson.AbortException;
 import hudson.Util;
 import hudson.model.Run;
 import hudson.tasks.test.AbstractTestResultAction;
-import hudson.tasks.test.PipelineArgs;
+import hudson.tasks.test.PipelineTestDetails;
 import hudson.tasks.test.PipelineBlockWithTests;
 import hudson.tasks.test.MetaTabulatedResult;
 import hudson.tasks.test.TabulatedResult;
@@ -127,20 +127,20 @@ public final class TestResult extends MetaTabulatedResult {
 
     @Deprecated
     public TestResult(long buildTime, DirectoryScanner results, boolean keepLongStdio) throws IOException {
-        this(buildTime, results, keepLongStdio, new PipelineArgs());
+        this(buildTime, results, keepLongStdio, null);
     }
 
     /**
      * Collect reports from the given {@link DirectoryScanner}, while
      * filtering out all files that were created before the given time.
      * @param keepLongStdio if true, retain a suite's complete stdout/stderr even if this is huge and the suite passed
-     * @param pipelineArgs A non-null {@link PipelineArgs} instance containing Pipeline-related additional arguments.
+     * @param pipelineTestDetails A {@link PipelineTestDetails} instance containing Pipeline-related additional arguments.
      * @since 1.22
      */
     public TestResult(long buildTime, DirectoryScanner results, boolean keepLongStdio,
-                      @Nonnull PipelineArgs pipelineArgs) throws IOException {
+                      PipelineTestDetails pipelineTestDetails) throws IOException {
         this.keepLongStdio = keepLongStdio;
-        parse(buildTime, results, pipelineArgs);
+        parse(buildTime, results, pipelineTestDetails);
     }
 
     public TestObject getParent() {
@@ -159,7 +159,7 @@ public final class TestResult extends MetaTabulatedResult {
 
     @Deprecated
     public void parse(long buildTime, DirectoryScanner results) throws IOException {
-        parse(buildTime, results, new PipelineArgs());
+        parse(buildTime, results, null);
     }
 
     /**
@@ -167,21 +167,21 @@ public final class TestResult extends MetaTabulatedResult {
      * filtering out all files that were created before the given time.
      * @param buildTime Build time.
      * @param results Directory scanner.
-     * @param pipelineArgs A non-null {@link PipelineArgs} instance containing Pipeline-related additional arguments.
+     * @param pipelineTestDetails A {@link PipelineTestDetails} instance containing Pipeline-related additional arguments.
      *
      * @throws IOException if an error occurs.
      * @since 1.22
      */
-    public void parse(long buildTime, DirectoryScanner results, @Nonnull PipelineArgs pipelineArgs) throws IOException {
+    public void parse(long buildTime, DirectoryScanner results, PipelineTestDetails pipelineTestDetails) throws IOException {
         String[] includedFiles = results.getIncludedFiles();
         File baseDir = results.getBasedir();
-        parse(buildTime,baseDir,pipelineArgs,includedFiles);
+        parse(buildTime,baseDir, pipelineTestDetails,includedFiles);
     }
 
     @Deprecated
     public void parse(long buildTime, File baseDir, String[] reportFiles)
             throws IOException {
-        parse(buildTime, baseDir, new PipelineArgs(), reportFiles);
+        parse(buildTime, baseDir, null, reportFiles);
     }
 
     /**
@@ -189,13 +189,13 @@ public final class TestResult extends MetaTabulatedResult {
      * filtering out all files that were created before the given time.
      * @param buildTime Build time.
      * @param baseDir Base directory.
-     * @param pipelineArgs A non-null {@link PipelineArgs} instance containing Pipeline-related additional arguments.
+     * @param pipelineTestDetails A {@link PipelineTestDetails} instance containing Pipeline-related additional arguments.
      * @param reportFiles Report files.
      *
      * @throws IOException if an error occurs.
      * @since 1.22
      */
-    public void parse(long buildTime, File baseDir, @Nonnull PipelineArgs pipelineArgs, String[] reportFiles) throws IOException {
+    public void parse(long buildTime, File baseDir, PipelineTestDetails pipelineTestDetails, String[] reportFiles) throws IOException {
 
         boolean parsed=false;
 
@@ -203,7 +203,7 @@ public final class TestResult extends MetaTabulatedResult {
             File reportFile = new File(baseDir, value);
             // only count files that were actually updated during this build
             if (buildTime-3000/*error margin*/ <= reportFile.lastModified()) {
-                parsePossiblyEmpty(reportFile, pipelineArgs);
+                parsePossiblyEmpty(reportFile, pipelineTestDetails);
                 parsed = true;
             }
         }
@@ -228,7 +228,7 @@ public final class TestResult extends MetaTabulatedResult {
 
     @Deprecated
     public void parse(long buildTime, Iterable<File> reportFiles) throws IOException {
-        parse(buildTime, reportFiles, new PipelineArgs());
+        parse(buildTime, reportFiles, null);
     }
 
     /**
@@ -236,18 +236,18 @@ public final class TestResult extends MetaTabulatedResult {
      *
      * @param buildTime Build time.
      * @param reportFiles Report files.
-     * @param pipelineArgs A non-null {@link PipelineArgs} instance containing Pipeline-related additional arguments.
+     * @param pipelineTestDetails A {@link PipelineTestDetails} instance containing Pipeline-related additional arguments.
      *
      * @throws IOException if an error occurs.
      * @since 1.22
      */
-    public void parse(long buildTime, Iterable<File> reportFiles, @Nonnull PipelineArgs pipelineArgs) throws IOException {
+    public void parse(long buildTime, Iterable<File> reportFiles, PipelineTestDetails pipelineTestDetails) throws IOException {
         boolean parsed=false;
 
         for (File reportFile : reportFiles) {
             // only count files that were actually updated during this build
             if (buildTime-3000/*error margin*/ <= reportFile.lastModified()) {
-                parsePossiblyEmpty(reportFile, pipelineArgs);
+                parsePossiblyEmpty(reportFile, pipelineTestDetails);
                 parsed = true;
             }
         }
@@ -271,14 +271,14 @@ public final class TestResult extends MetaTabulatedResult {
         
     }
     
-    private void parsePossiblyEmpty(File reportFile, @Nonnull PipelineArgs pipelineArgs) throws IOException {
+    private void parsePossiblyEmpty(File reportFile, PipelineTestDetails pipelineTestDetails) throws IOException {
         if(reportFile.length()==0) {
             // this is a typical problem when JVM quits abnormally, like OutOfMemoryError during a test.
-            SuiteResult sr = new SuiteResult(reportFile.getName(), "", "", pipelineArgs);
+            SuiteResult sr = new SuiteResult(reportFile.getName(), "", "", pipelineTestDetails);
             sr.addCase(new CaseResult(sr,"[empty]","Test report file "+reportFile.getAbsolutePath()+" was length 0"));
             add(sr);
         } else {
-            parse(reportFile, pipelineArgs);
+            parse(reportFile, pipelineTestDetails);
         }
     }
     
@@ -332,20 +332,20 @@ public final class TestResult extends MetaTabulatedResult {
 
     @Deprecated
     public void parse(File reportFile) throws IOException {
-        parse(reportFile, new PipelineArgs());
+        parse(reportFile, null);
     }
 
     /**
      * Parses an additional report file.
      * @param reportFile Report file to parse.
-     * @param pipelineArgs A non-null {@link PipelineArgs} instance containing Pipeline-related additional arguments.
+     * @param pipelineTestDetails A {@link PipelineTestDetails} instance containing Pipeline-related additional arguments.
      *
      * @throws IOException if an error occurs.
      * @since 1.22
      */
-    public void parse(File reportFile, @Nonnull PipelineArgs pipelineArgs) throws IOException {
+    public void parse(File reportFile, PipelineTestDetails pipelineTestDetails) throws IOException {
         try {
-            for (SuiteResult suiteResult : SuiteResult.parse(reportFile, keepLongStdio, pipelineArgs))
+            for (SuiteResult suiteResult : SuiteResult.parse(reportFile, keepLongStdio, pipelineTestDetails))
                 add(suiteResult);
         } catch (InterruptedException e) {
             throw new IOException("Failed to read "+reportFile,e);
@@ -356,7 +356,7 @@ public final class TestResult extends MetaTabulatedResult {
                 throw new IOException("Failed to read "+reportFile+"\n"+
                     "Is this really a JUnit report file? Your configuration must be matching too many files",e);
             } else {
-                SuiteResult sr = new SuiteResult(reportFile.getName(), "", "", new PipelineArgs());
+                SuiteResult sr = new SuiteResult(reportFile.getName(), "", "", null);
                 StringWriter writer = new StringWriter();
                 e.printStackTrace(new PrintWriter(writer));
                 String error = "Failed to read test report file "+reportFile.getAbsolutePath()+"\n"+writer.toString();

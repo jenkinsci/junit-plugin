@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * Builder class for recording additional Pipeline-related arguments needed for test parsing and test results.
  */
-public class PipelineArgs implements Serializable {
+public class PipelineTestDetails implements Serializable {
     private String nodeId;
     private List<String> enclosingBlocks = new ArrayList<>();
     private List<String> enclosingBlockNames = new ArrayList<>();

@@ -24,7 +24,7 @@
 package hudson.tasks.junit;
 
 import hudson.XmlFile;
-import hudson.tasks.test.PipelineArgs;
+import hudson.tasks.test.PipelineTestDetails;
 import hudson.util.HeapSpaceStringConverter;
 import hudson.util.XStream2;
 
@@ -59,7 +59,7 @@ public class TestResultTest {
     @Test
     public void testIpsTests() throws Exception {
         TestResult testResult = new TestResult();
-        testResult.parse(getDataFile("eclipse-plugin-test-report.xml"), new PipelineArgs());
+        testResult.parse(getDataFile("eclipse-plugin-test-report.xml"), new PipelineTestDetails());
 
         Collection<SuiteResult> suites = testResult.getSuites();
         assertEquals("Wrong number of test suites", 16, suites.size());
@@ -113,9 +113,9 @@ public class TestResultTest {
     @Test
     public void testDuplicateTestMethods() throws IOException, URISyntaxException {
         TestResult testResult = new TestResult();
-        testResult.parse(getDataFile("JENKINS-13214/27449.xml"), new PipelineArgs());
-        testResult.parse(getDataFile("JENKINS-13214/27540.xml"), new PipelineArgs());
-        testResult.parse(getDataFile("JENKINS-13214/29734.xml"), new PipelineArgs());
+        testResult.parse(getDataFile("JENKINS-13214/27449.xml"), null);
+        testResult.parse(getDataFile("JENKINS-13214/27540.xml"), null);
+        testResult.parse(getDataFile("JENKINS-13214/29734.xml"), null);
         testResult.tally();
         
         assertEquals("Wrong number of test suites", 1, testResult.getSuites().size());
@@ -125,8 +125,8 @@ public class TestResultTest {
     @Bug(12457)
     public void testTestSuiteDistributedOverMultipleFilesIsCountedAsOne() throws IOException, URISyntaxException {
         TestResult testResult = new TestResult();
-        testResult.parse(getDataFile("JENKINS-12457/TestSuite_a1.xml"), new PipelineArgs());
-        testResult.parse(getDataFile("JENKINS-12457/TestSuite_a2.xml"), new PipelineArgs());
+        testResult.parse(getDataFile("JENKINS-12457/TestSuite_a1.xml"), null);
+        testResult.parse(getDataFile("JENKINS-12457/TestSuite_a2.xml"), null);
         testResult.tally();
         
         assertEquals("Wrong number of testsuites", 1, testResult.getSuites().size());
@@ -142,8 +142,8 @@ public class TestResultTest {
      */
     public void testDuplicatedTestSuiteIsNotCounted() throws IOException, URISyntaxException {
         TestResult testResult = new TestResult();
-        testResult.parse(getDataFile("JENKINS-12457/TestSuite_b.xml"), new PipelineArgs());
-        testResult.parse(getDataFile("JENKINS-12457/TestSuite_b_duplicate.xml"), new PipelineArgs());
+        testResult.parse(getDataFile("JENKINS-12457/TestSuite_b.xml"), null);
+        testResult.parse(getDataFile("JENKINS-12457/TestSuite_b_duplicate.xml"), null);
         testResult.tally();
         
         assertEquals("Wrong number of testsuites", 1, testResult.getSuites().size());
@@ -157,16 +157,16 @@ public class TestResultTest {
         TestResult first = new TestResult();
         TestResult second = new TestResult();
 
-        first.parse(getDataFile("JENKINS-41134/TestSuite_first.xml"), new PipelineArgs());
-        second.parse(getDataFile("JENKINS-41134/TestSuite_second.xml"), new PipelineArgs());
+        first.parse(getDataFile("JENKINS-41134/TestSuite_first.xml"), null);
+        second.parse(getDataFile("JENKINS-41134/TestSuite_second.xml"), null);
         assertEquals("Fail count should be 0", 0, first.getFailCount());
         first.merge(second);
         assertEquals("Fail count should now be 1", 1, first.getFailCount());
 
         first = new TestResult();
         second = new TestResult();
-        first.parse(getDataFile("JENKINS-41134/TestSuite_first.xml"), new PipelineArgs());
-        second.parse(getDataFile("JENKINS-41134/TestSuite_second_dup_first.xml"), new PipelineArgs());
+        first.parse(getDataFile("JENKINS-41134/TestSuite_first.xml"), null);
+        second.parse(getDataFile("JENKINS-41134/TestSuite_second_dup_first.xml"), null);
         assertEquals("Fail count should be 0", 0, first.getFailCount());
         first.merge(second);
         assertEquals("Fail count should now be 1", 1, first.getFailCount());

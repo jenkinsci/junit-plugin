@@ -5,7 +5,7 @@ import hudson.Launcher;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import hudson.tasks.test.PipelineArgs;
+import hudson.tasks.test.PipelineTestDetails;
 import hudson.tasks.junit.JUnitResultArchiver;
 import hudson.tasks.junit.TestResultAction;
 import hudson.tasks.junit.TestResultSummary;
@@ -43,11 +43,11 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
 
         List<FlowNode> enclosingBlocks = getEnclosingStagesAndParallels(node);
 
-        PipelineArgs pipelineArgs = new PipelineArgs();
-        pipelineArgs.setNodeId(nodeId);
-        pipelineArgs.setEnclosingBlocks(getEnclosingBlockIds(enclosingBlocks));
-        pipelineArgs.setEnclosingBlockNames(getEnclosingBlockNames(enclosingBlocks));
-        TestResultAction testResultAction = JUnitResultArchiver.parseAndAttach(step, pipelineArgs, run, workspace, launcher, listener);
+        PipelineTestDetails pipelineTestDetails = new PipelineTestDetails();
+        pipelineTestDetails.setNodeId(nodeId);
+        pipelineTestDetails.setEnclosingBlocks(getEnclosingBlockIds(enclosingBlocks));
+        pipelineTestDetails.setEnclosingBlockNames(getEnclosingBlockNames(enclosingBlocks));
+        TestResultAction testResultAction = JUnitResultArchiver.parseAndAttach(step, pipelineTestDetails, run, workspace, launcher, listener);
 
         if (testResultAction != null) {
             // TODO: Once JENKINS-43995 lands, update this to set the step status instead of the entire build.

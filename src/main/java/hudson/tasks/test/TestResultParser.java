@@ -91,7 +91,7 @@ public abstract class TestResultParser implements ExtensionPoint {
                                   Run<?,?> run, @Nonnull FilePath workspace, Launcher launcher,
                                   TaskListener listener)
             throws InterruptedException, IOException {
-        return parseResult(testResultLocations, run, new PipelineArgs(), workspace, launcher, listener);
+        return parseResult(testResultLocations, run, null, workspace, launcher, listener);
     }
 
     /**
@@ -117,7 +117,7 @@ public abstract class TestResultParser implements ExtensionPoint {
      *      specifies the locations of the test result files. Never null.
      * @param run
      *      Build for which these tests are parsed. Never null.
-     * @param pipelineArgs A non-null {@link PipelineArgs} instance containing Pipeline-related additional arguments.
+     * @param pipelineTestDetails A {@link PipelineTestDetails} instance containing Pipeline-related additional arguments.
      * @param workspace the workspace in which tests can be found
      * @param launcher
      *      Can be used to fork processes on the machine where the build is running. Never null.
@@ -138,7 +138,7 @@ public abstract class TestResultParser implements ExtensionPoint {
      * @since 1.22
      */
     public TestResult parseResult(String testResultLocations,
-                                  Run<?,?> run, @Nonnull PipelineArgs pipelineArgs,
+                                  Run<?,?> run, PipelineTestDetails pipelineTestDetails,
                                   @Nonnull FilePath workspace, Launcher launcher, TaskListener listener)
             throws InterruptedException, IOException {
         if (run instanceof AbstractBuild) {
