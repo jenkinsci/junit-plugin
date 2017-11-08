@@ -249,7 +249,11 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
     }
 
     public TestResult findCorrespondingResult(String id) {
-        return ((TestResult)getResult()).findCorrespondingResult(id);
+        final Object testResult = getResult();
+        if (!(testResult instanceof TestResult)) {
+            return null;
+        }
+        return ((TestResult)testResult).findCorrespondingResult(id);
     }
     
     /**
