@@ -32,6 +32,8 @@ import java.io.Writer;
 import java.util.List;
 import static org.jvnet.hudson.test.MemoryAssert.*;
 import static org.junit.Assert.*;
+
+import hudson.tasks.test.PipelineTestDetails;
 import org.junit.Test;
 
 public class SuiteResult2Test {
@@ -97,7 +99,7 @@ public class SuiteResult2Test {
     }
 
     private SuiteResult parseOne(File file) throws Exception {
-        List<SuiteResult> results = SuiteResult.parse(file, false, null, null, null);
+        List<SuiteResult> results = SuiteResult.parse(file, false, null);
         assertEquals(1,results.size());
         return results.get(0);
     }

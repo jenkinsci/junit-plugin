@@ -41,6 +41,7 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import hudson.tasks.junit.TestResultAction.Data;
+import hudson.tasks.test.PipelineTestDetails;
 import hudson.util.DescribableList;
 import hudson.util.FormValidation;
 import org.apache.tools.ant.DirectoryScanner;
@@ -52,7 +53,6 @@ import org.kohsuke.stapler.QueryParameter;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import jenkins.tasks.SimpleBuildStep;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -124,16 +124,16 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     private TestResult parse(String expandedTestResults, Run<?,?> run, @Nonnull FilePath workspace, Launcher launcher, TaskListener listener)
             throws IOException, InterruptedException
     {
-        return parse(this, null, null, expandedTestResults, run, workspace, launcher, listener);
+        return parse(this, null, expandedTestResults, run, workspace, launcher, listener);
 
     }
 
-    private static TestResult parse(@Nonnull JUnitTask task, @CheckForNull String nodeId, List<String> enclosingBlocks,
+    private static TestResult parse(@Nonnull JUnitTask task, PipelineTestDetails pipelineTestDetails,
                                     String expandedTestResults, Run<?,?> run, @Nonnull FilePath workspace,
                                     Launcher launcher, TaskListener listener)
             throws IOException, InterruptedException {
         return new JUnitParser(task.isKeepLongStdio(), task.isAllowEmptyResults())
-                .parseResult(expandedTestResults, run, nodeId, enclosingBlocks, workspace, launcher, listener);
+                .parseResult(expandedTestResults, run, pipelineTestDetails, workspace, launcher, listener);
     }
 
     @Deprecated
@@ -150,21 +150,20 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     @Override
     public void perform(Run build, FilePath workspace, Launcher launcher,
             TaskListener listener) throws InterruptedException, IOException {
-        TestResultAction action = parseAndAttach(this, null, null, build, workspace, launcher, listener);
+        TestResultAction action = parseAndAttach(this, null, build, workspace, launcher, listener);
 
         if (action != null && action.getResult().getFailCount() > 0)
             build.setResult(Result.UNSTABLE);
     }
 
-    public static TestResultAction parseAndAttach(@Nonnull JUnitTask task, @CheckForNull String nodeId,
-                                                  List<String> enclosingBlocks, Run build, FilePath workspace,
-                                                  Launcher launcher, TaskListener listener)
+    public static TestResultAction parseAndAttach(@Nonnull JUnitTask task, PipelineTestDetails pipelineTestDetails,
+                                                  Run build, FilePath workspace, Launcher launcher, TaskListener listener)
             throws InterruptedException, IOException {
         listener.getLogger().println(Messages.JUnitResultArchiver_Recording());
 
         final String testResults = build.getEnvironment(listener).expand(task.getTestResults());
 
-        TestResult result = parse(task, nodeId, enclosingBlocks, testResults, build, workspace, launcher, listener);
+        TestResult result = parse(task, pipelineTestDetails, testResults, build, workspace, launcher, listener);
 
         synchronized (build) {
             // TODO can the build argument be omitted now, or is it used prior to the call to addAction?
