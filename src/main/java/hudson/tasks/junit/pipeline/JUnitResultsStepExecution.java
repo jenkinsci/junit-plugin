@@ -11,15 +11,14 @@ import hudson.tasks.junit.TestResultAction;
 import hudson.tasks.junit.TestResultSummary;
 import org.jenkinsci.plugins.workflow.actions.LabelAction;
 import org.jenkinsci.plugins.workflow.actions.ThreadNameAction;
-import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.SynchronousNonBlockingStepExecution;
-import org.jenkinsci.plugins.workflow.support.steps.StageStep;
 
 import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
+import org.jenkinsci.plugins.workflow.graph.StepNode;
 
 public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecution<TestResultSummary> {
 
@@ -70,7 +69,7 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
         List<FlowNode> enclosingBlocks = new ArrayList<>();
         for (FlowNode enclosing : node.getEnclosingBlocks()) {
             if (enclosing != null && enclosing.getAction(LabelAction.class) != null) {
-                if ((enclosing instanceof StepStartNode && ((StepStartNode) enclosing).getDescriptor() instanceof StageStep.DescriptorImpl) ||
+                if ((enclosing instanceof StepNode && ((StepNode) enclosing).getDescriptor().getFunctionName().equals("stage")) ||
                         (enclosing.getAction(ThreadNameAction.class) != null)) {
                     enclosingBlocks.add(enclosing);
                 }
