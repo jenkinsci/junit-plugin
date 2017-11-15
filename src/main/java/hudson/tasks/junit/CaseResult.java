@@ -271,6 +271,10 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     }
 
     public String getDisplayName() {
+        return getNameWithEnclosingBlocks(getTransformedTestName());
+    }
+
+    private String getNameWithEnclosingBlocks(String rawName) {
         // Only prepend the enclosing flow node names if there are any and the run this is in has multiple blocks directly containing
         // test results.
         if (!getEnclosingFlowNodeNames().isEmpty()) {
@@ -278,11 +282,11 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
             if (r != null) {
                 TestResultAction action = r.getAction(TestResultAction.class);
                 if (action != null && action.getResult().hasMultipleBlocks()) {
-                    return StringUtils.join(new ReverseListIterator(getEnclosingFlowNodeNames()), " / ") + " / " + getTransformedTestName();
+                    return StringUtils.join(new ReverseListIterator(getEnclosingFlowNodeNames()), " / ") + " / " + rawName;
                 }
             }
         }
-        return getTransformedTestName();
+        return rawName;
     }
 
     /**
@@ -369,7 +373,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      * @since 1.515
      */
     public String getFullDisplayName() {
-    	return TestNameTransformer.getTransformedName(getFullName());
+    	return getNameWithEnclosingBlocks(TestNameTransformer.getTransformedName(getFullName()));
     }
 
     @Override
@@ -471,7 +475,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         if (parent == null) return null;
         SuiteResult pr = parent.getPreviousResult();
         if(pr==null)    return null;
-        return pr.getCase(getDisplayName());
+        return pr.getCase(getTransformedTestName());
     }
     
     /**

@@ -42,6 +42,7 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 public class JUnitResultsStepTest {
     @Rule
@@ -245,26 +246,36 @@ public class JUnitResultsStepTest {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "testTrends");
         j.setDefinition(new CpsFlowDefinition("node {\n" +
                 "  stage('first') {\n" +
-                "    def first = junit(testResults: \"junit-report-testTrends-first-${env.BUILD_NUMBER}.xml\")\n" +
+                "    def first = junit(testResults: \"junit-report-testTrends-first.xml\")\n" +
                 "  }\n" +
                 "  stage('second') {\n" +
-                "    def second = junit(testResults: \"junit-report-testTrends-second-${env.BUILD_NUMBER}.xml\")\n" +
+                "    def second = junit(testResults: \"junit-report-testTrends-second.xml\")\n" +
                 "  }\n" +
                 "}\n", true));
         FilePath ws = rule.jenkins.getWorkspaceFor(j);
-        for (int i = 1; i < 4; i++) {
-            FilePath firstFile = ws.child("junit-report-testTrends-first-" + i + ".xml");
-            firstFile.copyFrom(JUnitResultsStepTest.class.getResource("junit-report-testTrends-first-" + i + ".xml"));
-            FilePath secondFile = ws.child("junit-report-testTrends-second-" + i + ".xml");
-            secondFile.copyFrom(JUnitResultsStepTest.class.getResource("junit-report-testTrends-second-" + i + ".xml"));
-        }
+        FilePath firstFile = ws.child("junit-report-testTrends-first.xml");
+        FilePath secondFile = ws.child("junit-report-testTrends-second.xml");
+
+        // Populate first run's tests.
+        firstFile.copyFrom(JUnitResultsStepTest.class.getResource("junit-report-testTrends-first-1.xml"));
+        secondFile.copyFrom(JUnitResultsStepTest.class.getResource("junit-report-testTrends-second-1.xml"));
 
         WorkflowRun firstRun = rule.buildAndAssertSuccess(j);
         assertStageResults(firstRun, 1, 8, 0, "first");
         assertStageResults(firstRun, 1, 1, 0, "second");
+
+        // Populate second run's tests.
+        firstFile.copyFrom(JUnitResultsStepTest.class.getResource("junit-report-testTrends-first-2.xml"));
+        secondFile.copyFrom(JUnitResultsStepTest.class.getResource("junit-report-testTrends-second-2.xml"));
+
         WorkflowRun secondRun = rule.assertBuildStatus(Result.UNSTABLE, rule.waitForCompletion(j.scheduleBuild2(0).waitForStart()));
         assertStageResults(secondRun, 1, 8, 3, "first");
         assertStageResults(secondRun, 1, 1, 0, "second");
+
+        // Populate third run's tests
+        firstFile.copyFrom(JUnitResultsStepTest.class.getResource("junit-report-testTrends-first-3.xml"));
+        secondFile.copyFrom(JUnitResultsStepTest.class.getResource("junit-report-testTrends-second-3.xml"));
+
         WorkflowRun thirdRun = rule.assertBuildStatus(Result.UNSTABLE, rule.waitForCompletion(j.scheduleBuild2(0).waitForStart()));
         assertStageResults(thirdRun, 1, 8, 3, "first");
         assertStageResults(thirdRun, 1, 1, 0, "second");
@@ -273,16 +284,24 @@ public class JUnitResultsStepTest {
 
         for (CaseResult failed : thirdAction.getFailedTests()) {
             if (failed.getDisplayName() != null) {
-                if (failed.getDisplayName().equals("first / org.twia.vendor.VendorManagerTest.testGetVendorFirmKeyForVendorRep") ||
-                        failed.getDisplayName().equals("first / org.twia.vendor.VendorManagerTest.testCreateAdjustingFirm")) {
+                if (failed.getDisplayName().equals("first / testGetVendorFirmKeyForVendorRep")) {
+                    assertEquals("first / org.twia.vendor.VendorManagerTest.testGetVendorFirmKeyForVendorRep",
+                            failed.getFullDisplayName());
                     assertEquals(2, failed.getFailedSince());
-                } else if (failed.getDisplayName().equals("first / org.twia.vendor.VendorManagerTest.testCreateVendorFirm")) {
+                } else if (failed.getDisplayName().equals("first / testCreateAdjustingFirm")) {
+                    assertEquals("first / org.twia.vendor.VendorManagerTest.testCreateAdjustingFirm",
+                            failed.getFullDisplayName());
+                    assertEquals(2, failed.getFailedSince());
+                } else if (failed.getDisplayName().equals("first / testCreateVendorFirm")) {
+                    assertEquals("first / org.twia.vendor.VendorManagerTest.testCreateVendorFirm",
+                            failed.getFullDisplayName());
                     assertEquals(3, failed.getFailedSince());
+                } else {
+                    fail("Failed test displayName " + failed.getDisplayName() + " is unexpected.");
                 }
             }
         }
     }
-
 
     private static Predicate<FlowNode> branchForName(final String name) {
         return new Predicate<FlowNode>() {
