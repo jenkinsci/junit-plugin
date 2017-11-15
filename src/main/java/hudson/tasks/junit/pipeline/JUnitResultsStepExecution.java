@@ -5,21 +5,20 @@ import hudson.Launcher;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import hudson.tasks.test.PipelineTestDetails;
 import hudson.tasks.junit.JUnitResultArchiver;
 import hudson.tasks.junit.TestResultAction;
 import hudson.tasks.junit.TestResultSummary;
-import org.jenkinsci.plugins.workflow.actions.LabelAction;
-import org.jenkinsci.plugins.workflow.actions.ThreadNameAction;
-import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode;
-import org.jenkinsci.plugins.workflow.graph.FlowNode;
-import org.jenkinsci.plugins.workflow.steps.StepContext;
-import org.jenkinsci.plugins.workflow.steps.SynchronousNonBlockingStepExecution;
-import org.jenkinsci.plugins.workflow.support.steps.StageStep;
-
-import javax.annotation.Nonnull;
+import hudson.tasks.test.PipelineTestDetails;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nonnull;
+import org.jenkinsci.plugins.workflow.actions.LabelAction;
+import org.jenkinsci.plugins.workflow.actions.ThreadNameAction;
+import org.jenkinsci.plugins.workflow.graph.FlowNode;
+import org.jenkinsci.plugins.workflow.graph.StepNode;
+import org.jenkinsci.plugins.workflow.steps.StepContext;
+import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
+import org.jenkinsci.plugins.workflow.steps.SynchronousNonBlockingStepExecution;
 
 public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecution<TestResultSummary> {
 
@@ -70,7 +69,7 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
         List<FlowNode> enclosingBlocks = new ArrayList<>();
         for (FlowNode enclosing : node.getEnclosingBlocks()) {
             if (enclosing != null && enclosing.getAction(LabelAction.class) != null) {
-                if ((enclosing instanceof StepStartNode && ((StepStartNode) enclosing).getDescriptor() instanceof StageStep.DescriptorImpl) ||
+                if (isStageNode(enclosing) ||
                         (enclosing.getAction(ThreadNameAction.class) != null)) {
                     enclosingBlocks.add(enclosing);
                 }
@@ -78,6 +77,15 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
         }
 
         return enclosingBlocks;
+    }
+
+    private static boolean isStageNode(@Nonnull FlowNode node) {
+        if (node instanceof StepNode) {
+            StepDescriptor d = ((StepNode) node).getDescriptor();
+            return d != null && d.getFunctionName().equals("stage");
+        } else {
+            return false;
+        }
     }
 
     @Nonnull
