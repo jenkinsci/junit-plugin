@@ -28,6 +28,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.BuildWatcher;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -301,6 +302,42 @@ public class JUnitResultsStepTest {
                 }
             }
         }
+    }
+
+    @Issue("JENKINS-37663")
+    @Test
+    public void declarativePost() throws Exception {
+        WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "declarativePost");
+        j.setDefinition(new CpsFlowDefinition("pipeline {\n" +
+                "  agent any\n" +
+                "  stages {\n" +
+                "    stage('foo') {\n" +
+                "      steps {\n" +
+                "        echo 'Test file already written.'\n" +
+                "      }\n" +
+                "    }\n" +
+                "  }\n" +
+                "  post {\n" +
+                "    always {\n" +
+                "      junit allowEmptyResults:true, testResults:'junitResult.xml'\n" +
+                "    }\n" +
+                "    unstable {\n" +
+                "      echo 'UNSTABLE IN POST'\n" +
+                "    }\n" +
+                "    success {\n" +
+                "      echo 'SUCCESS IN POST'\n" +
+                "    }\n" +
+                "  }\n" +
+                "}\n", true));
+        FilePath ws = rule.jenkins.getWorkspaceFor(j);
+        FilePath firstFile = ws.child("junitResult.xml");
+        firstFile.copyFrom(JUnitResultsStepTest.class.getResource("junit-report-testTrends-first-2.xml"));
+
+        WorkflowRun b = rule.assertBuildStatus(Result.UNSTABLE, rule.waitForCompletion(j.scheduleBuild2(0).waitForStart()));
+        TestResultAction action = b.getAction(TestResultAction.class);
+        assertEquals(3, action.getFailCount());
+        rule.assertLogContains("UNSTABLE IN POST", b);
+        rule.assertLogNotContains("SUCCESS IN POST", b);
     }
 
     private static Predicate<FlowNode> branchForName(final String name) {
