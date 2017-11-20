@@ -139,15 +139,17 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>org.jenkins-ci.plugins</groupId>
+            <artifactId>scm-api</artifactId>
+            <version>2.2.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.jenkinsci.plugins</groupId>
             <artifactId>pipeline-model-definition</artifactId>
             <version>1.2.5-20171120.134059-3</version>
             <scope>test</scope>
             <exclusions>
-                <exclusion>
-                    <groupId>org.jenkins-ci.plugins</groupId>
-                    <artifactId>scm-api</artifactId>
-                </exclusion>
                 <exclusion>
                     <groupId>commons-codec</groupId>
                     <artifactId>commons-codec</artifactId>
