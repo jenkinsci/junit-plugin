@@ -16,7 +16,7 @@
         <jenkins.version>2.7.3</jenkins.version>
         <java.level>7</java.level>
         <no-test-jar>false</no-test-jar>
-        <workflow-cps.version>2.37</workflow-cps.version>
+        <workflow-cps.version>2.41</workflow-cps.version>
         <workflow-support.version>2.14</workflow-support.version>
     </properties>
     <licenses>
@@ -68,7 +68,7 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>script-security</artifactId>
-            <version>1.30</version>
+            <version>1.34</version>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
