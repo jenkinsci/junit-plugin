@@ -28,6 +28,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.BuildWatcher;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -241,6 +242,43 @@ public class JUnitResultsStepTest {
         assertStageResults(r, 5, 10, "first");
     }
 
+    @Issue("JENKINS-48196")
+    @Test
+    public void stageInParallel() throws Exception {
+        WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "stageInParallel");
+        FilePath ws = rule.jenkins.getWorkspaceFor(j);
+        FilePath testFile = ws.child("first-result.xml");
+        testFile.copyFrom(TestResultTest.class.getResource("junit-report-1463.xml"));
+        FilePath secondTestFile = ws.child("second-result.xml");
+        secondTestFile.copyFrom(TestResultTest.class.getResource("junit-report-2874.xml"));
+        FilePath thirdTestFile = ws.child("third-result.xml");
+        thirdTestFile.copyFrom(TestResultTest.class.getResource("junit-report-nested-testsuites.xml"));
+
+        j.setDefinition(new CpsFlowDefinition("stage('outer') {\n" +
+                "  node {\n" +
+                "    parallel(a: { stage('a') { def first = junit(testResults: 'first-result.xml'); assert first.totalCount == 6 }  },\n" +
+                "             b: { stage('b') { def second = junit(testResults: 'second-result.xml'); assert second.totalCount == 1 } },\n" +
+                "             c: { stage('d') { def third = junit(testResults: 'third-result.xml'); assert third.totalCount == 3 } })\n" +
+                "  }\n" +
+                "}\n", true
+        ));
+        WorkflowRun r = rule.assertBuildStatus(Result.UNSTABLE,
+                rule.waitForCompletion(j.scheduleBuild2(0).waitForStart()));
+        TestResultAction action = r.getAction(TestResultAction.class);
+        assertNotNull(action);
+        assertEquals(5, action.getResult().getSuites().size());
+        assertEquals(10, action.getTotalCount());
+
+        // assertBranchResults looks to make sure the display names for tests are "(stageName) / (branchName) / (testName)"
+        // That should still effectively be the case here, even though there's a stage inside each branch, because the
+        // branch and nested stage have the same name.
+        assertBranchResults(r, 1, 6, "a", "outer");
+        assertBranchResults(r, 1, 1, "b", "outer");
+        // ...except for branch c. That contains a stage named 'd', so its test should have display names like
+        // "outer / c / d / (testName)"
+        assertBranchResults(r, 3, 3, -1, "c", "outer", "d");
+    }
+
     @Test
     public void testTrends() throws Exception {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "testTrends");
@@ -327,17 +365,22 @@ public class JUnitResultsStepTest {
     }
 
     public static void assertBranchResults(WorkflowRun run, int suiteCount, int testCount, String branchName, String stageName) {
-        assertBranchResults(run, suiteCount, testCount, -1, branchName, stageName);
+        assertBranchResults(run, suiteCount, testCount, -1, branchName, stageName, null);
     }
 
-    public static void assertBranchResults(WorkflowRun run, int suiteCount, int testCount, int failCount, String branchName, String stageName) {
+    public static void assertBranchResults(WorkflowRun run, int suiteCount, int testCount, int failCount, String branchName, String stageName,
+                                           String innerStageName) {
         FlowExecution execution = run.getExecution();
         DepthFirstScanner scanner = new DepthFirstScanner();
         FlowNode aBranch = scanner.findFirstMatch(execution, branchForName(branchName));
         assertNotNull(aBranch);
         TestResult branchResult = assertBlockResults(run, suiteCount, testCount, failCount, aBranch);
+        String namePrefix = stageName + " / " + branchName;
+        if (innerStageName != null) {
+            namePrefix += " / " + innerStageName;
+        }
         for (CaseResult c : branchResult.getPassedTests()) {
-            assertEquals(stageName + " / " + branchName + " / " + c.getTransformedTestName(), c.getDisplayName());
+            assertEquals(namePrefix + " / " + c.getTransformedTestName(), c.getDisplayName());
         }
     }
 

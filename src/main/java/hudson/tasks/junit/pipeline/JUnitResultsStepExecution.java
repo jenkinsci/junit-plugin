@@ -101,10 +101,14 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
     public static List<String> getEnclosingBlockNames(@Nonnull List<FlowNode> nodes) {
         List<String> names = new ArrayList<>();
         for (FlowNode n : nodes) {
-            ThreadNameAction threadNameAction = n.getAction(ThreadNameAction.class);
-            LabelAction labelAction = n.getAction(LabelAction.class);
+            ThreadNameAction threadNameAction = n.getPersistentAction(ThreadNameAction.class);
+            LabelAction labelAction = n.getPersistentAction(LabelAction.class);
             if (threadNameAction != null) {
-                names.add(threadNameAction.getThreadName());
+                // If we're on a parallel branch with the same name as the previous (inner) node, that generally
+                // means we're in a Declarative parallel stages situation, so don't add the redundant branch name.
+                if (names.isEmpty() || !threadNameAction.getThreadName().equals(names.get(names.size()-1))) {
+                    names.add(threadNameAction.getThreadName());
+                }
             } else if (labelAction != null) {
                 names.add(labelAction.getDisplayName());
             }
