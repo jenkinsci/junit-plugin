@@ -28,6 +28,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.BuildWatcher;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -302,6 +303,25 @@ public class JUnitResultsStepTest {
             }
         }
     }
+
+    @Issue("JENKINS-48178")
+    @Test
+    public void currentBuildResultUnstable() throws Exception {
+        WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "currentBuildResultUnstable");
+        j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
+                "  node {\n" +
+                "    def results = junit(testResults: '*.xml')\n" + // node id 7
+                "    assert results.totalCount == 8\n" +
+                "    assert currentBuild.result == 'SUCCESS'\n" +
+                "  }\n" +
+                "}\n", true));
+        FilePath ws = rule.jenkins.getWorkspaceFor(j);
+        FilePath testFile = ws.child("test-result.xml");
+        testFile.copyFrom(JUnitResultsStepTest.class.getResource("junit-report-testTrends-first-2.xml"));
+
+        rule.assertBuildStatus(Result.UNSTABLE, rule.waitForCompletion(j.scheduleBuild2(0).waitForStart()));
+    }
+
 
     private static Predicate<FlowNode> branchForName(final String name) {
         return new Predicate<FlowNode>() {
