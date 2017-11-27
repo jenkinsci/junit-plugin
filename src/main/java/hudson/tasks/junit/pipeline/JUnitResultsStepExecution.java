@@ -51,7 +51,7 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
         if (testResultAction != null) {
             // TODO: Once JENKINS-43995 lands, update this to set the step status instead of the entire build.
             if (testResultAction.getResult().getFailCount() > 0) {
-                getContext().setResult(Result.UNSTABLE);
+                run.setResult(Result.UNSTABLE);
             }
             return new TestResultSummary(testResultAction.getResult().getResultByNode(nodeId));
         }
