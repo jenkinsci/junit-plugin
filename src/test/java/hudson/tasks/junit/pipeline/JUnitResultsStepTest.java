@@ -312,7 +312,7 @@ public class JUnitResultsStepTest {
                 "  node {\n" +
                 "    def results = junit(testResults: '*.xml')\n" + // node id 7
                 "    assert results.totalCount == 8\n" +
-                "    assert currentBuild.result == 'SUCCESS'\n" +
+                "    assert currentBuild.result == 'UNSTABLE'\n" +
                 "  }\n" +
                 "}\n", true));
         FilePath ws = rule.jenkins.getWorkspaceFor(j);
