@@ -1,0 +1,36 @@
+<div>
+    Optionally, specify the number of enclosing stages or branches, starting from the innermost stage or branch, to
+    ignore. Defaults to 0, meaning all are included.
+
+    Example:
+    <code>
+        stage('outer stage') {
+          stage('inner stage') {
+            parallel(branchA: {
+                       node {
+                         sh './run_first_set_of_tests.sh`
+                         junit testResults: '**/target/surefire-reports/TEST-*.xml'
+                       }
+                     },
+                     branchB: {
+                       node {
+                         sh './run_second_set_of_tests.sh`
+                         junit testResults: '**/target/surefire-reports/TEST-*.xml', ignoreEnclosingDepth: 1
+                       }
+                     },
+                     branchC: {
+                       node {
+                         sh './run_third_set_of_tests.sh`
+                         junit testResults: '**/target/surefire-reports/TEST-*.xml', ignoreEnclosingDepth: 2
+                       }
+                     })
+          }
+        }
+    </code>
+    Tests in <code>branchA</code>, with no <code>ignoreEnclosingDepth</code> specified, will be listed like
+    <code>outer stage / inner stage / branchA / testName</code>.
+    Tests in <code>branchB</code>, with <code>ignoreEnclosingDepth</code> specified as 1, will be listed like
+    <code>outer stage / inner stage / testName</code>, ignoring their innermost enclosing stage or branch.
+    Tests in <code>branchC</code>, with <code>ignoreEnclosingDepth</code> specified as 2, will be listed like
+    <code>outer stage / testName</code>, ignoring their two innermost enclosing stages or branches.
+</div>

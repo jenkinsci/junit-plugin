@@ -359,6 +359,53 @@ public class JUnitResultsStepTest {
         rule.assertBuildStatus(Result.UNSTABLE, rule.waitForCompletion(j.scheduleBuild2(0).waitForStart()));
     }
 
+    @Issue("JENKINS-48372")
+    @Test
+    public void ignoreEnclosingDepth() throws Exception {
+        WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "ignoreEnclosingDepth");
+        FilePath ws = rule.jenkins.getWorkspaceFor(j);
+        FilePath testFile = ws.child("first-result.xml");
+        testFile.copyFrom(TestResultTest.class.getResource("junit-report-1463.xml"));
+        FilePath secondTestFile = ws.child("second-result.xml");
+        secondTestFile.copyFrom(TestResultTest.class.getResource("junit-report-2874.xml"));
+        FilePath thirdTestFile = ws.child("third-result.xml");
+        thirdTestFile.copyFrom(TestResultTest.class.getResource("junit-report-nested-testsuites.xml"));
+
+        j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
+                "  stage('second') {\n" +
+                "    node {\n" +
+                "      parallel(a: { junit(testResults: 'first-result.xml') },\n" +
+                "               b: { junit(testResults: 'second-result.xml', ignoreEnclosingDepth: 1) },\n" +
+                "               c: { junit(testResults: 'third-result.xml', ignoreEnclosingDepth: 2) })\n" +
+                "    }\n" +
+                "  }\n" +
+                "}\n", true
+        ));
+        WorkflowRun r = rule.assertBuildStatus(Result.UNSTABLE,
+                rule.waitForCompletion(j.scheduleBuild2(0).waitForStart()));
+        TestResultAction action = r.getAction(TestResultAction.class);
+        assertNotNull(action);
+        assertEquals(5, action.getResult().getSuites().size());
+        assertEquals(10, action.getTotalCount());
+
+        // "first" still contains everything.
+        assertStageResults(r, 5, 10, "first");
+
+        // "second" should now only contain branches a and b.
+        assertStageResults(r, 2, 7, "second");
+
+        // branch b on its own shouldn't have anything, since we specified ignoreEnclosingDepth as 1.
+        FlowNode branchB = getFlowNodeForBranch(r, "b");
+        assertNotNull(branchB);
+        TestResult emptyB = action.getResult().getResultForPipelineBlock(branchB.getId());
+        assertEquals(0, emptyB.getTotalCount());
+
+        // branch c on its own shouldn't have anything, since we specified ignoreEnclosingDepth as 2.
+        FlowNode branchC = getFlowNodeForBranch(r, "c");
+        assertNotNull(branchC);
+        TestResult emptyC = action.getResult().getResultForPipelineBlock(branchC.getId());
+        assertEquals(0, emptyC.getTotalCount());
+    }
 
     private static Predicate<FlowNode> branchForName(final String name) {
         return new Predicate<FlowNode>() {
@@ -387,11 +434,16 @@ public class JUnitResultsStepTest {
         assertBranchResults(run, suiteCount, testCount, -1, branchName, stageName, null);
     }
 
-    public static void assertBranchResults(WorkflowRun run, int suiteCount, int testCount, int failCount, String branchName, String stageName,
-                                           String innerStageName) {
+    public static FlowNode getFlowNodeForBranch(WorkflowRun run, String branchName) {
         FlowExecution execution = run.getExecution();
         DepthFirstScanner scanner = new DepthFirstScanner();
         FlowNode aBranch = scanner.findFirstMatch(execution, branchForName(branchName));
+        return aBranch;
+    }
+
+    public static void assertBranchResults(WorkflowRun run, int suiteCount, int testCount, int failCount, String branchName, String stageName,
+                                           String innerStageName) {
+        FlowNode aBranch = getFlowNodeForBranch(run, branchName);
         assertNotNull(aBranch);
         TestResult branchResult = assertBlockResults(run, suiteCount, testCount, failCount, aBranch);
         String namePrefix = stageName + " / " + branchName;

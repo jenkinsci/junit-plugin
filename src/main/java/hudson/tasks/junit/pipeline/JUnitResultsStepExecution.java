@@ -40,7 +40,7 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
 
         String nodeId = node.getId();
 
-        List<FlowNode> enclosingBlocks = getEnclosingStagesAndParallels(node);
+        List<FlowNode> enclosingBlocks = getEnclosingStagesAndParallels(node, step.getIgnoreEnclosingDepth());
 
         PipelineTestDetails pipelineTestDetails = new PipelineTestDetails();
         pipelineTestDetails.setNodeId(nodeId);
@@ -59,13 +59,19 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
         return new TestResultSummary();
     }
 
+    @Nonnull
+    public static List<FlowNode> getEnclosingStagesAndParallels(FlowNode node) {
+        return getEnclosingStagesAndParallels(node, 0);
+    }
+
     /**
      * Get the stage and parallel branch start node IDs (not the body nodes) for this node, innermost first.
      * @param node A flownode.
+     * @param ignoreDepth optional number of enclosing nodes, from inside, to ignore.
      * @return A nonnull, possibly empty list of stage/parallel branch start nodes, innermost first.
      */
     @Nonnull
-    public static List<FlowNode> getEnclosingStagesAndParallels(FlowNode node) {
+    public static List<FlowNode> getEnclosingStagesAndParallels(FlowNode node, int ignoreDepth) {
         List<FlowNode> enclosingBlocks = new ArrayList<>();
         for (FlowNode enclosing : node.getEnclosingBlocks()) {
             if (enclosing != null && enclosing.getAction(LabelAction.class) != null) {
@@ -76,7 +82,7 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
             }
         }
 
-        return enclosingBlocks;
+        return enclosingBlocks.subList(ignoreDepth, enclosingBlocks.size());
     }
 
     private static boolean isStageNode(@Nonnull FlowNode node) {

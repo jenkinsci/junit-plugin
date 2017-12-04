@@ -53,6 +53,11 @@ public class JUnitResultsStep extends Step implements JUnitTask {
      */
     private boolean allowEmptyResults;
 
+    /**
+     * Optional value for number of enclosing nodes (from inside) to ignore. Defaults to 0.
+     */
+    private int ignoreEnclosingDepth;
+
     @DataBoundConstructor
     public JUnitResultsStep(String testResults) {
         this.testResults = testResults;
@@ -119,6 +124,21 @@ public class JUnitResultsStep extends Step implements JUnitTask {
         this.allowEmptyResults = allowEmptyResults;
     }
 
+    /**
+     * @return The number of enclosing nodes (from the inside) to ignore. Defaults to 0.
+     */
+    public int getIgnoreEnclosingDepth() {
+        // Just to be safe, return 0 for any value <0.
+        return ignoreEnclosingDepth < 0 ? 0 : ignoreEnclosingDepth;
+    }
+
+    /**
+     * @param ignoreEnclosingDepth The number of enclosing nodes (from the inside) to ignore. Defaults to 0.
+     */
+    @DataBoundSetter public final void setIgnoreEnclosingDepth(int ignoreEnclosingDepth) {
+        this.ignoreEnclosingDepth = ignoreEnclosingDepth;
+    }
+
     @Override
     public StepExecution start(StepContext context) throws Exception {
         return new JUnitResultsStepExecution(this, context);
@@ -150,6 +170,14 @@ public class JUnitResultsStep extends Step implements JUnitTask {
                     5,
                     (int) (100.0 - Math.max(0.0, Math.min(100.0, 5 * value)))
             ));
+        }
+
+        public FormValidation doCheckIgnoreEnclosingDepth(@QueryParameter int value) {
+            if (value < 0) {
+                return FormValidation.error(Messages.JUnitResultsStep_IgnoreEnclosingDepthLessThanZero());
+            } else {
+                return FormValidation.ok();
+            }
         }
 
     }

@@ -815,7 +815,7 @@ public final class TestResult extends MetaTabulatedResult {
         if (block != null) {
             return (TestResult)blockToTestResult(block, this);
         } else {
-            return this;
+            return new TestResult();
         }
     }
 
