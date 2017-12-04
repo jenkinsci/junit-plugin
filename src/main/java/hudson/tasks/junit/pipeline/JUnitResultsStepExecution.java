@@ -46,14 +46,19 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
         pipelineTestDetails.setNodeId(nodeId);
         pipelineTestDetails.setEnclosingBlocks(getEnclosingBlockIds(enclosingBlocks));
         pipelineTestDetails.setEnclosingBlockNames(getEnclosingBlockNames(enclosingBlocks));
-        TestResultAction testResultAction = JUnitResultArchiver.parseAndAttach(step, pipelineTestDetails, run, workspace, launcher, listener);
+        try {
+            TestResultAction testResultAction = JUnitResultArchiver.parseAndAttach(step, pipelineTestDetails, run, workspace, launcher, listener);
 
-        if (testResultAction != null) {
-            // TODO: Once JENKINS-43995 lands, update this to set the step status instead of the entire build.
-            if (testResultAction.getResult().getFailCount() > 0) {
-                run.setResult(Result.UNSTABLE);
+            if (testResultAction != null) {
+                // TODO: Once JENKINS-43995 lands, update this to set the step status instead of the entire build.
+                if (testResultAction.getResult().getFailCount() > 0) {
+                    run.setResult(Result.UNSTABLE);
+                }
+                return new TestResultSummary(testResultAction.getResult().getResultByNode(nodeId));
             }
-            return new TestResultSummary(testResultAction.getResult().getResultByNode(nodeId));
+        } catch (Exception e) {
+            listener.getLogger().println(e.getMessage());
+            throw e;
         }
 
         return new TestResultSummary();
