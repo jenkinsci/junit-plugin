@@ -12,8 +12,10 @@ import hudson.tasks.test.PipelineTestDetails;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
+
 import org.jenkinsci.plugins.workflow.actions.LabelAction;
 import org.jenkinsci.plugins.workflow.actions.ThreadNameAction;
+import org.jenkinsci.plugins.workflow.actions.WarningAction;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.graph.StepNode;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
@@ -50,8 +52,9 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
             TestResultAction testResultAction = JUnitResultArchiver.parseAndAttach(step, pipelineTestDetails, run, workspace, launcher, listener);
 
             if (testResultAction != null) {
-                // TODO: Once JENKINS-43995 lands, update this to set the step status instead of the entire build.
-                if (testResultAction.getResult().getFailCount() > 0) {
+                int testFailures = testResultAction.getResult().getResultByNode(nodeId).getFailCount();
+                if (testFailures > 0) {
+                    node.addOrReplaceAction(new WarningAction(testFailures + " tests failed"));
                     run.setResult(Result.UNSTABLE);
                 }
                 return new TestResultSummary(testResultAction.getResult().getResultByNode(nodeId));
