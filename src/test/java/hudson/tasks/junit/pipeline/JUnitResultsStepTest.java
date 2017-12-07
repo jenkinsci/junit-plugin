@@ -259,10 +259,10 @@ public class JUnitResultsStepTest {
         assertEquals(5, action.getResult().getSuites().size());
         assertEquals(10, action.getTotalCount());
 
-        assertBranchResults(r, 1, 6, "a", "first");
-        assertBranchResults(r, 1, 1, "b", "first");
-        assertBranchResults(r, 3, 3, "c", "first");
-        assertStageResults(r, 5, 10, "first");
+        assertBranchResults(r, 1, 6, 0, "a", "first", null);
+        assertBranchResults(r, 1, 1, 0, "b", "first", null);
+        assertBranchResults(r, 3, 3, 1, "c", "first", null);
+        assertStageResults(r, 5, 10, 1, "first");
     }
 
     @Issue("JENKINS-48196")
@@ -295,11 +295,11 @@ public class JUnitResultsStepTest {
         // assertBranchResults looks to make sure the display names for tests are "(stageName) / (branchName) / (testName)"
         // That should still effectively be the case here, even though there's a stage inside each branch, because the
         // branch and nested stage have the same name.
-        assertBranchResults(r, 1, 6, "a", "outer");
-        assertBranchResults(r, 1, 1, "b", "outer");
+        assertBranchResults(r, 1, 6, 0, "a", "outer", null);
+        assertBranchResults(r, 1, 1, 0, "b", "outer", null);
         // ...except for branch c. That contains a stage named 'd', so its test should have display names like
         // "outer / c / d / (testName)"
-        assertBranchResults(r, 3, 3, -1, "c", "outer", "d");
+        assertBranchResults(r, 3, 3, 1, "c", "outer", "d");
     }
 
     @Test
@@ -406,10 +406,6 @@ public class JUnitResultsStepTest {
         };
     }
 
-    public static void assertBranchResults(WorkflowRun run, int suiteCount, int testCount, String branchName, String stageName) {
-        assertBranchResults(run, suiteCount, testCount, -1, branchName, stageName, null);
-    }
-
     public static void assertBranchResults(WorkflowRun run, int suiteCount, int testCount, int failCount, String branchName, String stageName,
                                            String innerStageName) {
         FlowExecution execution = run.getExecution();
@@ -424,10 +420,6 @@ public class JUnitResultsStepTest {
         for (CaseResult c : branchResult.getPassedTests()) {
             assertEquals(namePrefix + " / " + c.getTransformedTestName(), c.getDisplayName());
         }
-    }
-
-    public static void assertStageResults(WorkflowRun run, int suiteCount, int testCount, String stageName) {
-        assertStageResults(run, suiteCount, testCount, -1, stageName);
     }
 
     public static void assertStageResults(WorkflowRun run, int suiteCount, int testCount, int failCount, String stageName) {
@@ -449,8 +441,11 @@ public class JUnitResultsStepTest {
 
         assertEquals(suiteCount, aResult.getSuites().size());
         assertEquals(testCount, aResult.getTotalCount());
-        if (failCount > -1) {
-            assertEquals(failCount, aResult.getFailCount());
+        assertEquals(failCount, aResult.getFailCount());
+        if (failCount > 0) {
+            assertEquals(Result.UNSTABLE, blockNode.getStatus());
+        } else {
+            assertEquals(Result.SUCCESS, blockNode.getStatus());
         }
 
         PipelineBlockWithTests aBlock = action.getResult().getPipelineBlockWithTests(blockNode.getId());
