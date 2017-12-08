@@ -387,13 +387,13 @@ public final class SuiteResult implements Serializable {
     /**
      * The absolute path to the original test report. OS-dependent.
      *
-     * @return the sabsolute path to the original test report.
+     * @return the absolute path to the original test report.
      */
     public String getFile() {
-		return file;
-	}
+        return file;
+    }
 
-	public hudson.tasks.junit.TestResult getParent() {
+    public hudson.tasks.junit.TestResult getParent() {
         return parent;
     }
 
@@ -435,13 +435,13 @@ public final class SuiteResult implements Serializable {
         return casesByName().get(name);
     }
 
-	public Set<String> getClassNames() {
-		Set<String> result = new HashSet<String>();
-		for (CaseResult c : cases) {
-			result.add(c.getClassName());
-		}
-		return result;
-	}
+    public Set<String> getClassNames() {
+        Set<String> result = new HashSet<String>();
+        for (CaseResult c : cases) {
+            result.add(c.getClassName());
+        }
+        return result;
+    }
 
     /** KLUGE. We have to call this to prevent freeze()
      * from calling c.freeze() on all its children,
