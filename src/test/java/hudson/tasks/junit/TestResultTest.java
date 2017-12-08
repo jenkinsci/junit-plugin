@@ -100,7 +100,7 @@ public class TestResultTest {
 
         SuiteResult failedSuite = result.getSuite("broken");
         assertNotNull(failedSuite);
-        CaseResult failedCase = failedSuite.getCase("becomeUglier");
+        CaseResult failedCase = failedSuite.getCase("breakable.misc.UglyTest.becomeUglier");
         assertNotNull(failedCase);
         assertFalse(failedCase.isSkipped());
         assertFalse(failedCase.isPassed());
