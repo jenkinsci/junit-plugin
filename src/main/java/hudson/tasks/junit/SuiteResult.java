@@ -131,7 +131,7 @@ public final class SuiteResult implements Serializable {
         if (casesByName == null) {
             casesByName = new HashMap<>();
             for (CaseResult c : cases) {
-                casesByName.put(c.getTransformedTestName(), c);
+                casesByName.put(c.getTransformedFullDisplayName(), c);
             }
         }
         return casesByName;
@@ -294,7 +294,7 @@ public final class SuiteResult implements Serializable {
 
     /*package*/ void addCase(CaseResult cr) {
         cases.add(cr);
-        casesByName().put(cr.getTransformedTestName(), cr);
+        casesByName().put(cr.getTransformedFullDisplayName(), cr);
 
         //if suite time was not specified use sum of the cases' times
         if( !hasTimeAttr() ){
@@ -421,18 +421,15 @@ public final class SuiteResult implements Serializable {
     }
 
     /**
-     * Returns the {@link CaseResult} whose {@link CaseResult#getDisplayName()}
+     * Returns the {@link CaseResult} whose {@link CaseResult#getFullDisplayName()}
      * is the same as the given string.
-     * <p>
-     * Note that test name needs not be unique.
-     * </p>
      *
-     * @param name The case name.
+     * @param caseResultFullDisplayName The case FullDisplayName.
      *
      * @return the {@link CaseResult} with the provided name.
      */
-    public CaseResult getCase(String name) {
-        return casesByName().get(name);
+    public CaseResult getCase(String caseResultFullDisplayName) {
+        return casesByName().get(caseResultFullDisplayName);
     }
 
     public Set<String> getClassNames() {

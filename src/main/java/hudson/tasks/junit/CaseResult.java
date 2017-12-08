@@ -376,7 +376,10 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      * @since 1.515
      */
     public String getFullDisplayName() {
-        return getNameWithEnclosingBlocks(TestNameTransformer.getTransformedName(getFullName()));
+        return getNameWithEnclosingBlocks(getTransformedFullDisplayName());
+    }
+    public String getTransformedFullDisplayName() {
+        return TestNameTransformer.getTransformedName(getFullName());
     }
 
     @Override
@@ -482,7 +485,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         if (parent == null) return null;
         SuiteResult pr = parent.getPreviousResult();
         if(pr==null)    return null;
-        return pr.getCase(getTransformedTestName());
+        return pr.getCase(getTransformedFullDisplayName());
     }
 
     /**
