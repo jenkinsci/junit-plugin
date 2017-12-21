@@ -88,6 +88,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
      * If true, don't throw exception on missing test results or no files found.
      */
     private boolean allowEmptyResults;
+    private boolean makeUnstable;
 
     @DataBoundConstructor
     public JUnitResultArchiver(String testResults) {
@@ -119,6 +120,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
         setTestDataPublishers(testDataPublishers == null ? Collections.<TestDataPublisher>emptyList() : testDataPublishers);
         setHealthScaleFactor(healthScaleFactor);
         setAllowEmptyResults(false);
+        setMakeUnstable(true);
     }
 
     private TestResult parse(String expandedTestResults, Run<?,?> run, @Nonnull FilePath workspace, Launcher launcher, TaskListener listener)
@@ -132,7 +134,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                                     String expandedTestResults, Run<?,?> run, @Nonnull FilePath workspace,
                                     Launcher launcher, TaskListener listener)
             throws IOException, InterruptedException {
-        return new JUnitParser(task.isKeepLongStdio(), task.isAllowEmptyResults())
+        return new JUnitParser(task.isKeepLongStdio(), task.isAllowEmptyResults(), task.isMakeUnstable())
                 .parseResult(expandedTestResults, run, pipelineTestDetails, workspace, launcher, listener);
     }
 
@@ -154,6 +156,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
 
         if (action != null && action.getResult().getFailCount() > 0)
             build.setResult(Result.UNSTABLE);
+            listener.getLogger().println(Messages.JUnitResultArchiver_ChangeState("UNSTABLE"));
     }
 
     public static TestResultAction parseAndAttach(@Nonnull JUnitTask task, PipelineTestDetails pipelineTestDetails,
@@ -192,6 +195,12 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                 // most likely a configuration error in the job - e.g. false pattern to match the JUnit result files
                 throw new AbortException(Messages.JUnitResultArchiver_ResultIsEmpty());
             }
+            
+            if (!task.isMakeUnstable()) {
+                    // Change the buils state to Unstable if there are any failed test cases
+                    listener.getLogger().println(Messages.JUnitResultArchiver_ResultIsEmpty());
+                    return null;
+            }            
 
             // TODO: Move into JUnitParser [BUG 3123310]
             if (task.getTestDataPublishers() != null) {
@@ -285,11 +294,23 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     public boolean isAllowEmptyResults() {
         return allowEmptyResults;
     }
-
+    
     @DataBoundSetter public final void setAllowEmptyResults(boolean allowEmptyResults) {
         this.allowEmptyResults = allowEmptyResults;
     }
+    
+    /**
+     *
+     * @return the makeUnstable
+     */
+    public boolean isMakeUnstable() {
+        return makeUnstable;
+    }    
 
+  
+    @DataBoundSetter public final void setMakeUnstable(boolean makeUnstable) {
+        this.makeUnstable = makeUnstable;
+    }
 
     private static final long serialVersionUID = 1L;
 

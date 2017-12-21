@@ -52,6 +52,7 @@ public class JUnitResultsStep extends Step implements JUnitTask {
      * If true, don't throw exception on missing test results or no files found.
      */
     private boolean allowEmptyResults;
+    private boolean makeUnstable;
 
     @DataBoundConstructor
     public JUnitResultsStep(String testResults) {
@@ -117,6 +118,19 @@ public class JUnitResultsStep extends Step implements JUnitTask {
 
     @DataBoundSetter public final void setAllowEmptyResults(boolean allowEmptyResults) {
         this.allowEmptyResults = allowEmptyResults;
+    }
+
+
+    /**
+     *
+     * @return the makeUnstable
+     */
+    public boolean isMakeUnstable() {
+        return makeUnstable;
+    }
+
+    @DataBoundSetter public final void setMakeUnstable(boolean makeUnstable) {
+        this.makeUnstable = makeUnstable;
     }
 
     @Override

@@ -51,11 +51,12 @@ public class JUnitParser extends TestResultParser {
 
     private final boolean keepLongStdio;
     private final boolean allowEmptyResults;
+    private final boolean makeUnstable;
 
     /** TODO TestResultParser.all does not seem to ever be called so why must this be an Extension? */
     @Deprecated
     public JUnitParser() {
-        this(false, false);
+        this(false, false, true);
     }
 
     /**
@@ -66,16 +67,20 @@ public class JUnitParser extends TestResultParser {
     public JUnitParser(boolean keepLongStdio) {
         this.keepLongStdio = keepLongStdio;
         this.allowEmptyResults = false;
+        this.makeUnstable = true;
+    
     }
 
     /**
      * @param keepLongStdio if true, retain a suite's complete stdout/stderr even if this is huge and the suite passed
      * @param allowEmptyResults if true, empty results are allowed
+     * @param makeUnstable if true, build will be Unstable if there are any failed test cases
      * @since 1.10
      */
-    public JUnitParser(boolean keepLongStdio, boolean allowEmptyResults) {
+    public JUnitParser(boolean keepLongStdio, boolean allowEmptyResults, boolean makeUnstable) {
         this.keepLongStdio = keepLongStdio;
         this.allowEmptyResults = allowEmptyResults;
+        this.makeUnstable = makeUnstable;
     }
 
     @Override
@@ -112,7 +117,7 @@ public class JUnitParser extends TestResultParser {
         // also get code that deals with testDataPublishers from JUnitResultArchiver.perform
 
         return workspace.act(new ParseResultCallable(testResultLocations, buildTime, timeOnMaster, keepLongStdio,
-                allowEmptyResults, pipelineTestDetails));
+                allowEmptyResults, makeUnstable, pipelineTestDetails));
     }
 
     private static final class ParseResultCallable extends MasterToSlaveFileCallable<TestResult> {
@@ -121,16 +126,19 @@ public class JUnitParser extends TestResultParser {
         private final long nowMaster;
         private final boolean keepLongStdio;
         private final boolean allowEmptyResults;
+        private final boolean makeUnstable;
         private final PipelineTestDetails pipelineTestDetails;
 
         private ParseResultCallable(String testResults, long buildTime, long nowMaster,
                                     boolean keepLongStdio, boolean allowEmptyResults,
+                                    boolean makeUnstable,
                                     PipelineTestDetails pipelineTestDetails) {
             this.buildTime = buildTime;
             this.testResults = testResults;
             this.nowMaster = nowMaster;
             this.keepLongStdio = keepLongStdio;
             this.allowEmptyResults = allowEmptyResults;
+            this.makeUnstable = makeUnstable;
             this.pipelineTestDetails = pipelineTestDetails;
         }
 
