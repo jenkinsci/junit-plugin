@@ -53,12 +53,14 @@ public class JUnitParser extends TestResultParser {
     private final boolean allowEmptyResults;
     private final boolean makeUnstable;
 
+
     /** TODO TestResultParser.all does not seem to ever be called so why must this be an Extension? */
     @Deprecated
     public JUnitParser() {
         this(false, false, true);
     }
-
+    
+    
     /**
      * @param keepLongStdio if true, retain a suite's complete stdout/stderr even if this is huge and the suite passed
      * @since 1.358
@@ -68,8 +70,19 @@ public class JUnitParser extends TestResultParser {
         this.keepLongStdio = keepLongStdio;
         this.allowEmptyResults = false;
         this.makeUnstable = true;
-    
     }
+    
+    
+    /**
+     * @param keepLongStdio if true, retain a suite's complete stdout/stderr even if this is huge and the suite passed
+     * @param allowEmptyResults if true, empty results are allowed
+     * @since 1.10
+     */
+    public JUnitParser(boolean keepLongStdio, boolean allowEmptyResults) {
+        this.keepLongStdio = keepLongStdio;
+        this.allowEmptyResults = allowEmptyResults;
+        this.makeUnstable = true;
+    }    
 
     /**
      * @param keepLongStdio if true, retain a suite's complete stdout/stderr even if this is huge and the suite passed
