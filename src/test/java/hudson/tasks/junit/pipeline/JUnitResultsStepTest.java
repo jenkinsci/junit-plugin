@@ -62,6 +62,7 @@ public class JUnitResultsStepTest {
     public void configRoundTrip() throws Exception {
         SnippetizerTester st = new SnippetizerTester(rule);
         JUnitResultsStep step = new JUnitResultsStep("**/target/surefire-reports/TEST-*.xml");
+        step.setMakeUnstable(true);
         st.assertRoundTrip(step, "junit '**/target/surefire-reports/TEST-*.xml'");
         step.setAllowEmptyResults(true);
         st.assertRoundTrip(step, "junit allowEmptyResults: true, testResults: '**/target/surefire-reports/TEST-*.xml'");
