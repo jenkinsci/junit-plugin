@@ -93,6 +93,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     @DataBoundConstructor
     public JUnitResultArchiver(String testResults) {
         this.testResults = testResults;
+        this.makeUnstable = true;
     }
 
     @Deprecated
@@ -120,8 +121,23 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
         setTestDataPublishers(testDataPublishers == null ? Collections.<TestDataPublisher>emptyList() : testDataPublishers);
         setHealthScaleFactor(healthScaleFactor);
         setAllowEmptyResults(false);
-        setMakeUnstable(true);
     }
+    
+    
+    @Deprecated
+    public JUnitResultArchiver(
+            String testResults,
+            boolean keepLongStdio,
+            DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> testDataPublishers,
+            double healthScaleFactor,
+            boolean makeUnstable) {
+        this.testResults = testResults;
+        setKeepLongStdio(keepLongStdio);
+        setTestDataPublishers(testDataPublishers == null ? Collections.<TestDataPublisher>emptyList() : testDataPublishers);
+        setHealthScaleFactor(healthScaleFactor);
+        setAllowEmptyResults(false);
+        setMakeUnstable(true);
+    }    
 
     private TestResult parse(String expandedTestResults, Run<?,?> run, @Nonnull FilePath workspace, Launcher launcher, TaskListener listener)
             throws IOException, InterruptedException
