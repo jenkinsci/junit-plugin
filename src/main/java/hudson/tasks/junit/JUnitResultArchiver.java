@@ -108,6 +108,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
             boolean keepLongStdio,
             DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> testDataPublishers) {
         this(testResults, keepLongStdio, testDataPublishers, 1.0);
+        this.makeUnstable = true;
     }
 
     @Deprecated
