@@ -65,12 +65,12 @@ public class JUnitResultsStepTest {
         step.setMakeUnstable(true);
         st.assertRoundTrip(step, "junit makeUnstable: true, testResults: '**/target/surefire-reports/TEST-*.xml'");
         step.setAllowEmptyResults(true);
-        st.assertRoundTrip(step, "junit makeUnstable: true, allowEmptyResults: true, testResults: '**/target/surefire-reports/TEST-*.xml'");
+        st.assertRoundTrip(step, "junit allowEmptyResults: true, makeUnstable: true, testResults: '**/target/surefire-reports/TEST-*.xml'");
         step.setHealthScaleFactor(2.0);
-        st.assertRoundTrip(step, "junit makeUnstable: true, allowEmptyResults: true, healthScaleFactor: 2.0, testResults: '**/target/surefire-reports/TEST-*.xml'");
+        st.assertRoundTrip(step, "junit allowEmptyResults: true, makeUnstable: true, healthScaleFactor: 2.0, testResults: '**/target/surefire-reports/TEST-*.xml'");
         MockTestDataPublisher publisher = new MockTestDataPublisher("testing");
         step.setTestDataPublishers(Collections.<TestDataPublisher>singletonList(publisher));
-        st.assertRoundTrip(step, "junit makeUnstable: true, allowEmptyResults: true, healthScaleFactor: 2.0, testDataPublishers: [[$class: 'MockTestDataPublisher', name: 'testing']], testResults: '**/target/surefire-reports/TEST-*.xml'");
+        st.assertRoundTrip(step, "junit allowEmptyResults: true, makeUnstable: true, healthScaleFactor: 2.0, testDataPublishers: [[$class: 'MockTestDataPublisher', name: 'testing']], testResults: '**/target/surefire-reports/TEST-*.xml'");
     }
 
     @Issue("JENKINS-48250")
