@@ -63,14 +63,14 @@ public class JUnitResultsStepTest {
         SnippetizerTester st = new SnippetizerTester(rule);
         JUnitResultsStep step = new JUnitResultsStep("**/target/surefire-reports/TEST-*.xml");
         step.setMakeUnstable(true);
-        st.assertRoundTrip(step, "junit '**/target/surefire-reports/TEST-*.xml'");
+        st.assertRoundTrip(step, "junit makeUnstable: true, testResults: '**/target/surefire-reports/TEST-*.xml'");
         step.setAllowEmptyResults(true);
-        st.assertRoundTrip(step, "junit allowEmptyResults: true, testResults: '**/target/surefire-reports/TEST-*.xml'");
+        st.assertRoundTrip(step, "junit makeUnstable: true, allowEmptyResults: true, testResults: '**/target/surefire-reports/TEST-*.xml'");
         step.setHealthScaleFactor(2.0);
-        st.assertRoundTrip(step, "junit allowEmptyResults: true, healthScaleFactor: 2.0, testResults: '**/target/surefire-reports/TEST-*.xml'");
+        st.assertRoundTrip(step, "junit makeUnstable: true, allowEmptyResults: true, healthScaleFactor: 2.0, testResults: '**/target/surefire-reports/TEST-*.xml'");
         MockTestDataPublisher publisher = new MockTestDataPublisher("testing");
         step.setTestDataPublishers(Collections.<TestDataPublisher>singletonList(publisher));
-        st.assertRoundTrip(step, "junit allowEmptyResults: true, healthScaleFactor: 2.0, testDataPublishers: [[$class: 'MockTestDataPublisher', name: 'testing']], testResults: '**/target/surefire-reports/TEST-*.xml'");
+        st.assertRoundTrip(step, "junit makeUnstable: true, allowEmptyResults: true, healthScaleFactor: 2.0, testDataPublishers: [[$class: 'MockTestDataPublisher', name: 'testing']], testResults: '**/target/surefire-reports/TEST-*.xml'");
     }
 
     @Issue("JENKINS-48250")
@@ -111,7 +111,7 @@ public class JUnitResultsStepTest {
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
                 "  node {\n" +
                 "    sh 'echo hi'\n" +
-                "    def results = junit(testResults: '*.xml', allowEmptyResults: true)\n" +
+                "    def results = junit(testResults: '*.xml', allowEmptyResults: true, makeUnstable: true)\n" +
                 "    assert results.totalCount == 0\n" +
                 "  }\n" +
                 "}\n", true));
