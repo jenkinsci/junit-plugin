@@ -111,7 +111,7 @@ public class JUnitResultsStepTest {
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
                 "  node {\n" +
                 "    sh 'echo hi'\n" +
-                "    def results = junit(testResults: '*.xml', allowEmptyResults: true, makeUnstable: true)\n" +
+                "    def results = junit(testResults: '*.xml', makeUnstable: true,  allowEmptyResults: true)\n" +
                 "    assert results.totalCount == 0\n" +
                 "  }\n" +
                 "}\n", true));
@@ -126,7 +126,7 @@ public class JUnitResultsStepTest {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "singleStep");
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
                 "  node {\n" +
-                "    def results = junit(testResults: '*.xml')\n" + // node id 7
+                "    def results = junit(testResults: '*.xml', makeUnstable: true)\n" + // node id 7
                 "    assert results.totalCount == 6\n" +
                 "  }\n" +
                 "}\n", true));
@@ -153,8 +153,8 @@ public class JUnitResultsStepTest {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "twoSteps");
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
                 "  node {\n" +
-                "    def first = junit(testResults: 'first-result.xml')\n" +    // node id 7
-                "    def second = junit(testResults: 'second-result.xml')\n" +  // node id 8
+                "    def first = junit(testResults: 'first-result.xml', makeUnstable: true)\n" +    // node id 7
+                "    def second = junit(testResults: 'second-result.xml', makeUnstable: true)\n" +  // node id 8
                 "    assert first.totalCount == 6\n" +
                 "    assert second.totalCount == 1\n" +
                 "  }\n" +
@@ -191,9 +191,9 @@ public class JUnitResultsStepTest {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "threeSteps");
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
                 "  node {\n" +
-                "    def first = junit(testResults: 'first-result.xml')\n" +    // node id 7
-                "    def second = junit(testResults: 'second-result.xml')\n" +  // node id 8
-                "    def third = junit(testResults: 'third-result.xml')\n" +    // node id 9
+                "    def first = junit(testResults: 'first-result.xml', makeUnstable: true)\n" +    // node id 7
+                "    def second = junit(testResults: 'second-result.xml', makeUnstable: true)\n" +  // node id 8
+                "    def third = junit(testResults: 'third-result.xml', makeUnstable: true)\n" +    // node id 9
                 "    assert first.totalCount == 6\n" +
                 "    assert second.totalCount == 1\n" +
                 "  }\n" +
@@ -247,9 +247,9 @@ public class JUnitResultsStepTest {
 
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
                 "  node {\n" +
-                "    parallel(a: { def first = junit(testResults: 'first-result.xml'); assert first.totalCount == 6 },\n" +
-                "             b: { def second = junit(testResults: 'second-result.xml'); assert second.totalCount == 1 },\n" +
-                "             c: { def third = junit(testResults: 'third-result.xml'); assert third.totalCount == 3 })\n" +
+                "    parallel(a: { def first = junit(testResults: 'first-result.xml', makeUnstable: true); assert first.totalCount == 6 },\n" +
+                "             b: { def second = junit(testResults: 'second-result.xml', makeUnstable: true); assert second.totalCount == 1 },\n" +
+                "             c: { def third = junit(testResults: 'third-result.xml', makeUnstable: true); assert third.totalCount == 3 })\n" +
                 "  }\n" +
                 "}\n", true
         ));
@@ -280,9 +280,9 @@ public class JUnitResultsStepTest {
 
         j.setDefinition(new CpsFlowDefinition("stage('outer') {\n" +
                 "  node {\n" +
-                "    parallel(a: { stage('a') { def first = junit(testResults: 'first-result.xml'); assert first.totalCount == 6 }  },\n" +
-                "             b: { stage('b') { def second = junit(testResults: 'second-result.xml'); assert second.totalCount == 1 } },\n" +
-                "             c: { stage('d') { def third = junit(testResults: 'third-result.xml'); assert third.totalCount == 3 } })\n" +
+                "    parallel(a: { stage('a') { def first = junit(testResults: 'first-result.xml', makeUnstable: true); assert first.totalCount == 6 }  },\n" +
+                "             b: { stage('b') { def second = junit(testResults: 'second-result.xml', makeUnstable: true); assert second.totalCount == 1 } },\n" +
+                "             c: { stage('d') { def third = junit(testResults: 'third-result.xml', makeUnstable: true); assert third.totalCount == 3 } })\n" +
                 "  }\n" +
                 "}\n", true
         ));
@@ -308,10 +308,10 @@ public class JUnitResultsStepTest {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "testTrends");
         j.setDefinition(new CpsFlowDefinition("node {\n" +
                 "  stage('first') {\n" +
-                "    def first = junit(testResults: \"junit-report-testTrends-first.xml\")\n" +
+                "    def first = junit(testResults: \"junit-report-testTrends-first.xml\", makeUnstable: true)\n" +
                 "  }\n" +
                 "  stage('second') {\n" +
-                "    def second = junit(testResults: \"junit-report-testTrends-second.xml\")\n" +
+                "    def second = junit(testResults: \"junit-report-testTrends-second.xml\", makeUnstable: true)\n" +
                 "  }\n" +
                 "}\n", true));
         FilePath ws = rule.jenkins.getWorkspaceFor(j);
@@ -371,7 +371,7 @@ public class JUnitResultsStepTest {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "currentBuildResultUnstable");
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
                 "  node {\n" +
-                "    def results = junit(testResults: '*.xml')\n" + // node id 7
+                "    def results = junit(testResults: '*.xml', makeUnstable: true)\n" + // node id 7
                 "    assert results.totalCount == 8\n" +
                 "    assert currentBuild.result == 'UNSTABLE'\n" +
                 "  }\n" +

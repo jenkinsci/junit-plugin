@@ -279,7 +279,7 @@ public class TestResultPublishingTest {
     public void testBrokenResultFile() throws Exception {
         FreeStyleProject p = rule.createFreeStyleProject();
         p.getBuildersList().add(new TestBuilder());
-        p.getPublishersList().add(new JUnitResultArchiver("TEST-foo.xml", false, null));
+        p.getPublishersList().add(new JUnitResultArchiver("TEST-foo.xml", true, false, null));
         rule.assertBuildStatus(Result.UNSTABLE, p.scheduleBuild2(0).get());
     }
     private static final class TestBuilder extends Builder {
