@@ -316,7 +316,7 @@ public class SuiteResultTest {
         assertTrue(result.getErrorStackTrace() != null);
     }
 
-    @Issue("JENKINS-6454")
+    @Issue("JENKINS-6545")
     @Test
     public void testParseNestedTestSuites() throws Exception {
         // A report with several nested suites
