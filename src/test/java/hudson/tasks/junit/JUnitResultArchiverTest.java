@@ -25,6 +25,7 @@ package hudson.tasks.junit;
 
 import hudson.Extension;
 import hudson.FilePath;
+import hudson.Functions;
 import hudson.matrix.AxisList;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixProject;
@@ -45,6 +46,7 @@ import java.util.concurrent.TimeUnit;
 import hudson.util.HttpResponses;
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
+import org.junit.Assume;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.TouchBuilder;
 import org.jvnet.hudson.test.recipes.LocalData;
@@ -325,6 +327,7 @@ public class JUnitResultArchiverTest {
     }
 
     @Test public void specialCharsInRelativePath() throws Exception {
+        Assume.assumeFalse(Functions.isWindows());
         final String ID_PREFIX = "test-../a=%3C%7C%23)/testReport/org.twia.vendor/VendorManagerTest/testCreateAdjustingFirm/";
         final String EXPECTED = "org.twia.dao.DAOException: [S2001] Hibernate encountered an error updating Claim [null]";
 
