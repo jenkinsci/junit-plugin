@@ -2,6 +2,7 @@ package hudson.tasks.junit.pipeline;
 
 import com.google.common.base.Predicate;
 import hudson.FilePath;
+import hudson.Functions;
 import hudson.Launcher;
 import hudson.model.Descriptor;
 import hudson.model.Result;
@@ -78,7 +79,9 @@ public class JUnitResultsStepTest {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "emptyFails");
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
                 "  node {\n" +
-                "    sh 'echo hi'\n" +
+                (Functions.isWindows() ?
+                "    bat 'echo hi'\n" :
+                "    sh 'echo hi'\n") +
                 "    junit('*.xml')\n" +
                 "  }\n" +
                 "}\n", true));
@@ -109,7 +112,9 @@ public class JUnitResultsStepTest {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "allowEmpty");
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
                 "  node {\n" +
-                "    sh 'echo hi'\n" +
+                (Functions.isWindows() ?
+                "    bat 'echo hi'\n" :
+                "    sh 'echo hi'\n") +
                 "    def results = junit(testResults: '*.xml', allowEmptyResults: true)\n" +
                 "    assert results.totalCount == 0\n" +
                 "  }\n" +
