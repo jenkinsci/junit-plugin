@@ -86,7 +86,7 @@ public abstract class AggregatedTestResultAction extends AbstractTestResultActio
         failCount += child.getFailCount();
         skipCount += child.getSkipCount();
         totalCount += child.getTotalCount();
-        this.children.add(new Child(getChildName(child),child.owner.number));
+        this.children.add(new Child(getChildName(child),child.run.number));
     }
 
     public int getFailCount() {
