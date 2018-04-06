@@ -55,6 +55,7 @@ import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nonnull;
 import jenkins.tasks.SimpleBuildStep;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundSetter;
 
 /**
@@ -293,6 +294,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
 
     private static final long serialVersionUID = 1L;
 
+    @Symbol("junitFree")
     @Extension
     public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
         public String getDisplayName() {
