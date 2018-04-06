@@ -3,16 +3,18 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>3.0</version>
+        <version>3.8-SNAPSHOT</version>
         <relativePath />
     </parent>
     <artifactId>junit</artifactId>
-    <version>1.25-SNAPSHOT</version>
+    <version>${revision}${changelist}</version>
     <packaging>hpi</packaging>
     <name>JUnit Plugin</name>
     <description>Allows JUnit-format test results to be published.</description>
     <url>http://wiki.jenkins-ci.org/display/JENKINS/JUnit+Plugin</url>
     <properties>
+        <revision>1.25</revision>
+        <changelist>-SNAPSHOT</changelist>
         <jenkins.version>2.7.3</jenkins.version>
         <java.level>7</java.level>
         <no-test-jar>false</no-test-jar>

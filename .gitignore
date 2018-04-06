@@ -12,3 +12,4 @@ work/
 .project
 .settings/
 build/
+.flattened-pom.xml
