@@ -13,8 +13,8 @@
     <description>Allows JUnit-format test results to be published.</description>
     <url>http://wiki.jenkins-ci.org/display/JENKINS/JUnit+Plugin</url>
     <properties>
-        <jenkins.version>2.7.3</jenkins.version>
-        <java.level>7</java.level>
+        <jenkins.version>2.118-rc15690.d020aea9017c</jenkins.version>
+        <java.level>8</java.level>
         <no-test-jar>false</no-test-jar>
         <workflow-cps.version>2.37</workflow-cps.version>
         <workflow-support.version>2.14</workflow-support.version>
