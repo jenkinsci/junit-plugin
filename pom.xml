@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>3.8-SNAPSHOT</version>
+        <version>3.9-20180419.172824-3</version> <!-- TODO github.com/jenkinsci/plugin-pom/pull/100 -->
         <relativePath />
     </parent>
     <artifactId>junit</artifactId>
@@ -13,7 +13,7 @@
     <description>Allows JUnit-format test results to be published.</description>
     <url>http://wiki.jenkins-ci.org/display/JENKINS/JUnit+Plugin</url>
     <properties>
-        <jenkins.version>2.118-rc15690.d020aea9017c</jenkins.version>
+        <jenkins.version>2.118-rc15700.24aa7b764a86</jenkins.version> <!-- TODO https://github.com/jenkinsci/jenkins/pull/3394 -->
         <java.level>8</java.level>
         <no-test-jar>false</no-test-jar>
         <workflow-cps.version>2.37</workflow-cps.version>
@@ -47,7 +47,7 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>structs</artifactId>
-            <version>1.15-rc121.2f93d60ab619</version>
+            <version>1.15-rc128.6f68601f55b6</version> <!-- TODO https://github.com/jenkinsci/structs-plugin/pull/36 -->
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins.workflow</groupId>
