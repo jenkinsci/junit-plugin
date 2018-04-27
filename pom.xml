@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>3.0</version>
+        <version>3.9</version>
         <relativePath />
     </parent>
     <artifactId>junit</artifactId>
@@ -13,8 +13,8 @@
     <description>Allows JUnit-format test results to be published.</description>
     <url>http://wiki.jenkins-ci.org/display/JENKINS/JUnit+Plugin</url>
     <properties>
-        <jenkins.version>2.7.3</jenkins.version>
-        <java.level>7</java.level>
+        <jenkins.version>2.118-rc15700.24aa7b764a86</jenkins.version> <!-- TODO https://github.com/jenkinsci/jenkins/pull/3394 -->
+        <java.level>8</java.level>
         <no-test-jar>false</no-test-jar>
         <workflow-cps.version>2.37</workflow-cps.version>
         <workflow-support.version>2.14</workflow-support.version>
@@ -47,7 +47,7 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>structs</artifactId>
-            <version>1.7</version>
+            <version>1.15-rc128.6f68601f55b6</version> <!-- TODO https://github.com/jenkinsci/structs-plugin/pull/36 -->
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins.workflow</groupId>
