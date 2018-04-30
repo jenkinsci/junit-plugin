@@ -2,6 +2,7 @@ package hudson.tasks.junit.pipeline;
 
 import com.google.common.base.Predicate;
 import hudson.FilePath;
+import hudson.Functions;
 import hudson.Launcher;
 import hudson.model.Descriptor;
 import hudson.model.Result;
@@ -28,6 +29,7 @@ import org.jenkinsci.plugins.workflow.graphanalysis.DepthFirstScanner;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.plugins.workflow.support.steps.StageStep;
+import org.junit.Assume;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -75,6 +77,8 @@ public class JUnitResultsStepTest {
     @Issue("JENKINS-48250")
     @Test
     public void emptyFails() throws Exception {
+        Assume.assumeFalse(Functions.isWindows());
+
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "emptyFails");
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
                 "  node {\n" +
@@ -106,6 +110,8 @@ public class JUnitResultsStepTest {
 
     @Test
     public void allowEmpty() throws Exception {
+        Assume.assumeFalse(Functions.isWindows());
+
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "allowEmpty");
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
                 "  node {\n" +
