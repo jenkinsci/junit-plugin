@@ -1,10 +1,12 @@
 package hudson.tasks.test;
 
 import com.google.common.collect.ImmutableList;
+import hudson.Functions;
 import hudson.model.AbstractBuild;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
+import hudson.tasks.BatchFile;
 import hudson.tasks.BuildTrigger;
 import hudson.tasks.Fingerprinter;
 import hudson.tasks.Shell;
@@ -181,7 +183,8 @@ public class AggregatedTestResultPublisherTest {
     private void addFingerprinterToProject(FreeStyleProject project, String[] contents, String[] files) throws Exception {
         StringBuilder targets = new StringBuilder();
         for (int i = 0; i < contents.length; i++) {
-            project.getBuildersList().add(new Shell("echo $BUILD_NUMBER " + contents[i] + " > " + files[i]));
+            String command = "echo $BUILD_NUMBER " + contents[i] + " > " + files[i];
+            project.getBuildersList().add(Functions.isWindows() ? new BatchFile(command) : new Shell(command));
             targets.append(files[i]).append(',');
         }
 
