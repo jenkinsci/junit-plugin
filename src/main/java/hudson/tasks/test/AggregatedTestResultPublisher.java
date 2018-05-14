@@ -354,7 +354,7 @@ public class AggregatedTestResultPublisher extends Recorder {
                 name = name.trim();
                 if (Helper.getActiveInstance().getItem(name,project) == null) {
                     final AbstractProject<?,?> nearest = AbstractProject.findNearest(name);
-                    return FormValidation.error(hudson.tasks.Messages.BuildTrigger_NoSuchProject(name, nearest != null ? nearest.getName() : null));
+                    return FormValidation.error(Messages.BuildTrigger_NoSuchProject(name, nearest != null ? nearest.getName() : null));
                 }
             }
             
