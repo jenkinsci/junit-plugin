@@ -333,6 +333,7 @@ public class JUnitResultArchiverTest {
 
         MatrixProject p = j.jenkins.createProject(MatrixProject.class, "test-" + j.jenkins.getItems().size());
         p.setAxes(new AxisList(new TextAxis("a", "<|#)")));
+        p.setChildCustomWorkspace("axis_sub_folder");
         p.setScm(new SingleFileSCM("report.xml", getClass().getResource("junit-report-20090516.xml")));
         p.getPublishersList().add(new JUnitResultArchiver("report.xml"));
 
