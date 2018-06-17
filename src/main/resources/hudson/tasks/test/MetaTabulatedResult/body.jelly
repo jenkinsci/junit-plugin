@@ -35,12 +35,34 @@ THE SOFTWARE.
       </tr>
       <j:forEach var="f" items="${it.failedTests}" varStatus="i">
         <tr>
-          <td class="pane no-wrap"><t:failed-test result="${f}" url="${f.getRelativePathFrom(it)}"/></td>
+          <td class="pane no-wrap"><t:non-passed-test result="${f}" url="${f.getRelativePathFrom(it)}"/></td>
           <td class="pane no-wrap" style="text-align:right;" data="${f.duration}">
             ${f.durationString}
           </td>
           <td class="pane" style="text-align:right;">
             <a href="${rootURL}/${f.failedSinceRun.url}" class="model-link inside">${f.age}</a>
+          </td>
+        </tr>
+      </j:forEach>
+    </table>
+  </j:if>
+
+  <j:if test="${it.skipCount!=0}">
+    <h2>${%All Skipped Tests}</h2>
+    <table class="pane sortable bigtable stripped">
+      <tr>
+        <td class="pane-header">${%Test Name}</td>
+        <td class="pane-header" style="width:4em">${%Duration}</td>
+        <td class="pane-header" style="width:3em">${%Age}</td>
+      </tr>
+      <j:forEach var="f" items="${it.skippedTests}" varStatus="i">
+        <tr>
+          <td class="pane no-wrap"><t:non-passed-test result="${f}" url="${f.getRelativePathFrom(it)}"/></td>
+          <td class="pane no-wrap" style="text-align:right;" data="${f.duration}">
+            ${f.durationString}
+          </td>
+          <td class="pane" style="text-align:right;">
+            <a href="${rootURL}/${f.skippedSinceRun.url}" class="model-link inside">${f.age}</a>
           </td>
         </tr>
       </j:forEach>
