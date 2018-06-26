@@ -34,6 +34,29 @@ THE SOFTWARE.
         </j:when>
         <j:otherwise>
           <test:bar/>
+          <j:if test="${it.failCount!=0}">
+            <h2>${%All Failed Tests}</h2>
+            <table class="pane sortable bigtable stripped">
+              <tr>
+                <td class="pane-header">${%Test Name}</td>
+                <td class="pane-header" style="width:4em">${%Duration}</td>
+                <td class="pane-header" style="width:3em">${%Age}</td>
+              </tr>
+              <j:forEach var="job" items="${it.individuals}">
+                <j:forEach var="f" items="${job.failedTests}" varStatus="i">
+                  <tr>
+                    <td class="pane no-wrap"><t:failed-test result="${f}" url="${rootURL}/${f.failedSinceRun.url}testReport/${f.getRelativePathFrom(job.getResult())}"/></td>
+                    <td class="pane no-wrap" style="text-align:right;" data="${f.duration}">
+                      ${f.durationString}
+                    </td>
+                    <td class="pane" style="text-align:right;">
+                      <a href="${rootURL}/${f.failedSinceRun.url}" class="model-link inside">${f.age}</a>
+                    </td>
+                  </tr>
+                </j:forEach>
+              </j:forEach>
+            </table>
+          </j:if>
           <h2>${%Drill Down}</h2>
           <table class="pane sortable stripped">
             <tr>
