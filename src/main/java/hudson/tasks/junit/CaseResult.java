@@ -404,12 +404,12 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      */
     @Exported(visibility=9)
     public int getFailedSince() {
-        // If we haven't calculated failedSince yet, and we should,
-        // do it now.
+        // If we haven't calculated failedSince yet, and we should, do it now.
         if (failedSince==0 && getFailCount()==1) {
             CaseResult prev = getPreviousResult();
-            if(prev!=null && !prev.isPassed())
+            if(prev!=null && !prev.isPassed()) {
                 this.failedSince = prev.getFailedSince();
+            }
             else if (getRun() != null) {
                 this.failedSince = getRun().getNumber();
             } else {
@@ -426,12 +426,12 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      */
     @Exported(visibility=9)
     public int getSkippedSince() {
-        // If we haven't calculated failedSince yet, and we should,
-        // do it now.
+        // If we haven't calculated skippedSince yet, and we should, do it now.
         if (skippedSince==0 && getSkipCount()==1) {
             CaseResult prev = getPreviousResult();
-            if(prev!=null && !prev.isPassed())
+            if(prev!=null && prev.isSkipped()){
                 this.skippedSince = prev.getSkippedSince();
+            }
             else if (getRun() != null) {
                 this.skippedSince = getRun().getNumber();
             } else {
