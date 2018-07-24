@@ -101,7 +101,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      *
      * If {@link #isPassed() passing}, this field is left unused to 0.
      */
-    private /*final*/ int skippedSince;
+    private int skippedSince;
 
     private static float parseTime(Element testCase) {
         String time = testCase.attributeValue("time");
