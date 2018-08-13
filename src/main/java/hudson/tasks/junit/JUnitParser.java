@@ -149,8 +149,8 @@ public class JUnitParser extends TestResultParser {
                     File f = result.getOldTests().iterator().next();
                     throw new AbortException(
                         String.format(
-                            "Test reports were found but none of them are new. Did tests run? %n"+
-                            "For example, %s is %s old%n", f,
+                            "%d Test reports were found but none of them are new. Did tests run? %n"+
+                            "For example, %s is %s old%n", result.getOldTests().size(), f,
                             Util.getTimeSpanString(buildTime-f.lastModified())));
                 }
             } else {

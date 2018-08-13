@@ -224,14 +224,7 @@ public final class TestResult extends MetaTabulatedResult {
                     "I can't figure out what test results are new and what are old.\n" +
                     "Please keep the slave clock in sync with the master.");
 
-/*
-            File f = new File(baseDir,reportFiles[0]);
-            throw new AbortException(
-                String.format(
-                "Test reports were found but none of them are new. Did leafNodes run? %n"+
-                "For example, %s is %s old%n", f,
-                Util.getTimeSpanString(buildTime-f.lastModified())));
-*/
+            //throwing none-of-them-are-new exception happens in JUnitParser
         }
     }
 
@@ -272,12 +265,7 @@ public final class TestResult extends MetaTabulatedResult {
                     "I can't figure out what test results are new and what are old.\n" +
                     "Please keep the slave clock in sync with the master.");
 
-            File f = reportFiles.iterator().next();
-            throw new AbortException(
-                String.format(
-                "Test reports were found but none of them are new. Did leafNodes run? %n"+
-                "For example, %s is %s old%n", f,
-                Util.getTimeSpanString(buildTime-f.lastModified())));
+            //throwing none-of-them-are-new exception happens in JUnitParser
         }
         
     }
