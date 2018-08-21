@@ -39,15 +39,20 @@ import jenkins.MasterToSlaveFileCallable;
 import org.apache.tools.ant.types.FileSet;
 import org.apache.tools.ant.DirectoryScanner;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+
 /**
  * Parse some JUnit xml files and generate a TestResult containing all the
  * results parsed.
  */
+@Extension // see TestResultParser.all
 public class JUnitParser extends TestResultParser {
 
     private final boolean keepLongStdio;
     private final boolean allowEmptyResults;
 
+    /** Generally unused, but present for extension compatibility. */
     @Deprecated
     public JUnitParser() {
         this(false, false);
@@ -71,6 +76,16 @@ public class JUnitParser extends TestResultParser {
     public JUnitParser(boolean keepLongStdio, boolean allowEmptyResults) {
         this.keepLongStdio = keepLongStdio;
         this.allowEmptyResults = allowEmptyResults;
+    }
+
+    @Override
+    public String getDisplayName() {
+        return Messages.JUnitParser_DisplayName();
+    }
+
+    @Override
+    public String getTestResultLocationMessage() {
+        return Messages.JUnitParser_TestResultLocationMessage();
     }
 
     @Deprecated

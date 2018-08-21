@@ -25,6 +25,7 @@ package hudson.tasks.test;
 
 import hudson.AbortException;
 import hudson.ExtensionList;
+import hudson.ExtensionPoint;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Util;
@@ -37,7 +38,9 @@ import javax.annotation.Nonnull;
 
 /**
  * Parses test result files and builds in-memory representation of it as {@link TestResult}.
- *
+ * <p>
+ * Originally this was treated as an {@link ExtensionPoint},
+ * but no supported code path actually uses this API directly. See {@link #all}.
  * <p>
  * Parsers are stateless, and the {@link #parseResult} method
  * can be concurrently invoked by multiple threads for different builds.
@@ -49,7 +52,7 @@ public abstract class TestResultParser {
      * Returns a human readable name of the parser, like "JUnit Parser".
      *
      * @return a human readable name of the parser, like "JUnit Parser".
-     * @deprecated Unused.
+     * @deprecated Normally unused.
      */
     @Deprecated
     public String getDisplayName() {
@@ -61,7 +64,7 @@ public abstract class TestResultParser {
      * For example, "JUnit XML reports:"
      *
      * @return the text is used in the UI prompt for the GLOB that specifies files to be parsed by this parser.
-     * @deprecated Unused.
+     * @deprecated Normally unused.
      */
     @Deprecated
     public String getTestResultLocationMessage() {
@@ -72,7 +75,7 @@ public abstract class TestResultParser {
      * All registered {@link TestResultParser}s.
      *
      * @return all registered {@link TestResultParser}s.
-     * @deprecated Meaningless.
+     * @deprecated Unused. In fact only the {@code labeled-test-groups-publisher} plugin seems to actually enumerate parsers this way (though not using this method), a use case superseded by {@link PipelineTestDetails}.
      */
     @Deprecated
     public static ExtensionList<TestResultParser> all() {
