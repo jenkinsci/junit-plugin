@@ -679,6 +679,7 @@ public final class TestResult extends MetaTabulatedResult {
      */
     @Override
     public void tally() {
+        // TODO allow TestResultStorage to cancel this
         /// Empty out data structures
         // TODO: free children? memmory leak?
         suitesByName = new HashMap<String,SuiteResult>();

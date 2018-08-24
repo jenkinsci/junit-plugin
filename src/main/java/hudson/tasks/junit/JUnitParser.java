@@ -154,6 +154,7 @@ public class JUnitParser extends TestResultParser {
                     throw new AbortException(Messages.JUnitResultArchiver_NoTestReportFound());
                 }
             }
+            // TODO allow TestResultStorage to intercept here
             return result;
         }
     }
