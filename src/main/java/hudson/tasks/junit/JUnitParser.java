@@ -30,6 +30,7 @@ import hudson.*;
 import hudson.model.AbstractBuild;
 import hudson.model.Run;
 import hudson.remoting.VirtualChannel;
+import hudson.tasks.junit.storage.TestResultStorage;
 
 import java.io.IOException;
 import java.io.File;
@@ -40,7 +41,6 @@ import org.apache.tools.ant.types.FileSet;
 import org.apache.tools.ant.DirectoryScanner;
 
 import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
 
 /**
  * Parse some JUnit xml files and generate a TestResult containing all the
@@ -108,11 +108,11 @@ public class JUnitParser extends TestResultParser {
         final long buildTime = build.getTimestamp().getTimeInMillis();
         final long timeOnMaster = System.currentTimeMillis();
 
-        // [BUG 3123310] TODO - Test Result Refactor: review and fix TestDataPublisher/TestAction subsystem]
-        // also get code that deals with testDataPublishers from JUnitResultArchiver.perform
+        TestResultStorage storage = TestResultStorage.find();
+        TestResultStorage.RemotePublisher publisher = storage == null ? null : storage.createRemotePublisher(build, listener);
 
         return workspace.act(new ParseResultCallable(testResultLocations, buildTime, timeOnMaster, keepLongStdio,
-                allowEmptyResults, pipelineTestDetails));
+                allowEmptyResults, pipelineTestDetails, publisher));
     }
 
     private static final class ParseResultCallable extends MasterToSlaveFileCallable<TestResult> {
@@ -122,16 +122,18 @@ public class JUnitParser extends TestResultParser {
         private final boolean keepLongStdio;
         private final boolean allowEmptyResults;
         private final PipelineTestDetails pipelineTestDetails;
+        private final @CheckForNull TestResultStorage.RemotePublisher publisher;
 
         private ParseResultCallable(String testResults, long buildTime, long nowMaster,
                                     boolean keepLongStdio, boolean allowEmptyResults,
-                                    PipelineTestDetails pipelineTestDetails) {
+                                    PipelineTestDetails pipelineTestDetails, TestResultStorage.RemotePublisher publisher) {
             this.buildTime = buildTime;
             this.testResults = testResults;
             this.nowMaster = nowMaster;
             this.keepLongStdio = keepLongStdio;
             this.allowEmptyResults = allowEmptyResults;
             this.pipelineTestDetails = pipelineTestDetails;
+            this.publisher = publisher;
         }
 
         public TestResult invoke(File ws, VirtualChannel channel) throws IOException {
@@ -154,8 +156,12 @@ public class JUnitParser extends TestResultParser {
                     throw new AbortException(Messages.JUnitResultArchiver_NoTestReportFound());
                 }
             }
-            // TODO allow TestResultStorage to intercept here
-            return result;
+            if (publisher != null) {
+                publisher.publish(result);
+                return new TestResult(); // ignored anyway
+            } else {
+                return result;
+            }
         }
     }
 

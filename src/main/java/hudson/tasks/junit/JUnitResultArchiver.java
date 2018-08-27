@@ -189,8 +189,10 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                     listener.getLogger().println(Messages.JUnitResultArchiver_ResultIsEmpty());
                     return null;
                 }
+                /* TODO some of this logic is already in ParseResultCallable; the rest should be moved there
                 // most likely a configuration error in the job - e.g. false pattern to match the JUnit result files
                 throw new AbortException(Messages.JUnitResultArchiver_ResultIsEmpty());
+                */
             }
 
             // TODO: Move into JUnitParser [BUG 3123310]

@@ -24,18 +24,46 @@
 
 package hudson.tasks.junit.storage;
 
+import hudson.ExtensionList;
 import hudson.ExtensionPoint;
+import hudson.FilePath;
+import hudson.Launcher;
+import hudson.model.Run;
+import hudson.model.TaskListener;
+import hudson.tasks.junit.JUnitParser;
+import hudson.tasks.junit.TestResult;
+import hudson.tasks.test.PipelineTestDetails;
+import java.io.IOException;
+import javax.annotation.CheckForNull;
+import org.jenkinsci.remoting.SerializableOnlyOverRemoting;
 
 /**
  * Allows test results to be saved and loaded from an external storage service.
  */
 public interface TestResultStorage extends ExtensionPoint {
 
-    // TODO intercept parseResult
+    /**
+     * Runs during {@link JUnitParser#parseResult(String, Run, PipelineTestDetails, FilePath, Launcher, TaskListener)}.
+     */
+    RemotePublisher createRemotePublisher(Run<?,?> build, TaskListener listener) throws IOException;
+
+    /**
+     * Remotable hook to perform test result publishing.
+     */
+    interface RemotePublisher extends SerializableOnlyOverRemoting {
+        void publish(TestResult result) throws IOException;
+    }
 
     // TODO produce a hudson.tasks.junit.TestResult for a Job × buildNumber; populate full data, or load it lazily?
 
     // TODO substitute trend graph for /job/*/ or /job/*/test/?width=800&height=600 from TestResultProjectAction/{index,floatingBox}
     // TODO substitute count/duration graph for /job/*/*/testReport/pkg/SomeTest/method/history/ and similar from History/index
+
+    // TODO decide whether to bother making AbstractTestResultAction.descriptions and/or testData pluggable
+
+    static @CheckForNull TestResultStorage find() {
+        ExtensionList<TestResultStorage> all = ExtensionList.lookup(TestResultStorage.class);
+        return all.isEmpty() ? null : all.iterator().next();
+    }
 
 }
