@@ -50,7 +50,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.CheckForNull;
 import javax.annotation.Nullable;
 import jenkins.tasks.SimpleBuildStep;
 
@@ -72,7 +71,7 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
     private @Nullable Integer skipCount;
     // Hudson < 1.25 didn't set these fields, so use Integer
     // so that we can distinguish between 0 tests vs not-computed-yet.
-    private @CheckForNull Integer totalCount;
+    private @Nullable Integer totalCount;
     private Double healthScaleFactor;
     private List<Data> testData = new ArrayList<Data>();
 

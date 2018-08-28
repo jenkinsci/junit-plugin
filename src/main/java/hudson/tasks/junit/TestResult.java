@@ -23,6 +23,7 @@
  */
 package hudson.tasks.junit;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.AbortException;
 import hudson.Util;
 import hudson.model.Run;
@@ -62,6 +63,7 @@ import javax.annotation.Nonnull;
  */
 public final class TestResult extends MetaTabulatedResult {
 
+    @SuppressFBWarnings(value = "SE_BAD_FIELD", justification = "We do not expect TestResult to be serialized when this field is set.")
     private final @CheckForNull TestResultImpl impl;
 
     /**
