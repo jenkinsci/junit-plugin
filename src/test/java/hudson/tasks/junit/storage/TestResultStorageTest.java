@@ -106,8 +106,8 @@ public class TestResultStorageTest {
         assertEquals("failure", failedTests.get(0).getErrorDetails());
         // TODO more detailed Java queries incl. PackageResult / ClassResult
         // TODO verify that there is no junitResult.xml on disk
-        // TODO verify that build.xml#//hudson.tasks.junit.TestResultAction is (mostly?) empty
-        // TODO verify structure
+        // TODO verify that build.xml#//hudson.tasks.junit.TestResultAction is empty except for healthScaleFactor and testData
+        // TODO verify table structure
     }
 
     @TestExtension public static class Impl implements TestResultStorage {
@@ -123,6 +123,30 @@ public class TestResultStorageTest {
                 throw new IOException(x);
             }
             return new RemotePublisherImpl(build.getParent().getFullName(), build.getNumber(), listener);
+        }
+
+        @Override public TestResultImpl load(String job, int build) {
+            return new TestResultImpl() {
+                @Override public int getFailCount() {
+                    try {
+                        Connection connection = connectionSupplier.connection;
+                        try (PreparedStatement statement = connection.prepareStatement("SELECT COUNT(*) FROM " + Impl.CASE_RESULTS_TABLE + " WHERE job = ? and build = ? and errorDetails IS NOT NULL")) {
+                            statement.setString(1, job);
+                            statement.setInt(2, build);
+                            try (ResultSet result = statement.executeQuery()) {
+                                result.next();
+                                return result.getInt(1);
+                            }
+                        }
+                    } catch (SQLException x) {
+                        x.printStackTrace();
+                        return 0;
+                    }
+                }
+                @Override public TestResult getResultByNodes(List<String> nodeIds) {
+                    return new TestResult(this); // TODO
+                }
+            };
         }
 
         private static class RemotePublisherImpl implements RemotePublisher {

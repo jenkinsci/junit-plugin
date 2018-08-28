@@ -54,7 +54,7 @@ public interface TestResultStorage extends ExtensionPoint {
         void publish(TestResult result) throws IOException;
     }
 
-    // TODO produce a hudson.tasks.junit.TestResult for a Job × buildNumber; populate full data, or load it lazily?
+    TestResultImpl load(String job, int build);
 
     // TODO substitute trend graph for /job/*/ or /job/*/test/?width=800&height=600 from TestResultProjectAction/{index,floatingBox}
     // TODO substitute count/duration graph for /job/*/*/testReport/pkg/SomeTest/method/history/ and similar from History/index

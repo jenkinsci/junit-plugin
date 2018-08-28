@@ -26,6 +26,7 @@ package hudson.tasks.junit;
 import hudson.AbortException;
 import hudson.Util;
 import hudson.model.Run;
+import hudson.tasks.junit.storage.TestResultImpl;
 import hudson.tasks.test.AbstractTestResultAction;
 import hudson.tasks.test.PipelineTestDetails;
 import hudson.tasks.test.PipelineBlockWithTests;
@@ -44,6 +45,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import javax.annotation.CheckForNull;
 
 import org.apache.tools.ant.DirectoryScanner;
 import org.dom4j.DocumentException;
@@ -59,6 +61,8 @@ import javax.annotation.Nonnull;
  * @author Kohsuke Kawaguchi
  */
 public final class TestResult extends MetaTabulatedResult {
+
+    private final @CheckForNull TestResultImpl impl;
 
     /**
      * List of all {@link SuiteResult}s in this test.
@@ -118,6 +122,7 @@ public final class TestResult extends MetaTabulatedResult {
      */
     public TestResult(boolean keepLongStdio) {
         this.keepLongStdio = keepLongStdio;
+        impl = null;
     }
 
     @Deprecated
@@ -140,7 +145,13 @@ public final class TestResult extends MetaTabulatedResult {
     public TestResult(long buildTime, DirectoryScanner results, boolean keepLongStdio,
                       PipelineTestDetails pipelineTestDetails) throws IOException {
         this.keepLongStdio = keepLongStdio;
+        impl = null;
         parse(buildTime, results, pipelineTestDetails);
+    }
+
+    public TestResult(TestResultImpl impl) {
+        this.impl = impl;
+        keepLongStdio = false; // irrelevant
     }
 
     public TestObject getParent() {
@@ -344,6 +355,9 @@ public final class TestResult extends MetaTabulatedResult {
      * @since 1.22
      */
     public void parse(File reportFile, PipelineTestDetails pipelineTestDetails) throws IOException {
+        if (impl != null) {
+            throw new IllegalStateException("Cannot reparse using a pluggable impl");
+        }
         try {
             for (SuiteResult suiteResult : SuiteResult.parse(reportFile, keepLongStdio, pipelineTestDetails))
                 add(suiteResult);
@@ -446,6 +460,9 @@ public final class TestResult extends MetaTabulatedResult {
     @Exported(visibility=999)
     @Override
     public int getFailCount() {
+        if (impl != null) {
+            return impl.getFailCount();
+        }
         if(failedTests==null)
             return 0;
         else
@@ -649,6 +666,9 @@ public final class TestResult extends MetaTabulatedResult {
 
     @Nonnull
     public TestResult getResultByNodes(@Nonnull List<String> nodeIds) {
+        if (impl != null) {
+            return impl.getResultByNodes(nodeIds);
+        }
         TestResult result = new TestResult();
         for (String n : nodeIds) {
             List<SuiteResult> suites = suitesByNode.get(n);
@@ -732,6 +752,7 @@ public final class TestResult extends MetaTabulatedResult {
      * and then freeze can be called again.
      */
     public void freeze(TestResultAction parent) {
+        assert impl == null;
         this.parentAction = parent;
         if(suitesByName==null) {
             // freeze for the first time
