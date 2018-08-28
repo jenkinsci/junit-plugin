@@ -59,7 +59,7 @@ public interface TestResultStorage extends ExtensionPoint {
     // TODO substitute trend graph for /job/*/ or /job/*/test/?width=800&height=600 from TestResultProjectAction/{index,floatingBox}
     // TODO substitute count/duration graph for /job/*/*/testReport/pkg/SomeTest/method/history/ and similar from History/index
 
-    // TODO decide whether to bother making AbstractTestResultAction.descriptions and/or testData pluggable
+    // for now, AbstractTestResultAction.descriptions and testData are not pluggable
 
     static @CheckForNull TestResultStorage find() {
         ExtensionList<TestResultStorage> all = ExtensionList.lookup(TestResultStorage.class);

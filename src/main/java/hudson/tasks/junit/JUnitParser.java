@@ -159,6 +159,7 @@ public class JUnitParser extends TestResultParser {
             if (publisher != null) {
                 publisher.publish(result);
                 return new TestResult(); // ignored anyway
+                // TODO at least send back a TestResultSummary to avoid requiring JUnitResultsStepExecution to repeatedly query storage
             } else {
                 return result;
             }

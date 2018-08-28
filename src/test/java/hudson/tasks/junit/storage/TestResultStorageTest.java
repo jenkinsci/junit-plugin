@@ -24,6 +24,7 @@
 
 package hudson.tasks.junit.storage;
 
+import com.google.common.collect.ImmutableSet;
 import com.thoughtworks.xstream.XStream;
 import hudson.model.Label;
 import hudson.model.Result;
@@ -34,7 +35,10 @@ import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.SuiteResult;
 import hudson.tasks.junit.TestResult;
 import hudson.tasks.junit.TestResultAction;
+import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -43,6 +47,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
+import javax.xml.parsers.DocumentBuilderFactory;
+import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.database.Database;
 import org.jenkinsci.plugins.database.GlobalDatabaseConfiguration;
 import org.jenkinsci.plugins.database.h2.LocalH2Database;
@@ -53,12 +61,15 @@ import org.jenkinsci.remoting.SerializableOnlyOverRemoting;
 import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 public class TestResultStorageTest {
     
@@ -75,7 +86,6 @@ public class TestResultStorageTest {
         GlobalDatabaseConfiguration.get().setDatabase(new LocalH2Database(database.getPath(), true));
     }
 
-    @Ignore("TODO")
     @Test public void smokes() throws Exception {
         DumbSlave remote = r.createOnlineSlave(Label.get("remote"));
         //((Channel) remote.getChannel()).addListener(new LoggingChannelListener(Logger.getLogger(TestResultStorageTest.class.getName()), Level.INFO));
@@ -95,19 +105,40 @@ public class TestResultStorageTest {
                 ResultSet result = statement.executeQuery()) {
             printResultSet(result);
         }
-        r.assertBuildStatus(Result.UNSTABLE, b);
-        TestResultAction a = b.getAction(TestResultAction.class);
-        assertNotNull(a);
-        assertEquals(1, a.getFailCount());
-        List<CaseResult> failedTests = a.getFailedTests();
-        assertEquals(1, failedTests.size());
-        assertEquals("Klazz", failedTests.get(0).getClassName());
-        assertEquals("test1", failedTests.get(0).getName());
-        assertEquals("failure", failedTests.get(0).getErrorDetails());
-        // TODO more detailed Java queries incl. PackageResult / ClassResult
-        // TODO verify that there is no junitResult.xml on disk
-        // TODO verify that build.xml#//hudson.tasks.junit.TestResultAction is empty except for healthScaleFactor and testData
         // TODO verify table structure
+        r.assertBuildStatus(Result.UNSTABLE, b);
+        assertFalse(new File(b.getRootDir(), "junitResult.xml").isFile());
+        {
+            String buildXml = FileUtils.readFileToString(new File(b.getRootDir(), "build.xml"));
+            Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(buildXml.getBytes(StandardCharsets.UTF_8)));
+            NodeList testResultActionList = doc.getElementsByTagName("hudson.tasks.junit.TestResultAction");
+            assertEquals(buildXml, 1, testResultActionList.getLength());
+            Element testResultAction = (Element) testResultActionList.item(0);
+            NodeList childNodes = testResultAction.getChildNodes();
+            Set<String> childNames = new TreeSet<>();
+            for (int i = 0; i < childNodes.getLength(); i++) {
+                Node item = childNodes.item(i);
+                if (item instanceof Element) {
+                    childNames.add(((Element) item).getTagName());
+                }
+            }
+            assertEquals(buildXml, ImmutableSet.of("healthScaleFactor", "testData", "descriptions"), childNames);
+        }
+        // TODO verify that at this point no master-side queries have been executed
+        {
+            TestResultAction a = b.getAction(TestResultAction.class);
+            assertNotNull(a);
+            assertEquals(1, a.getFailCount());
+            /* TODO implement:
+            List<CaseResult> failedTests = a.getFailedTests();
+            assertEquals(1, failedTests.size());
+            assertEquals("Klazz", failedTests.get(0).getClassName());
+            assertEquals("test1", failedTests.get(0).getName());
+            assertEquals("failure", failedTests.get(0).getErrorDetails());
+            */
+            // TODO more detailed Java queries incl. PackageResult / ClassResult
+            // TODO test healthScaleFactor, descriptions
+        }
     }
 
     @TestExtension public static class Impl implements TestResultStorage {
@@ -129,7 +160,7 @@ public class TestResultStorageTest {
             return new TestResultImpl() {
                 @Override public int getFailCount() {
                     try {
-                        Connection connection = connectionSupplier.connection;
+                        Connection connection = connectionSupplier.connection();
                         try (PreparedStatement statement = connection.prepareStatement("SELECT COUNT(*) FROM " + Impl.CASE_RESULTS_TABLE + " WHERE job = ? and build = ? and errorDetails IS NOT NULL")) {
                             statement.setString(1, job);
                             statement.setInt(2, build);
