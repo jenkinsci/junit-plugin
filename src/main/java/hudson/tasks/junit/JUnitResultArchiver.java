@@ -262,7 +262,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
 
             if (appending) {
                 build.save();
-            } else {
+            } else if (summary.get().getTotalCount() > 0) {
                 build.addAction(action);
             }
 
