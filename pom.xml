@@ -145,7 +145,7 @@
             <artifactId>database</artifactId>
             <version>1.5</version>
             <scope>test</scope>
-            <exclusions>
+            <exclusions> <!-- TODO pending fixes upstream -->
                 <exclusion>
                     <groupId>antlr</groupId>
                     <artifactId>antlr</artifactId>
@@ -153,6 +153,10 @@
                 <exclusion>
                     <groupId>javax.validation</groupId>
                     <artifactId>validation-api</artifactId>
+                </exclusion>
+                <exclusion> <!-- clashes with org.jenkins-ci.dom4j:dom4j -->
+                    <groupId>dom4j</groupId>
+                    <artifactId>dom4j</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
