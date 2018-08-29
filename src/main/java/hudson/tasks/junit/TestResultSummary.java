@@ -13,6 +13,7 @@ public class TestResultSummary implements Serializable {
     private int passCount;
     private int totalCount;
 
+    @Deprecated
     public TestResultSummary() {
     }
 

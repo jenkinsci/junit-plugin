@@ -92,14 +92,13 @@ public class TestResultStorageTest {
         WorkflowJob p = r.createProject(WorkflowJob.class, "p");
         p.setDefinition(new CpsFlowDefinition(
                 "node('remote') {\n" +
+                // TODO test skips
                 "  writeFile file: 'x.xml', text: '''<testsuite name='sweet'><testcase classname='Klazz' name='test1'><error message='failure'/></testcase><testcase classname='Klazz' name='test2'/></testsuite>'''\n" +
-                "  junit 'x.xml'\n" +
+                "  def s = junit 'x.xml'\n" +
+                // TODO test repeated publishing
+                "  echo(/summary: fail=$s.failCount skip=$s.skipCount pass=$s.passCount total=$s.totalCount/)\n" +
                 "}", true));
         WorkflowRun b = p.scheduleBuild2(0).get();
-        try (Connection connection = GlobalDatabaseConfiguration.get().getDatabase().getDataSource().getConnection();
-                ResultSet result = connection.getMetaData().getTables(null, null, null, new String[] {"TABLE"})) {
-            printResultSet(result);
-        }
         try (Connection connection = GlobalDatabaseConfiguration.get().getDatabase().getDataSource().getConnection();
                 PreparedStatement statement = connection.prepareStatement("SELECT * FROM " + Impl.CASE_RESULTS_TABLE);
                 ResultSet result = statement.executeQuery()) {
@@ -107,6 +106,7 @@ public class TestResultStorageTest {
         }
         // TODO verify table structure
         r.assertBuildStatus(Result.UNSTABLE, b);
+        r.assertLogContains("summary: fail=1 skip=0 pass=1 total=2", b);
         assertFalse(new File(b.getRootDir(), "junitResult.xml").isFile());
         {
             String buildXml = FileUtils.readFileToString(new File(b.getRootDir(), "build.xml"));
@@ -124,7 +124,7 @@ public class TestResultStorageTest {
             }
             assertEquals(buildXml, ImmutableSet.of("healthScaleFactor", "testData", "descriptions"), childNames);
         }
-        // TODO verify that at this point no master-side queries have been executed
+        Impl.queriesPermitted = true;
         {
             TestResultAction a = b.getAction(TestResultAction.class);
             assertNotNull(a);
@@ -145,20 +145,25 @@ public class TestResultStorageTest {
 
         static final String CASE_RESULTS_TABLE = "caseResults";
 
+        static boolean queriesPermitted;
+
         private final ConnectionSupplier connectionSupplier = new LocalConnectionSupplier();
 
-        @Override public RemotePublisher createRemotePublisher(Run<?, ?> build, TaskListener listener) throws IOException {
+        @Override public RemotePublisher createRemotePublisher(Run<?, ?> build) throws IOException {
             try {
                 connectionSupplier.connection(); // make sure we start a local server and create table first
             } catch (SQLException x) {
                 throw new IOException(x);
             }
-            return new RemotePublisherImpl(build.getParent().getFullName(), build.getNumber(), listener);
+            return new RemotePublisherImpl(build.getParent().getFullName(), build.getNumber());
         }
 
         @Override public TestResultImpl load(String job, int build) {
             return new TestResultImpl() {
                 @Override public int getFailCount() {
+                    if (!queriesPermitted) {
+                        throw new IllegalStateException("Should not have been running any queries yet");
+                    }
                     try {
                         Connection connection = connectionSupplier.connection();
                         try (PreparedStatement statement = connection.prepareStatement("SELECT COUNT(*) FROM " + Impl.CASE_RESULTS_TABLE + " WHERE job = ? and build = ? and errorDetails IS NOT NULL")) {
@@ -184,21 +189,20 @@ public class TestResultStorageTest {
 
             private final String job;
             private final int build;
-            private final TaskListener listener;
             // TODO keep the same supplier and thus Connection open across builds, so long as the database config remains unchanged
             private final ConnectionSupplier connectionSupplier;
 
-            RemotePublisherImpl(String job, int build, TaskListener listener) {
+            RemotePublisherImpl(String job, int build) {
                 this.job = job;
                 this.build = build;
-                this.listener = listener;
                 connectionSupplier = new RemoteConnectionSupplier();
             }
 
-            @Override public void publish(TestResult result) throws IOException {
+            @Override public void publish(TestResult result, TaskListener listener) throws IOException {
                 try {
                     Connection connection = connectionSupplier.connection();
                     try (PreparedStatement statement = connection.prepareStatement("INSERT INTO " + CASE_RESULTS_TABLE + " (job, build, suite, className, testName, errorDetails) VALUES (?, ?, ?, ?, ?, ?)")) {
+                        int count = 0;
                         for (SuiteResult suiteResult : result.getSuites()) {
                             for (CaseResult caseResult : suiteResult.getCases()) {
                                 statement.setString(1, job);
@@ -213,8 +217,10 @@ public class TestResultStorageTest {
                                     statement.setNull(6, Types.VARCHAR);
                                 }
                                 statement.executeUpdate();
+                                count++;
                             }
                         }
+                        listener.getLogger().printf("Saved %d test cases into database.%n", count);
                     }
                 } catch (SQLException x) {
                     throw new IOException(x);
@@ -262,6 +268,7 @@ public class TestResultStorageTest {
                     try (Statement statement = connection.createStatement()) {
                         // TODO this and joined tables: skipped, skippedMessage, errorStackTrace, stdout, stderr, duration, nodeId, enclosingBlocks, enclosingBlockNames, etc.
                         statement.execute("CREATE TABLE " + CASE_RESULTS_TABLE + "(job varchar(255), build int, suite varchar(255), className varchar(255), testName varchar(255), errorDetails varchar(255))");
+                        // TODO indices
                     }
                 }
             }

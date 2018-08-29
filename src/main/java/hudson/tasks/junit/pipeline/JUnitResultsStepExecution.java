@@ -6,7 +6,6 @@ import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.junit.JUnitResultArchiver;
-import hudson.tasks.junit.TestResultAction;
 import hudson.tasks.junit.TestResultSummary;
 import hudson.tasks.test.PipelineTestDetails;
 import java.util.ArrayList;
@@ -46,22 +45,12 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
         pipelineTestDetails.setNodeId(nodeId);
         pipelineTestDetails.setEnclosingBlocks(getEnclosingBlockIds(enclosingBlocks));
         pipelineTestDetails.setEnclosingBlockNames(getEnclosingBlockNames(enclosingBlocks));
-        try {
-            TestResultAction testResultAction = JUnitResultArchiver.parseAndAttach(step, pipelineTestDetails, run, workspace, launcher, listener);
-
-            if (testResultAction != null) {
-                // TODO: Once JENKINS-43995 lands, update this to set the step status instead of the entire build.
-                if (testResultAction.getResult().getFailCount() > 0) {
-                    run.setResult(Result.UNSTABLE);
-                }
-                return new TestResultSummary(testResultAction.getResult().getResultByNode(nodeId));
-            }
-        } catch (Exception e) {
-            listener.getLogger().println(e.getMessage());
-            throw e;
+        TestResultSummary summary = JUnitResultArchiver.parseAndSummarize(step, pipelineTestDetails, run, workspace, launcher, listener);
+        // TODO: Once JENKINS-43995 lands, update this to set the step status instead of the entire build.
+        if (summary.getFailCount() > 0) {
+            run.setResult(Result.UNSTABLE);
         }
-
-        return new TestResultSummary();
+        return summary;
     }
 
     /**

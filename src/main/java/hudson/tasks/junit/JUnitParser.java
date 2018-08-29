@@ -34,13 +34,12 @@ import hudson.tasks.junit.storage.TestResultStorage;
 
 import java.io.IOException;
 import java.io.File;
+import java.util.concurrent.atomic.AtomicReference;
 
 import jenkins.MasterToSlaveFileCallable;
 
 import org.apache.tools.ant.types.FileSet;
 import org.apache.tools.ant.DirectoryScanner;
-
-import javax.annotation.CheckForNull;
 
 /**
  * Parse some JUnit xml files and generate a TestResult containing all the
@@ -101,42 +100,52 @@ public class JUnitParser extends TestResultParser {
         return parseResult(testResultLocations, build, null, workspace, launcher, listener);
     }
 
+    @Deprecated
     @Override
     public TestResult parseResult(String testResultLocations, Run<?,?> build, PipelineTestDetails pipelineTestDetails,
                                   FilePath workspace, Launcher launcher, TaskListener listener)
+            throws InterruptedException, IOException {
+        return parseResult(testResultLocations, build, pipelineTestDetails, workspace, launcher, listener, new AtomicReference<>());
+    }
+
+    public TestResult parseResult(String testResultLocations, Run<?,?> build, PipelineTestDetails pipelineTestDetails,
+                                  FilePath workspace, Launcher launcher, TaskListener listener, AtomicReference<TestResultSummary> summary)
             throws InterruptedException, IOException {
         final long buildTime = build.getTimestamp().getTimeInMillis();
         final long timeOnMaster = System.currentTimeMillis();
 
         TestResultStorage storage = TestResultStorage.find();
-        TestResultStorage.RemotePublisher publisher = storage == null ? null : storage.createRemotePublisher(build, listener);
-
-        return workspace.act(new ParseResultCallable(testResultLocations, buildTime, timeOnMaster, keepLongStdio,
-                allowEmptyResults, pipelineTestDetails, publisher));
+        if (storage == null) {
+            listener.getLogger().println(Messages.JUnitResultArchiver_Recording());
+            TestResult result = workspace.act(new DirectParseResultCallable(testResultLocations, buildTime, timeOnMaster, keepLongStdio, allowEmptyResults, pipelineTestDetails));
+            summary.set(new TestResultSummary(result));
+            return result;
+        } else {
+            summary.set(workspace.act(new StorageParseResultCallable(testResultLocations, buildTime, timeOnMaster, keepLongStdio, allowEmptyResults, pipelineTestDetails, storage.createRemotePublisher(build), listener)));
+            return new TestResult(); // ignored anyway
+        }
     }
 
-    private static final class ParseResultCallable extends MasterToSlaveFileCallable<TestResult> {
+    private static abstract class ParseResultCallable<T> extends MasterToSlaveFileCallable<T> {
         private final long buildTime;
         private final String testResults;
         private final long nowMaster;
         private final boolean keepLongStdio;
         private final boolean allowEmptyResults;
         private final PipelineTestDetails pipelineTestDetails;
-        private final @CheckForNull TestResultStorage.RemotePublisher publisher;
 
         private ParseResultCallable(String testResults, long buildTime, long nowMaster,
                                     boolean keepLongStdio, boolean allowEmptyResults,
-                                    PipelineTestDetails pipelineTestDetails, TestResultStorage.RemotePublisher publisher) {
+                                    PipelineTestDetails pipelineTestDetails) {
             this.buildTime = buildTime;
             this.testResults = testResults;
             this.nowMaster = nowMaster;
             this.keepLongStdio = keepLongStdio;
             this.allowEmptyResults = allowEmptyResults;
             this.pipelineTestDetails = pipelineTestDetails;
-            this.publisher = publisher;
         }
 
-        public TestResult invoke(File ws, VirtualChannel channel) throws IOException {
+        public T invoke(File ws, VirtualChannel channel) throws IOException {
             final long nowSlave = System.currentTimeMillis();
 
             FileSet fs = Util.createFileSet(ws, testResults);
@@ -156,14 +165,43 @@ public class JUnitParser extends TestResultParser {
                     throw new AbortException(Messages.JUnitResultArchiver_NoTestReportFound());
                 }
             }
-            if (publisher != null) {
-                publisher.publish(result);
-                return new TestResult(); // ignored anyway
-                // TODO at least send back a TestResultSummary to avoid requiring JUnitResultsStepExecution to repeatedly query storage
-            } else {
-                return result;
-            }
+            return handle(result);
         }
+
+        protected abstract T handle(TestResult result) throws IOException;
+
+    }
+
+    private static final class DirectParseResultCallable extends ParseResultCallable<TestResult> {
+
+        DirectParseResultCallable(String testResults, long buildTime, long nowMaster, boolean keepLongStdio, boolean allowEmptyResults, PipelineTestDetails pipelineTestDetails) {
+            super(testResults, buildTime, nowMaster, keepLongStdio, allowEmptyResults, pipelineTestDetails);
+        }
+
+        @Override
+        protected TestResult handle(TestResult result) throws IOException {
+            return result;
+        }
+
+    }
+
+    private static final class StorageParseResultCallable extends ParseResultCallable<TestResultSummary> {
+
+        private final TestResultStorage.RemotePublisher publisher;
+        private final TaskListener listener;
+
+        StorageParseResultCallable(String testResults, long buildTime, long nowMaster, boolean keepLongStdio, boolean allowEmptyResults, PipelineTestDetails pipelineTestDetails, TestResultStorage.RemotePublisher publisher, TaskListener listener) {
+            super(testResults, buildTime, nowMaster, keepLongStdio, allowEmptyResults, pipelineTestDetails);
+            this.publisher = publisher;
+            this.listener = listener;
+        }
+
+        @Override
+        protected TestResultSummary handle(TestResult result) throws IOException {
+            publisher.publish(result, listener);
+            return new TestResultSummary(result);
+        }
+
     }
 
 }

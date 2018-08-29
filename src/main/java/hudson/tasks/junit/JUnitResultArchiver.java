@@ -53,6 +53,7 @@ import org.kohsuke.stapler.QueryParameter;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nonnull;
 import jenkins.tasks.SimpleBuildStep;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -121,6 +122,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
         setAllowEmptyResults(false);
     }
 
+    @Deprecated
     private TestResult parse(String expandedTestResults, Run<?,?> run, @Nonnull FilePath workspace, Launcher launcher, TaskListener listener)
             throws IOException, InterruptedException
     {
@@ -128,12 +130,20 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
 
     }
 
+    @Deprecated
     private static TestResult parse(@Nonnull JUnitTask task, PipelineTestDetails pipelineTestDetails,
                                     String expandedTestResults, Run<?,?> run, @Nonnull FilePath workspace,
                                     Launcher launcher, TaskListener listener)
             throws IOException, InterruptedException {
+        return parse(task, pipelineTestDetails, expandedTestResults, run, workspace, launcher, listener, new AtomicReference<>());
+    }
+
+    private static TestResult parse(@Nonnull JUnitTask task, PipelineTestDetails pipelineTestDetails,
+                                    String expandedTestResults, Run<?,?> run, @Nonnull FilePath workspace,
+                                    Launcher launcher, TaskListener listener, AtomicReference<TestResultSummary> summary)
+            throws IOException, InterruptedException {
         return new JUnitParser(task.isKeepLongStdio(), task.isAllowEmptyResults())
-                .parseResult(expandedTestResults, run, pipelineTestDetails, workspace, launcher, listener);
+                .parseResult(expandedTestResults, run, pipelineTestDetails, workspace, launcher, listener, summary);
     }
 
     @Deprecated
@@ -150,12 +160,13 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     @Override
     public void perform(Run build, FilePath workspace, Launcher launcher,
             TaskListener listener) throws InterruptedException, IOException {
-        TestResultAction action = parseAndAttach(this, null, build, workspace, launcher, listener);
-
-        if (action != null && action.getResult().getFailCount() > 0)
+        if (parseAndSummarize(this, null, build, workspace, launcher, listener).getFailCount() > 0) {
             build.setResult(Result.UNSTABLE);
+        }
     }
 
+    /** @deprecated use {@link #parseAndSummarize} instead */
+    @Deprecated
     public static TestResultAction parseAndAttach(@Nonnull JUnitTask task, PipelineTestDetails pipelineTestDetails,
                                                   Run build, FilePath workspace, Launcher launcher, TaskListener listener)
             throws InterruptedException, IOException {
@@ -189,10 +200,8 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                     listener.getLogger().println(Messages.JUnitResultArchiver_ResultIsEmpty());
                     return null;
                 }
-                /* TODO some of this logic is already in ParseResultCallable; the rest should be moved there
                 // most likely a configuration error in the job - e.g. false pattern to match the JUnit result files
                 throw new AbortException(Messages.JUnitResultArchiver_ResultIsEmpty());
-                */
             }
 
             // TODO: Move into JUnitParser [BUG 3123310]
@@ -212,6 +221,52 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
             }
 
             return action;
+        }
+    }
+
+    public static TestResultSummary parseAndSummarize(@Nonnull JUnitTask task, PipelineTestDetails pipelineTestDetails,
+                                                  Run build, FilePath workspace, Launcher launcher, TaskListener listener)
+            throws InterruptedException, IOException {
+        final String testResults = build.getEnvironment(listener).expand(task.getTestResults());
+
+        AtomicReference<TestResultSummary> summary = new AtomicReference<>();
+        TestResult result = parse(task, pipelineTestDetails, testResults, build, workspace, launcher, listener, summary);
+
+        synchronized (build) {
+            // TODO can the build argument be omitted now, or is it used prior to the call to addAction?
+            TestResultAction action = build.getAction(TestResultAction.class);
+            boolean appending;
+            if (action == null) {
+                appending = false;
+                action = new TestResultAction(build, result, listener);
+            } else {
+                appending = true;
+                result.freeze(action);
+                action.mergeResult(result, listener);
+            }
+            action.setHealthScaleFactor(task.getHealthScaleFactor()); // overwrites previous value if appending
+            if (summary.get().getTotalCount() == 0 && /* maybe a secondary effect */ build.getResult() != Result.FAILURE) {
+                assert task.isAllowEmptyResults();
+                listener.getLogger().println(Messages.JUnitResultArchiver_ResultIsEmpty());
+            }
+
+            // TODO: Move into JUnitParser [BUG 3123310]
+            if (task.getTestDataPublishers() != null) {
+                for (TestDataPublisher tdp : task.getTestDataPublishers()) {
+                    Data d = tdp.contributeTestData(build, workspace, launcher, listener, result);
+                    if (d != null) {
+                        action.addData(d);
+                    }
+                }
+            }
+
+            if (appending) {
+                build.save();
+            } else {
+                build.addAction(action);
+            }
+
+            return summary.get();
         }
     }
 

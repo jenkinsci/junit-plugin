@@ -43,15 +43,15 @@ import org.jenkinsci.remoting.SerializableOnlyOverRemoting;
 public interface TestResultStorage extends ExtensionPoint {
 
     /**
-     * Runs during {@link JUnitParser#parseResult(String, Run, PipelineTestDetails, FilePath, Launcher, TaskListener)}.
+     * Runs during {@link JUnitParser#parseResult(String, Run, PipelineTestDetails, FilePath, Launcher, TaskListener, AtomicReference)}.
      */
-    RemotePublisher createRemotePublisher(Run<?,?> build, TaskListener listener) throws IOException;
+    RemotePublisher createRemotePublisher(Run<?,?> build) throws IOException;
 
     /**
      * Remotable hook to perform test result publishing.
      */
     interface RemotePublisher extends SerializableOnlyOverRemoting {
-        void publish(TestResult result) throws IOException;
+        void publish(TestResult result, TaskListener listener) throws IOException;
     }
 
     TestResultImpl load(String job, int build);
