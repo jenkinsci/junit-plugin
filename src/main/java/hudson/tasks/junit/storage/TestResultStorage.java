@@ -26,13 +26,10 @@ package hudson.tasks.junit.storage;
 
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
-import hudson.FilePath;
-import hudson.Launcher;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.junit.JUnitParser;
 import hudson.tasks.junit.TestResult;
-import hudson.tasks.test.PipelineTestDetails;
 import java.io.IOException;
 import javax.annotation.CheckForNull;
 import org.jenkinsci.remoting.SerializableOnlyOverRemoting;
@@ -43,7 +40,7 @@ import org.jenkinsci.remoting.SerializableOnlyOverRemoting;
 public interface TestResultStorage extends ExtensionPoint {
 
     /**
-     * Runs during {@link JUnitParser#parseResult(String, Run, PipelineTestDetails, FilePath, Launcher, TaskListener, AtomicReference)}.
+     * Runs during {@link JUnitParser#summarizeResult}.
      */
     RemotePublisher createRemotePublisher(Run<?,?> build) throws IOException;
 
