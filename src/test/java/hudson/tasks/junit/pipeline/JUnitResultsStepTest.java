@@ -15,13 +15,10 @@ import hudson.tasks.junit.TestResult;
 import hudson.tasks.junit.TestResultAction;
 import hudson.tasks.junit.TestResultTest;
 import hudson.tasks.test.PipelineBlockWithTests;
-import org.hamcrest.CoreMatchers;
 import org.jenkinsci.plugins.workflow.actions.LabelAction;
-import org.jenkinsci.plugins.workflow.actions.LogAction;
 import org.jenkinsci.plugins.workflow.actions.ThreadNameAction;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.SnippetizerTester;
-import org.jenkinsci.plugins.workflow.cps.nodes.StepAtomNode;
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
@@ -39,7 +36,6 @@ import org.jvnet.hudson.test.TestExtension;
 import org.kohsuke.stapler.DataBoundConstructor;
 
 import javax.annotation.Nullable;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -49,7 +45,6 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 public class JUnitResultsStepTest {
@@ -89,22 +84,6 @@ public class JUnitResultsStepTest {
         WorkflowRun r = j.scheduleBuild2(0).waitForStart();
         rule.assertBuildStatus(Result.FAILURE, rule.waitForCompletion(r));
         rule.assertLogContains("ERROR: " + Messages.JUnitResultArchiver_NoTestReportFound(), r);
-        FlowExecution execution = r.getExecution();
-        DepthFirstScanner scanner = new DepthFirstScanner();
-        FlowNode f = scanner.findFirstMatch(execution, new Predicate<FlowNode>() {
-            @Override
-            public boolean apply(@Nullable FlowNode input) {
-                return input instanceof StepAtomNode &&
-                        ((StepAtomNode) input).getDescriptor() instanceof JUnitResultsStep.DescriptorImpl;
-            }
-        });
-        assertNotNull(f);
-        LogAction logAction = f.getPersistentAction(LogAction.class);
-        assertNotNull(logAction);
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        logAction.getLogText().writeRawLogTo(0, baos);
-        String log = baos.toString();
-        assertThat(log, CoreMatchers.containsString(Messages.JUnitResultArchiver_NoTestReportFound()));
     }
 
     @Test
