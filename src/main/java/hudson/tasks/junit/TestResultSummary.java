@@ -22,6 +22,13 @@ public class TestResultSummary implements Serializable {
         this.skipCount = result.getSkipCount();
         this.passCount = result.getPassCount();
         this.totalCount = result.getTotalCount();
+        if (totalCount == 0) {
+            for (SuiteResult suite : result.getSuites()) {
+                if (!suite.getCases().isEmpty()) {
+                    throw new IllegalArgumentException("Attempt to construct TestResultSummary from TestResult without calling tally/freeze");
+                }
+            }
+        }
     }
 
     @Whitelisted
