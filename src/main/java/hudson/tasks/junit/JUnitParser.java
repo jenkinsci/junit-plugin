@@ -34,7 +34,6 @@ import hudson.tasks.junit.storage.TestResultStorage;
 
 import java.io.IOException;
 import java.io.File;
-import java.util.concurrent.atomic.AtomicReference;
 
 import jenkins.MasterToSlaveFileCallable;
 
@@ -100,29 +99,17 @@ public class JUnitParser extends TestResultParser {
         return parseResult(testResultLocations, build, null, workspace, launcher, listener);
     }
 
-    @Deprecated
     @Override
     public TestResult parseResult(String testResultLocations, Run<?,?> build, PipelineTestDetails pipelineTestDetails,
                                   FilePath workspace, Launcher launcher, TaskListener listener)
             throws InterruptedException, IOException {
-        return parseResult(testResultLocations, build, pipelineTestDetails, workspace, launcher, listener, new AtomicReference<>());
+        return workspace.act(new DirectParseResultCallable(testResultLocations, build, keepLongStdio, allowEmptyResults, pipelineTestDetails));
     }
 
-    public TestResult parseResult(String testResultLocations, Run<?,?> build, PipelineTestDetails pipelineTestDetails,
-                                  FilePath workspace, Launcher launcher, TaskListener listener, AtomicReference<TestResultSummary> summary)
+    public TestResultSummary summarizeResult(String testResultLocations, Run<?,?> build, PipelineTestDetails pipelineTestDetails,
+                                  FilePath workspace, Launcher launcher, TaskListener listener, TestResultStorage storage)
             throws InterruptedException, IOException {
-        final long buildTime = build.getTimestamp().getTimeInMillis();
-        final long timeOnMaster = System.currentTimeMillis();
-
-        TestResultStorage storage = TestResultStorage.find();
-        if (storage == null) {
-            listener.getLogger().println(Messages.JUnitResultArchiver_Recording());
-            return workspace.act(new DirectParseResultCallable(testResultLocations, buildTime, timeOnMaster, keepLongStdio, allowEmptyResults, pipelineTestDetails));
-        } else {
-            summary.set(workspace.act(new StorageParseResultCallable(testResultLocations, buildTime, timeOnMaster, keepLongStdio, allowEmptyResults, pipelineTestDetails, storage.createRemotePublisher(build), listener)));
-            return new TestResult(); // ignored anyway
-        }
-        // TODO awkward; maybe clearer to split into distinct methods, one returning TestResult, one taking TestResultStorage and returning TestResultSummary
+        return workspace.act(new StorageParseResultCallable(testResultLocations, build, keepLongStdio, allowEmptyResults, pipelineTestDetails, storage.createRemotePublisher(build), listener));
     }
 
     private static abstract class ParseResultCallable<T> extends MasterToSlaveFileCallable<T> {
@@ -133,12 +120,12 @@ public class JUnitParser extends TestResultParser {
         private final boolean allowEmptyResults;
         private final PipelineTestDetails pipelineTestDetails;
 
-        private ParseResultCallable(String testResults, long buildTime, long nowMaster,
+        private ParseResultCallable(String testResults, Run<?,?> build,
                                     boolean keepLongStdio, boolean allowEmptyResults,
                                     PipelineTestDetails pipelineTestDetails) {
-            this.buildTime = buildTime;
+            this.buildTime = build.getTimestamp().getTimeInMillis();
             this.testResults = testResults;
-            this.nowMaster = nowMaster;
+            this.nowMaster = System.currentTimeMillis();
             this.keepLongStdio = keepLongStdio;
             this.allowEmptyResults = allowEmptyResults;
             this.pipelineTestDetails = pipelineTestDetails;
@@ -173,8 +160,8 @@ public class JUnitParser extends TestResultParser {
 
     private static final class DirectParseResultCallable extends ParseResultCallable<TestResult> {
 
-        DirectParseResultCallable(String testResults, long buildTime, long nowMaster, boolean keepLongStdio, boolean allowEmptyResults, PipelineTestDetails pipelineTestDetails) {
-            super(testResults, buildTime, nowMaster, keepLongStdio, allowEmptyResults, pipelineTestDetails);
+        DirectParseResultCallable(String testResults, Run<?,?> build, boolean keepLongStdio, boolean allowEmptyResults, PipelineTestDetails pipelineTestDetails) {
+            super(testResults, build, keepLongStdio, allowEmptyResults, pipelineTestDetails);
         }
 
         @Override
@@ -189,8 +176,8 @@ public class JUnitParser extends TestResultParser {
         private final TestResultStorage.RemotePublisher publisher;
         private final TaskListener listener;
 
-        StorageParseResultCallable(String testResults, long buildTime, long nowMaster, boolean keepLongStdio, boolean allowEmptyResults, PipelineTestDetails pipelineTestDetails, TestResultStorage.RemotePublisher publisher, TaskListener listener) {
-            super(testResults, buildTime, nowMaster, keepLongStdio, allowEmptyResults, pipelineTestDetails);
+        StorageParseResultCallable(String testResults, Run<?,?> build, boolean keepLongStdio, boolean allowEmptyResults, PipelineTestDetails pipelineTestDetails, TestResultStorage.RemotePublisher publisher, TaskListener listener) {
+            super(testResults, build, keepLongStdio, allowEmptyResults, pipelineTestDetails);
             this.publisher = publisher;
             this.listener = listener;
         }

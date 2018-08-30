@@ -41,6 +41,7 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import hudson.tasks.junit.TestResultAction.Data;
+import hudson.tasks.junit.storage.TestResultStorage;
 import hudson.tasks.test.PipelineTestDetails;
 import hudson.util.DescribableList;
 import hudson.util.FormValidation;
@@ -53,7 +54,6 @@ import org.kohsuke.stapler.QueryParameter;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nonnull;
 import jenkins.tasks.SimpleBuildStep;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -130,20 +130,12 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
 
     }
 
-    @Deprecated
     private static TestResult parse(@Nonnull JUnitTask task, PipelineTestDetails pipelineTestDetails,
                                     String expandedTestResults, Run<?,?> run, @Nonnull FilePath workspace,
                                     Launcher launcher, TaskListener listener)
             throws IOException, InterruptedException {
-        return parse(task, pipelineTestDetails, expandedTestResults, run, workspace, launcher, listener, new AtomicReference<>());
-    }
-
-    private static TestResult parse(@Nonnull JUnitTask task, PipelineTestDetails pipelineTestDetails,
-                                    String expandedTestResults, Run<?,?> run, @Nonnull FilePath workspace,
-                                    Launcher launcher, TaskListener listener, AtomicReference<TestResultSummary> summary)
-            throws IOException, InterruptedException {
         return new JUnitParser(task.isKeepLongStdio(), task.isAllowEmptyResults())
-                .parseResult(expandedTestResults, run, pipelineTestDetails, workspace, launcher, listener, summary);
+                .parseResult(expandedTestResults, run, pipelineTestDetails, workspace, launcher, listener);
     }
 
     @Deprecated
@@ -227,10 +219,22 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     public static TestResultSummary parseAndSummarize(@Nonnull JUnitTask task, PipelineTestDetails pipelineTestDetails,
                                                   Run build, FilePath workspace, Launcher launcher, TaskListener listener)
             throws InterruptedException, IOException {
+        TestResultStorage storage = TestResultStorage.find();
+        if (storage == null) {
+            listener.getLogger().println(Messages.JUnitResultArchiver_Recording());
+        } // else let storage decide what to print
+
         final String testResults = build.getEnvironment(listener).expand(task.getTestResults());
 
-        AtomicReference<TestResultSummary> summary = new AtomicReference<>();
-        TestResult result = parse(task, pipelineTestDetails, testResults, build, workspace, launcher, listener, summary);
+        TestResult result;
+        TestResultSummary summary;
+        if (storage == null) {
+            result = parse(task, pipelineTestDetails, testResults, build, workspace, launcher, listener);
+            summary = null; // see below
+        } else {
+            result = new TestResult(); // irrelevant
+            summary = new JUnitParser(task.isKeepLongStdio(), task.isAllowEmptyResults()).summarizeResult(testResults, build, pipelineTestDetails, workspace, launcher, listener, storage);
+        }
 
         synchronized (build) {
             // TODO can the build argument be omitted now, or is it used prior to the call to addAction?
@@ -244,12 +248,12 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                 result.freeze(action);
                 action.mergeResult(result, listener);
             }
-            if (summary.get() == null) {
-                // Cannot do this in parseResult since the result has not yet been frozen.
-                summary.set(new TestResultSummary(result));
+            if (summary == null) {
+                // Cannot do this above since the result has not yet been frozen.
+                summary = new TestResultSummary(result);
             }
             action.setHealthScaleFactor(task.getHealthScaleFactor()); // overwrites previous value if appending
-            if (summary.get().getTotalCount() == 0 && /* maybe a secondary effect */ build.getResult() != Result.FAILURE) {
+            if (summary.getTotalCount() == 0 && /* maybe a secondary effect */ build.getResult() != Result.FAILURE) {
                 assert task.isAllowEmptyResults();
                 listener.getLogger().println(Messages.JUnitResultArchiver_ResultIsEmpty());
             }
@@ -266,11 +270,11 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
 
             if (appending) {
                 build.save();
-            } else if (summary.get().getTotalCount() > 0) {
+            } else if (summary.getTotalCount() > 0) {
                 build.addAction(action);
             }
 
-            return summary.get();
+            return summary;
         }
     }
 
