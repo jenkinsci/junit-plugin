@@ -117,13 +117,12 @@ public class JUnitParser extends TestResultParser {
         TestResultStorage storage = TestResultStorage.find();
         if (storage == null) {
             listener.getLogger().println(Messages.JUnitResultArchiver_Recording());
-            TestResult result = workspace.act(new DirectParseResultCallable(testResultLocations, buildTime, timeOnMaster, keepLongStdio, allowEmptyResults, pipelineTestDetails));
-            summary.set(new TestResultSummary(result));
-            return result;
+            return workspace.act(new DirectParseResultCallable(testResultLocations, buildTime, timeOnMaster, keepLongStdio, allowEmptyResults, pipelineTestDetails));
         } else {
             summary.set(workspace.act(new StorageParseResultCallable(testResultLocations, buildTime, timeOnMaster, keepLongStdio, allowEmptyResults, pipelineTestDetails, storage.createRemotePublisher(build), listener)));
             return new TestResult(); // ignored anyway
         }
+        // TODO awkward; maybe clearer to split into distinct methods, one returning TestResult, one taking TestResultStorage and returning TestResultSummary
     }
 
     private static abstract class ParseResultCallable<T> extends MasterToSlaveFileCallable<T> {

@@ -244,6 +244,10 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                 result.freeze(action);
                 action.mergeResult(result, listener);
             }
+            if (summary.get() == null) {
+                // Cannot do this in parseResult since the result has not yet been frozen.
+                summary.set(new TestResultSummary(result));
+            }
             action.setHealthScaleFactor(task.getHealthScaleFactor()); // overwrites previous value if appending
             if (summary.get().getTotalCount() == 0 && /* maybe a secondary effect */ build.getResult() != Result.FAILURE) {
                 assert task.isAllowEmptyResults();
