@@ -26,6 +26,7 @@ package hudson.tasks.junit.storage;
 
 import com.google.common.collect.ImmutableSet;
 import com.thoughtworks.xstream.XStream;
+import hudson.Util;
 import hudson.model.Label;
 import hudson.model.Result;
 import hudson.model.Run;
@@ -92,11 +93,18 @@ public class TestResultStorageTest {
         WorkflowJob p = r.createProject(WorkflowJob.class, "p");
         p.setDefinition(new CpsFlowDefinition(
                 "node('remote') {\n" +
-                // TODO test skips
-                "  writeFile file: 'x.xml', text: '''<testsuite name='sweet'><testcase classname='Klazz' name='test1'><error message='failure'/></testcase><testcase classname='Klazz' name='test2'/></testsuite>'''\n" +
+                "  writeFile file: 'x.xml', text: '''<testsuite name='sweet'>" +
+                    "<testcase classname='Klazz' name='test1'><error message='failure'/></testcase>" +
+                    "<testcase classname='Klazz' name='test2'/>" +
+                    "<testcase classname='other.Klazz' name='test3'><skipped message='Not actually run.'/></testcase>" +
+                    "</testsuite>'''\n" +
                 "  def s = junit 'x.xml'\n" +
-                // TODO test repeated publishing
                 "  echo(/summary: fail=$s.failCount skip=$s.skipCount pass=$s.passCount total=$s.totalCount/)\n" +
+                "  writeFile file: 'x.xml', text: '''<testsuite name='supersweet'>" +
+                    "<testcase classname='another.Klazz' name='test1'><error message='another failure'/></testcase>" +
+                    "</testsuite>'''\n" +
+                "  s = junit 'x.xml'\n" +
+                "  echo(/next summary: fail=$s.failCount skip=$s.skipCount pass=$s.passCount total=$s.totalCount/)\n" +
                 "}", true));
         WorkflowRun b = p.scheduleBuild2(0).get();
         try (Connection connection = GlobalDatabaseConfiguration.get().getDatabase().getDataSource().getConnection();
@@ -106,7 +114,8 @@ public class TestResultStorageTest {
         }
         // TODO verify table structure
         r.assertBuildStatus(Result.UNSTABLE, b);
-        r.assertLogContains("summary: fail=1 skip=0 pass=1 total=2", b);
+        r.assertLogContains("summary: fail=1 skip=1 pass=1 total=3", b);
+        r.assertLogContains("next summary: fail=1 skip=0 pass=0 total=1", b);
         assertFalse(new File(b.getRootDir(), "junitResult.xml").isFile());
         {
             String buildXml = FileUtils.readFileToString(new File(b.getRootDir(), "build.xml"));
@@ -128,13 +137,22 @@ public class TestResultStorageTest {
         {
             TestResultAction a = b.getAction(TestResultAction.class);
             assertNotNull(a);
-            assertEquals(1, a.getFailCount());
+            assertEquals(2, a.getFailCount());
+            assertEquals(1, a.getSkipCount());
+            assertEquals(4, a.getTotalCount());
+            assertEquals(2, a.getResult().getFailCount());
+            assertEquals(1, a.getResult().getSkipCount());
+            assertEquals(4, a.getResult().getTotalCount());
+            assertEquals(1, a.getResult().getPassCount());
             /* TODO implement:
             List<CaseResult> failedTests = a.getFailedTests();
-            assertEquals(1, failedTests.size());
+            assertEquals(2, failedTests.size());
             assertEquals("Klazz", failedTests.get(0).getClassName());
             assertEquals("test1", failedTests.get(0).getName());
             assertEquals("failure", failedTests.get(0).getErrorDetails());
+            assertEquals("another.Klazz", failedTests.get(1).getClassName());
+            assertEquals("test1", failedTests.get(1).getName());
+            assertEquals("another failure", failedTests.get(1).getErrorDetails());
             */
             // TODO more detailed Java queries incl. PackageResult / ClassResult
             // TODO test healthScaleFactor, descriptions
@@ -158,15 +176,27 @@ public class TestResultStorageTest {
             return new RemotePublisherImpl(build.getParent().getFullName(), build.getNumber());
         }
 
+        @FunctionalInterface
+        private interface Querier<T> {
+            T run(Connection connection) throws SQLException;
+        }
         @Override public TestResultImpl load(String job, int build) {
             return new TestResultImpl() {
-                @Override public int getFailCount() {
+                private <T> T query(Querier<T> querier, T dflt) {
                     if (!queriesPermitted) {
                         throw new IllegalStateException("Should not have been running any queries yet");
                     }
                     try {
                         Connection connection = connectionSupplier.connection();
-                        try (PreparedStatement statement = connection.prepareStatement("SELECT COUNT(*) FROM " + Impl.CASE_RESULTS_TABLE + " WHERE job = ? and build = ? and errorDetails IS NOT NULL")) {
+                        return querier.run(connection);
+                    } catch (SQLException x) {
+                        x.printStackTrace();
+                        return dflt;
+                    }
+                }
+                private int getCaseCount(String and) {
+                    return query(connection -> {
+                        try (PreparedStatement statement = connection.prepareStatement("SELECT COUNT(*) FROM " + Impl.CASE_RESULTS_TABLE + " WHERE job = ? AND build = ?" + and)) {
                             statement.setString(1, job);
                             statement.setInt(2, build);
                             try (ResultSet result = statement.executeQuery()) {
@@ -174,10 +204,19 @@ public class TestResultStorageTest {
                                 return result.getInt(1);
                             }
                         }
-                    } catch (SQLException x) {
-                        x.printStackTrace();
-                        return 0;
-                    }
+                    }, 0);
+                }
+                @Override public int getFailCount() {
+                    return getCaseCount(" AND errorDetails IS NOT NULL");
+                }
+                @Override public int getSkipCount() {
+                    return getCaseCount(" AND skipped IS NOT NULL");
+                }
+                @Override public int getPassCount() {
+                    return getCaseCount(" AND errorDetails IS NULL AND skipped IS NULL");
+                }
+                @Override public int getTotalCount() {
+                    return getCaseCount("");
                 }
                 @Override public TestResult getResultByNodes(List<String> nodeIds) {
                     return new TestResult(this); // TODO
@@ -201,7 +240,7 @@ public class TestResultStorageTest {
             @Override public void publish(TestResult result, TaskListener listener) throws IOException {
                 try {
                     Connection connection = connectionSupplier.connection();
-                    try (PreparedStatement statement = connection.prepareStatement("INSERT INTO " + CASE_RESULTS_TABLE + " (job, build, suite, className, testName, errorDetails) VALUES (?, ?, ?, ?, ?, ?)")) {
+                    try (PreparedStatement statement = connection.prepareStatement("INSERT INTO " + CASE_RESULTS_TABLE + " (job, build, suite, className, testName, errorDetails, skipped) VALUES (?, ?, ?, ?, ?, ?, ?)")) {
                         int count = 0;
                         for (SuiteResult suiteResult : result.getSuites()) {
                             for (CaseResult caseResult : suiteResult.getCases()) {
@@ -215,6 +254,11 @@ public class TestResultStorageTest {
                                     statement.setString(6, errorDetails);
                                 } else {
                                     statement.setNull(6, Types.VARCHAR);
+                                }
+                                if (caseResult.isSkipped()) {
+                                    statement.setString(7, Util.fixNull(caseResult.getSkippedMessage()));
+                                } else {
+                                    statement.setNull(7, Types.VARCHAR);
                                 }
                                 statement.executeUpdate();
                                 count++;
@@ -266,8 +310,8 @@ public class TestResultStorageTest {
                 }
                 if (!exists) {
                     try (Statement statement = connection.createStatement()) {
-                        // TODO this and joined tables: skipped, skippedMessage, errorStackTrace, stdout, stderr, duration, nodeId, enclosingBlocks, enclosingBlockNames, etc.
-                        statement.execute("CREATE TABLE " + CASE_RESULTS_TABLE + "(job varchar(255), build int, suite varchar(255), className varchar(255), testName varchar(255), errorDetails varchar(255))");
+                        // TODO this and joined tables: errorStackTrace, stdout, stderr, duration, nodeId, enclosingBlocks, enclosingBlockNames, etc.
+                        statement.execute("CREATE TABLE " + CASE_RESULTS_TABLE + "(job varchar(255), build int, suite varchar(255), className varchar(255), testName varchar(255), errorDetails varchar(255), skipped varchar(255))");
                         // TODO indices
                     }
                 }

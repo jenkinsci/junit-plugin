@@ -177,6 +177,10 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
 
     @Override
     public synchronized int getSkipCount() {
+        TestResultStorage storage = TestResultStorage.find();
+        if (storage != null) {
+            return new TestResult(storage.load(run.getParent().getFullName(), run.getNumber())).getSkipCount();
+        }
         if(totalCount==null)
             getResult();    // this will compute the result
         return skipCount;
@@ -184,6 +188,10 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
 
     @Override
     public synchronized int getTotalCount() {
+        TestResultStorage storage = TestResultStorage.find();
+        if (storage != null) {
+            return new TestResult(storage.load(run.getParent().getFullName(), run.getNumber())).getTotalCount();
+        }
         if(totalCount==null)
             getResult();    // this will compute the result
         return totalCount;

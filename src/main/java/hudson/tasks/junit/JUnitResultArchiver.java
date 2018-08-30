@@ -224,7 +224,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
             listener.getLogger().println(Messages.JUnitResultArchiver_Recording());
         } // else let storage decide what to print
 
-        final String testResults = build.getEnvironment(listener).expand(task.getTestResults());
+        String testResults = build.getEnvironment(listener).expand(task.getTestResults());
 
         TestResult result;
         TestResultSummary summary;
@@ -245,10 +245,13 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                 action = new TestResultAction(build, result, listener);
             } else {
                 appending = true;
-                result.freeze(action);
-                action.mergeResult(result, listener);
+                if (storage == null) {
+                    result.freeze(action);
+                    action.mergeResult(result, listener);
+                }
             }
             if (summary == null) {
+                assert storage == null;
                 // Cannot do this above since the result has not yet been frozen.
                 summary = new TestResultSummary(result);
             }
@@ -258,7 +261,6 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                 listener.getLogger().println(Messages.JUnitResultArchiver_ResultIsEmpty());
             }
 
-            // TODO: Move into JUnitParser [BUG 3123310]
             if (task.getTestDataPublishers() != null) {
                 for (TestDataPublisher tdp : task.getTestDataPublishers()) {
                     Data d = tdp.contributeTestData(build, workspace, launcher, listener, result);

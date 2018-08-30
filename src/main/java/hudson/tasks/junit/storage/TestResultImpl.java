@@ -33,5 +33,8 @@ import javax.annotation.Nonnull;
  */
 public interface TestResultImpl {
     int getFailCount();
+    int getSkipCount();
+    int getPassCount();
+    int getTotalCount();
     @Nonnull TestResult getResultByNodes(@Nonnull List<String> nodeIds);
 }
