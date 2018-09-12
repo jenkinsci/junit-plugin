@@ -377,6 +377,7 @@ public class AggregatedTestResultPublisher extends Recorder {
         }
 
         public AutoCompletionCandidates doAutoCompleteJobs(@QueryParameter String value, @AncestorInPath Item self, @AncestorInPath ItemGroup container) {
+            // Item.READ checked inside
             return AutoCompletionCandidates.ofJobNames(Job.class,value,self,container);
         }
     }
