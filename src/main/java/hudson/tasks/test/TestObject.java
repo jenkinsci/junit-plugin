@@ -455,12 +455,13 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
     public synchronized HttpResponse doSubmitDescription(
             @QueryParameter String description) throws IOException,
             ServletException {
-        getRun().checkPermission(Run.UPDATE);
-        if (getRun() == null) {
+        Run<?, ?> run = getRun();
+        if (run == null) {
             LOGGER.severe("getRun() is null, can't save description.");
         } else {
+            run.checkPermission(Run.UPDATE);
             setDescription(description);
-            getRun().save();
+            run.save();
         }
 
         return new HttpRedirect(".");
