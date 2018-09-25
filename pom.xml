@@ -13,7 +13,7 @@
     <description>Allows JUnit-format test results to be published.</description>
     <url>http://wiki.jenkins-ci.org/display/JENKINS/JUnit+Plugin</url>
     <properties>
-        <revision>1.25</revision>
+        <revision>1.26</revision>
         <changelist>-SNAPSHOT</changelist>
         <jenkins.version>2.121.3</jenkins.version>
         <java.level>8</java.level>
@@ -60,12 +60,6 @@
             <groupId>org.jenkins-ci.plugins.workflow</groupId>
             <artifactId>workflow-api</artifactId>
             <version>2.22</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.jenkins-ci.plugins</groupId>
-                    <artifactId>scm-api</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
