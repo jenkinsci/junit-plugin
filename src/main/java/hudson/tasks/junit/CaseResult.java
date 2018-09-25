@@ -643,6 +643,33 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         }
     }
 
+    @Override
+    public String toString() {
+        StringBuilder b = new StringBuilder("CaseResult{className=").append(className).append(", testName=").append(testName);
+        if (errorDetails != null) {
+            b.append(", errorDetails=").append(errorDetails);
+        }
+        if (errorStackTrace != null) {
+            b.append(", errorStackTrace=").append(errorStackTrace);
+        }
+        if (skipped) {
+            b.append(", skipped=true");
+        }
+        if (skippedMessage != null) {
+            b.append(", skippedMessage=").append(skippedMessage);
+        }
+        if (duration != 0.0f) {
+            b.append(", duration=").append(duration);
+        }
+        if (stdout != null) {
+            b.append(", stdout=").append(stdout);
+        }
+        if (stderr != null) {
+            b.append(", stderr=").append(stderr);
+        }
+        return b.append('}').toString();
+    }
+
     public int compareTo(CaseResult that) {
         if (this == that) {
             return 0;

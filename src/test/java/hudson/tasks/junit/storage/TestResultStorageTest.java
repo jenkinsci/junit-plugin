@@ -145,6 +145,7 @@ public class TestResultStorageTest {
             assertEquals(4, a.getResult().getTotalCount());
             assertEquals(1, a.getResult().getPassCount());
             /* TODO implement:
+            assertEquals("[CaseResult{className=Klazz, testName=test1, errorDetails=failure}, CaseResult{className=another.Klazz, testName=test1, errorDetails=another failure}]", a.getFailedTests().toString());
             List<CaseResult> failedTests = a.getFailedTests();
             assertEquals(2, failedTests.size());
             assertEquals("Klazz", failedTests.get(0).getClassName());
@@ -154,6 +155,7 @@ public class TestResultStorageTest {
             assertEquals("test1", failedTests.get(1).getName());
             assertEquals("another failure", failedTests.get(1).getErrorDetails());
             */
+            // TODO passedTests, skippedTests
             // TODO more detailed Java queries incl. PackageResult / ClassResult
             // TODO test healthScaleFactor, descriptions
         }
