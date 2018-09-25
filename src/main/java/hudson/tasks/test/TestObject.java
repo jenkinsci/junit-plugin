@@ -40,6 +40,7 @@ import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 
 import com.google.common.collect.MapMaker;
+import org.kohsuke.stapler.interceptor.RequirePOST;
 
 import javax.servlet.ServletException;
 import java.io.IOException;
@@ -450,15 +451,17 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
         return null;
     }
 
+    @RequirePOST
     public synchronized HttpResponse doSubmitDescription(
             @QueryParameter String description) throws IOException,
             ServletException {
-        if (getRun() == null) {
+        Run<?, ?> run = getRun();
+        if (run == null) {
             LOGGER.severe("getRun() is null, can't save description.");
         } else {
-            getRun().checkPermission(Run.UPDATE);
+            run.checkPermission(Run.UPDATE);
             setDescription(description);
-            getRun().save();
+            run.save();
         }
 
         return new HttpRedirect(".");

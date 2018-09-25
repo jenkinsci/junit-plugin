@@ -32,6 +32,7 @@ import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.Descriptor;
+import hudson.model.Item;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.Saveable;
@@ -377,7 +378,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
         public FormValidation doCheckTestResults(
                 @AncestorInPath AbstractProject project,
                 @QueryParameter String value) throws IOException {
-            if (project == null) {
+            if (project == null || !project.hasPermission(Item.WORKSPACE)) {
                 return FormValidation.ok();
             }
             return FilePath.validateFileMask(project.getSomeWorkspace(), value);
