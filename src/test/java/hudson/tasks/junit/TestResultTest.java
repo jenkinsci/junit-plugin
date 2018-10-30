@@ -31,6 +31,8 @@ import hudson.util.XStream2;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -104,7 +106,20 @@ public class TestResultTest {
         assertFalse(failedCase.isPassed());
         assertEquals(5, failedCase.getFailedSince());
     }
-    
+
+    /**
+     * When  skipped test case result does not contain message attribute then the skipped xml element text is retrieved
+     */
+    @Test
+    public void testSkippedMessageIsAddedWhenTheMessageAttributeIsNull() throws IOException, URISyntaxException {
+        TestResult testResult = new TestResult();
+        testResult.parse(getDataFile("SKIPPED_MESSAGE/skippedTestResult.xml"), null);
+        List<SuiteResult> suiteResults = new ArrayList<>(testResult.getSuites());
+        CaseResult caseResult = suiteResults.get(0).getCases().get(0);
+        assertNotNull(caseResult.getSkippedMessage());
+        assertEquals("Given skip This Test........................................................pending\n", caseResult.getSkippedMessage());
+    }
+
     /**
      * When test methods are parametrized, they can occur multiple times in the testresults XMLs.
      * Test that these are counted correctly.
