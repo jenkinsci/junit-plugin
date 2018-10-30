@@ -261,6 +261,9 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
 
         if (skippedElement != null) {
             message = skippedElement.attributeValue("message");
+            if(message == null) {
+                message = skippedElement.getText();
+            }
         }
 
         return message;
