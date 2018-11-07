@@ -116,7 +116,6 @@ public class TestResultTest {
         testResult.parse(getDataFile("SKIPPED_MESSAGE/skippedTestResult.xml"), null);
         List<SuiteResult> suiteResults = new ArrayList<>(testResult.getSuites());
         CaseResult caseResult = suiteResults.get(0).getCases().get(0);
-        assertNotNull(caseResult.getSkippedMessage());
         assertEquals("Given skip This Test........................................................pending\n", caseResult.getSkippedMessage());
     }
 
