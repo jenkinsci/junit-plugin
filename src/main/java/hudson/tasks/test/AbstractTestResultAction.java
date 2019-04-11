@@ -202,7 +202,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
      *
      * <p>
      * If such a concept doesn't make sense for a particular subtype,
-     * return <tt>this</tt>.
+     * return <code>this</code>.
      */
     public abstract Object getResult();
 
