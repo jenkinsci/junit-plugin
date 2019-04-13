@@ -30,8 +30,12 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.concurrent.TimeUnit;
 
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
 import org.jvnet.hudson.test.TouchBuilder;
@@ -117,4 +121,20 @@ public class TestResultLinksTest {
         boolean pathStartsWithRootUrl = !pathIsEmptyOrNull && relativePath2.startsWith(rule.jenkins.getRootUrl());
         assertTrue("relative path is empty OR begins with the app root", pathIsEmptyOrNull || pathStartsWithRootUrl ); 
     }
+    
+    @Issue("JENKINS-31660")
+    @Test
+    public void testPreviousBuildNotLoaded() throws IOException, URISyntaxException {
+        TestResult testResult = new TestResult();
+        File dataFile = TestResultTest.getDataFile("SKIPPED_MESSAGE/skippedTestResult.xml");
+        testResult.parse(dataFile, null);
+        FreeStyleBuild build = new FreeStyleBuild(project) {
+            @Override
+            public FreeStyleBuild getPreviousBuild() {
+                fail("When no tests fail, we don't need tp load previous builds (expensive)");
+                return null;
+            }
+        };
+        testResult.freeze(new TestResultAction(build, testResult, null));
+     }
 }
