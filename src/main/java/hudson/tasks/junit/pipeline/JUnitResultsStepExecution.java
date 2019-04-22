@@ -6,13 +6,13 @@ import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.junit.JUnitResultArchiver;
+import hudson.tasks.junit.TestResult;
 import hudson.tasks.junit.TestResultAction;
 import hudson.tasks.junit.TestResultSummary;
 import hudson.tasks.test.PipelineTestDetails;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nonnull;
-
 import org.jenkinsci.plugins.workflow.actions.LabelAction;
 import org.jenkinsci.plugins.workflow.actions.ThreadNameAction;
 import org.jenkinsci.plugins.workflow.actions.WarningAction;
@@ -52,12 +52,13 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
             TestResultAction testResultAction = JUnitResultArchiver.parseAndAttach(step, pipelineTestDetails, run, workspace, launcher, listener);
 
             if (testResultAction != null) {
-                int testFailures = testResultAction.getResult().getResultByNode(nodeId).getFailCount();
+                TestResult testResult = testResultAction.getResult().getResultByNode(nodeId);
+                int testFailures = testResult.getFailCount();
                 if (testFailures > 0) {
                     node.addOrReplaceAction(new WarningAction(testFailures + " tests failed"));
                     run.setResult(Result.UNSTABLE);
                 }
-                return new TestResultSummary(testResultAction.getResult().getResultByNode(nodeId));
+                return new TestResultSummary(testResult);
             }
         } catch (Exception e) {
             listener.getLogger().println(e.getMessage());
