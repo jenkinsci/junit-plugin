@@ -55,7 +55,7 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
                 TestResult testResult = testResultAction.getResult().getResultByNode(nodeId);
                 int testFailures = testResult.getFailCount();
                 if (testFailures > 0) {
-                    node.addOrReplaceAction(new WarningAction(testFailures + " tests failed"));
+                    node.addOrReplaceAction(new WarningAction(Result.UNSTABLE).withMessage(testFailures + " tests failed"));
                     run.setResult(Result.UNSTABLE);
                 }
                 return new TestResultSummary(testResult);
