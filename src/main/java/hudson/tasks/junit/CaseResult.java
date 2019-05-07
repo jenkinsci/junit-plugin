@@ -402,6 +402,11 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     public int getFailedSince() {
         // If we haven't calculated failedSince yet, and we should,
         // do it now.
+        recomputeFailedSinceIfNeeded();
+        return failedSince;
+    }
+
+    private void recomputeFailedSinceIfNeeded() {
         if (failedSince==0 && getFailCount()==1) {
             CaseResult prev = getPreviousResult();
             if(prev!=null && !prev.isPassed())
@@ -413,9 +418,8 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
                 // failedSince will be 0, which isn't correct. 
             }
         }
-        return failedSince;
     }
-    
+
     public Run<?,?> getFailedSinceRun() {
     	return getRun().getParent().getBuildByNumber(getFailedSince());
     }
@@ -637,13 +641,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     public void freeze(SuiteResult parent) {
         this.parent = parent;
         // some old test data doesn't have failedSince value set, so for those compute them.
-        if(!isPassed() && failedSince==0) {
-            CaseResult prev = getPreviousResult();
-            if(prev!=null && !prev.isPassed())
-                this.failedSince = prev.failedSince;
-            else
-                this.failedSince = getRun().getNumber();
-        }
+        recomputeFailedSinceIfNeeded();
     }
 
     public int compareTo(CaseResult that) {
