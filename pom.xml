@@ -7,13 +7,13 @@
         <relativePath />
     </parent>
     <artifactId>junit</artifactId>
-    <version>1.28</version>
+    <version>${revision}${changelist}</version>
     <packaging>hpi</packaging>
     <name>JUnit Plugin</name>
     <description>Allows JUnit-format test results to be published.</description>
     <url>http://wiki.jenkins-ci.org/display/JENKINS/JUnit+Plugin</url>
     <properties>
-        <revision>1.28</revision>
+        <revision>1.29</revision>
         <changelist>-SNAPSHOT</changelist>
         <jenkins.version>2.138.4</jenkins.version>
         <java.level>8</java.level>
@@ -31,7 +31,7 @@
         <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
         <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
         <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
-      <tag>junit-1.28</tag>
+      <tag>${scmTag}</tag>
     </scm>
     <repositories>
         <repository>
