@@ -131,7 +131,7 @@ public final class SuiteResult implements Serializable {
         if (casesByName == null) {
             casesByName = new HashMap<>();
             for (CaseResult c : cases) {
-                casesByName.put(c.getTransformedTestName(), c);
+                casesByName.put(c.getTransformedFullName(), c);
             }
         }
         return casesByName;
@@ -294,7 +294,7 @@ public final class SuiteResult implements Serializable {
 
     /*package*/ void addCase(CaseResult cr) {
         cases.add(cr);
-        casesByName().put(cr.getTransformedTestName(), cr);
+        casesByName().put(cr.getTransformedFullName(), cr);
 
         //if suite time was not specified use sum of the cases' times
         if( !hasTimeAttr() ){
