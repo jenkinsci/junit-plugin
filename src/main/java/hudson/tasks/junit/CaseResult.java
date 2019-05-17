@@ -427,14 +427,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         }
     }
 
-
-    /**
-     * If this test was skipped, then return the build number
-     * when this test was first skipped.
-     */
-    @Exported(visibility=9)
-    public int getSkippedSince() {
-        // If we haven't calculated skippedSince yet, and we should, do it now.
+    private void recomputeSkippedSinceIfNeeded() {
         if (skippedSince==0 && getSkipCount()==1) {
             CaseResult prev = getPreviousResult();
             if(prev!=null && prev.isSkipped()){
@@ -447,6 +440,16 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
                 // skippedSince will be 0, which isn't correct.
             }
         }
+    }
+
+    /**
+     * If this test was skipped, then return the build number
+     * when this test was first skipped.
+     */
+    @Exported(visibility=9)
+    public int getSkippedSince() {
+        // If we haven't calculated skippedSince yet, and we should, do it now.
+        recomputeSkippedSinceIfNeeded();
         return skippedSince;
     }
 
