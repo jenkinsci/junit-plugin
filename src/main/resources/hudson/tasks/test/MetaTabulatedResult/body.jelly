@@ -25,6 +25,44 @@ THE SOFTWARE.
 
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson/test" xmlns:f="/lib/form">
+  <st:once>
+    <script type="text/javascript">
+      function showSkipped() {
+        const skippedTestsTable = document.getElementsByClassName("block collapse skipped")[0];
+        const showSkippedLink = document.getElementById("showSkippedLink");
+        skippedTestsTable.classList.add("show");
+        showSkippedLink.style.display = "none";
+      }
+    </script>
+    <style type="text/css">
+      *, ::after, ::before {
+      box-sizing: border-box;
+      }
+
+      .collapse {
+      display: block;
+      max-height: 0px;
+      overflow: hidden;
+      transition: max-height 0.5s cubic-bezier(0, 1, 0, 1);
+      }
+      .collapse.show {
+      max-height: 99em;
+      transition: max-height .5s ease-in-out;
+      }
+
+      .block {
+      margin-top: 10px;
+      padding: 0;
+      }
+      .block__content {
+      height: 100%;
+      }
+      a:link#showSkippedLink {
+      margin-top: 0.83em;
+      }
+    </style>
+  </st:once>
+
   <j:if test="${it.failCount!=0}">
     <h2>${%All Failed Tests}</h2>
     <table class="pane sortable bigtable stripped">
@@ -41,28 +79,6 @@ THE SOFTWARE.
           </td>
           <td class="pane" style="text-align:right;">
             <a href="${rootURL}/${f.failedSinceRun.url}" class="model-link inside">${f.age}</a>
-          </td>
-        </tr>
-      </j:forEach>
-    </table>
-  </j:if>
-
-  <j:if test="${it.skipCount!=0}">
-    <h2>${%All Skipped Tests}</h2>
-    <table class="pane sortable bigtable stripped">
-      <tr>
-        <td class="pane-header">${%Test Name}</td>
-        <td class="pane-header" style="width:4em">${%Duration}</td>
-        <td class="pane-header" style="width:3em">${%Age}</td>
-      </tr>
-      <j:forEach var="f" items="${it.skippedTests}" varStatus="i">
-        <tr>
-          <td class="pane no-wrap"><t:failed-test result="${f}" url="${f.getRelativePathFrom(it)}"/></td>
-          <td class="pane no-wrap" style="text-align:right;" data="${f.duration}">
-            ${f.durationString}
-          </td>
-          <td class="pane" style="text-align:right;">
-            <a href="${rootURL}/${f.skippedSinceRun.url}" class="model-link inside">${f.age}</a>
           </td>
         </tr>
       </j:forEach>
@@ -117,4 +133,34 @@ THE SOFTWARE.
       </tbody>
     </table>
   </j:if>
+
+  <j:if test="${it.skipCount!=0}">
+    <a id="showSkippedLink" name="editSkipped"
+       href="#showskipped"
+       onclick="javascript:showSkipped()">${%Show all skipped tests} ${">>>"}</a>
+    <div class="block collapse skipped">
+    <div class="block__content">
+    <h2>${%All Skipped Tests}</h2>
+    <table class="pane sortable bigtable stripped">
+      <tr>
+        <td class="pane-header">${%Test Name}</td>
+        <td class="pane-header" style="width:4em">${%Duration}</td>
+        <td class="pane-header" style="width:3em">${%Age}</td>
+      </tr>
+      <j:forEach var="f" items="${it.skippedTests}" varStatus="i">
+        <tr>
+          <td class="pane no-wrap"><t:failed-test result="${f}" url="${f.getRelativePathFrom(it)}"/></td>
+          <td class="pane no-wrap" style="text-align:right;" data="${f.duration}">
+            ${f.durationString}
+          </td>
+          <td class="pane" style="text-align:right;">
+            <a href="${rootURL}/${f.skippedSinceRun.url}" class="model-link inside">${f.age}</a>
+          </td>
+        </tr>
+      </j:forEach>
+    </table>
+    </div>
+    </div>
+  </j:if>
+
 </j:jelly>
