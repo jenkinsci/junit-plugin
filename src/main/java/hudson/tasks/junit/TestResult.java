@@ -44,6 +44,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.logging.Logger;
 
 import org.apache.tools.ant.DirectoryScanner;
 import org.dom4j.DocumentException;
@@ -59,6 +60,7 @@ import javax.annotation.Nonnull;
  * @author Kohsuke Kawaguchi
  */
 public final class TestResult extends MetaTabulatedResult {
+    private static final Logger LOGGER = Logger.getLogger(TestResult.class.getName());
 
     /**
      * List of all {@link SuiteResult}s in this test.
@@ -286,7 +288,7 @@ public final class TestResult extends MetaTabulatedResult {
         for (SuiteResult s : suites) {
             // JENKINS-12457: If a testsuite is distributed over multiple files, merge it into a single SuiteResult:
             if(s.getName().equals(sr.getName()) &&
-                    nullSafeEq(s.getId(),sr.getId()) &&
+                    eitherNullOrEq(s.getId(),sr.getId()) &&
                     nullSafeEq(s.getNodeId(),sr.getNodeId()) &&
                     nullSafeEq(s.getEnclosingBlocks(),sr.getEnclosingBlocks()) &&
                     nullSafeEq(s.getEnclosingBlockNames(),sr.getEnclosingBlockNames())) {
@@ -295,6 +297,11 @@ public final class TestResult extends MetaTabulatedResult {
                 // In that case consider the result file as a duplicate and discard it.
                 // see http://jenkins.361315.n4.nabble.com/Problem-with-duplicate-build-execution-td371616.html for discussion.
                 if(strictEq(s.getTimestamp(),sr.getTimestamp())) {
+                    String message = "Ignoring duplicate TestSuite: " + sr.getName();
+                    if (null != sr.getFile()) {
+                        message = message + " (" + sr.getFile() + ")";
+                    }
+                    LOGGER.warning(message);
                     return;
                 }
 
@@ -328,6 +335,13 @@ public final class TestResult extends MetaTabulatedResult {
             return rhs == null;
         }
         return lhs.equals(rhs);
+    }
+
+    private boolean eitherNullOrEq(Object lhs, Object rhs) {
+        // Merged testSuites may have attribute (ID) not preset in the original.
+        // If both have an ID, compare it.
+        // If either does not have an ID, then assume they are the same.
+        return lhs == null || rhs == null || lhs.equals(rhs);
     }
 
     @Deprecated
