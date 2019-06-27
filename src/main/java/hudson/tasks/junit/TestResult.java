@@ -296,13 +296,22 @@ public final class TestResult extends MetaTabulatedResult {
                 // However, a common problem is that people parse TEST-*.xml as well as TESTS-TestSuite.xml.
                 // In that case consider the result file as a duplicate and discard it.
                 // see http://jenkins.361315.n4.nabble.com/Problem-with-duplicate-build-execution-td371616.html for discussion.
-                if(strictEq(s.getTimestamp(),sr.getTimestamp())) {
-                    String message = "Ignoring duplicate TestSuite: " + sr.getName();
-                    if (null != sr.getFile()) {
-                        message = message + " (" + sr.getFile() + ")";
+                if(strictEq(s.getTimestamp(),sr.getTimestamp()) &&
+                        s.getDuration() == sr.getDuration() &&
+                        s.getCases().size() == sr.getCases().size()) {
+                    
+                    // Rare edge case: testing framework writes one file per test case, but all same test suite...
+                    // *and* duration is not included, or so fast that first two files have 0.000 or 0.001.
+                    // When the second file is read, number of test cases will match... so compare the name.
+                    if (s.getCases().size() != 1 ||
+                            s.getCases().get(0).getFullName().equals(sr.getCases().get(0).getFullName())) {
+                        String message = "Ignoring duplicate TestSuite: " + sr.getName();
+                        if (null != sr.getFile()) {
+                            message = message + " (" + sr.getFile() + ")";
+                        }
+                        LOGGER.warning(message);
+                        return;
                     }
-                    LOGGER.warning(message);
-                    return;
                 }
 
                 duration += sr.getDuration();
