@@ -260,6 +260,23 @@ public class TestResultTest {
         assertEquals("Wrong number of test cases", 3, testResult.getTotalCount());
     }
     
+    /**
+     * Despite problem stated for {@link TestResultTest#testDuplicatedTestSuiteIsNotCounted()} above,
+     * sometimes test cases are split over multiple files with identical timestamps.
+     */
+    @Issue("JENKINS-48583")
+    @Test
+    public void testNonDuplicatedTestSuiteIsCounted() throws IOException, URISyntaxException {
+        TestResult testResult = new TestResult();
+        testResult.parse(getDataFile("JENKINS-12457/TestSuite_b.xml"), null);
+        testResult.parse(getDataFile("JENKINS-12457/TestSuite_b_duplicate.xml"), null);
+        testResult.parse(getDataFile("JENKINS-12457/TestSuite_b_nonduplicate.xml"), null);
+        testResult.tally();
+        
+        assertEquals("Wrong number of testsuites", 1, testResult.getSuites().size());
+        assertEquals("Wrong number of test cases", 2, testResult.getTotalCount());
+    }
+
     private static final XStream XSTREAM = new XStream2();
 
     static {
