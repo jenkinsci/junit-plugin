@@ -32,12 +32,10 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
 import org.junit.Test;
-import org.jvnet.hudson.test.Bug;
 
 import com.thoughtworks.xstream.XStream;
 import org.jvnet.hudson.test.Issue;
@@ -136,7 +134,8 @@ public class TestResultTest {
         assertEquals("Wrong number of test cases", 3, testResult.getTotalCount());
     }
     
-    @Bug(12457)
+    @Issue("JENKINS-12457")
+    @Test
     public void testTestSuiteDistributedOverMultipleFilesIsCountedAsOne() throws IOException, URISyntaxException {
         TestResult testResult = new TestResult();
         testResult.parse(getDataFile("JENKINS-12457/TestSuite_a1.xml"), null);
@@ -154,6 +153,7 @@ public class TestResultTest {
      * A common problem is that people parse TEST-*.xml as well as TESTS-TestSuite.xml.
      * See http://jenkins.361315.n4.nabble.com/Problem-with-duplicate-build-execution-td371616.html for discussion.
      */
+    @Test
     public void testDuplicatedTestSuiteIsNotCounted() throws IOException, URISyntaxException {
         TestResult testResult = new TestResult();
         testResult.parse(getDataFile("JENKINS-12457/TestSuite_b.xml"), null);
@@ -190,7 +190,7 @@ public class TestResultTest {
     @Test
     public void testMergeWithTime() throws Exception {
         TestResult testResult = new TestResult();
-        testResult.parse(getDataFile("junit-report-time-aggregation.xml"));
+        testResult.parse(getDataFile("junit-report-time-aggregation.xml"), null);
         testResult.tally();
 
         assertEquals(1, testResult.getSuites().size());
@@ -203,7 +203,7 @@ public class TestResultTest {
     @Test
     public void testMergeWithoutTime() throws Exception {
         TestResult testResult = new TestResult();
-        testResult.parse(getDataFile("junit-report-time-aggregation2.xml"));
+        testResult.parse(getDataFile("junit-report-time-aggregation2.xml"), null);
         testResult.tally();
 
         assertEquals(1, testResult.getSuites().size());
@@ -216,7 +216,7 @@ public class TestResultTest {
     @Test
     public void testSuiteWithMultipleClasses() throws IOException, URISyntaxException {
         TestResult testResult = new TestResult();
-        testResult.parse(getDataFile("JENKINS-42438/junit-report-1.xml"));
+        testResult.parse(getDataFile("JENKINS-42438/junit-report-1.xml"), null);
         testResult.tally();
 
         assertEquals("Wrong number of testsuites", 1, testResult.getSuites().size());
