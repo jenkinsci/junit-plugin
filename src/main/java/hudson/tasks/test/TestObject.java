@@ -45,6 +45,7 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
 import javax.servlet.ServletException;
 import java.io.IOException;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -188,7 +189,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
                 buf.insert(0, Functions.getRelativeLinkTo(myBuildAsItem));
             } else {
                 // We're not in a stapler request. Okay, give up.
-                LOGGER.info("trying to get relative path, but it is not my ancestor, and we're not in a stapler request. Trying absolute hudson url...");
+                LOGGER.fine("trying to get relative path, but it is not my ancestor, and we are not in a stapler request. Trying absolute hudson url...");
                 String hudsonRootUrl = Helper.getActiveInstance().getRootUrl();
                 if (hudsonRootUrl==null||hudsonRootUrl.length()==0) {
                     LOGGER.warning("Can't find anything like a decent hudson url. Punting, returning empty string."); 
@@ -199,7 +200,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
                 buf.insert(0, hudsonRootUrl);
             }
 
-            LOGGER.info("Here's our relative path: " + buf.toString()); 
+            LOGGER.log(Level.FINE, "Here is our relative path: {0}", buf);
             return buf.toString(); 
         }
 

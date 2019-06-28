@@ -50,7 +50,7 @@ import static org.junit.Assert.*;
  * @author dty
  */
 public class TestResultTest {
-    private File getDataFile(String name) throws URISyntaxException {
+    protected static File getDataFile(String name) throws URISyntaxException {
         return new File(TestResultTest.class.getResource(name).toURI());
     }
 
