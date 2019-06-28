@@ -459,7 +459,7 @@ public final class TestResult extends MetaTabulatedResult {
     }
     
     /**
-     * Returns <tt>true</tt> if this doesn't have any any test results.
+     * Returns <code>true</code> if this doesn't have any any test results.
      *
      * @return whether this doesn't contain any test results.
      * @since 1.511
