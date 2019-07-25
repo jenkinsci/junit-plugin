@@ -16,7 +16,7 @@ The plugin also provides a generic API for other unit-test publisher plugins in 
 
 The JUnit publisher is configured at the job level by adding a Publish JUnit test result report post build action. The configuration parameters include:
 
-* **Test report XMLs:** Specify the path to JUnit XML files in the Ant glob syntax, such as **/build/test-reports/*.xml. 
+* **Test report XMLs:** Specify the path to JUnit XML files in the Ant glob syntax, such as `**/build/test-reports/*.xml`. 
   Be sure not to include any non-report files into this pattern. 
   You can specify multiple patterns of files separated by commas. 
   The base directory of the fileset is the workspace root.
