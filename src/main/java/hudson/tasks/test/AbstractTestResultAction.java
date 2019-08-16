@@ -222,7 +222,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
             loadedBuilds = null;
         }
         while(true) {
-            b = loadedBuilds == null || loadedBuilds.contains(b.number - /* assuming there are no gaps */1) ? b.getPreviousBuild() : null;
+            b = loadedBuilds == null || Collections.min(loadedBuilds) < b.number ? b.getPreviousBuild() : null;
             if(b==null)
                 return null;
             U r = b.getAction(type);
