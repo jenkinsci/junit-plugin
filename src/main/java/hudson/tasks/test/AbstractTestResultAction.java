@@ -222,7 +222,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
             loadedBuilds = null;
         }
         while(true) {
-            b = loadedBuilds == null || Collections.min(loadedBuilds) < b.number ? b.getPreviousBuild() : null;
+            b = loadedBuilds == null ? b.getPreviousBuild() : (LazyBuildMixIn.LazyLoadingJob<?,?>)b.getParent()).getLazyBuildMixIn().getNearestOldBuild(b.number - 1);
             if(b==null)
                 return null;
             U r = b.getAction(type);
