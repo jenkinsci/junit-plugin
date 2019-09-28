@@ -231,14 +231,14 @@ public class TestResultTest {
 
         assertEquals("Wrong number of test classes", 2, suite.getClassNames().size());
 
-        CaseResult case1 = suite.getCase("testDrawingSurfaceBitmapIsScreenSize");
+        CaseResult case1 = suite.getCase("org.catrobat.paintroid.test.integration.BitmapIntegrationTest.testDrawingSurfaceBitmapIsScreenSize");
         assertNotNull(case1);
         ClassResult class1 = case1.getParent();
         assertNotNull(class1);
         assertEquals("org.catrobat.paintroid.test.integration.BitmapIntegrationTest", class1.getFullName());
         assertEquals("Wrong duration for test class", 5.0, class1.getDuration(),0.1);
 
-        CaseResult case2 = suite.getCase("testColorPickerDialogSwitchTabsInLandscape");
+        CaseResult case2 = suite.getCase("org.catrobat.paintroid.test.integration.LandscapeTest.testColorPickerDialogSwitchTabsInLandscape");
         assertNotNull(case2);
         ClassResult class2 = case2.getParent();
         assertNotNull(class2);
