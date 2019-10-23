@@ -11,7 +11,7 @@
     <packaging>hpi</packaging>
     <name>JUnit Plugin</name>
     <description>Allows JUnit-format test results to be published.</description>
-    <url>http://wiki.jenkins-ci.org/display/JENKINS/JUnit+Plugin</url>
+    <url>https://github.com/jenkinsci/junit-plugin</url>
     <properties>
         <revision>1.29</revision>
         <changelist>-SNAPSHOT</changelist>
