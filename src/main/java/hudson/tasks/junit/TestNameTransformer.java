@@ -2,7 +2,6 @@ package hudson.tasks.junit;
 
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
-import jenkins.model.Jenkins;
 
 /**
  * Allow extensions to transform the class/package/method name for JUnit test

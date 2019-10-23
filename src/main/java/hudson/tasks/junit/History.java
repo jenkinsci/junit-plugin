@@ -69,14 +69,14 @@ public class History {
 	}
 	
     public boolean historyAvailable() {
-       if (testObject.getRun().getParent().getBuilds().size() > 1)
-           return true;
+       if (testObject.getRun().getParent().getBuilds().isEmpty())
+           return false;
         else
-           return false; 
+           return true; 
     }
 	
     public List<TestResult> getList(int start, int end) {
-    	List<TestResult> list = new ArrayList<TestResult>();
+    	List<TestResult> list = new ArrayList<>();
     	end = Math.min(end, testObject.getRun().getParent().getBuilds().size());
     	for (Run<?,?> b: testObject.getRun().getParent().getBuilds().subList(start, end)) {
     		if (b.isBuilding()) continue;
@@ -101,7 +101,7 @@ public class History {
        return new GraphImpl("seconds") {
     	   
            protected DataSetBuilder<String, ChartLabel> createDataSet() {
-               DataSetBuilder<String, ChartLabel> data = new DataSetBuilder<String, ChartLabel>();
+               DataSetBuilder<String, ChartLabel> data = new DataSetBuilder<>();
                
                List<TestResult> list;
                try {
@@ -139,7 +139,7 @@ public class History {
     public Graph getCountGraph() {
         return new GraphImpl("") {
             protected DataSetBuilder<String, ChartLabel> createDataSet() {
-                DataSetBuilder<String, ChartLabel> data = new DataSetBuilder<String, ChartLabel>();
+                DataSetBuilder<String, ChartLabel> data = new DataSetBuilder<>();
 
                 List<TestResult> list;
                 try {
@@ -261,7 +261,7 @@ public class History {
             Run<?,?> build = o.getRun();
             String buildLink = build.getUrl();
             String actionUrl = o.getTestResultAction().getUrlName();
-            final String rootUrl = Helper.getActiveInstance().getRootUrl();
+            final String rootUrl = Jenkins.get().getRootUrl();
             if (rootUrl == null) {
                 throw new IllegalStateException("Jenkins root URL not available");
             }

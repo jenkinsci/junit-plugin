@@ -64,7 +64,7 @@ public final class TestResult extends MetaTabulatedResult {
      * List of all {@link SuiteResult}s in this test.
      * This is the core data structure to be persisted in the disk.
      */
-    private final List<SuiteResult> suites = new ArrayList<SuiteResult>();
+    private final List<SuiteResult> suites = new ArrayList<>();
 
     /**
      * {@link #suites} keyed by their names for faster lookup.
@@ -681,13 +681,13 @@ public final class TestResult extends MetaTabulatedResult {
     public void tally() {
         /// Empty out data structures
         // TODO: free children? memmory leak?
-        suitesByName = new HashMap<String,SuiteResult>();
+        suitesByName = new HashMap<>();
         suitesByNode = new HashMap<>();
         testsByBlock = new HashMap<>();
-        failedTests = new ArrayList<CaseResult>();
+        failedTests = new ArrayList<>();
         skippedTests = null;
         passedTests = null;
-        byPackages = new TreeMap<String,PackageResult>();
+        byPackages = new TreeMap<>();
 
         totalTests = 0;
         skippedTestsCounter = 0;
@@ -734,14 +734,14 @@ public final class TestResult extends MetaTabulatedResult {
         this.parentAction = parent;
         if(suitesByName==null) {
             // freeze for the first time
-            suitesByName = new HashMap<String,SuiteResult>();
+            suitesByName = new HashMap<>();
             suitesByNode = new HashMap<>();
             testsByBlock = new HashMap<>();
             totalTests = 0;
-            failedTests = new ArrayList<CaseResult>();
+            failedTests = new ArrayList<>();
             skippedTests = null;
             passedTests = null;
-            byPackages = new TreeMap<String,PackageResult>();
+            byPackages = new TreeMap<>();
         }
 
         for (SuiteResult s : suites) {

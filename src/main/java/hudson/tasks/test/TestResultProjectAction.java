@@ -144,7 +144,7 @@ public class TestResultProjectAction implements Action {
 
         // set the updated value
         Cookie cookie = new Cookie(FAILURE_ONLY_COOKIE,String.valueOf(failureOnly));
-        List anc = req.getAncestors();
+        List<Ancestor> anc = req.getAncestors();
         Ancestor a = (Ancestor) anc.get(anc.size()-2);
         cookie.setPath(a.getUrl()); // just for this project
         cookie.setMaxAge(60*60*24*365); // 1 year
