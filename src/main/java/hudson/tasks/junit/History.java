@@ -69,10 +69,10 @@ public class History {
 	}
 	
     public boolean historyAvailable() {
-       if (testObject.getRun().getParent().getBuilds().isEmpty())
-           return false;
+        if (testObject.getRun().getParent().getBuilds().size() > 1)
+           return true;
         else
-           return true; 
+           return false; 
     }
 	
     public List<TestResult> getList(int start, int end) {
