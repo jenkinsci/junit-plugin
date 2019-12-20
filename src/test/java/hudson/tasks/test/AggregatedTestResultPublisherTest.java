@@ -1,10 +1,15 @@
 package hudson.tasks.test;
 
 import com.google.common.collect.ImmutableList;
+
+import hudson.Functions;
 import hudson.model.AbstractBuild;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
+import hudson.model.ParametersDefinitionProperty;
 import hudson.model.Result;
+import hudson.model.StringParameterDefinition;
+import hudson.tasks.BatchFile;
 import hudson.tasks.BuildTrigger;
 import hudson.tasks.Fingerprinter;
 import hudson.tasks.Shell;
@@ -24,6 +29,8 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
 
 public class AggregatedTestResultPublisherTest {
+    private static final String VAR = "var";
+    private static final String JOBS = "$" + VAR;
     public static final String TEST_PROJECT_NAME = "junit";
     public static final String AGGREGATION_PROJECT_NAME = "aggregated";
     @Rule
@@ -123,6 +130,35 @@ public class AggregatedTestResultPublisherTest {
                 .follow()
                 .hasLinkToTestResultOfBuild(TEST_PROJECT_NAME, 1);
     }
+    
+
+    @LocalData
+    @Test
+    public void testResultsAndAggregatedTestResultsParam() throws Exception {
+        createUpstreamParamProjectWithTests();
+        createDownstreamParamProjectWithTests();
+
+        buildAndSetupPageObjects();
+
+        projectPage.getLatestTestReportLink()
+                .assertHasLatestTestResultText()
+                .assertHasTests()
+                .follow();
+        projectPage.getLatestAggregatedTestReportLink()
+                .assertHasLatestAggregatedTestResultText()
+                .assertHasTests()
+                .follow();
+
+        buildPage.getTestReportLink()
+                .assertHasTestResultText()
+                .assertHasTests()
+                .follow();
+        buildPage.getAggregatedTestReportLink()
+                .assertHasAggregatedTestResultText()
+                .assertHasTests()
+                .follow()
+                .hasLinkToTestResultOfBuild(TEST_PROJECT_NAME, 1);
+    }
 
     private void buildAndSetupPageObjects() throws Exception {
         buildOnce();
@@ -153,11 +189,32 @@ public class AggregatedTestResultPublisherTest {
         addFingerprinterToProject(upstreamProject, singleContents, singleFiles);
         upstreamProject.setQuietPeriod(0);
     }
+    
+    private void createUpstreamParamProjectWithTests() throws Exception {
+        upstreamProject = j.createFreeStyleProject(AGGREGATION_PROJECT_NAME);
+        StringParameterDefinition params = new StringParameterDefinition(VAR, TEST_PROJECT_NAME);
+        upstreamProject.addProperty(new ParametersDefinitionProperty(params));
+        addFingerprinterToProject(upstreamProject, singleContents, singleFiles);
+        upstreamProject.setQuietPeriod(0);
+        addJUnitResultArchiver(upstreamProject);
+    }
 
     private void createDownstreamProjectWithTests() throws Exception {
         createDownstreamProjectWithNoTests();
 
         addJUnitResultArchiver(downstreamProject);
+        j.jenkins.rebuildDependencyGraph();
+    }
+    
+    private void createDownstreamParamProjectWithTests() throws Exception {
+        downstreamProject = j.createFreeStyleProject(TEST_PROJECT_NAME);
+        downstreamProject.setQuietPeriod(0);
+        addFingerprinterToProject(downstreamProject, singleContents, singleFiles);
+        upstreamProject.getPublishersList().add(new BuildTrigger(ImmutableList.of(downstreamProject), Result.SUCCESS));
+        upstreamProject.getPublishersList().add(new AggregatedTestResultPublisher(JOBS));
+        
+        addJUnitResultArchiver(downstreamProject);
+
         j.jenkins.rebuildDependencyGraph();
     }
 
