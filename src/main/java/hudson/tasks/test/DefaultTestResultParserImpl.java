@@ -48,7 +48,9 @@ import jenkins.MasterToSlaveFileCallable;
  *
  * @since 1.343
  * @author Kohsuke Kawaguchi
+ * @deprecated Unused, unusable.
  */
+@Deprecated
 public abstract class DefaultTestResultParserImpl extends TestResultParser implements Serializable {
     /**
      * This method is executed on the slave that has the report files to parse test reports and builds {@link TestResult}.

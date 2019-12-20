@@ -176,7 +176,7 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
     @Override
     public void tally() {
         passCount=failCount=skipCount=0;
-        duration=0;
+        duration = 0;
         for (CaseResult r : cases) {
             r.setClass(this);
             if (r.isSkipped()) {
@@ -188,10 +188,7 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
             else {
                 failCount++;
             }
-            //retrieve the class duration from these cases' suite time
-            if(duration == 0){
-                duration = r.getSuiteResult().getDuration();
-            }
+            duration += r.getDuration();
         }
     }
 

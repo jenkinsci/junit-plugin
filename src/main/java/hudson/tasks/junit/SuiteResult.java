@@ -23,24 +23,32 @@
  */
 package hudson.tasks.junit;
 
+import hudson.tasks.test.PipelineTestDetails;
 import hudson.tasks.test.TestObject;
 import hudson.util.io.ParserConfigurator;
 import org.dom4j.Document;
 import org.dom4j.DocumentException;
 import org.dom4j.Element;
 import org.dom4j.io.SAXReader;
+import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
+import org.xml.sax.SAXException;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -59,6 +67,7 @@ import java.util.regex.Pattern;
  */
 @ExportedBean
 public final class SuiteResult implements Serializable {
+    private static final Logger LOGGER = Logger.getLogger(SuiteResult.class.getName());
     private final String file;
     private final String name;
     private final String stdout;
@@ -69,31 +78,60 @@ public final class SuiteResult implements Serializable {
      * AFAICT, this is not a required attribute in XML, so the value may be null.
      */
     private String timestamp;
-    /** Optional ID attribute of a test suite. E.g., Eclipse plug-ins tests always have the name 'tests' but a different id. **/
+    /**
+     * Optional ID attribute of a test suite. E.g., Eclipse plug-ins tests always have the name 'tests' but a different id.
+     **/
     private String id;
 
-    /** Optional time attribute of a test suite. E.g., Suites can use their own time attribute or the sum of their cases' times as before.**/
+    /**
+     * Optional time attribute of a test suite. E.g., Suites can use their own time attribute or the sum of their cases' times as before.
+     **/
     private String time;
+
+    /**
+     * Optional {@link FlowNode#getId()} this suite was generated in.
+     */
+    private String nodeId;
+
+    private final List<String> enclosingBlocks = new ArrayList<>();
+
+    private final List<String> enclosingBlockNames = new ArrayList<>();
 
     /**
      * All test cases.
      */
     private final List<CaseResult> cases = new ArrayList<CaseResult>();
-    private transient Map<String,CaseResult> casesByName;
+    private transient Map<String, CaseResult> casesByName;
     private transient hudson.tasks.junit.TestResult parent;
 
+    @Deprecated
     SuiteResult(String name, String stdout, String stderr) {
+        this(name, stdout, stderr, null);
+    }
+
+    /**
+     * @since 1.22
+     */
+    SuiteResult(String name, String stdout, String stderr, @CheckForNull PipelineTestDetails pipelineTestDetails) {
         this.name = name;
         this.stderr = stderr;
         this.stdout = stdout;
+        // runId is generally going to be not null, but we only care about it if both it and nodeId are not null.
+        if (pipelineTestDetails != null && pipelineTestDetails.getNodeId() != null) {
+            this.nodeId = pipelineTestDetails.getNodeId();
+            this.enclosingBlocks.addAll(pipelineTestDetails.getEnclosingBlocks());
+            this.enclosingBlockNames.addAll(pipelineTestDetails.getEnclosingBlockNames());
+        } else {
+            this.nodeId = null;
+        }
         this.file = null;
     }
 
-    private synchronized Map<String,CaseResult> casesByName() {
+    private synchronized Map<String, CaseResult> casesByName() {
         if (casesByName == null) {
-            casesByName = new HashMap<String,CaseResult>();
+            casesByName = new HashMap<>();
             for (CaseResult c : cases) {
-                casesByName.put(c.getName(), c);
+                casesByName.put(c.getTransformedTestName(), c);
             }
         }
         return casesByName;
@@ -101,8 +139,11 @@ public final class SuiteResult implements Serializable {
 
     /**
      * Passed to {@link ParserConfigurator}.
+     *
      * @since 1.416
+     * @deprecated with no replacement.
      */
+    @Deprecated
     public static class SuiteResultParserConfigurationContext {
         public final File xmlReport;
 
@@ -116,67 +157,96 @@ public final class SuiteResult implements Serializable {
      * This method returns a collection, as a single XML may have multiple &lt;testsuite>
      * elements wrapped into the top-level &lt;testsuites>.
      */
-    static List<SuiteResult> parse(File xmlReport, boolean keepLongStdio) throws DocumentException, IOException, InterruptedException {
+    static List<SuiteResult> parse(File xmlReport, boolean keepLongStdio, PipelineTestDetails pipelineTestDetails)
+            throws DocumentException, IOException, InterruptedException {
         List<SuiteResult> r = new ArrayList<SuiteResult>();
 
         // parse into DOM
         SAXReader saxReader = new SAXReader();
-        ParserConfigurator.applyConfiguration(saxReader,new SuiteResultParserConfigurationContext(xmlReport));
+        
+        //source: https://www.owasp.org/index.php/XML_External_Entity_(XXE)_Prevention_Cheat_Sheet => SAXReader
+        // setFeatureQuietly(saxReader, "http://apache.org/xml/features/disallow-doctype-decl", true);
+        // setFeatureQuietly(saxReader, "http://xml.org/sax/features/external-parameter-entities", false);
 
-        Document result = saxReader.read(xmlReport);
-        Element root = result.getRootElement();
+        // only that seems to let the initial feature of testng namespace being loaded locally
+        setFeatureQuietly(saxReader, "http://xml.org/sax/features/external-general-entities", false);
 
-        parseSuite(xmlReport,keepLongStdio,r,root);
+        saxReader.setEntityResolver(new XMLEntityResolver());
+
+        FileInputStream xmlReportStream = new FileInputStream(xmlReport);
+        try {
+            Document result = saxReader.read(xmlReportStream);
+            Element root = result.getRootElement();
+
+            parseSuite(xmlReport, keepLongStdio, r, root, pipelineTestDetails);
+        } finally {
+            xmlReportStream.close();
+        }
 
         return r;
     }
 
-    private static void parseSuite(File xmlReport, boolean keepLongStdio, List<SuiteResult> r, Element root) throws DocumentException, IOException {
+    private static void setFeatureQuietly(SAXReader reader, String feature, boolean value) {
+        try {
+            reader.setFeature(feature, value);
+        }
+        catch (SAXException ignored) {
+            // ignore and continue in case the feature cannot be changed
+        }
+    }
+
+    private static void parseSuite(File xmlReport, boolean keepLongStdio, List<SuiteResult> r, Element root,
+                                   PipelineTestDetails pipelineTestDetails) throws DocumentException, IOException {
         // nested test suites
         @SuppressWarnings("unchecked")
-        List<Element> testSuites = (List<Element>)root.elements("testsuite");
+        List<Element> testSuites = (List<Element>) root.elements("testsuite");
         for (Element suite : testSuites)
-            parseSuite(xmlReport, keepLongStdio, r, suite);
+            parseSuite(xmlReport, keepLongStdio, r, suite, pipelineTestDetails);
 
         // child test cases
         // FIXME: do this also if no testcases!
-        if (root.element("testcase")!=null || root.element("error")!=null)
-            r.add(new SuiteResult(xmlReport, root, keepLongStdio));
+        if (root.element("testcase") != null || root.element("error") != null)
+            r.add(new SuiteResult(xmlReport, root, keepLongStdio, pipelineTestDetails));
     }
 
     /**
-     * @param xmlReport
-     *      A JUnit XML report file whose top level element is 'testsuite'.
-     * @param suite
-     *      The parsed result of {@code xmlReport}
+     * @param xmlReport A JUnit XML report file whose top level element is 'testsuite'.
+     * @param suite     The parsed result of {@code xmlReport}
      */
-    private SuiteResult(File xmlReport, Element suite, boolean keepLongStdio) throws DocumentException, IOException {
-    	this.file = xmlReport.getAbsolutePath();
+    private SuiteResult(File xmlReport, Element suite, boolean keepLongStdio, @CheckForNull PipelineTestDetails pipelineTestDetails)
+            throws DocumentException, IOException {
+        this.file = xmlReport.getAbsolutePath();
         String name = suite.attributeValue("name");
-        if(name==null)
+        if (name == null)
             // some user reported that name is null in their environment.
             // see http://www.nabble.com/Unexpected-Null-Pointer-Exception-in-Hudson-1.131-tf4314802.html
-            name = '('+xmlReport.getName()+')';
+            name = '(' + xmlReport.getName() + ')';
         else {
             String pkg = suite.attributeValue("package");
-            if(pkg!=null&& pkg.length()>0)   name=pkg+'.'+name;
+            if (pkg != null && pkg.length() > 0) name = pkg + '.' + name;
         }
         this.name = TestObject.safe(name);
         this.timestamp = suite.attributeValue("timestamp");
         this.id = suite.attributeValue("id");
+        if (pipelineTestDetails != null && pipelineTestDetails.getNodeId() != null) {
+            this.nodeId = pipelineTestDetails.getNodeId();
+            this.enclosingBlocks.addAll(pipelineTestDetails.getEnclosingBlocks());
+            this.enclosingBlockNames.addAll(pipelineTestDetails.getEnclosingBlockNames());
+        }
+
         // check for test suite time attribute
-        if( ( this.time = suite.attributeValue("time") ) != null ){
+        if ((this.time = suite.attributeValue("time")) != null) {
             duration = new TimeToFloat(this.time).parse();
         }
-        
+
         Element ex = suite.element("error");
-        if(ex!=null) {
+        if (ex != null) {
             // according to junit-noframes.xsl l.229, this happens when the test class failed to load
             addCase(new CaseResult(this, suite, "<init>", keepLongStdio));
         }
-        
+
         @SuppressWarnings("unchecked")
-        List<Element> testCases = (List<Element>)suite.elements("testcase");
+        List<Element> testCases = (List<Element>) suite.elements("testcase");
         for (Element e : testCases) {
             // https://issues.jenkins-ci.org/browse/JENKINS-1233 indicates that
             // when <testsuites> is present, we are better off using @classname on the
@@ -202,17 +272,17 @@ public final class SuiteResult implements Serializable {
 
         String stdout = CaseResult.possiblyTrimStdio(cases, keepLongStdio, suite.elementText("system-out"));
         String stderr = CaseResult.possiblyTrimStdio(cases, keepLongStdio, suite.elementText("system-err"));
-        if (stdout==null && stderr==null) {
+        if (stdout == null && stderr == null) {
             // Surefire never puts stdout/stderr in the XML. Instead, it goes to a separate file (when ${maven.test.redirectTestOutputToFile}).
             Matcher m = SUREFIRE_FILENAME.matcher(xmlReport.getName());
             if (m.matches()) {
                 // look for ***-output.txt from TEST-***.xml
-                File mavenOutputFile = new File(xmlReport.getParentFile(),m.group(1)+"-output.txt");
+                File mavenOutputFile = new File(xmlReport.getParentFile(), m.group(1) + "-output.txt");
                 if (mavenOutputFile.exists()) {
                     try {
                         stdout = CaseResult.possiblyTrimStdio(cases, keepLongStdio, mavenOutputFile);
                     } catch (IOException e) {
-                        throw new IOException("Failed to read "+mavenOutputFile,e);
+                        throw new IOException("Failed to read " + mavenOutputFile, e);
                     }
                 }
             }
@@ -224,12 +294,19 @@ public final class SuiteResult implements Serializable {
 
     /*package*/ void addCase(CaseResult cr) {
         cases.add(cr);
-        casesByName().put(cr.getName(), cr);
-        
+        casesByName().put(cr.getTransformedTestName(), cr);
+
         //if suite time was not specified use sum of the cases' times
-        if(this.time == null){
+        if( !hasTimeAttr() ){
             duration += cr.getDuration();
         }
+    }
+
+    /**
+     * Returns true if the time attribute is present in this Suite.
+     */
+    private boolean hasTimeAttr() {
+        return time != null;
     }
 
     @Exported(visibility=9)
@@ -240,6 +317,47 @@ public final class SuiteResult implements Serializable {
     @Exported(visibility=9)
     public float getDuration() {
         return duration;
+    }
+
+    /**
+     * The possibly-null {@link FlowNode#id} this suite was generated in.
+     *
+     * @since 1.22
+     */
+    @Exported(visibility=9)
+    @CheckForNull
+    public String getNodeId() {
+        return nodeId;
+    }
+
+    /**
+     * The possibly-empty list of {@link FlowNode#id}s for enclosing blocks within which this suite was generated.
+     *
+     * @since 1.22
+     */
+    @Exported(visibility=9)
+    @Nonnull
+    public List<String> getEnclosingBlocks() {
+        if (enclosingBlocks != null) {
+            return Collections.unmodifiableList(enclosingBlocks);
+        } else {
+            return Collections.emptyList();
+        }
+    }
+
+    /**
+     * The possibly-empty list of display names of enclosing blocks within which this suite was generated.
+     *
+     * @since 1.22
+     */
+    @Exported(visibility=9)
+    @Nonnull
+    public List<String> getEnclosingBlockNames() {
+        if (enclosingBlockNames != null) {
+            return Collections.unmodifiableList(enclosingBlockNames);
+        } else {
+            return Collections.emptyList();
+        }
     }
 
     /**
@@ -303,7 +421,7 @@ public final class SuiteResult implements Serializable {
     }
 
     /**
-     * Returns the {@link CaseResult} whose {@link CaseResult#getName()}
+     * Returns the {@link CaseResult} whose {@link CaseResult#getDisplayName()}
      * is the same as the given string.
      * <p>
      * Note that test name needs not be unique.
@@ -348,4 +466,22 @@ public final class SuiteResult implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private static final Pattern SUREFIRE_FILENAME = Pattern.compile("TEST-(.+)\\.xml");
+
+    /**
+     * Merges another SuiteResult into this one.
+     * 
+     * @param sr the SuiteResult to merge into this one
+     */
+    public void merge(SuiteResult sr) {
+        if (sr.hasTimeAttr() ^ hasTimeAttr()){
+            LOGGER.warning("Merging of suiteresults with incompatible time attribute may lead to incorrect durations in reports.( "+getFile()+", "+sr.getFile()+")");
+        }
+        if (hasTimeAttr()) {
+            duration += sr.getDuration();
+        }
+        for (CaseResult cr : sr.getCases()) {
+            addCase(cr);
+            cr.replaceParent(this);
+        }
+    }
 }

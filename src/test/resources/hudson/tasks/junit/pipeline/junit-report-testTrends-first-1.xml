@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite errors="0" failures="0" tests="8" time="14.000">
+<testcase name="org.twia.vendor.VendorManagerTest.testGetVendorFirmKeyForVendorRep" time="3.000"/>
+<testcase name="org.twia.vendor.VendorManagerTest.testGetRevokedClaimsForAdjustingFirm" time="3.000"/>
+<testcase name="org.twia.vendor.VendorManagerTest.testCreateVendorFirm" time="1.000"/>
+<testcase name="org.twia.vendor.VendorManagerTest.testUpdateVendorFirm" time="1.000"/>
+<testcase name="org.twia.vendor.VendorManagerTest.testAddVendorLocation" time="2.000"/>
+<testcase name="org.twia.vendor.VendorManagerTest.testCreateVendor_NoPrimaryLocation" time="1.000"/>
+<testcase name="org.twia.vendor.VendorManagerTest.testCreateVendor_NoPrimaryRep" time="2.000"/>
+<testcase name="org.twia.vendor.VendorManagerTest.testCreateAdjustingFirm" time="1.000"/>
+</testsuite>

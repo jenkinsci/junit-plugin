@@ -24,6 +24,7 @@
 package hudson.tasks.junit;
 
 import hudson.model.TaskListener;
+import hudson.tasks.test.PipelineTestDetails;
 import hudson.tasks.test.TestResultParser;
 import hudson.*;
 import hudson.model.AbstractBuild;
@@ -32,22 +33,26 @@ import hudson.remoting.VirtualChannel;
 
 import java.io.IOException;
 import java.io.File;
+
 import jenkins.MasterToSlaveFileCallable;
 
 import org.apache.tools.ant.types.FileSet;
 import org.apache.tools.ant.DirectoryScanner;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
+
 /**
  * Parse some JUnit xml files and generate a TestResult containing all the
  * results parsed.
  */
-@Extension
+@Extension // see TestResultParser.all
 public class JUnitParser extends TestResultParser {
 
     private final boolean keepLongStdio;
     private final boolean allowEmptyResults;
 
-    /** TODO TestResultParser.all does not seem to ever be called so why must this be an Extension? */
+    /** Generally unused, but present for extension compatibility. */
     @Deprecated
     public JUnitParser() {
         this(false, false);
@@ -88,20 +93,26 @@ public class JUnitParser extends TestResultParser {
         return (TestResult) super.parse(testResultLocations, build, launcher, listener);
     }
 
+    @Deprecated
     @Override
-    public TestResult parseResult(String testResultLocations,
-                                       Run<?,?> build, FilePath workspace, Launcher launcher,
-                                       TaskListener listener)
-            throws InterruptedException, IOException
-    {
+    public TestResult parseResult(String testResultLocations, Run<?,?> build, FilePath workspace,
+                                  Launcher launcher, TaskListener listener)
+            throws InterruptedException, IOException {
+        return parseResult(testResultLocations, build, null, workspace, launcher, listener);
+    }
+
+    @Override
+    public TestResult parseResult(String testResultLocations, Run<?,?> build, PipelineTestDetails pipelineTestDetails,
+                                  FilePath workspace, Launcher launcher, TaskListener listener)
+            throws InterruptedException, IOException {
         final long buildTime = build.getTimestamp().getTimeInMillis();
         final long timeOnMaster = System.currentTimeMillis();
 
         // [BUG 3123310] TODO - Test Result Refactor: review and fix TestDataPublisher/TestAction subsystem]
         // also get code that deals with testDataPublishers from JUnitResultArchiver.perform
 
-        return workspace.act(new ParseResultCallable(testResultLocations, buildTime,
-                                                     timeOnMaster, keepLongStdio, allowEmptyResults));
+        return workspace.act(new ParseResultCallable(testResultLocations, buildTime, timeOnMaster, keepLongStdio,
+                allowEmptyResults, pipelineTestDetails));
     }
 
     private static final class ParseResultCallable extends MasterToSlaveFileCallable<TestResult> {
@@ -110,14 +121,17 @@ public class JUnitParser extends TestResultParser {
         private final long nowMaster;
         private final boolean keepLongStdio;
         private final boolean allowEmptyResults;
+        private final PipelineTestDetails pipelineTestDetails;
 
         private ParseResultCallable(String testResults, long buildTime, long nowMaster,
-                                    boolean keepLongStdio, boolean allowEmptyResults) {
+                                    boolean keepLongStdio, boolean allowEmptyResults,
+                                    PipelineTestDetails pipelineTestDetails) {
             this.buildTime = buildTime;
             this.testResults = testResults;
             this.nowMaster = nowMaster;
             this.keepLongStdio = keepLongStdio;
             this.allowEmptyResults = allowEmptyResults;
+            this.pipelineTestDetails = pipelineTestDetails;
         }
 
         public TestResult invoke(File ws, VirtualChannel channel) throws IOException {
@@ -129,7 +143,7 @@ public class JUnitParser extends TestResultParser {
 
             String[] files = ds.getIncludedFiles();
             if (files.length > 0) {
-                result = new TestResult(buildTime + (nowSlave - nowMaster), ds, keepLongStdio);
+                result = new TestResult(buildTime + (nowSlave - nowMaster), ds, keepLongStdio, pipelineTestDetails);
                 result.tally();
             } else {
                 if (this.allowEmptyResults) {

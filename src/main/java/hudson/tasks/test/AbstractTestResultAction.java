@@ -202,7 +202,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
      *
      * <p>
      * If such a concept doesn't make sense for a particular subtype,
-     * return <tt>this</tt>.
+     * return <code>this</code>.
      */
     public abstract Object getResult();
 
@@ -249,7 +249,11 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
     }
 
     public TestResult findCorrespondingResult(String id) {
-        return ((TestResult)getResult()).findCorrespondingResult(id);
+        final Object testResult = getResult();
+        if (!(testResult instanceof TestResult)) {
+            return null;
+        }
+        return ((TestResult)testResult).findCorrespondingResult(id);
     }
     
     /**
@@ -265,7 +269,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
      * A shortcut for scripting
      * 
      * @return List of passed tests from associated test result.
-     * @since TODO
+     * @since 1.10
      */
     @Nonnull
     public List<? extends TestResult> getPassedTests() {
@@ -276,7 +280,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
      * A shortcut for scripting
      * 
      * @return List of skipped tests from associated test result.
-     * @since TODO
+     * @since 1.10
      */
     @Nonnull
     public List<? extends TestResult> getSkippedTests() {

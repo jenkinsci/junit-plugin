@@ -25,7 +25,9 @@ package hudson.tasks.junit;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.util.TextFile;
+import org.apache.commons.collections.iterators.ReverseListIterator;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.jvnet.localizer.Localizable;
 
 import hudson.model.Run;
@@ -34,11 +36,15 @@ import hudson.tasks.test.TestResult;
 import org.dom4j.Element;
 import org.kohsuke.stapler.export.Exported;
 
+import javax.annotation.CheckForNull;
+import javax.annotation.Nonnull;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 import java.util.logging.Logger;
 
 import static java.util.Collections.emptyList;
@@ -201,10 +207,14 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      * @param errorStackTrace Error stack trace.
      */
     public CaseResult(SuiteResult parent, String testName, String errorStackTrace) {
+    	this(parent, testName, errorStackTrace, "");
+    }
+    
+    public CaseResult(SuiteResult parent, String testName, String errorStackTrace, String errorDetails) {
         this.className = parent == null ? "unnamed" : parent.getName();
         this.testName = testName;
         this.errorStackTrace = errorStackTrace;
-        this.errorDetails = "";
+        this.errorDetails = errorDetails;
         this.parent = parent;
         this.stdout = null;
         this.stderr = null;
@@ -251,13 +261,35 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
 
         if (skippedElement != null) {
             message = skippedElement.attributeValue("message");
+            if(message == null) {
+                message = skippedElement.getText();
+            }
         }
 
         return message;
     }
 
-    public String getDisplayName() {
+    public String getTransformedTestName() {
         return TestNameTransformer.getTransformedName(testName);
+    }
+
+    public String getDisplayName() {
+        return getNameWithEnclosingBlocks(getTransformedTestName());
+    }
+
+    private String getNameWithEnclosingBlocks(String rawName) {
+        // Only prepend the enclosing flow node names if there are any and the run this is in has multiple blocks directly containing
+        // test results.
+        if (!getEnclosingFlowNodeNames().isEmpty()) {
+            Run<?, ?> r = getRun();
+            if (r != null) {
+                TestResultAction action = r.getAction(TestResultAction.class);
+                if (action != null && action.getResult().hasMultipleBlocks()) {
+                    return StringUtils.join(new ReverseListIterator(getEnclosingFlowNodeNames()), " / ") + " / " + rawName;
+                }
+            }
+        }
+        return rawName;
     }
 
     /**
@@ -294,7 +326,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         if (safeName != null) {
             return safeName;
         }
-        StringBuilder buf = new StringBuilder(testName);
+        StringBuilder buf = new StringBuilder(getDisplayName());
         for( int i=0; i<buf.length(); i++ ) {
             char ch = buf.charAt(i);
             if(!Character.isJavaIdentifierPart(ch))
@@ -344,7 +376,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      * @since 1.515
      */
     public String getFullDisplayName() {
-    	return TestNameTransformer.getTransformedName(getFullName());
+    	return getNameWithEnclosingBlocks(TestNameTransformer.getTransformedName(getFullName()));
     }
 
     @Override
@@ -370,6 +402,11 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     public int getFailedSince() {
         // If we haven't calculated failedSince yet, and we should,
         // do it now.
+        recomputeFailedSinceIfNeeded();
+        return failedSince;
+    }
+
+    private void recomputeFailedSinceIfNeeded() {
         if (failedSince==0 && getFailCount()==1) {
             CaseResult prev = getPreviousResult();
             if(prev!=null && !prev.isPassed())
@@ -381,9 +418,8 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
                 // failedSince will be 0, which isn't correct. 
             }
         }
-        return failedSince;
     }
-    
+
     public Run<?,?> getFailedSinceRun() {
     	return getRun().getParent().getBuildByNumber(getFailedSince());
     }
@@ -446,7 +482,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         if (parent == null) return null;
         SuiteResult pr = parent.getPreviousResult();
         if(pr==null)    return null;
-        return pr.getCase(getName());
+        return pr.getCase(getTransformedTestName());
     }
     
     /**
@@ -553,15 +589,48 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     public SuiteResult getSuiteResult() {
         return parent;
     }
-    
+
+    @CheckForNull
+    public String getFlowNodeId() {
+        if (parent != null) {
+            return parent.getNodeId();
+        }
+        return null;
+    }
+
+    @Nonnull
+    public List<String> getEnclosingFlowNodeIds() {
+        List<String> enclosing = new ArrayList<>();
+        if (parent != null) {
+            enclosing.addAll(parent.getEnclosingBlocks());
+        }
+        return enclosing;
+    }
+
+    @Nonnull
+    public List<String> getEnclosingFlowNodeNames() {
+        List<String> enclosing = new ArrayList<>();
+        if (parent != null) {
+            enclosing.addAll(parent.getEnclosingBlockNames());
+        }
+        return enclosing;
+    }
+
     @Override
     public Run<?,?> getRun() {
         SuiteResult sr = getSuiteResult();
         if (sr==null) {
-            LOGGER.warning("In getOwner(), getSuiteResult is null"); return null; }
+            LOGGER.warning("In getOwner(), getSuiteResult is null");
+            return null;
+        }
+
         hudson.tasks.junit.TestResult tr = sr.getParent();
-        if (tr==null) {
-            LOGGER.warning("In getOwner(), suiteResult.getParent() is null."); return null; }
+
+        if (tr == null) {
+            LOGGER.warning("In getOwner(), suiteResult.getParent() is null.");
+            return null;
+        }
+
         return tr.getRun();
     }
 
@@ -572,13 +641,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     public void freeze(SuiteResult parent) {
         this.parent = parent;
         // some old test data doesn't have failedSince value set, so for those compute them.
-        if(!isPassed() && failedSince==0) {
-            CaseResult prev = getPreviousResult();
-            if(prev!=null && !prev.isPassed())
-                this.failedSince = prev.failedSince;
-            else
-                this.failedSince = getRun().getNumber();
-        }
+        recomputeFailedSinceIfNeeded();
     }
 
     public int compareTo(CaseResult that) {

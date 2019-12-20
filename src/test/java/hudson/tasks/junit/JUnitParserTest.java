@@ -30,6 +30,7 @@ import hudson.model.BuildListener;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.tasks.Builder;
+import hudson.tasks.test.PipelineTestDetails;
 import hudson.tasks.test.TestResult;
 import org.junit.Before;
 import org.junit.Rule;
@@ -75,7 +76,8 @@ public class JUnitParserTest {
             }
 
             System.out.println("...touched everything");
-            hudson.tasks.junit.TestResult result = (new JUnitParser()).parseResult( testResultLocation, build, build.getWorkspace(), launcher, listener);
+            hudson.tasks.junit.TestResult result = (new JUnitParser()).parseResult(testResultLocation, build,
+                    null, build.getWorkspace(), launcher, listener);
 
             System.out.println("back from parse");
             assertNotNull("we should have a non-null result", result);
