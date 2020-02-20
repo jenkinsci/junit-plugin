@@ -204,7 +204,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
                 buf.insert(0, Functions.getRelativeLinkTo(myBuildAsItem));
             } else {
                 // We're not in a stapler request. Okay, give up.
-                LOGGER.fine(() -> "trying to get relative path, but it is not my ancestor, and we are not in a stapler request. Trying absolute jenkins url...");
+                LOGGER.fine("trying to get relative path, but it is not my ancestor, and we are not in a stapler request. Trying absolute jenkins url...");
                 String jenkinsUrl = Jenkins.get().getRootUrl();
                 if (jenkinsUrl == null || jenkinsUrl.length() == 0) {
                     LOGGER.warning("Can't find anything like a decent hudson url. Punting, returning empty string."); 
