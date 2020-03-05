@@ -92,7 +92,7 @@ public class JUnitResultsStepTest {
 
         WorkflowRun r = j.scheduleBuild2(0).waitForStart();
         rule.assertBuildStatus(Result.FAILURE, rule.waitForCompletion(r));
-        rule.assertLogContains("ERROR: " + Messages.JUnitResultArchiver_NoTestReportFound(), r);
+        rule.waitForMessage("ERROR: " + Messages.JUnitResultArchiver_NoTestReportFound(), r);
         FlowExecution execution = r.getExecution();
         DepthFirstScanner scanner = new DepthFirstScanner();
         FlowNode f = scanner.findFirstMatch(execution, new Predicate<FlowNode>() {
@@ -126,7 +126,7 @@ public class JUnitResultsStepTest {
 
         WorkflowRun r = rule.buildAndAssertSuccess(j);
         assertNull(r.getAction(TestResultAction.class));
-        rule.assertLogContains("None of the test reports contained any result", r);
+        rule.waitForMessage("None of the test reports contained any result", r);
     }
 
     @Test
