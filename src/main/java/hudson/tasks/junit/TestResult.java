@@ -469,6 +469,7 @@ public final class TestResult extends MetaTabulatedResult {
         return getTotalCount() == 0;
     }
 
+    @Exported(visibility=999)
     @Override
     public List<CaseResult> getFailedTests() {
         return failedTests;
