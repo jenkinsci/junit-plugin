@@ -31,6 +31,8 @@ import hudson.util.XStream2;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -48,7 +50,7 @@ import static org.junit.Assert.*;
  * @author dty
  */
 public class TestResultTest {
-    private File getDataFile(String name) throws URISyntaxException {
+    protected static File getDataFile(String name) throws URISyntaxException {
         return new File(TestResultTest.class.getResource(name).toURI());
     }
 
@@ -104,7 +106,19 @@ public class TestResultTest {
         assertFalse(failedCase.isPassed());
         assertEquals(5, failedCase.getFailedSince());
     }
-    
+
+    /**
+     * When  skipped test case result does not contain message attribute then the skipped xml element text is retrieved
+     */
+    @Test
+    public void testSkippedMessageIsAddedWhenTheMessageAttributeIsNull() throws IOException, URISyntaxException {
+        TestResult testResult = new TestResult();
+        testResult.parse(getDataFile("SKIPPED_MESSAGE/skippedTestResult.xml"), null);
+        List<SuiteResult> suiteResults = new ArrayList<>(testResult.getSuites());
+        CaseResult caseResult = suiteResults.get(0).getCases().get(0);
+        assertEquals("Given skip This Test........................................................pending\n", caseResult.getSkippedMessage());
+    }
+
     /**
      * When test methods are parametrized, they can occur multiple times in the testresults XMLs.
      * Test that these are counted correctly.
@@ -196,6 +210,40 @@ public class TestResultTest {
         SuiteResult suite = testResult.getSuite("test.fs.FileSystemTests");
         assertEquals(3, suite.getCases().size());
         assertEquals(30, suite.getDuration(), 2);
+    }
+
+    @Issue("JENKINS-42438")
+    @Test
+    public void testSuiteWithMultipleClasses() throws IOException, URISyntaxException {
+        TestResult testResult = new TestResult();
+        testResult.parse(getDataFile("JENKINS-42438/junit-report-1.xml"));
+        testResult.tally();
+
+        assertEquals("Wrong number of testsuites", 1, testResult.getSuites().size());
+        assertEquals("Wrong number of test cases", 11, testResult.getTotalCount());
+
+        // The suite duration is non-sensical for Android tests.
+        // This looks like a bug in the JUnit runner used by Android tests.
+        assertEquals("Wrong duration for test result", 2.0, testResult.getDuration(), 0.1);
+
+        SuiteResult suite = testResult.getSuite("org.catrobat.paintroid.test.integration.ActivityOpenedFromPocketCodeNewImageTest");
+        assertNotNull(suite);
+
+        assertEquals("Wrong number of test classes", 2, suite.getClassNames().size());
+
+        CaseResult case1 = suite.getCase("testDrawingSurfaceBitmapIsScreenSize");
+        assertNotNull(case1);
+        ClassResult class1 = case1.getParent();
+        assertNotNull(class1);
+        assertEquals("org.catrobat.paintroid.test.integration.BitmapIntegrationTest", class1.getFullName());
+        assertEquals("Wrong duration for test class", 5.0, class1.getDuration(),0.1);
+
+        CaseResult case2 = suite.getCase("testColorPickerDialogSwitchTabsInLandscape");
+        assertNotNull(case2);
+        ClassResult class2 = case2.getParent();
+        assertNotNull(class2);
+        assertEquals("org.catrobat.paintroid.test.integration.LandscapeTest", class2.getFullName());
+        assertEquals("Wrong duration for test class", 93.0, class2.getDuration(), 0.1);
     }
 
     private static final XStream XSTREAM = new XStream2();

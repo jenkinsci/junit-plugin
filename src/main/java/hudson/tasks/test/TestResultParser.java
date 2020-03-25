@@ -32,37 +32,29 @@ import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import hudson.tasks.Publisher;
 
 import java.io.IOException;
 import javax.annotation.Nonnull;
 
 /**
  * Parses test result files and builds in-memory representation of it as {@link TestResult}.
- *
  * <p>
- * This extension point encapsulates the knowledge of a particular test report format and its parsing process,
- * thereby improving the pluggability of test result parsing; integration with a new test tool can be done
- * by just writing a parser, without writing a custom {@link Publisher}, and the test reports are displayed
- * with the default UI and recognized by the rest of Hudson as test reports.
- *
- * <p>
- * Most typical implementations of this class should extend from {@link DefaultTestResultParserImpl},
- * which handles a set of default error checks on user inputs. 
- *
+ * Originally this was treated as an {@link ExtensionPoint},
+ * but no supported code path actually uses this API directly. See {@link #all}.
  * <p>
  * Parsers are stateless, and the {@link #parseResult} method
  * can be concurrently invoked by multiple threads for different builds.
  *
  * @since 1.343
- * @see DefaultTestResultParserImpl
  */
-public abstract class TestResultParser implements ExtensionPoint {
+public abstract class TestResultParser {
     /**
      * Returns a human readable name of the parser, like "JUnit Parser".
      *
      * @return a human readable name of the parser, like "JUnit Parser".
+     * @deprecated Normally unused.
      */
+    @Deprecated
     public String getDisplayName() {
         return "Unknown Parser"; 
     }
@@ -72,7 +64,9 @@ public abstract class TestResultParser implements ExtensionPoint {
      * For example, "JUnit XML reports:"
      *
      * @return the text is used in the UI prompt for the GLOB that specifies files to be parsed by this parser.
+     * @deprecated Normally unused.
      */
+    @Deprecated
     public String getTestResultLocationMessage() {
         return "Paths to results files to parse:";
     }
@@ -81,7 +75,9 @@ public abstract class TestResultParser implements ExtensionPoint {
      * All registered {@link TestResultParser}s.
      *
      * @return all registered {@link TestResultParser}s.
+     * @deprecated Unused. In fact only the {@code labeled-test-groups-publisher} plugin seems to actually enumerate parsers this way (though not using this method), a use case superseded by {@link PipelineTestDetails}.
      */
+    @Deprecated
     public static ExtensionList<TestResultParser> all() {
         return ExtensionList.lookup(TestResultParser.class);
     }

@@ -23,22 +23,30 @@
  */
 package hudson.tasks.junit;
 
+import hudson.Extension;
 import hudson.FilePath;
+import hudson.Functions;
 import hudson.matrix.AxisList;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixProject;
 import hudson.matrix.TextAxis;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
+import hudson.model.UnprotectedRootAction;
 import hudson.slaves.DumbSlave;
 import hudson.tasks.test.TestObject;
 
+import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
+import hudson.util.HttpResponses;
+import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
+import org.junit.Assume;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.TouchBuilder;
 import org.jvnet.hudson.test.recipes.LocalData;
@@ -77,6 +85,7 @@ import org.jvnet.hudson.test.RandomlyFails;
 import org.jvnet.hudson.test.SingleFileSCM;
 import org.jvnet.hudson.test.TestExtension;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.HttpResponse;
 
 public class JUnitResultArchiverTest {
 
@@ -320,6 +329,7 @@ public class JUnitResultArchiverTest {
     }
 
     @Test public void specialCharsInRelativePath() throws Exception {
+        Assume.assumeFalse(Functions.isWindows());
         final String ID_PREFIX = "test-../a=%3C%7C%23)/testReport/org.twia.vendor/VendorManagerTest/testCreateAdjustingFirm/";
         final String EXPECTED = "org.twia.dao.DAOException: [S2001] Hibernate encountered an error updating Claim [null]";
 
@@ -376,5 +386,91 @@ public class JUnitResultArchiverTest {
         assertEquals("test", ((MockTestDataPublisher)testDataPublishers.get(0)).getName());
 
         assertEquals(described, model.uninstantiate(model.instantiate(described)));
+    }
+    
+    @Test
+    @Issue("SECURITY-521")
+    public void testXxe() throws Exception {
+        String oobInUserContentLink = j.getURL() + "userContent/oob.xml";
+        String triggerLink = j.getURL() + "triggerMe";
+        
+        String xxeFile = this.getClass().getResource("testXxe-xxe.xml").getFile();
+        String xxeFileContent = FileUtils.readFileToString(new File(xxeFile), StandardCharsets.UTF_8);
+        String adaptedXxeFileContent = xxeFileContent.replace("$OOB_LINK$", oobInUserContentLink);
+        
+        String oobFile = this.getClass().getResource("testXxe-oob.xml").getFile();
+        String oobFileContent = FileUtils.readFileToString(new File(oobFile), StandardCharsets.UTF_8);
+        String adaptedOobFileContent = oobFileContent.replace("$TARGET_URL$", triggerLink);
+        
+        File userContentDir = new File(j.jenkins.getRootDir(), "userContent");
+        FileUtils.writeStringToFile(new File(userContentDir, "oob.xml"), adaptedOobFileContent);
+        
+        FreeStyleProject project = j.createFreeStyleProject();
+        DownloadBuilder builder = new DownloadBuilder();
+        builder.fileContent = adaptedXxeFileContent;
+        project.getBuildersList().add(builder);
+        
+        JUnitResultArchiver publisher = new JUnitResultArchiver("xxe.xml");
+        project.getPublishersList().add(publisher);
+    
+        project.scheduleBuild2(0).get();
+        // UNSTABLE
+        // assertEquals(Result.SUCCESS, project.scheduleBuild2(0).get().getResult());
+        
+        YouCannotTriggerMe urlHandler = j.jenkins.getExtensionList(UnprotectedRootAction.class).get(YouCannotTriggerMe.class);
+        assertEquals(0, urlHandler.triggerCount);
+    }
+    
+    public static class DownloadBuilder extends Builder {
+        String fileContent;
+        
+        @Override
+        public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
+            try {
+                FileUtils.writeStringToFile(new File(build.getWorkspace().getRemote(), "xxe.xml"), fileContent);
+            } catch (IOException e) {
+                return false;
+            }
+            
+            return true;
+        }
+        
+        @Extension
+        public static class DescriptorImpl extends BuildStepDescriptor<Builder> {
+            @Override
+            public boolean isApplicable(Class<? extends AbstractProject> jobType) {
+                return true;
+            }
+            
+            @Override
+            public String getDisplayName() {
+                return null;
+            }
+        }
+    }
+    
+    @TestExtension("testXxe")
+    public static class YouCannotTriggerMe implements UnprotectedRootAction {
+        private int triggerCount = 0;
+        
+        @Override
+        public String getIconFileName() {
+            return null;
+        }
+        
+        @Override
+        public String getDisplayName() {
+            return null;
+        }
+        
+        @Override
+        public String getUrlName() {
+            return "triggerMe";
+        }
+        
+        public HttpResponse doIndex() {
+            triggerCount++;
+            return HttpResponses.plainText("triggered");
+        }
     }
 }

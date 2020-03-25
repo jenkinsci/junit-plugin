@@ -46,7 +46,7 @@ import javax.annotation.Nonnull;
  * Parse some JUnit xml files and generate a TestResult containing all the
  * results parsed.
  */
-@Extension
+@Extension // see TestResultParser.all
 public class JUnitParser extends TestResultParser {
 
     private final boolean keepLongStdio;
@@ -54,7 +54,7 @@ public class JUnitParser extends TestResultParser {
     private final boolean makeUnstable;
 
 
-    /** TODO TestResultParser.all does not seem to ever be called so why must this be an Extension? */
+    /** Generally unused, but present for extension compatibility. */
     @Deprecated
     public JUnitParser() {
         this(false, false, true);
