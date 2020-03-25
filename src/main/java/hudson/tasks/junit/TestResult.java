@@ -157,6 +157,15 @@ public final class TestResult extends MetaTabulatedResult {
     	return this;
     }
 
+    @Exported
+    public Map<String, String> getProperties() {
+        Map<String, String> properties = new HashMap<String, String>();
+        for (SuiteResult s : suites) {
+            properties.putAll(s.getProperties());
+        }
+        return properties;
+    }
+
     @Deprecated
     public void parse(long buildTime, DirectoryScanner results) throws IOException {
         parse(buildTime, results, null);

@@ -73,6 +73,8 @@ public final class SuiteResult implements Serializable {
     private final String stdout;
     private final String stderr;
     private float duration;
+    private final Map<String, String> properties;
+
     /**
      * The 'timestamp' attribute of  the test suite.
      * AFAICT, this is not a required attribute in XML, so the value may be null.
@@ -125,6 +127,7 @@ public final class SuiteResult implements Serializable {
             this.nodeId = null;
         }
         this.file = null;
+        this.properties = Collections.emptyMap();
     }
 
     private synchronized Map<String, CaseResult> casesByName() {
@@ -290,6 +293,24 @@ public final class SuiteResult implements Serializable {
 
         this.stdout = stdout;
         this.stderr = stderr;
+
+        // parse properties
+        Map<String, String> properties = new HashMap<String, String>();
+        Element properties_element = suite.element("properties");
+        if (properties_element != null) {
+            //LOGGER.info("Got properties tag.");
+    
+            @SuppressWarnings("unchecked")
+            List<Element> property_elements = properties_element.elements("property");
+            for (Element prop : property_elements) {
+                if (prop.attributeValue("name") instanceof String && prop.attributeValue("value") instanceof String) {
+                    //LOGGER.info("Property[" + prop.attributeValue("name") + "] = " + prop.attributeValue("value"));
+                    properties.put(prop.attributeValue("name"), prop.attributeValue("value"));
+                }
+            }
+        }
+
+        this.properties = properties;
     }
 
     /*package*/ void addCase(CaseResult cr) {
@@ -382,6 +403,16 @@ public final class SuiteResult implements Serializable {
     @Exported
     public String getStderr() {
         return stderr;
+    }
+
+    /**
+     * The properties of this test.
+     *
+     * @return the properties of this test.
+     */
+    @Exported
+    public Map<String, String> getProperties() {
+        return properties;
     }
 
     /**

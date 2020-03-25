@@ -118,6 +118,12 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
         return Messages.PackageResult_getChildTitle();
     }
 
+    @Exported
+    public Map<String, String> getProperties() {
+        return parent.getProperties();
+    }
+
+
     // TODO: wait until stapler 1.60 to do this @Exported
     @Override
     public float getDuration() {
