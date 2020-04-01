@@ -172,7 +172,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
             TaskListener listener) throws InterruptedException, IOException {
         TestResultAction action = parseAndAttach(this, null, build, workspace, launcher, listener);
 
-        if (action != null && action.getResult().getFailCount() > 0)
+        if ((action != null) && (action.getResult().getFailCount() > 0))
             build.setResult(Result.UNSTABLE);
             listener.getLogger().println(Messages.JUnitResultArchiver_ChangeState("UNSTABLE"));
     }
