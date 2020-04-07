@@ -246,6 +246,20 @@ public class TestResultTest {
         assertEquals("Wrong duration for test class", 93.0, class2.getDuration(), 0.1);
     }
 
+    @Issue("JENKINS-48583")
+    @Test
+    public void testMergeOriginalAntOutput() throws IOException, URISyntaxException {
+        TestResult testResult = new TestResult();
+        testResult.parse(getDataFile("JENKINS-48583/TEST-com.sample.test.TestMessage.xml"), null);
+        testResult.parse(getDataFile("JENKINS-48583/TEST-com.sample.test.TestMessage2.xml"), null);
+        testResult.parse(getDataFile("JENKINS-48583/TESTS-TestSuites.xml"), null);
+        testResult.parse(getDataFile("JENKINS-48583/TEST-com.sample.test.TestMessage.xml"), null);
+        testResult.tally();
+        
+        assertEquals("Wrong number of testsuites", 2, testResult.getSuites().size());
+        assertEquals("Wrong number of test cases", 3, testResult.getTotalCount());
+    }
+    
     private static final XStream XSTREAM = new XStream2();
 
     static {
