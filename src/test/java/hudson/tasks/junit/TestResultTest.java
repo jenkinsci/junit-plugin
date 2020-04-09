@@ -136,7 +136,8 @@ public class TestResultTest {
         assertEquals("Wrong number of test cases", 3, testResult.getTotalCount());
     }
     
-    @Bug(12457)
+    @Issue("JENKINS-12457")
+    @Test
     public void testTestSuiteDistributedOverMultipleFilesIsCountedAsOne() throws IOException, URISyntaxException {
         TestResult testResult = new TestResult();
         testResult.parse(getDataFile("JENKINS-12457/TestSuite_a1.xml"), null);
@@ -154,6 +155,7 @@ public class TestResultTest {
      * A common problem is that people parse TEST-*.xml as well as TESTS-TestSuite.xml.
      * See http://jenkins.361315.n4.nabble.com/Problem-with-duplicate-build-execution-td371616.html for discussion.
      */
+    @Test
     public void testDuplicatedTestSuiteIsNotCounted() throws IOException, URISyntaxException {
         TestResult testResult = new TestResult();
         testResult.parse(getDataFile("JENKINS-12457/TestSuite_b.xml"), null);
