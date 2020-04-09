@@ -154,6 +154,9 @@ public class TestResultTest {
     /**
      * A common problem is that people parse TEST-*.xml as well as TESTS-TestSuite.xml.
      * See http://jenkins.361315.n4.nabble.com/Problem-with-duplicate-build-execution-td371616.html for discussion.
+     * 
+     * UPDATE: de-duplication causes missing tests, and the original use case hasn't worked in several releases.
+     * Therefore, the de-duplication logic has been removed.
      */
     @Test
     public void testDuplicatedTestSuiteIsNotCounted() throws IOException, URISyntaxException {
@@ -163,8 +166,8 @@ public class TestResultTest {
         testResult.tally();
         
         assertEquals("Wrong number of testsuites", 1, testResult.getSuites().size());
-        assertEquals("Wrong number of test cases", 1, testResult.getTotalCount());
-        assertEquals("Wrong duration for test result", 1.0, testResult.getDuration(), 0.01);
+        assertEquals("Wrong number of test cases", 2, testResult.getTotalCount());
+        assertEquals("Wrong duration for test result", 2.0, testResult.getDuration(), 0.01);
     }
 
     @Issue("JENKINS-41134")
@@ -259,12 +262,11 @@ public class TestResultTest {
         testResult.tally();
         
         assertEquals("Wrong number of testsuites", 2, testResult.getSuites().size());
-        assertEquals("Wrong number of test cases", 3, testResult.getTotalCount());
+        assertEquals("Wrong number of test cases", 7, testResult.getTotalCount());
     }
     
     /**
-     * Despite problem stated for {@link TestResultTest#testDuplicatedTestSuiteIsNotCounted()} above,
-     * sometimes test cases are split over multiple files with identical timestamps.
+     * Sometimes legitimage test cases are split over multiple files with identical timestamps.
      */
     @Issue("JENKINS-48583")
     @Test
@@ -276,7 +278,7 @@ public class TestResultTest {
         testResult.tally();
         
         assertEquals("Wrong number of testsuites", 1, testResult.getSuites().size());
-        assertEquals("Wrong number of test cases", 2, testResult.getTotalCount());
+        assertEquals("Wrong number of test cases", 3, testResult.getTotalCount());
     }
 
     private static final XStream XSTREAM = new XStream2();

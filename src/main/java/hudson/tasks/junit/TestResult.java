@@ -290,13 +290,6 @@ public final class TestResult extends MetaTabulatedResult {
                     nullSafeEq(s.getNodeId(),sr.getNodeId()) &&
                     nullSafeEq(s.getEnclosingBlocks(),sr.getEnclosingBlocks()) &&
                     nullSafeEq(s.getEnclosingBlockNames(),sr.getEnclosingBlockNames())) {
-            
-                // However, a common problem is that people parse TEST-*.xml as well as TESTS-TestSuite.xml.
-                // In that case consider the result file as a duplicate and discard it.
-                // see http://jenkins.361315.n4.nabble.com/Problem-with-duplicate-build-execution-td371616.html for discussion.
-                if(strictEq(s.getTimestamp(),sr.getTimestamp())) {
-                    return;
-                }
 
                 duration += sr.getDuration();
                 s.merge(sr);
