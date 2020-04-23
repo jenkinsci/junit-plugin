@@ -2,7 +2,7 @@ package hudson.tasks.junit;
 
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
-import jenkins.model.Jenkins;
+import jenkins.util.JenkinsJVM;
 
 /**
  * Allow extensions to transform the class/package/method name for JUnit test
@@ -29,6 +29,10 @@ public abstract class TestNameTransformer implements ExtensionPoint {
     public abstract String transformName(String name);
     
     public static String getTransformedName(String name) {
+        if (!JenkinsJVM.isJenkinsJVM()) {
+            // TODO JENKINS-61787 should this be serialized and passed along in the callable?
+            return name;
+        }
         String transformedName = name;
         for (TestNameTransformer transformer : all()) {
             transformedName = transformer.transformName(transformedName);
