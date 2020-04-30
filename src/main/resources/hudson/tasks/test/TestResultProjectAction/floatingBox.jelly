@@ -25,7 +25,7 @@ THE SOFTWARE.
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt" xmlns:local="local">
   <j:set var="tr" value="${action.lastTestResultAction}" />
-  <j:if test="${tr.previousResult!=null}">
+  <j:if test="${tr.previousResult!=null and tr.shouldCalculatePreviousResults()}">
     <!-- at least two data points are required for a trend report -->
     <div align="right">
       <j:set var="mode" value="${h.getCookie(request,'TestResultAction_failureOnly').value}" />
