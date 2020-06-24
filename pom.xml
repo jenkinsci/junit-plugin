@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>4.1</version>
+        <version>4.3</version>
         <relativePath />
     </parent>
     <artifactId>junit</artifactId>
@@ -15,7 +15,7 @@
     <properties>
         <revision>1.30</revision>
         <changelist>-SNAPSHOT</changelist>
-        <jenkins.version>2.164.3</jenkins.version>
+        <jenkins.version>2.241</jenkins.version>
         <java.level>8</java.level>
         <no-test-jar>false</no-test-jar>
     </properties>
@@ -44,6 +44,11 @@
         </pluginRepository>
     </pluginRepositories>
     <dependencies>
+        <dependency>
+            <groupId>io.jenkins.plugins</groupId>
+            <artifactId>echarts-api</artifactId>
+            <version>4.7.0-4</version>
+        </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>structs</artifactId>

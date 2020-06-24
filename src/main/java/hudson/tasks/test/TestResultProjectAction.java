@@ -23,11 +23,16 @@
  */
 package hudson.tasks.test;
 
+import edu.hm.hafner.echarts.ChartModelConfiguration;
+import edu.hm.hafner.echarts.JacksonFacade;
+import edu.hm.hafner.echarts.LinesChartModel;
 import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.Job;
 import hudson.model.Run;
 import hudson.tasks.junit.JUnitResultArchiver;
+import hudson.tasks.junit.TestResultAction;
+import io.jenkins.plugins.echarts.AsyncTrendChart;
 import org.kohsuke.stapler.Ancestor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -37,6 +42,7 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
+import org.kohsuke.stapler.bind.JavaScriptMethod;
 
 /**
  * Project action object from test reporter, such as {@link JUnitResultArchiver},
@@ -47,7 +53,7 @@ import java.util.List;
  *
  * @author Kohsuke Kawaguchi
  */
-public class TestResultProjectAction implements Action {
+public class TestResultProjectAction implements Action, AsyncTrendChart {
     /**
      * Project that owns this action.
      * @since 1.2-beta-1
@@ -100,6 +106,15 @@ public class TestResultProjectAction implements Action {
         }
 
         return null;
+    }
+
+    protected LinesChartModel createChartModel() {
+        return new TestResultTrendChart().create(createBuildHistory(), new ChartModelConfiguration());
+    }
+    
+    public TestResultActionIterable createBuildHistory() {
+        Run<?, ?> lastCompletedBuild = job.getLastCompletedBuild();
+        return new TestResultActionIterable(lastCompletedBuild.getAction(TestResultAction.class));
     }
 
     /**
@@ -155,4 +170,15 @@ public class TestResultProjectAction implements Action {
     }
 
     private static final String FAILURE_ONLY_COOKIE = "TestResultAction_failureOnly";
+
+    @JavaScriptMethod
+    @Override
+    public String getBuildTrendModel() {
+        return new JacksonFacade().toJson(createChartModel());
+    }
+
+    @Override
+    public boolean isTrendVisible() {
+        return true;
+    }
 }
