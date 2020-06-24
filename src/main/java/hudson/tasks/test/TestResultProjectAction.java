@@ -114,7 +114,7 @@ public class TestResultProjectAction implements Action, AsyncTrendChart {
     
     public TestResultActionIterable createBuildHistory() {
         Run<?, ?> lastCompletedBuild = job.getLastCompletedBuild();
-        return new TestResultActionIterable(lastCompletedBuild.getAction(TestResultAction.class));
+        return new TestResultActionIterable(lastCompletedBuild.getAction(AbstractTestResultAction.class));
     }
 
     /**
