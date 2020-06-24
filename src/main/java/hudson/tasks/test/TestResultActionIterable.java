@@ -45,6 +45,7 @@ public class TestResultActionIterable implements Iterable {
 
     private static class TestResultActionIterator implements Iterator<BuildResult<TestResultAction>> {
         private Run<?, ?> cursor;
+        private Run<?, ?> initialValue;
 
         /**
          * Creates a new iterator starting from the baseline.
@@ -53,12 +54,16 @@ public class TestResultActionIterable implements Iterable {
          *         the run to start from
          */
         TestResultActionIterator(final Run<?, ?> baseline) {
-            cursor = baseline;
+            initialValue = baseline;
             
         }
 
         @Override
         public boolean hasNext() {
+            if (initialValue != null) {
+                return initialValue.getAction(TestResultAction.class) != null;
+            }
+            
             if (cursor == null) {
                 return false;
             }
@@ -72,12 +77,19 @@ public class TestResultActionIterable implements Iterable {
 
         @Override
         public BuildResult<TestResultAction> next() {
-            if (cursor == null) {
+            if (initialValue == null && cursor == null) {
                 throw new NoSuchElementException(
                         "There is no action available anymore. Use hasNext() before calling next().");
             }
+            Run<?, ?> run;
+            if (initialValue != null) {
+                run = initialValue;
+                initialValue = null;
+            } else {
+                run = cursor.getPreviousBuild();
+            }
 
-            TestResultAction buildAction = getBuildActionFromHistoryStartingFrom(cursor.getPreviousBuild());
+            TestResultAction buildAction = getBuildActionFromHistoryStartingFrom(run);
             if (buildAction != null) {
                 cursor = buildAction.run;
 
