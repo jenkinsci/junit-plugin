@@ -119,7 +119,10 @@ public class TestResultProjectAction implements Action, AsyncTrendChart {
 
     /**
      * Display the test result trend.
+     * 
+     * Deprecated: Replaced by echarts in TODO
      */
+    @Deprecated
     public void doTrend( StaplerRequest req, StaplerResponse rsp ) throws IOException, ServletException {
         AbstractTestResultAction a = getLastTestResultAction();
         if(a!=null)
@@ -130,7 +133,10 @@ public class TestResultProjectAction implements Action, AsyncTrendChart {
 
     /**
      * Generates the clickable map HTML fragment for {@link #doTrend(StaplerRequest, StaplerResponse)}.
+     *
+     * Deprecated: Replaced by echarts in TODO
      */
+    @Deprecated
     public void doTrendMap( StaplerRequest req, StaplerResponse rsp ) throws IOException, ServletException {
         AbstractTestResultAction a = getLastTestResultAction();
         if(a!=null)

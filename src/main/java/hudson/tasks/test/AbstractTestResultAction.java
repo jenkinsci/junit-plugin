@@ -292,7 +292,10 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
 
     /**
      * Generates a PNG image for the test result trend.
+     * 
+     * Deprecated: Replaced by echarts in TODO
      */
+    @Deprecated
     public void doGraph( StaplerRequest req, StaplerResponse rsp) throws IOException {
         if(ChartUtil.awtProblemCause!=null) {
             // not available. send out error message
