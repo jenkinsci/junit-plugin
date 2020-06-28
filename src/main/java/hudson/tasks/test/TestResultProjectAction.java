@@ -31,7 +31,6 @@ import hudson.model.Action;
 import hudson.model.Job;
 import hudson.model.Run;
 import hudson.tasks.junit.JUnitResultArchiver;
-import hudson.tasks.junit.TestResultAction;
 import io.jenkins.plugins.echarts.AsyncTrendChart;
 import org.kohsuke.stapler.Ancestor;
 import org.kohsuke.stapler.StaplerRequest;
@@ -120,7 +119,7 @@ public class TestResultProjectAction implements Action, AsyncTrendChart {
     /**
      * Display the test result trend.
      * 
-     * Deprecated: Replaced by echarts in TODO
+     * @deprecated Replaced by echarts in TODO
      */
     @Deprecated
     public void doTrend( StaplerRequest req, StaplerResponse rsp ) throws IOException, ServletException {
@@ -134,7 +133,7 @@ public class TestResultProjectAction implements Action, AsyncTrendChart {
     /**
      * Generates the clickable map HTML fragment for {@link #doTrend(StaplerRequest, StaplerResponse)}.
      *
-     * Deprecated: Replaced by echarts in TODO
+     * @deprecated Replaced by echarts in TODO
      */
     @Deprecated
     public void doTrendMap( StaplerRequest req, StaplerResponse rsp ) throws IOException, ServletException {

@@ -1,12 +1,10 @@
 package hudson.tasks.test;
 
-import edu.hm.hafner.echarts.BuildResult;
 import edu.hm.hafner.echarts.ChartModelConfiguration;
 import edu.hm.hafner.echarts.LineSeries;
 import edu.hm.hafner.echarts.LinesChartModel;
 import edu.hm.hafner.echarts.LinesDataSet;
 import edu.hm.hafner.echarts.Palette;
-import java.util.Arrays;
 
 public class TestResultTrendChart {
 
