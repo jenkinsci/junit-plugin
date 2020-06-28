@@ -50,7 +50,12 @@ import org.xml.sax.SAXException;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class TestResultPublishingTest {
     @Rule
@@ -130,15 +135,13 @@ public class TestResultPublishingTest {
         //      after "Latest Test Result" it should say "no failures"
         rule.assertXPathResultsContainText(projectPage, "//td", "(no failures)");
         //      there should be a test result trend graph
-        rule.assertXPath(projectPage, "//img[@src='test/trend']");
-        // the trend graph should be served up with a good http status
-        Page trendGraphPage = wc.goTo(proj.getUrl() + "/test/trend", "image/png");
-        rule.assertGoodStatus(trendGraphPage);
+        HtmlElement trendGraphCaption = (HtmlElement) projectPage.getByXPath( "//div[@class='test-trend-caption']").get(0);
+        assertThat(trendGraphCaption.getTextContent(), is("Test Result Trend"));
+        HtmlElement testCanvas = ((HtmlElement) trendGraphCaption.getParentNode()).getElementsByTagName("canvas").get(0);
+        assertNotNull("couldn't find test result trend graph", testCanvas);
 
         // The trend graph should be clickable and take us to a run details page
-        Object imageNode = projectPage.getFirstByXPath("//img[@src='test/trend']");
-        assertNotNull("couldn't find any matching nodes", imageNode);
-        assertTrue("image node should be an HtmlImage object", imageNode instanceof HtmlImage);
+        assertTrue("image node should be an HtmlCanvas object", testCanvas instanceof HtmlCanvas);
         // TODO: Check that we can click on the graph and get to a particular run. How do I do this with HtmlUnit?
 
         XmlPage xmlProjectPage = wc.goToXml(proj.getUrl() + "/lastBuild/testReport/api/xml");
