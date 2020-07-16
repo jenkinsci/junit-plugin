@@ -270,7 +270,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     }
 
     public String getTransformedTestName() {
-        return TestNameTransformer.getTransformedName(testName);
+        return TestNameTransformer.getTransformedName(getName());
     }
 
     public String getDisplayName() {
@@ -300,6 +300,9 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      */
     @Exported(visibility=999)
     public @Override String getName() {
+    	if (testName.isEmpty()) {
+    		return "(?)";
+    	}
         return testName;
     }
 

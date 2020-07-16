@@ -246,6 +246,27 @@ public class TestResultTest {
         assertEquals("Wrong duration for test class", 93.0, class2.getDuration(), 0.1);
     }
 
+    @Issue("JENKINS-63113")
+    @Test
+    public void testTestcaseWithEmptyName() throws Exception {
+        TestResult testResult = new TestResult();
+        testResult.parse(getDataFile("junit-report-empty-testcasename.xml"));
+        testResult.tally();
+
+        assertEquals("Wrong number of testsuites", 1, testResult.getSuites().size());
+        assertEquals("Wrong number of test cases", 1, testResult.getTotalCount());
+
+        SuiteResult suite = testResult.getSuite("test.TestJUnit5FailingInBeforeAll");
+        assertNotNull(suite);
+
+        assertEquals("Wrong number of test classes", 1, suite.getClassNames().size());
+        CaseResult case1 = suite.getCases().get(0);
+
+        assertEquals("test.TestJUnit5FailingInBeforeAll.(?)", case1.getFullName());
+        assertEquals("(?)", case1.getDisplayName());
+        assertEquals("(?)", case1.getName());
+    }
+
     private static final XStream XSTREAM = new XStream2();
 
     static {
