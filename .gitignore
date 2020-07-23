@@ -6,7 +6,7 @@ work/
 *.ipr
 *.iws
 .idea/
-
+appmap
 # eclipse project files
 .classpath
 .project

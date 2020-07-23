@@ -1,0 +1,3 @@
+name: jenkins-plugin-junit
+packages:
+- path: hudson.tasks
