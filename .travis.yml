@@ -23,4 +23,4 @@ script:
   - mvn -DargLine="-javaagent:appmap-java11.jar" test
 
 after_script:
-- env DEBUG=true ./bin/upload-appmaps
+- env DEBUG=true ruby ./bin/upload-appmaps
