@@ -1,11 +1,7 @@
 package hudson.tasks.test;
 
-import hudson.tasks.junit.SuiteResult;
-import hudson.tasks.junit.TestResult;
-
 import javax.annotation.Nonnull;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;

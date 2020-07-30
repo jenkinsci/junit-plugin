@@ -40,7 +40,7 @@ import static java.util.Collections.emptyList;
  */
 public class SimpleCaseResult extends TestResult {
     protected AbstractTestResultAction parentAction;
-    protected final List<SimpleCaseResult> listOnlyContainingThisObject = new ArrayList<SimpleCaseResult>(1);
+    protected final List<SimpleCaseResult> listOnlyContainingThisObject = new ArrayList<>(1);
     protected float duration = 1.0f;
     private static final Logger LOGGER = Logger.getLogger(SimpleCaseResult.class.getName());
 
