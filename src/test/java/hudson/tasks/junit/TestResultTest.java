@@ -136,7 +136,8 @@ public class TestResultTest {
         assertEquals("Wrong number of test cases", 3, testResult.getTotalCount());
     }
     
-    @Bug(12457)
+    @Issue("JENKINS-12457")
+    @Test
     public void testTestSuiteDistributedOverMultipleFilesIsCountedAsOne() throws IOException, URISyntaxException {
         TestResult testResult = new TestResult();
         testResult.parse(getDataFile("JENKINS-12457/TestSuite_a1.xml"), null);
@@ -148,21 +149,6 @@ public class TestResultTest {
         
         // check duration: 157.980 (TestSuite_a1.xml) and 15.000 (TestSuite_a2.xml) = 172.98 
         assertEquals("Wrong duration for test result", 172.98, testResult.getDuration(), 0.1);
-    }
-    
-    /**
-     * A common problem is that people parse TEST-*.xml as well as TESTS-TestSuite.xml.
-     * See http://jenkins.361315.n4.nabble.com/Problem-with-duplicate-build-execution-td371616.html for discussion.
-     */
-    public void testDuplicatedTestSuiteIsNotCounted() throws IOException, URISyntaxException {
-        TestResult testResult = new TestResult();
-        testResult.parse(getDataFile("JENKINS-12457/TestSuite_b.xml"), null);
-        testResult.parse(getDataFile("JENKINS-12457/TestSuite_b_duplicate.xml"), null);
-        testResult.tally();
-        
-        assertEquals("Wrong number of testsuites", 1, testResult.getSuites().size());
-        assertEquals("Wrong number of test cases", 1, testResult.getTotalCount());
-        assertEquals("Wrong duration for test result", 1.0, testResult.getDuration(), 0.01);
     }
 
     @Issue("JENKINS-41134")
@@ -246,6 +232,36 @@ public class TestResultTest {
         assertEquals("Wrong duration for test class", 93.0, class2.getDuration(), 0.1);
     }
 
+    @Issue("JENKINS-48583")
+    @Test
+    public void testMergeOriginalAntOutput() throws IOException, URISyntaxException {
+        TestResult testResult = new TestResult();
+        testResult.parse(getDataFile("JENKINS-48583/TEST-com.sample.test.TestMessage.xml"), null);
+        testResult.parse(getDataFile("JENKINS-48583/TEST-com.sample.test.TestMessage2.xml"), null);
+        testResult.parse(getDataFile("JENKINS-48583/TESTS-TestSuites.xml"), null);
+        testResult.parse(getDataFile("JENKINS-48583/TEST-com.sample.test.TestMessage.xml"), null);
+        testResult.tally();
+        
+        assertEquals("Wrong number of testsuites", 2, testResult.getSuites().size());
+        assertEquals("Wrong number of test cases", 7, testResult.getTotalCount());
+    }
+    
+    /**
+     * Sometimes legitimage test cases are split over multiple files with identical timestamps.
+     */
+    @Issue("JENKINS-48583")
+    @Test
+    public void testNonDuplicatedTestSuiteIsCounted() throws IOException, URISyntaxException {
+        TestResult testResult = new TestResult();
+        testResult.parse(getDataFile("JENKINS-12457/TestSuite_b.xml"), null);
+        testResult.parse(getDataFile("JENKINS-12457/TestSuite_b_duplicate.xml"), null);
+        testResult.parse(getDataFile("JENKINS-12457/TestSuite_b_nonduplicate.xml"), null);
+        testResult.tally();
+
+        assertEquals("Wrong number of testsuites", 1, testResult.getSuites().size());
+        assertEquals("Wrong number of test cases", 3, testResult.getTotalCount());
+    }
+    
     @Issue("JENKINS-63113")
     @Test
     public void testTestcaseWithEmptyName() throws Exception {
