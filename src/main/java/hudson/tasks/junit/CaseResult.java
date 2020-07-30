@@ -207,9 +207,9 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      * @param errorStackTrace Error stack trace.
      */
     public CaseResult(SuiteResult parent, String testName, String errorStackTrace) {
-    	this(parent, testName, errorStackTrace, "");
+        this(parent, testName, errorStackTrace, "");
     }
-    
+
     public CaseResult(SuiteResult parent, String testName, String errorStackTrace, String errorDetails) {
         this.className = parent == null ? "unnamed" : parent.getName();
         this.testName = testName;
@@ -222,9 +222,9 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         this.skipped = false;
         this.skippedMessage = null;
     }
-    
+
     public ClassResult getParent() {
-    	return classResult;
+        return classResult;
     }
 
     private static String getError(Element testCase) {
@@ -369,17 +369,20 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         if(idx<0)       return "(root)";
         else            return className.substring(0,idx);
     }
-    
+
     @Override
     public String getFullName() {
-    	return className+'.'+getName();
+        return className+'.'+getName();
     }
-    
+
     /**
      * @since 1.515
      */
     public String getFullDisplayName() {
-    	return getNameWithEnclosingBlocks(TestNameTransformer.getTransformedName(getFullName()));
+        return getNameWithEnclosingBlocks(getTransformedFullDisplayName());
+    }
+    public String getTransformedFullDisplayName() {
+        return TestNameTransformer.getTransformedName(getFullName());
     }
 
     @Override
@@ -424,7 +427,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     }
 
     public Run<?,?> getFailedSinceRun() {
-    	return getRun().getParent().getBuildByNumber(getFailedSince());
+        return getRun().getParent().getBuildByNumber(getFailedSince());
     }
 
     /**
@@ -485,9 +488,9 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         if (parent == null) return null;
         SuiteResult pr = parent.getPreviousResult();
         if(pr==null)    return null;
-        return pr.getCase(getTransformedTestName());
+        return pr.getCase(getTransformedFullDisplayName());
     }
-    
+
     /**
      * Case results have no children
      * @return null
@@ -570,7 +573,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     public boolean isSkipped() {
         return skipped;
     }
-    
+
     /**
      * @return true if the test was not skipped and did not pass, false otherwise.
      * @since 1.520
@@ -693,7 +696,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     /*package*/ void setClass(ClassResult classResult) {
         this.classResult = classResult;
     }
-    
+
     void replaceParent(SuiteResult parent) {
         this.parent = parent;
     }

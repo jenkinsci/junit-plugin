@@ -149,7 +149,7 @@ public class SuiteResultTest {
             assertEquals(source.getStderr(), result.getStderr());
             assertEquals(source.getStdout(), result.getStdout());
             assertEquals(source.getCases().size(), result.getCases().size());
-            assertNotNull(result.getCase("testGetBundle"));
+            assertNotNull(result.getCase("test.foo.bar.BundleResolverIntegrationTest.testGetBundle"));
         } finally {
             dest.delete();
 }
