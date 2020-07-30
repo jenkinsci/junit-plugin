@@ -208,6 +208,56 @@ public class CaseResultTest {
         wc.goTo("job/foo/1/testReport/org.twia.vendor/VendorManagerTest/testCreateAdjustingFirm/summary","text/plain");
     }
 
+    /**
+    * Execute twice a failing test and make sure its failing age is 2
+    */
+    @Issue("JENKINS-30413")
+    @Test
+    public void testAge() throws Exception {
+        String projectName = "tr-age-test";
+        String testResultResourceFile = "JENKINS-30413.xml";
+
+        //Create a job:
+        FreeStyleProject p = rule.createFreeStyleProject(projectName);
+        p.getPublishersList().add(new JUnitResultArchiver("*.xml"));
+
+        //First build execution:
+        p.getBuildersList().add(new TestBuilder() {
+            public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+                build.getWorkspace().child("junit.xml").copyFrom(
+                    getClass().getResource(testResultResourceFile));
+                return true;
+            }
+        });
+        FreeStyleBuild b1 = rule.assertBuildStatus(Result.UNSTABLE, p.scheduleBuild2(0).get());
+
+        //First build result analysis:
+        TestResult tr = b1.getAction(TestResultAction.class).getResult();
+        assertEquals(1,tr.getFailedTests().size());
+        CaseResult cr = tr.getFailedTests().get(0);
+        assertEquals(1,cr.getAge()); //First execution, failing test age is expected to be 1
+
+
+
+
+
+        //Second build execution:
+        p.getBuildersList().add(new TestBuilder() {
+            public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+                build.getWorkspace().child("junit.xml").copyFrom(
+                    getClass().getResource(testResultResourceFile));
+                return true;
+            }
+        });
+        FreeStyleBuild b2 = rule.assertBuildStatus(Result.UNSTABLE, p.scheduleBuild2(0).get());
+
+        //Second build result analysis:
+        TestResult tr2 = b2.getAction(TestResultAction.class).getResult();
+        assertEquals(1,tr2.getFailedTests().size());
+        CaseResult cr2 = tr2.getFailedTests().get(0);
+        assertEquals(2,cr2.getAge()); //At second execution, failing test age should be 2
+    }
+
     private FreeStyleBuild configureTestBuild(String projectName) throws Exception {
         FreeStyleProject p = projectName == null ? rule.createFreeStyleProject() : rule.createFreeStyleProject(projectName);
         p.getBuildersList().add(new TestBuilder() {

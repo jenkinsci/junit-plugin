@@ -70,7 +70,7 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
     private int skipCount;
     private Integer totalCount;
     private Double healthScaleFactor;
-    private List<Data> testData = new ArrayList<Data>();
+    private List<Data> testData = new ArrayList<>();
 
     @Deprecated
     public TestResultAction(AbstractBuild owner, TestResult result, BuildListener listener) {

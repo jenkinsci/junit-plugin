@@ -39,9 +39,6 @@ import jenkins.MasterToSlaveFileCallable;
 import org.apache.tools.ant.types.FileSet;
 import org.apache.tools.ant.DirectoryScanner;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
-
 /**
  * Parse some JUnit xml files and generate a TestResult containing all the
  * results parsed.

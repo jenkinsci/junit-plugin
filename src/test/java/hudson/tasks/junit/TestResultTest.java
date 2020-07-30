@@ -100,7 +100,7 @@ public class TestResultTest {
 
         SuiteResult failedSuite = result.getSuite("broken");
         assertNotNull(failedSuite);
-        CaseResult failedCase = failedSuite.getCase("becomeUglier");
+        CaseResult failedCase = failedSuite.getCase("breakable.misc.UglyTest.becomeUglier");
         assertNotNull(failedCase);
         assertFalse(failedCase.isSkipped());
         assertFalse(failedCase.isPassed());
@@ -149,25 +149,6 @@ public class TestResultTest {
         
         // check duration: 157.980 (TestSuite_a1.xml) and 15.000 (TestSuite_a2.xml) = 172.98 
         assertEquals("Wrong duration for test result", 172.98, testResult.getDuration(), 0.1);
-    }
-    
-    /**
-     * A common problem is that people parse TEST-*.xml as well as TESTS-TestSuite.xml.
-     * See http://jenkins.361315.n4.nabble.com/Problem-with-duplicate-build-execution-td371616.html for discussion.
-     * 
-     * UPDATE: de-duplication causes missing tests, and the original use case hasn't worked in several releases.
-     * Therefore, the de-duplication logic has been removed.
-     */
-    @Test
-    public void testDuplicatedTestSuiteIsNotCounted() throws IOException, URISyntaxException {
-        TestResult testResult = new TestResult();
-        testResult.parse(getDataFile("JENKINS-12457/TestSuite_b.xml"), null);
-        testResult.parse(getDataFile("JENKINS-12457/TestSuite_b_duplicate.xml"), null);
-        testResult.tally();
-        
-        assertEquals("Wrong number of testsuites", 1, testResult.getSuites().size());
-        assertEquals("Wrong number of test cases", 2, testResult.getTotalCount());
-        assertEquals("Wrong duration for test result", 2.0, testResult.getDuration(), 0.01);
     }
 
     @Issue("JENKINS-41134")
@@ -236,14 +217,14 @@ public class TestResultTest {
 
         assertEquals("Wrong number of test classes", 2, suite.getClassNames().size());
 
-        CaseResult case1 = suite.getCase("testDrawingSurfaceBitmapIsScreenSize");
+        CaseResult case1 = suite.getCase("org.catrobat.paintroid.test.integration.BitmapIntegrationTest.testDrawingSurfaceBitmapIsScreenSize");
         assertNotNull(case1);
         ClassResult class1 = case1.getParent();
         assertNotNull(class1);
         assertEquals("org.catrobat.paintroid.test.integration.BitmapIntegrationTest", class1.getFullName());
         assertEquals("Wrong duration for test class", 5.0, class1.getDuration(),0.1);
 
-        CaseResult case2 = suite.getCase("testColorPickerDialogSwitchTabsInLandscape");
+        CaseResult case2 = suite.getCase("org.catrobat.paintroid.test.integration.LandscapeTest.testColorPickerDialogSwitchTabsInLandscape");
         assertNotNull(case2);
         ClassResult class2 = case2.getParent();
         assertNotNull(class2);
@@ -276,9 +257,30 @@ public class TestResultTest {
         testResult.parse(getDataFile("JENKINS-12457/TestSuite_b_duplicate.xml"), null);
         testResult.parse(getDataFile("JENKINS-12457/TestSuite_b_nonduplicate.xml"), null);
         testResult.tally();
-        
+
         assertEquals("Wrong number of testsuites", 1, testResult.getSuites().size());
         assertEquals("Wrong number of test cases", 3, testResult.getTotalCount());
+    }
+    
+    @Issue("JENKINS-63113")
+    @Test
+    public void testTestcaseWithEmptyName() throws Exception {
+        TestResult testResult = new TestResult();
+        testResult.parse(getDataFile("junit-report-empty-testcasename.xml"));
+        testResult.tally();
+
+        assertEquals("Wrong number of testsuites", 1, testResult.getSuites().size());
+        assertEquals("Wrong number of test cases", 1, testResult.getTotalCount());
+
+        SuiteResult suite = testResult.getSuite("test.TestJUnit5FailingInBeforeAll");
+        assertNotNull(suite);
+
+        assertEquals("Wrong number of test classes", 1, suite.getClassNames().size());
+        CaseResult case1 = suite.getCases().get(0);
+
+        assertEquals("test.TestJUnit5FailingInBeforeAll.(?)", case1.getFullName());
+        assertEquals("(?)", case1.getDisplayName());
+        assertEquals("(?)", case1.getName());
     }
 
     private static final XStream XSTREAM = new XStream2();
@@ -290,3 +292,4 @@ public class TestResultTest {
         XSTREAM.registerConverter(new HeapSpaceStringConverter(),100);
     }
 }
+

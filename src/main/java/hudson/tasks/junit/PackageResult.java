@@ -73,7 +73,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
         if (safeName != null) {
             return safeName;
         }
-        Collection<PackageResult> siblings = parent == null ? Collections.EMPTY_LIST : parent.getChildren();
+        Collection<PackageResult> siblings = parent == null ? Collections.emptyList() : parent.getChildren();
         return safeName = uniquifyName(
                 siblings,
                 safe(getName()));
