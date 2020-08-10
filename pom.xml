@@ -13,7 +13,7 @@
     <description>Allows JUnit-format test results to be published.</description>
     <url>https://github.com/jenkinsci/junit-plugin</url>
     <properties>
-        <revision>1.31</revision>
+        <revision>1.32</revision>
         <changelist>-SNAPSHOT</changelist>
         <jenkins.version>2.204.4</jenkins.version>
         <java.level>8</java.level>
