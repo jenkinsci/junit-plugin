@@ -23,9 +23,10 @@ THE SOFTWARE.
 -->
 
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:test="/lib/hudson/test"
+>
   <f:nested>
-    <table style="width:100%">
+    <test:blockWrapper>
       <f:optionalBlock name="aggregatedTestResult.specify" negative="true"
               title="${%Automatically aggregate all downstream tests}"
               checked="${instance.jobs==null}"
@@ -38,7 +39,7 @@ THE SOFTWARE.
                      autoCompleteDelimChar="," />
         </f:entry>        
       </f:optionalBlock>
-    </table>
+    </test:blockWrapper>
   </f:nested>
   <f:entry field="includeFailedBuilds" title="">
     <f:checkbox name="includeFailedBuilds" checked="${instance.includeFailedBuilds}" title="${%Include failed builds in results}" />

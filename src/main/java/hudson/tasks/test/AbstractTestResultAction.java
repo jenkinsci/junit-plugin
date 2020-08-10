@@ -52,6 +52,8 @@ import org.jfree.chart.renderer.category.StackedAreaRenderer;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.ui.RectangleInsets;
 import org.jvnet.localizer.Localizable;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
@@ -202,7 +204,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
      *
      * <p>
      * If such a concept doesn't make sense for a particular subtype,
-     * return <tt>this</tt>.
+     * return <code>this</code>.
      */
     public abstract Object getResult();
 
@@ -213,7 +215,8 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
         return (T)getPreviousResult(getClass(), true);
     }
 
-    private <U extends AbstractTestResultAction> U getPreviousResult(Class<U> type, boolean eager) {
+    @Restricted(NoExternalUse.class)
+    public <U extends AbstractTestResultAction> U getPreviousResult(Class<U> type, boolean eager) {
         Run<?,?> b = run;
         Set<Integer> loadedBuilds;
         if (!eager && run.getParent() instanceof LazyBuildMixIn.LazyLoadingJob) {
@@ -289,7 +292,10 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
 
     /**
      * Generates a PNG image for the test result trend.
+     * 
+     * @deprecated Replaced by echarts in TODO
      */
+    @Deprecated
     public void doGraph( StaplerRequest req, StaplerResponse rsp) throws IOException {
         if(ChartUtil.awtProblemCause!=null) {
             // not available. send out error message

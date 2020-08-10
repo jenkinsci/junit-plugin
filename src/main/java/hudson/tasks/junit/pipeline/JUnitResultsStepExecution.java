@@ -6,6 +6,8 @@ import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.junit.JUnitResultArchiver;
+import hudson.tasks.junit.TestResult;
+import hudson.tasks.junit.TestResultAction;
 import hudson.tasks.junit.TestResultSummary;
 import hudson.tasks.test.PipelineTestDetails;
 import java.util.ArrayList;
@@ -13,6 +15,7 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import org.jenkinsci.plugins.workflow.actions.LabelAction;
 import org.jenkinsci.plugins.workflow.actions.ThreadNameAction;
+import org.jenkinsci.plugins.workflow.actions.WarningAction;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.graph.StepNode;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
@@ -45,12 +48,25 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
         pipelineTestDetails.setNodeId(nodeId);
         pipelineTestDetails.setEnclosingBlocks(getEnclosingBlockIds(enclosingBlocks));
         pipelineTestDetails.setEnclosingBlockNames(getEnclosingBlockNames(enclosingBlocks));
-        TestResultSummary summary = JUnitResultArchiver.parseAndSummarize(step, pipelineTestDetails, run, workspace, launcher, listener);
-        // TODO: Once JENKINS-43995 lands, update this to set the step status instead of the entire build.
-        if (summary.getFailCount() > 0) {
-            run.setResult(Result.UNSTABLE);
+        try {
+            TestResultSummary summary = JUnitResultArchiver.parseAndSummarize(step, pipelineTestDetails, run, workspace, launcher, listener);
+
+            if (summary.getFailCount() > 0) {
+                int testFailures = summary.getFailCount();
+                if (testFailures > 0) {
+                    node.addOrReplaceAction(new WarningAction(Result.UNSTABLE).withMessage(testFailures + " tests failed"));
+                    assert run != null;
+                    run.setResult(Result.UNSTABLE);
+                }
+                return summary;
+            }
+        } catch (Exception e) {
+            assert listener != null;
+            listener.getLogger().println(e.getMessage());
+            throw e;
         }
-        return summary;
+
+        return new TestResultSummary();
     }
 
     /**

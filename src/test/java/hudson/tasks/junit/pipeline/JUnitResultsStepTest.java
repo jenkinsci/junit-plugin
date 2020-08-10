@@ -15,12 +15,18 @@ import hudson.tasks.junit.TestResult;
 import hudson.tasks.junit.TestResultAction;
 import hudson.tasks.junit.TestResultTest;
 import hudson.tasks.test.PipelineBlockWithTests;
+import org.hamcrest.CoreMatchers;
+import org.hamcrest.BaseMatcher;
+import org.hamcrest.Description;
 import org.jenkinsci.plugins.workflow.actions.LabelAction;
 import org.jenkinsci.plugins.workflow.actions.ThreadNameAction;
+import org.jenkinsci.plugins.workflow.actions.WarningAction;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.cps.SnippetizerTester;
+import org.jenkinsci.plugins.workflow.cps.nodes.StepAtomNode;
 import org.jenkinsci.plugins.workflow.cps.nodes.StepStartNode;
 import org.jenkinsci.plugins.workflow.flow.FlowExecution;
+import org.jenkinsci.plugins.workflow.graph.BlockStartNode;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.graphanalysis.DepthFirstScanner;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
@@ -45,6 +51,7 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 public class JUnitResultsStepTest {
@@ -243,10 +250,10 @@ public class JUnitResultsStepTest {
         assertEquals(5, action.getResult().getSuites().size());
         assertEquals(10, action.getTotalCount());
 
-        assertBranchResults(r, 1, 6, "a", "first");
-        assertBranchResults(r, 1, 1, "b", "first");
-        assertBranchResults(r, 3, 3, "c", "first");
-        assertStageResults(r, 5, 10, "first");
+        assertBranchResults(r, 1, 6, 0, "a", "first", null);
+        assertBranchResults(r, 1, 1, 0, "b", "first", null);
+        assertBranchResults(r, 3, 3, 1, "c", "first", null);
+        assertStageResults(r, 5, 10, 1, "first");
     }
 
     @Issue("JENKINS-48196")
@@ -279,11 +286,11 @@ public class JUnitResultsStepTest {
         // assertBranchResults looks to make sure the display names for tests are "(stageName) / (branchName) / (testName)"
         // That should still effectively be the case here, even though there's a stage inside each branch, because the
         // branch and nested stage have the same name.
-        assertBranchResults(r, 1, 6, "a", "outer");
-        assertBranchResults(r, 1, 1, "b", "outer");
+        assertBranchResults(r, 1, 6, 0, "a", "outer", null);
+        assertBranchResults(r, 1, 1, 0, "b", "outer", null);
         // ...except for branch c. That contains a stage named 'd', so its test should have display names like
         // "outer / c / d / (testName)"
-        assertBranchResults(r, 3, 3, -1, "c", "outer", "d");
+        assertBranchResults(r, 3, 3, 1, "c", "outer", "d");
     }
 
     @Test
@@ -390,15 +397,11 @@ public class JUnitResultsStepTest {
         };
     }
 
-    public static void assertBranchResults(WorkflowRun run, int suiteCount, int testCount, String branchName, String stageName) {
-        assertBranchResults(run, suiteCount, testCount, -1, branchName, stageName, null);
-    }
-
     public static void assertBranchResults(WorkflowRun run, int suiteCount, int testCount, int failCount, String branchName, String stageName,
                                            String innerStageName) {
         FlowExecution execution = run.getExecution();
         DepthFirstScanner scanner = new DepthFirstScanner();
-        FlowNode aBranch = scanner.findFirstMatch(execution, branchForName(branchName));
+        BlockStartNode aBranch = (BlockStartNode)scanner.findFirstMatch(execution, branchForName(branchName));
         assertNotNull(aBranch);
         TestResult branchResult = assertBlockResults(run, suiteCount, testCount, failCount, aBranch);
         String namePrefix = stageName + " / " + branchName;
@@ -410,19 +413,15 @@ public class JUnitResultsStepTest {
         }
     }
 
-    public static void assertStageResults(WorkflowRun run, int suiteCount, int testCount, String stageName) {
-        assertStageResults(run, suiteCount, testCount, -1, stageName);
-    }
-
     public static void assertStageResults(WorkflowRun run, int suiteCount, int testCount, int failCount, String stageName) {
         FlowExecution execution = run.getExecution();
         DepthFirstScanner scanner = new DepthFirstScanner();
-        FlowNode aStage = scanner.findFirstMatch(execution, stageForName(stageName));
+        BlockStartNode aStage = (BlockStartNode)scanner.findFirstMatch(execution, stageForName(stageName));
         assertNotNull(aStage);
         assertBlockResults(run, suiteCount, testCount, failCount, aStage);
     }
 
-    private static TestResult assertBlockResults(WorkflowRun run, int suiteCount, int testCount, int failCount, FlowNode blockNode) {
+    private static TestResult assertBlockResults(WorkflowRun run, int suiteCount, int testCount, int failCount, BlockStartNode blockNode) {
         assertNotNull(blockNode);
 
         TestResultAction action = run.getAction(TestResultAction.class);
@@ -433,8 +432,11 @@ public class JUnitResultsStepTest {
 
         assertEquals(suiteCount, aResult.getSuites().size());
         assertEquals(testCount, aResult.getTotalCount());
-        if (failCount > -1) {
-            assertEquals(failCount, aResult.getFailCount());
+        assertEquals(failCount, aResult.getFailCount());
+        if (failCount > 0) {
+            assertThat(findJUnitSteps(blockNode), CoreMatchers.hasItem(hasWarningAction()));
+        } else {
+            assertThat(findJUnitSteps(blockNode), CoreMatchers.not(CoreMatchers.hasItem(hasWarningAction())));
         }
 
         PipelineBlockWithTests aBlock = action.getResult().getPipelineBlockWithTests(blockNode.getId());
@@ -459,6 +461,28 @@ public class JUnitResultsStepTest {
         assertNotNull(result);
         assertEquals(suiteCount, result.getSuites().size());
         assertEquals(testCount, result.getTotalCount());
+    }
+
+    private static List<FlowNode> findJUnitSteps(BlockStartNode blockStart) {
+        return new DepthFirstScanner().filteredNodes(
+                Collections.singletonList(blockStart.getEndNode()),
+                Collections.singletonList(blockStart),
+                node -> node instanceof StepAtomNode &&
+                        ((StepAtomNode) node).getDescriptor() instanceof JUnitResultsStep.DescriptorImpl
+        );
+    }
+
+    private static BaseMatcher<FlowNode> hasWarningAction() {
+        return new BaseMatcher<FlowNode>() {
+            @Override
+            public boolean matches(Object item) {
+                return item instanceof FlowNode && ((FlowNode) item).getPersistentAction(WarningAction.class) != null;
+            }
+            @Override
+            public void describeTo(Description description) {
+                description.appendText("a FlowNode with a WarningAction");
+            }
+        };
     }
 
     public static class MockTestDataPublisher extends TestDataPublisher {

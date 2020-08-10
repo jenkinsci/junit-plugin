@@ -73,7 +73,7 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
     // so that we can distinguish between 0 tests vs not-computed-yet.
     private @Nullable Integer totalCount;
     private Double healthScaleFactor;
-    private List<Data> testData = new ArrayList<Data>();
+    private List<Data> testData = new ArrayList<>();
 
     @Deprecated
     public TestResultAction(AbstractBuild owner, TestResult result, BuildListener listener) {
