@@ -3,6 +3,7 @@ package hudson.tasks.junit;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * Summary of test results that can be used in Pipeline scripts.
@@ -12,6 +13,7 @@ public class TestResultSummary implements Serializable {
     private int skipCount;
     private int passCount;
     private int totalCount;
+    private List<CaseResult> failedTests;
 
     public TestResultSummary() {
     }
@@ -21,6 +23,7 @@ public class TestResultSummary implements Serializable {
         this.skipCount = result.getSkipCount();
         this.passCount = result.getPassCount();
         this.totalCount = result.getTotalCount();
+        this.failedTests = result.getFailedTests();
     }
 
     @Whitelisted
@@ -41,6 +44,11 @@ public class TestResultSummary implements Serializable {
     @Whitelisted
     public int getTotalCount() {
         return totalCount;
+    }
+    
+    @Whitelisted
+    public List<CaseResult> getFailedTests() {
+        return failedTests;
     }
 }
 
