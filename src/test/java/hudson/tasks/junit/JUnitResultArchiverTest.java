@@ -313,6 +313,7 @@ public class JUnitResultArchiverTest {
     @Test public void emptyDirectoryAllowEmptyResult() throws Exception {
         JUnitResultArchiver a = new JUnitResultArchiver("TEST-*.xml");
         a.setAllowEmptyResults(true);
+        a.setMakeUnstable(true);
         FreeStyleProject freeStyleProject = j.createFreeStyleProject();
         freeStyleProject.getPublishersList().add(a);
         j.assertBuildStatus(Result.SUCCESS, freeStyleProject.scheduleBuild2(0).get());
@@ -321,6 +322,7 @@ public class JUnitResultArchiverTest {
     @Test public void emptyDirectory() throws Exception {
         JUnitResultArchiver a = new JUnitResultArchiver("TEST-*.xml");
         a.setAllowEmptyResults(false);
+        a.setMakeUnstable(true);
         FreeStyleProject freeStyleProject = j.createFreeStyleProject();
         freeStyleProject.getPublishersList().add(a);
         j.assertBuildStatus(Result.FAILURE, freeStyleProject.scheduleBuild2(0).get());
@@ -363,6 +365,7 @@ public class JUnitResultArchiverTest {
         JUnitResultArchiver j = model.instantiate(args);
         assertEquals("**/TEST-*.xml", j.getTestResults());
         assertFalse(j.isAllowEmptyResults());
+        assertTrue(j.isMakeUnstable());
         assertFalse(j.isKeepLongStdio());
         assertEquals(1.0, j.getHealthScaleFactor(), 0);
         assertTrue(j.getTestDataPublishers().isEmpty());
