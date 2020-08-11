@@ -63,7 +63,6 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.remoting.SerializableOnlyOverRemoting;
 
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -158,8 +157,18 @@ public class TestResultStorageTest {
             assertEquals("another.Klazz", failedTests.get(1).getClassName());
             assertEquals("test1", failedTests.get(1).getName());
             assertEquals("another failure", failedTests.get(1).getErrorDetails());
+
+            List<CaseResult> skippedTests = a.getSkippedTests();
+            assertEquals(1, skippedTests.size());
+            assertEquals("other.Klazz", skippedTests.get(0).getClassName());
+            assertEquals("test3", skippedTests.get(0).getName());
+            assertEquals("Not actually run.", skippedTests.get(0).getSkippedMessage());
+
+            List<CaseResult> passedTests = a.getPassedTests();
+            assertEquals(1, passedTests.size());
+            assertEquals("Klazz", passedTests.get(0).getClassName());
+            assertEquals("test2", passedTests.get(0).getName());
             
-            // TODO passedTests, skippedTests
             // TODO more detailed Java queries incl. PackageResult / ClassResult
             // TODO test healthScaleFactor, descriptions
         }
@@ -213,28 +222,33 @@ public class TestResultStorageTest {
                         }
                     }, 0);
                 }
-                
-                private List<CaseResult> getCaseResult(String column) {
+
+                private List<CaseResult> retrieveCaseResult(String whereCondition) {
                     return query(connection -> {
-                        try (PreparedStatement statement = connection.prepareStatement("SELECT suite, testname, classname, errordetails FROM " + Impl.CASE_RESULTS_TABLE + " WHERE job = ? AND build = ? AND " + column + " IS NOT NULL")) {
+                        try (PreparedStatement statement = connection.prepareStatement("SELECT suite, testname, classname, errordetails, skipped FROM " + Impl.CASE_RESULTS_TABLE + " WHERE job = ? AND build = ? AND " + whereCondition)) {
                             statement.setString(1, job);
                             statement.setInt(2, build);
                             try (ResultSet result = statement.executeQuery()) {
-                                
+
                                 List<CaseResult> results = new ArrayList<>();
                                 while (result.next()) {
                                     String testName = result.getString("testname");
                                     String errorDetails = result.getString("errordetails");
                                     String suite = result.getString("suite");
                                     String className = result.getString("classname");
+                                    String skipped = result.getString("skipped");
 
                                     SuiteResult suiteResult = new SuiteResult(suite, null, null, null);
-                                    results.add(new CaseResult(suiteResult, className, testName, errorDetails, null));
+                                    results.add(new CaseResult(suiteResult, className, testName, errorDetails, skipped));
                                 }
                                 return results;
                             }
                         }
                     }, emptyList());
+                }
+                
+                private List<CaseResult> getCaseResult(String column) {
+                    return retrieveCaseResult(column + " IS NOT NULL");
                 }
                 
                 @Override public int getFailCount() {
@@ -257,6 +271,18 @@ public class TestResultStorageTest {
                 @Override
                 public List<CaseResult> getFailedTests() {
                     List<CaseResult> errordetails = getCaseResult("errordetails");
+                    return errordetails;
+                }
+
+                @Override
+                public List<CaseResult> getSkippedTests() {
+                    List<CaseResult> errordetails = getCaseResult("skipped");
+                    return errordetails;
+                }
+
+                @Override
+                public List<CaseResult> getPassedTests() {
+                    List<CaseResult> errordetails = retrieveCaseResult("errordetails IS NULL AND skipped IS NULL");
                     return errordetails;
                 }
 

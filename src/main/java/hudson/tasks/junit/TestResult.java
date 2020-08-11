@@ -517,6 +517,10 @@ public final class TestResult extends MetaTabulatedResult {
      */
     @Override
     public synchronized List<CaseResult> getPassedTests() {
+        if (impl != null) {
+            return impl.getPassedTests();
+        }
+        
         if(passedTests == null){
             passedTests = new ArrayList<CaseResult>();
             for(SuiteResult s : suites) {
@@ -538,6 +542,10 @@ public final class TestResult extends MetaTabulatedResult {
      */
     @Override
     public synchronized List<CaseResult> getSkippedTests() {
+        if (impl != null) {
+            return impl.getSkippedTests();
+        }
+        
         if(skippedTests == null){
             skippedTests = new ArrayList<CaseResult>();
             for(SuiteResult s : suites) {

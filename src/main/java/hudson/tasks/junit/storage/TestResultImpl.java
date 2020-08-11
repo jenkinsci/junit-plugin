@@ -38,5 +38,7 @@ public interface TestResultImpl {
     int getPassCount();
     int getTotalCount();
     List<CaseResult> getFailedTests();
+    List<CaseResult> getSkippedTests();
+    List<CaseResult> getPassedTests();
     @Nonnull TestResult getResultByNodes(@Nonnull List<String> nodeIds);
 }

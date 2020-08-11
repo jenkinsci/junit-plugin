@@ -127,17 +127,18 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         this.skippedMessage = null;
     }
 
-    public CaseResult(SuiteResult parent, String className, String testName, String errorDetails, String stdOut) {
+    public  CaseResult(SuiteResult parent, String className, String testName, String errorDetails, String skippedMessage) {
         this.className = className;
         this.testName = testName;
         this.errorStackTrace = null;
         this.errorDetails = errorDetails;
         this.parent = parent;
-        this.stdout = stdOut;
+        this.stdout = null;
         this.stderr = null;
         this.duration = 0.0f;
-        this.skipped = false;
-        this.skippedMessage = null;
+        
+        this.skipped = skippedMessage != null;
+        this.skippedMessage = skippedMessage;
     }
 
     CaseResult(SuiteResult parent, Element testCase, String testClassName, boolean keepLongStdio) {
