@@ -47,6 +47,8 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
@@ -59,6 +61,9 @@ import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.remoting.SerializableOnlyOverRemoting;
+
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -144,7 +149,6 @@ public class TestResultStorageTest {
             assertEquals(1, a.getResult().getSkipCount());
             assertEquals(4, a.getResult().getTotalCount());
             assertEquals(1, a.getResult().getPassCount());
-            /* TODO implement:
             assertEquals("[CaseResult{className=Klazz, testName=test1, errorDetails=failure}, CaseResult{className=another.Klazz, testName=test1, errorDetails=another failure}]", a.getFailedTests().toString());
             List<CaseResult> failedTests = a.getFailedTests();
             assertEquals(2, failedTests.size());
@@ -154,7 +158,7 @@ public class TestResultStorageTest {
             assertEquals("another.Klazz", failedTests.get(1).getClassName());
             assertEquals("test1", failedTests.get(1).getName());
             assertEquals("another failure", failedTests.get(1).getErrorDetails());
-            */
+            
             // TODO passedTests, skippedTests
             // TODO more detailed Java queries incl. PackageResult / ClassResult
             // TODO test healthScaleFactor, descriptions
@@ -203,23 +207,59 @@ public class TestResultStorageTest {
                             statement.setInt(2, build);
                             try (ResultSet result = statement.executeQuery()) {
                                 result.next();
-                                return result.getInt(1);
+                                int anInt = result.getInt(1);
+                                return anInt;
                             }
                         }
                     }, 0);
                 }
+                
+                private List<CaseResult> getCaseResult(String column) {
+                    return query(connection -> {
+                        try (PreparedStatement statement = connection.prepareStatement("SELECT suite, testname, classname, errordetails FROM " + Impl.CASE_RESULTS_TABLE + " WHERE job = ? AND build = ? AND " + column + " IS NOT NULL")) {
+                            statement.setString(1, job);
+                            statement.setInt(2, build);
+                            try (ResultSet result = statement.executeQuery()) {
+                                
+                                List<CaseResult> results = new ArrayList<>();
+                                while (result.next()) {
+                                    String testName = result.getString("testname");
+                                    String errorDetails = result.getString("errordetails");
+                                    String suite = result.getString("suite");
+                                    String className = result.getString("classname");
+
+                                    SuiteResult suiteResult = new SuiteResult(suite, null, null, null);
+                                    results.add(new CaseResult(suiteResult, className, testName, errorDetails, null));
+                                }
+                                return results;
+                            }
+                        }
+                    }, emptyList());
+                }
+                
                 @Override public int getFailCount() {
-                    return getCaseCount(" AND errorDetails IS NOT NULL");
+                    int caseCount = getCaseCount(" AND errorDetails IS NOT NULL");
+                    return caseCount;
                 }
                 @Override public int getSkipCount() {
-                    return getCaseCount(" AND skipped IS NOT NULL");
+                    int caseCount = getCaseCount(" AND skipped IS NOT NULL");
+                    return caseCount;
                 }
                 @Override public int getPassCount() {
-                    return getCaseCount(" AND errorDetails IS NULL AND skipped IS NULL");
+                    int caseCount = getCaseCount(" AND errorDetails IS NULL AND skipped IS NULL");
+                    return caseCount;
                 }
                 @Override public int getTotalCount() {
-                    return getCaseCount("");
+                    int caseCount = getCaseCount("");
+                    return caseCount;
                 }
+
+                @Override
+                public List<CaseResult> getFailedTests() {
+                    List<CaseResult> errordetails = getCaseResult("errordetails");
+                    return errordetails;
+                }
+
                 @Override public TestResult getResultByNodes(List<String> nodeIds) {
                     return new TestResult(this); // TODO
                 }

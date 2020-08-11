@@ -208,7 +208,8 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
 
     @Override
      public List<CaseResult> getFailedTests() {
-          return getResult().getFailedTests();
+        TestResult result = getResult();
+        return result.getFailedTests();
      }
 
     @Override

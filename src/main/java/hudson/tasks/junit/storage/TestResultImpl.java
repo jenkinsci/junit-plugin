@@ -24,6 +24,7 @@
 
 package hudson.tasks.junit.storage;
 
+import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.TestResult;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -36,5 +37,6 @@ public interface TestResultImpl {
     int getSkipCount();
     int getPassCount();
     int getTotalCount();
+    List<CaseResult> getFailedTests();
     @Nonnull TestResult getResultByNodes(@Nonnull List<String> nodeIds);
 }

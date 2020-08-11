@@ -504,6 +504,9 @@ public final class TestResult extends MetaTabulatedResult {
 
     @Override
     public List<CaseResult> getFailedTests() {
+        if (impl != null) {
+            return impl.getFailedTests();
+        }
         return failedTests;
     }
 

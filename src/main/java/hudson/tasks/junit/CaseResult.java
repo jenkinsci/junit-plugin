@@ -101,6 +101,45 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         return new TimeToFloat(time).parse();
     }
 
+
+    /**
+     * Used to create a fake failure, when Hudson fails to load data from XML files.
+     * Public since 1.526.
+     *
+     * @param parent Parent result.
+     * @param testName Test name.
+     * @param errorStackTrace Error stack trace.
+     */
+    public CaseResult(SuiteResult parent, String testName, String errorStackTrace) {
+        this(parent, testName, errorStackTrace, "");
+    }
+
+    public CaseResult(SuiteResult parent, String testName, String errorStackTrace, String errorDetails) {
+        this.className = parent == null ? "unnamed" : parent.getName();
+        this.testName = testName;
+        this.errorStackTrace = errorStackTrace;
+        this.errorDetails = errorDetails;
+        this.parent = parent;
+        this.stdout = null;
+        this.stderr = null;
+        this.duration = 0.0f;
+        this.skipped = false;
+        this.skippedMessage = null;
+    }
+
+    public CaseResult(SuiteResult parent, String className, String testName, String errorDetails, String stdOut) {
+        this.className = className;
+        this.testName = testName;
+        this.errorStackTrace = null;
+        this.errorDetails = errorDetails;
+        this.parent = parent;
+        this.stdout = stdOut;
+        this.stderr = null;
+        this.duration = 0.0f;
+        this.skipped = false;
+        this.skippedMessage = null;
+    }
+
     CaseResult(SuiteResult parent, Element testCase, String testClassName, boolean keepLongStdio) {
         // schema for JUnit report XML format is not available in Ant,
         // so I don't know for sure what means what.
@@ -195,32 +234,6 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
             }
         }
         return HALF_MAX_SIZE;
-    }
-
-
-    /**
-     * Used to create a fake failure, when Hudson fails to load data from XML files.
-     * Public since 1.526.
-     *
-     * @param parent Parent result.
-     * @param testName Test name.
-     * @param errorStackTrace Error stack trace.
-     */
-    public CaseResult(SuiteResult parent, String testName, String errorStackTrace) {
-        this(parent, testName, errorStackTrace, "");
-    }
-
-    public CaseResult(SuiteResult parent, String testName, String errorStackTrace, String errorDetails) {
-        this.className = parent == null ? "unnamed" : parent.getName();
-        this.testName = testName;
-        this.errorStackTrace = errorStackTrace;
-        this.errorDetails = errorDetails;
-        this.parent = parent;
-        this.stdout = null;
-        this.stderr = null;
-        this.duration = 0.0f;
-        this.skipped = false;
-        this.skippedMessage = null;
     }
 
     public ClassResult getParent() {
