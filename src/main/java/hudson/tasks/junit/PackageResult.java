@@ -49,7 +49,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
     private final hudson.tasks.junit.TestResult parent;
     private float duration; 
 
-    PackageResult(hudson.tasks.junit.TestResult parent, String packageName) {
+    public PackageResult(hudson.tasks.junit.TestResult parent, String packageName) {
         this.packageName = packageName;
         this.parent = parent;
     }
@@ -175,6 +175,10 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
      * sort order
      */
     public List<CaseResult> getFailedTests() {
+       if (parent.getPluggableStorage() != null) {
+           return parent.getPluggableStorage().getFailedTestsByPackage(packageName);
+       }
+        
         List<CaseResult> r = new ArrayList<CaseResult>();
         for (ClassResult clr : classes.values()) {
             for (CaseResult cr : clr.getChildren()) {
@@ -204,6 +208,10 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
      */
     @Override
     public List<CaseResult> getPassedTests() {
+        if (parent.getPluggableStorage() != null) {
+            return parent.getPluggableStorage().getPassedTestsByPackage(packageName);
+        }
+
         List<CaseResult> r = new ArrayList<CaseResult>();
         for (ClassResult clr : classes.values()) {
             for (CaseResult cr : clr.getChildren()) {
@@ -223,6 +231,10 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
      */
     @Override
     public List<CaseResult> getSkippedTests() {
+        if (parent.getPluggableStorage() != null) {
+            return parent.getPluggableStorage().getSkippedTestsByPackage(packageName);
+        } 
+        
         List<CaseResult> r = new ArrayList<CaseResult>();
         for (ClassResult clr : classes.values()) {
             for (CaseResult cr : clr.getChildren()) {

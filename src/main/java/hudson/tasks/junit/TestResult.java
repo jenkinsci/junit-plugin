@@ -156,6 +156,11 @@ public final class TestResult extends MetaTabulatedResult {
         keepLongStdio = false; // irrelevant
     }
 
+    @CheckForNull
+    public TestResultImpl getPluggableStorage() {
+        return impl;
+    }
+
     public TestObject getParent() {
     	return parent;
     }
@@ -679,6 +684,10 @@ public final class TestResult extends MetaTabulatedResult {
     }
 
     public PackageResult byPackage(String packageName) {
+        if (impl != null) {
+            return impl.getPackageResult(packageName);
+        }
+        
         return byPackages.get(packageName);
     }
 
@@ -754,7 +763,7 @@ public final class TestResult extends MetaTabulatedResult {
                 cr.setParentAction(this.parentAction);
                 cr.setParentSuiteResult(s);
                 cr.tally();
-                String pkg = cr.getPackageName(), spkg = safe(pkg);
+            String pkg = cr.getPackageName(), spkg = safe(pkg);
                 PackageResult pr = byPackage(spkg);
                 if(pr==null)
                     byPackages.put(spkg,pr=new PackageResult(this,pkg));
