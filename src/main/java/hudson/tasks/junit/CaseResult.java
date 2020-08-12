@@ -24,6 +24,8 @@
 package hudson.tasks.junit;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import hudson.tasks.junit.storage.TestResultImpl;
+import hudson.tasks.junit.storage.TestResultStorage;
 import hudson.util.TextFile;
 import org.apache.commons.collections.iterators.ReverseListIterator;
 import org.apache.commons.io.FileUtils;
@@ -34,6 +36,7 @@ import hudson.model.Run;
 import hudson.tasks.test.TestResult;
 
 import org.dom4j.Element;
+import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.export.Exported;
 
 import javax.annotation.CheckForNull;
@@ -127,7 +130,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         this.skippedMessage = null;
     }
 
-    public  CaseResult(SuiteResult parent, String className, String testName, String errorDetails, String skippedMessage) {
+    public CaseResult(SuiteResult parent, String className, String testName, String errorDetails, String skippedMessage) {
         this.className = className;
         this.testName = testName;
         this.errorStackTrace = null;
@@ -441,6 +444,13 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     }
 
     public Run<?,?> getFailedSinceRun() {
+        TestResultStorage storage = TestResultStorage.find();
+        if (storage != null) {
+            Run<?, ?> run = Stapler.getCurrentRequest().findAncestorObject(Run.class);
+            TestResultImpl pluggableStorage = storage.load(run.getParent().getFullName(), run.getNumber());
+            return pluggableStorage.getFailedSinceRun(this);
+        }
+        
         return getRun().getParent().getBuildByNumber(getFailedSince());
     }
 

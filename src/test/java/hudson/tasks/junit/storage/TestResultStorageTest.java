@@ -27,6 +27,7 @@ package hudson.tasks.junit.storage;
 import com.google.common.collect.ImmutableSet;
 import com.thoughtworks.xstream.XStream;
 import hudson.Util;
+import hudson.model.Job;
 import hudson.model.Label;
 import hudson.model.Result;
 import hudson.model.Run;
@@ -55,6 +56,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import javax.xml.parsers.DocumentBuilderFactory;
+import jenkins.model.Jenkins;
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.database.Database;
 import org.jenkinsci.plugins.database.GlobalDatabaseConfiguration;
@@ -74,6 +76,8 @@ import org.junit.Test;
 import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
+import org.kohsuke.stapler.Stapler;
+import org.kohsuke.stapler.StaplerRequest;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -190,8 +194,11 @@ public class TestResultStorageTest {
 
 //            r.pause();
             // TODO test result summary i.e. failure content
-            // TODO more detailed Java queries incl. PackageResult / ClassResult
+            // TODO getFailedSinceRun, TestResult#getChildren, TestObject#getTestResultAction
+            // TODO more detailed Java queries incl. ClassResult
+            // TODO CaseResult#getRun: In getOwner(), suiteResult.getParent() is null
             // TODO test healthScaleFactor, descriptions
+            // TODO historyAvailable(History.java:72)
         }
     }
 
@@ -270,6 +277,71 @@ public class TestResultStorageTest {
                 @Override
                 public PackageResult getPackageResult(String packageName) {
                     return new PackageResult(new TestResult(this), packageName);
+                }
+
+                @Override
+                public Run<?, ?> getFailedSinceRun(CaseResult caseResult) {
+                    return query(connection -> {
+                        int lastPassingBuildNumber;
+                        Job<?, ?> theJob = Objects.requireNonNull(Jenkins.get().getItemByFullName(job, Job.class));
+                        try (PreparedStatement statement = connection.prepareStatement(
+                                "SELECT build " +
+                                        "FROM " + Impl.CASE_RESULTS_TABLE + " " +
+                                        "WHERE job = ? " +
+                                        "AND build < ? " +
+                                        "AND suite = ? " +
+                                        "AND package = ? " +
+                                        "AND classname = ? " +
+                                        "AND testname = ? " +
+                                        "AND errordetails IS NULL " +
+                                        "ORDER BY BUILD DESC " +
+                                        "LIMIT 1"
+                        )) {
+                            statement.setString(1, job);
+                            statement.setInt(2, build);
+                            statement.setString(3, caseResult.getSuiteResult().getName());
+                            statement.setString(4, caseResult.getPackageName());
+                            statement.setString(5, caseResult.getClassName());
+                            statement.setString(6, caseResult.getName());
+                            try (ResultSet result = statement.executeQuery()) {
+                                boolean hasPassed = result.next();
+                                if (!hasPassed) {
+                                    return theJob.getBuildByNumber(1);
+                                }
+                                
+                                lastPassingBuildNumber = result.getInt("build");
+                            }
+                        }
+                        try (PreparedStatement statement = connection.prepareStatement(
+                                "SELECT build " +
+                                        "FROM " + Impl.CASE_RESULTS_TABLE + " " +
+                                        "WHERE job = ? " +
+                                        "AND build > ? " +
+                                        "AND suite = ? " +
+                                        "AND package = ? " +
+                                        "AND classname = ? " +
+                                        "AND testname = ? " +
+                                        "AND errordetails is NOT NULL " +
+                                        "ORDER BY BUILD ASC " +
+                                        "LIMIT 1"
+                        )
+                        ) {
+                            statement.setString(1, job);
+                            statement.setInt(2, lastPassingBuildNumber);
+                            statement.setString(3, caseResult.getSuiteResult().getName());
+                            statement.setString(4, caseResult.getPackageName());
+                            statement.setString(5, caseResult.getClassName());
+                            statement.setString(6, caseResult.getName());
+
+                            try (ResultSet result = statement.executeQuery()) {
+                                result.next();
+
+                                int firstFailingBuildAfterPassing = result.getInt("build");
+                                return theJob.getBuildByNumber(firstFailingBuildAfterPassing);
+                            }
+                        }
+                    }, null);
+
                 }
 
                 @Override

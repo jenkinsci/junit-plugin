@@ -24,6 +24,7 @@
 
 package hudson.tasks.junit.storage;
 
+import hudson.model.Run;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.PackageResult;
 import hudson.tasks.junit.TestResult;
@@ -45,6 +46,8 @@ public interface TestResultImpl {
     List<CaseResult> getPassedTests();
     List<CaseResult> getPassedTestsByPackage(String packageName);
     PackageResult getPackageResult(String packageName);
+    
+    Run<?, ?> getFailedSinceRun(CaseResult caseResult);
     @Nonnull TestResult getResultByNodes(@Nonnull List<String> nodeIds);
 
 }
