@@ -192,7 +192,7 @@ public class TestResultStorageTest {
             assertEquals(1, rootPassedTests.size());
             assertEquals("Klazz", rootPassedTests.get(0).getClassName());
 
-//            r.pause();
+            r.pause();
             // TODO test result summary i.e. failure content
             // TODO getFailedSinceRun, TestResult#getChildren, TestObject#getTestResultAction
             // TODO more detailed Java queries incl. ClassResult
@@ -267,6 +267,26 @@ public class TestResultStorageTest {
 
                                     SuiteResult suiteResult = new SuiteResult(suite, null, null, null);
                                     results.add(new CaseResult(suiteResult, className, testName, errorDetails, skipped));
+                                }
+                                return results;
+                            }
+                        }
+                    }, emptyList());
+                }
+
+                @Override
+                public List<PackageResult> getAllPackageResults() {
+                    return query(connection -> {
+                        try (PreparedStatement statement = connection.prepareStatement("SELECT DISTINCT package FROM " + Impl.CASE_RESULTS_TABLE + " WHERE job = ? AND build = ?")) {
+                            statement.setString(1, job);
+                            statement.setInt(2, build);
+                            try (ResultSet result = statement.executeQuery()) {
+
+                                List<PackageResult> results = new ArrayList<>();
+                                while (result.next()) {
+                                    String packageName = result.getString("package");
+
+                                    results.add(new PackageResult(new TestResult(this), packageName));
                                 }
                                 return results;
                             }

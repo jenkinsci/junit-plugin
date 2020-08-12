@@ -647,6 +647,11 @@ public final class TestResult extends MetaTabulatedResult {
 
     @Override
     public Collection<PackageResult> getChildren() {
+        if (impl != null) {
+            List<PackageResult> allPackageResults = impl.getAllPackageResults();
+            return allPackageResults;
+        }
+        
         return byPackages.values();
     }
 

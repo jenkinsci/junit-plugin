@@ -46,6 +46,7 @@ public interface TestResultImpl {
     List<CaseResult> getPassedTests();
     List<CaseResult> getPassedTestsByPackage(String packageName);
     PackageResult getPackageResult(String packageName);
+    List<PackageResult> getAllPackageResults();
     
     Run<?, ?> getFailedSinceRun(CaseResult caseResult);
     @Nonnull TestResult getResultByNodes(@Nonnull List<String> nodeIds);
