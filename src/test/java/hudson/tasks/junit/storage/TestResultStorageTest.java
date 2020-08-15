@@ -190,7 +190,6 @@ public class TestResultStorageTest {
             assertEquals(1, rootPassedTests.size());
             assertEquals("Klazz", rootPassedTests.get(0).getClassName());
 
-            r.pause();
             // TODO test result summary i.e. failure content
             // TODO getFailedSinceRun, TestResult#getChildren, TestObject#getTestResultAction
             // TODO more detailed Java queries incl. ClassResult
