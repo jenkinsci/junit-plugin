@@ -61,5 +61,3 @@ public interface TestResultImpl {
     // end dodgy methods with no context
 
 }
-
-// junit/(root)/Klazz/test1/
