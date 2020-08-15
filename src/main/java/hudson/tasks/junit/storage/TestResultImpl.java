@@ -29,6 +29,7 @@ import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.ClassResult;
 import hudson.tasks.junit.PackageResult;
 import hudson.tasks.junit.TestResult;
+import hudson.tasks.junit.TrendTestResultSummary;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nonnull;
@@ -49,6 +50,12 @@ public interface TestResultImpl {
     List<CaseResult> getPassedTestsByPackage(String packageName);
     PackageResult getPackageResult(String packageName);
     List<PackageResult> getAllPackageResults();
+
+    /**
+     * Retrieves results for trend graphs
+     * @return test summary for all runs associated to the job
+     */
+    List<TrendTestResultSummary> getTrendTestResultSummary();
     
     Run<?, ?> getFailedSinceRun(CaseResult caseResult);
     @Nonnull TestResult getResultByNodes(@Nonnull List<String> nodeIds);

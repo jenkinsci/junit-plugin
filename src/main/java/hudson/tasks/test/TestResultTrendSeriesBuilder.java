@@ -4,12 +4,15 @@ import edu.hm.hafner.echarts.SeriesBuilder;
 import hudson.tasks.junit.TestResultAction;
 import java.util.HashMap;
 import java.util.Map;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 
+@Restricted(NoExternalUse.class)
 public class TestResultTrendSeriesBuilder extends SeriesBuilder<AbstractTestResultAction> {
-    static final String TOTALS_KEY = "total";
-    static final String PASSED_KEY = "passed";
-    static final String FAILED_KEY = "failed";
-    static final String SKIPPED_KEY = "skipped";
+    public static final String TOTALS_KEY = "total";
+    public static final String PASSED_KEY = "passed";
+    public static final String FAILED_KEY = "failed";
+    public static final String SKIPPED_KEY = "skipped";
 
     @Override
     protected Map<String, Integer> computeSeries(AbstractTestResultAction testResultAction) {

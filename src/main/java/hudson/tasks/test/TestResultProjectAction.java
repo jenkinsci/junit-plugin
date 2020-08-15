@@ -31,8 +31,11 @@ import hudson.model.Action;
 import hudson.model.Job;
 import hudson.model.Run;
 import hudson.tasks.junit.JUnitResultArchiver;
+import hudson.tasks.junit.storage.TestResultImpl;
+import hudson.tasks.junit.storage.TestResultStorage;
 import io.jenkins.plugins.echarts.AsyncTrendChart;
 import org.kohsuke.stapler.Ancestor;
+import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
@@ -108,11 +111,18 @@ public class TestResultProjectAction implements Action, AsyncTrendChart {
     }
 
     protected LinesChartModel createChartModel() {
-        return new TestResultTrendChart().create(createBuildHistory(), new ChartModelConfiguration());
+        Run<?, ?> lastCompletedBuild = job.getLastCompletedBuild();
+
+        TestResultStorage storage = TestResultStorage.find();
+        if (storage != null) {
+            TestResultImpl pluggableStorage = storage.load(lastCompletedBuild.getParent().getFullName(), lastCompletedBuild.getNumber());
+            return new TestResultTrendChart().create(pluggableStorage.getTrendTestResultSummary());
+        }
+        
+        return new TestResultTrendChart().create(createBuildHistory(lastCompletedBuild), new ChartModelConfiguration());
     }
     
-    public TestResultActionIterable createBuildHistory() {
-        Run<?, ?> lastCompletedBuild = job.getLastCompletedBuild();
+    private TestResultActionIterable createBuildHistory(Run<?, ?> lastCompletedBuild) {
         return new TestResultActionIterable(lastCompletedBuild.getAction(AbstractTestResultAction.class));
     }
 

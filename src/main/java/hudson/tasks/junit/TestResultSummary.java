@@ -20,6 +20,13 @@ public class TestResultSummary implements Serializable {
     public TestResultSummary() {
     }
 
+    public TestResultSummary(int failCount, int skipCount, int passCount, int totalCount) {
+        this.failCount = failCount;
+        this.skipCount = skipCount;
+        this.passCount = passCount;
+        this.totalCount = totalCount;
+    }
+
     public TestResultSummary(TestResult result) {
         this.failCount = result.getFailCount();
         this.skipCount = result.getSkipCount();

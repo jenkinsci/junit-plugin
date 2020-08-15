@@ -39,6 +39,8 @@ import hudson.tasks.junit.PackageResult;
 import hudson.tasks.junit.SuiteResult;
 import hudson.tasks.junit.TestResult;
 import hudson.tasks.junit.TestResultAction;
+import hudson.tasks.junit.TestResultSummary;
+import hudson.tasks.junit.TrendTestResultSummary;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -68,7 +70,13 @@ import org.jenkinsci.remoting.SerializableOnlyOverRemoting;
 
 import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
-import static org.junit.Assert.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -96,7 +104,7 @@ public class TestResultStorageTest {
         GlobalDatabaseConfiguration.get().setDatabase(new LocalH2Database(database.getPath(), true));
     }
 
-    @Test public void smokes() throws Exception {
+    @Test public void   smokes() throws Exception {
         DumbSlave remote = r.createOnlineSlave(Label.get("remote"));
         //((Channel) remote.getChannel()).addListener(new LoggingChannelListener(Logger.getLogger(TestResultStorageTest.class.getName()), Level.INFO));
         WorkflowJob p = r.createProject(WorkflowJob.class, "p");
@@ -189,6 +197,15 @@ public class TestResultStorageTest {
             assertEquals(1, rootPassedTests.size());
             assertEquals("Klazz", rootPassedTests.get(0).getClassName());
 
+
+            List<TrendTestResultSummary> trendTestResultSummary = requireNonNull(a.getResult().getPluggableStorage()).getTrendTestResultSummary();
+            assertThat(trendTestResultSummary, hasSize(1));
+            TestResultSummary testResultSummary = trendTestResultSummary.get(0).getTestResultSummary();
+            assertThat(testResultSummary.getFailCount(), equalTo(2));
+            assertThat(testResultSummary.getPassCount(), equalTo(1));
+            assertThat(testResultSummary.getSkipCount(), equalTo(1));
+            assertThat(testResultSummary.getTotalCount(), equalTo(4));
+            
             // TODO test result summary i.e. failure content
             // TODO getFailedSinceRun, TestResult#getChildren, TestObject#getTestResultAction
             // TODO more detailed Java queries incl. ClassResult
@@ -290,6 +307,29 @@ public class TestResultStorageTest {
                                     results.add(new PackageResult(new TestResult(this), packageName));
                                 }
                                 return results;
+                            }
+                        }
+                    }, emptyList());
+                }
+
+                @Override
+                public List<TrendTestResultSummary> getTrendTestResultSummary() {
+                    return query(connection -> {
+                        try (PreparedStatement statement = connection.prepareStatement("SELECT build, sum(case when errorDetails is not null then 1 else 0 end) as failCount, sum(case when skipped is not null then 1 else 0 end) as skipCount, sum(case when errorDetails is null and skipped is null then 1 else 0 end) as passCount FROM " +  Impl.CASE_RESULTS_TABLE +  " WHERE job = ? group by build;")) {
+                            statement.setString(1, job);
+                            try (ResultSet result = statement.executeQuery()) {
+
+                                List<TrendTestResultSummary> trendTestResultSummaries = new ArrayList<>();
+                                while (result.next()) {
+                                    int buildNumber = result.getInt("build");
+                                    int passed = result.getInt("passCount");
+                                    int failed = result.getInt("failCount");
+                                    int skipped = result.getInt("skipCount");
+                                    int total = passed + failed + skipped;
+
+                                    trendTestResultSummaries.add(new TrendTestResultSummary(buildNumber, new TestResultSummary(failed, skipped, passed, total)));
+                                }
+                                return trendTestResultSummaries;
                             }
                         }
                     }, emptyList());
