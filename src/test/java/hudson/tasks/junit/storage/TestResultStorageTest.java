@@ -153,7 +153,6 @@ public class TestResultStorageTest {
             assertEquals(1, a.getResult().getSkipCount());
             assertEquals(4, a.getResult().getTotalCount());
             assertEquals(1, a.getResult().getPassCount());
-            assertEquals("[CaseResult{className=Klazz, testName=test1, errorDetails=failure}, CaseResult{className=another.Klazz, testName=test1, errorDetails=another failure}]", a.getFailedTests().toString());
             List<CaseResult> failedTests = a.getFailedTests();
             assertEquals(2, failedTests.size());
             assertEquals("Klazz", failedTests.get(0).getClassName());
