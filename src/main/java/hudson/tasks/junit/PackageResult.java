@@ -186,8 +186,9 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
      * sort order
      */
     public List<CaseResult> getFailedTests() {
-       if (parent.getPluggableStorage() != null) {
-           return parent.getPluggableStorage().getFailedTestsByPackage(packageName);
+        TestResultImpl pluggableStorage = parent.getPluggableStorage();
+        if (pluggableStorage != null) {
+           return pluggableStorage.getFailedTestsByPackage(packageName);
        }
         
         List<CaseResult> r = new ArrayList<CaseResult>();
@@ -219,8 +220,9 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
      */
     @Override
     public List<CaseResult> getPassedTests() {
-        if (parent.getPluggableStorage() != null) {
-            return parent.getPluggableStorage().getPassedTestsByPackage(packageName);
+        TestResultImpl pluggableStorage = parent.getPluggableStorage();
+        if (pluggableStorage != null) {
+            return pluggableStorage.getPassedTestsByPackage(packageName);
         }
 
         List<CaseResult> r = new ArrayList<CaseResult>();
@@ -242,8 +244,9 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
      */
     @Override
     public List<CaseResult> getSkippedTests() {
-        if (parent.getPluggableStorage() != null) {
-            return parent.getPluggableStorage().getSkippedTestsByPackage(packageName);
+        TestResultImpl pluggableStorage = parent.getPluggableStorage();
+        if (pluggableStorage != null) {
+            return pluggableStorage.getSkippedTestsByPackage(packageName);
         } 
         
         List<CaseResult> r = new ArrayList<CaseResult>();

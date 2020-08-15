@@ -20,6 +20,8 @@ import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.jenkinsci.plugins.workflow.steps.SynchronousNonBlockingStepExecution;
 
+import static java.util.Objects.requireNonNull;
+
 public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecution<TestResultSummary> {
 
     private transient final JUnitResultsStep step;
@@ -33,7 +35,7 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
     protected TestResultSummary run() throws Exception {
         FilePath workspace = getContext().get(FilePath.class);
         workspace.mkdirs();
-        Run<?,?> run = getContext().get(Run.class);
+        Run<?,?> run = requireNonNull(getContext().get(Run.class));
         TaskListener listener = getContext().get(TaskListener.class);
         Launcher launcher = getContext().get(Launcher.class);
         FlowNode node = getContext().get(FlowNode.class);
@@ -53,7 +55,6 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
                 int testFailures = summary.getFailCount();
                 if (testFailures > 0) {
                     node.addOrReplaceAction(new WarningAction(Result.UNSTABLE).withMessage(testFailures + " tests failed"));
-                    assert run != null;
                     run.setResult(Result.UNSTABLE);
                 }
             }

@@ -218,7 +218,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     }
 
     public static TestResultSummary parseAndSummarize(@Nonnull JUnitTask task, PipelineTestDetails pipelineTestDetails,
-                                                  Run build, FilePath workspace, Launcher launcher, TaskListener listener)
+                                                  Run<?, ?> build, FilePath workspace, Launcher launcher, TaskListener listener)
             throws InterruptedException, IOException {
         TestResultStorage storage = TestResultStorage.find();
         if (storage == null) {
