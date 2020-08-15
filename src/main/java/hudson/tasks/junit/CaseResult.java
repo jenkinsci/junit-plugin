@@ -744,7 +744,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         }
     }
 
-    /*package*/ void setClass(ClassResult classResult) {
+    public void setClass(ClassResult classResult) {
         this.classResult = classResult;
     }
 

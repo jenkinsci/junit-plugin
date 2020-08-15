@@ -189,11 +189,8 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
             // Now the build
             Run<?,?> myBuild = cur.getRun();
             if (myBuild ==null) {
-                myBuild = Stapler.getCurrentRequest().findAncestorObject(Run.class);
-                if (myBuild == null) {
-                    LOGGER.warning("trying to get relative path, but we can't determine the build that owns this result.");
-                    return ""; // this won't take us to the right place, but it also won't 404.
-                }
+                LOGGER.warning("trying to get relative path, but we can't determine the build that owns this result.");
+                return ""; // this won't take us to the right place, but it also won't 404.
             }
             buf.insert(0,'/');
             buf.insert(0,myBuild.getUrl());
@@ -214,7 +211,9 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
                     return "";
 
                 }
-                buf.insert(0, '/');
+                if (!jenkinsUrl.endsWith("/")) {
+                    buf.insert(0, '/');
+                }
                 buf.insert(0, jenkinsUrl);
             }
 

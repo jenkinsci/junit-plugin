@@ -155,6 +155,7 @@ public class JUnitResultsStepTest {
         FilePath secondTestFile = ws.child("second-result.xml");
         secondTestFile.copyFrom(TestResultTest.class.getResource("junit-report-2874.xml"));
 
+        rule.pause();
         WorkflowRun r = rule.buildAndAssertSuccess(j);
         TestResultAction action = r.getAction(TestResultAction.class);
         assertNotNull(action);

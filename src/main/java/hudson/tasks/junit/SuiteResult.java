@@ -446,7 +446,7 @@ public final class SuiteResult implements Serializable {
      * which requires a non-null parent.
      * @param parent
      */
-    void setParent(hudson.tasks.junit.TestResult parent) {
+    public void setParent(hudson.tasks.junit.TestResult parent) {
         this.parent = parent;
     }
 

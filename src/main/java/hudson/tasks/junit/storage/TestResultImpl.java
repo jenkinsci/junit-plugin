@@ -26,9 +26,11 @@ package hudson.tasks.junit.storage;
 
 import hudson.model.Run;
 import hudson.tasks.junit.CaseResult;
+import hudson.tasks.junit.ClassResult;
 import hudson.tasks.junit.PackageResult;
 import hudson.tasks.junit.TestResult;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nonnull;
 
 /**
@@ -51,4 +53,13 @@ public interface TestResultImpl {
     Run<?, ?> getFailedSinceRun(CaseResult caseResult);
     @Nonnull TestResult getResultByNodes(@Nonnull List<String> nodeIds);
 
+    // These methods don't take into account context of packages
+    // so could easily lookup the wrong test
+    // they are used in the classic view for test results
+    ClassResult getClassResult(String name);
+    CaseResult getCaseResult(String name);
+    // end dodgy methods with no context
+
 }
+
+// junit/(root)/Klazz/test1/

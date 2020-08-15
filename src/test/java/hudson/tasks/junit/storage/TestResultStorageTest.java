@@ -34,6 +34,7 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.slaves.DumbSlave;
 import hudson.tasks.junit.CaseResult;
+import hudson.tasks.junit.ClassResult;
 import hudson.tasks.junit.PackageResult;
 import hudson.tasks.junit.SuiteResult;
 import hudson.tasks.junit.TestResult;
@@ -50,7 +51,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -76,8 +76,6 @@ import org.junit.Test;
 import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
-import org.kohsuke.stapler.Stapler;
-import org.kohsuke.stapler.StaplerRequest;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -253,7 +251,7 @@ public class TestResultStorageTest {
 
                 private List<CaseResult> retrieveCaseResult(String whereCondition) {
                     return query(connection -> {
-                        try (PreparedStatement statement = connection.prepareStatement("SELECT suite, testname, classname, errordetails, skipped FROM " + Impl.CASE_RESULTS_TABLE + " WHERE job = ? AND build = ? AND " + whereCondition)) {
+                        try (PreparedStatement statement = connection.prepareStatement("SELECT suite, package, testname, classname, errordetails, skipped FROM " + Impl.CASE_RESULTS_TABLE + " WHERE job = ? AND build = ? AND " + whereCondition)) {
                             statement.setString(1, job);
                             statement.setInt(2, build);
                             try (ResultSet result = statement.executeQuery()) {
@@ -261,13 +259,17 @@ public class TestResultStorageTest {
                                 List<CaseResult> results = new ArrayList<>();
                                 while (result.next()) {
                                     String testName = result.getString("testname");
+                                    String packageName = result.getString("package");
                                     String errorDetails = result.getString("errordetails");
                                     String suite = result.getString("suite");
                                     String className = result.getString("classname");
                                     String skipped = result.getString("skipped");
 
                                     SuiteResult suiteResult = new SuiteResult(suite, null, null, null);
-                                    results.add(new CaseResult(suiteResult, className, testName, errorDetails, skipped));
+                                    suiteResult.setParent(new TestResult(this));
+                                    CaseResult caseResult = new CaseResult(suiteResult, className, testName, errorDetails, skipped);
+                                    caseResult.setClass(new ClassResult(new PackageResult(new TestResult(this), packageName), className));
+                                    results.add(caseResult);
                                 }
                                 return results;
                             }
@@ -298,6 +300,29 @@ public class TestResultStorageTest {
                 @Override
                 public PackageResult getPackageResult(String packageName) {
                     return new PackageResult(new TestResult(this), packageName);
+                }
+
+                @Override
+                public ClassResult getClassResult(String name) {
+                    return query(connection -> {
+                        try (PreparedStatement statement = connection.prepareStatement("SELECT package, classname FROM " + Impl.CASE_RESULTS_TABLE + " WHERE job = ? AND build = ? AND classname = ?")) {
+                            statement.setString(1, job);
+                            statement.setInt(2, build);
+                            statement.setString(3, name);
+                            try (ResultSet result = statement.executeQuery()) {
+
+                                if (result.next()) {
+                                    String packageName = result.getString("package");
+                                    String className = result.getString("classname");
+
+                                    PackageResult packageResult = new PackageResult(new TestResult(this), packageName);
+                                    return new ClassResult(packageResult, className);
+                                }
+                                return null;
+                            }
+                        }
+                    }, null);
+
                 }
 
                 @Override
@@ -387,6 +412,7 @@ public class TestResultStorageTest {
                                     String skipped = result.getString("skipped");
 
                                     SuiteResult suiteResult = new SuiteResult(suite, null, null, null);
+                                    suiteResult.setParent(new TestResult(this));
                                     results.add(new CaseResult(suiteResult, className, testName, errorDetails, skipped));
                                 }
                                 return results;
@@ -396,8 +422,39 @@ public class TestResultStorageTest {
                 }
 
 
-                private List<CaseResult> getCaseResult(String column) {
+                private List<CaseResult> getCaseResults(String column) {
                     return retrieveCaseResult(column + " IS NOT NULL");
+                }
+                
+                @Override
+                public CaseResult getCaseResult(String testName) {
+                    return query(connection -> {
+                        try (PreparedStatement statement = connection.prepareStatement("SELECT suite, testname, package, classname, errordetails, skipped FROM " + Impl.CASE_RESULTS_TABLE + " WHERE job = ? AND build = ? AND testname = ?")) {
+                            statement.setString(1, job);
+                            statement.setInt(2, build);
+                            statement.setString(3, testName);
+                            try (ResultSet result = statement.executeQuery()) {
+
+                                CaseResult caseResult = null;
+                                if (result.next()) {
+                                    String resultTestName = result.getString("testname");
+                                    String errorDetails = result.getString("errordetails");
+                                    String packageName = result.getString("package");
+                                    String suite = result.getString("suite");
+                                    String className = result.getString("classname");
+                                    String skipped = result.getString("skipped");
+
+                                    SuiteResult suiteResult = new SuiteResult(suite, null, null, null);
+                                    suiteResult.setParent(new TestResult(this));
+                                    caseResult = new CaseResult(suiteResult, className, resultTestName, errorDetails, skipped);
+                                    caseResult.setClass(new ClassResult(new PackageResult(new TestResult(this), packageName), className));
+                                }
+                                return caseResult;
+                            }
+                        }
+                    }, null);
+
+
                 }
                 
                 @Override public int getFailCount() {
@@ -419,13 +476,13 @@ public class TestResultStorageTest {
 
                 @Override
                 public List<CaseResult> getFailedTests() {
-                    List<CaseResult> errordetails = getCaseResult("errordetails");
+                    List<CaseResult> errordetails = getCaseResults("errordetails");
                     return errordetails;
                 }
 
                 @Override
                 public List<CaseResult> getSkippedTests() {
-                    List<CaseResult> errordetails = getCaseResult("skipped");
+                    List<CaseResult> errordetails = getCaseResults("skipped");
                     return errordetails;
                 }
 
