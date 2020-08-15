@@ -6,8 +6,6 @@ import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.junit.JUnitResultArchiver;
-import hudson.tasks.junit.TestResult;
-import hudson.tasks.junit.TestResultAction;
 import hudson.tasks.junit.TestResultSummary;
 import hudson.tasks.test.PipelineTestDetails;
 import java.util.ArrayList;
@@ -58,15 +56,13 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
                     assert run != null;
                     run.setResult(Result.UNSTABLE);
                 }
-                return summary;
             }
+            return summary;
         } catch (Exception e) {
             assert listener != null;
             listener.getLogger().println(e.getMessage());
             throw e;
         }
-
-        return new TestResultSummary();
     }
 
     /**

@@ -3,6 +3,8 @@ package hudson.tasks.junit;
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 
 import java.io.Serializable;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.DoNotUse;
 
 /**
  * Summary of test results that can be used in Pipeline scripts.
@@ -14,6 +16,7 @@ public class TestResultSummary implements Serializable {
     private int totalCount;
 
     @Deprecated
+    @Restricted(DoNotUse.class)
     public TestResultSummary() {
     }
 
