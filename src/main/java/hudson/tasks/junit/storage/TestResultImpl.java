@@ -32,10 +32,13 @@ import hudson.tasks.junit.PackageResult;
 import hudson.tasks.junit.TestResult;
 import hudson.tasks.junit.TrendTestResultSummary;
 import java.util.List;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.Beta;
 
 /**
  * Pluggable implementation of {@link TestResult}.
  */
+@Restricted(Beta.class)
 public interface TestResultImpl {
     int getFailCount();
     int getSkipCount();

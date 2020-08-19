@@ -33,10 +33,13 @@ import hudson.tasks.junit.TestResult;
 import java.io.IOException;
 import javax.annotation.CheckForNull;
 import org.jenkinsci.remoting.SerializableOnlyOverRemoting;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.Beta;
 
 /**
  * Allows test results to be saved and loaded from an external storage service.
  */
+@Restricted(Beta.class)
 public interface TestResultStorage extends ExtensionPoint {
 
     /**
