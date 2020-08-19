@@ -74,6 +74,7 @@ import static java.util.Objects.requireNonNull;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -111,9 +112,9 @@ public class TestResultStorageTest {
         WorkflowJob p = r.createProject(WorkflowJob.class, "p");
         p.setDefinition(new CpsFlowDefinition(
                 "node('remote') {\n" +
-                "  writeFile file: 'x.xml', text: '''<testsuite name='sweet'>" +
-                    "<testcase classname='Klazz' name='test1'><error message='failure'/></testcase>" +
-                    "<testcase classname='Klazz' name='test2'/>" +
+                "  writeFile file: 'x.xml', text: '''<testsuite name='sweet' time='200.0'>" +
+                    "<testcase classname='Klazz' name='test1' time='198.0'><error message='failure'/></testcase>" +
+                    "<testcase classname='Klazz' name='test2' time='2.0'/>" +
                     "<testcase classname='other.Klazz' name='test3'><skipped message='Not actually run.'/></testcase>" +
                     "</testsuite>'''\n" +
                 "  def s = junit 'x.xml'\n" +
@@ -164,9 +165,11 @@ public class TestResultStorageTest {
             assertEquals(1, a.getResult().getPassCount());
             List<CaseResult> failedTests = a.getFailedTests();
             assertEquals(2, failedTests.size());
-            assertEquals("Klazz", failedTests.get(0).getClassName());
-            assertEquals("test1", failedTests.get(0).getName());
-            assertEquals("failure", failedTests.get(0).getErrorDetails());
+            final CaseResult klazzTest1 = failedTests.get(0);
+            assertEquals("Klazz", klazzTest1.getClassName());
+            assertEquals("test1", klazzTest1.getName());
+            assertEquals("failure", klazzTest1.getErrorDetails());
+            assertThat(klazzTest1.getDuration(), is(198.0f));
             assertEquals("another.Klazz", failedTests.get(1).getClassName());
             assertEquals("test1", failedTests.get(1).getName());
             assertEquals("another failure", failedTests.get(1).getErrorDetails());
@@ -266,7 +269,7 @@ public class TestResultStorageTest {
 
                 private List<CaseResult> retrieveCaseResult(String whereCondition) {
                     return query(connection -> {
-                        try (PreparedStatement statement = connection.prepareStatement("SELECT suite, package, testname, classname, errordetails, skipped FROM " + Impl.CASE_RESULTS_TABLE + " WHERE job = ? AND build = ? AND " + whereCondition)) {
+                        try (PreparedStatement statement = connection.prepareStatement("SELECT suite, package, testname, classname, errordetails, skipped, duration FROM " + Impl.CASE_RESULTS_TABLE + " WHERE job = ? AND build = ? AND " + whereCondition)) {
                             statement.setString(1, job);
                             statement.setInt(2, build);
                             try (ResultSet result = statement.executeQuery()) {
@@ -279,10 +282,11 @@ public class TestResultStorageTest {
                                     String suite = result.getString("suite");
                                     String className = result.getString("classname");
                                     String skipped = result.getString("skipped");
+                                    float duration = result.getFloat("duration");
 
                                     SuiteResult suiteResult = new SuiteResult(suite, null, null, null);
                                     suiteResult.setParent(new TestResult(this));
-                                    CaseResult caseResult = new CaseResult(suiteResult, className, testName, errorDetails, skipped);
+                                    CaseResult caseResult = new CaseResult(suiteResult, className, testName, errorDetails, skipped, duration);
                                     caseResult.setClass(new ClassResult(new PackageResult(new TestResult(this), packageName), className));
                                     results.add(caseResult);
                                 }
@@ -435,7 +439,7 @@ public class TestResultStorageTest {
 
                 private List<CaseResult> getByPackage(String packageName, String filter) {
                     return query(connection -> {
-                        try (PreparedStatement statement = connection.prepareStatement("SELECT suite, testname, classname, errordetails, skipped FROM " + Impl.CASE_RESULTS_TABLE + " WHERE job = ? AND build = ? AND package = ? " + filter)) {
+                        try (PreparedStatement statement = connection.prepareStatement("SELECT suite, testname, classname, errordetails, duration, skipped FROM " + Impl.CASE_RESULTS_TABLE + " WHERE job = ? AND build = ? AND package = ? " + filter)) {
                             statement.setString(1, job);
                             statement.setInt(2, build);
                             statement.setString(3, packageName);
@@ -448,10 +452,11 @@ public class TestResultStorageTest {
                                     String suite = result.getString("suite");
                                     String className = result.getString("classname");
                                     String skipped = result.getString("skipped");
+                                    float duration = result.getFloat("duration");
 
                                     SuiteResult suiteResult = new SuiteResult(suite, null, null, null);
                                     suiteResult.setParent(new TestResult(this));
-                                    results.add(new CaseResult(suiteResult, className, testName, errorDetails, skipped));
+                                    results.add(new CaseResult(suiteResult, className, testName, errorDetails, skipped, duration));
                                 }
                                 return results;
                             }
@@ -467,7 +472,7 @@ public class TestResultStorageTest {
                 @Override
                 public CaseResult getCaseResult(String testName) {
                     return query(connection -> {
-                        try (PreparedStatement statement = connection.prepareStatement("SELECT suite, testname, package, classname, errordetails, skipped FROM " + Impl.CASE_RESULTS_TABLE + " WHERE job = ? AND build = ? AND testname = ?")) {
+                        try (PreparedStatement statement = connection.prepareStatement("SELECT suite, testname, package, classname, errordetails, skipped, duration FROM " + Impl.CASE_RESULTS_TABLE + " WHERE job = ? AND build = ? AND testname = ?")) {
                             statement.setString(1, job);
                             statement.setInt(2, build);
                             statement.setString(3, testName);
@@ -481,10 +486,11 @@ public class TestResultStorageTest {
                                     String suite = result.getString("suite");
                                     String className = result.getString("classname");
                                     String skipped = result.getString("skipped");
+                                    float duration = result.getFloat("duration");
 
                                     SuiteResult suiteResult = new SuiteResult(suite, null, null, null);
                                     suiteResult.setParent(new TestResult(this));
-                                    caseResult = new CaseResult(suiteResult, className, resultTestName, errorDetails, skipped);
+                                    caseResult = new CaseResult(suiteResult, className, resultTestName, errorDetails, skipped, duration);
                                     caseResult.setClass(new ClassResult(new PackageResult(new TestResult(this), packageName), className));
                                 }
                                 return caseResult;
@@ -564,7 +570,7 @@ public class TestResultStorageTest {
             @Override public void publish(TestResult result, TaskListener listener) throws IOException {
                 try {
                     Connection connection = connectionSupplier.connection();
-                    try (PreparedStatement statement = connection.prepareStatement("INSERT INTO " + CASE_RESULTS_TABLE + " (job, build, suite, package, className, testName, errorDetails, skipped) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")) {
+                    try (PreparedStatement statement = connection.prepareStatement("INSERT INTO " + CASE_RESULTS_TABLE + " (job, build, suite, package, className, testName, errorDetails, skipped, duration) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                         int count = 0;
                         for (SuiteResult suiteResult : result.getSuites()) {
                             for (CaseResult caseResult : suiteResult.getCases()) {
@@ -585,6 +591,7 @@ public class TestResultStorageTest {
                                 } else {
                                     statement.setNull(8, Types.VARCHAR);
                                 }
+                                statement.setFloat(9, caseResult.getDuration());
                                 statement.executeUpdate();
                                 count++;
                             }
@@ -636,7 +643,7 @@ public class TestResultStorageTest {
                 if (!exists) {
                     try (Statement statement = connection.createStatement()) {
                         // TODO this and joined tables: errorStackTrace, stdout, stderr, duration, nodeId, enclosingBlocks, enclosingBlockNames, etc.
-                        statement.execute("CREATE TABLE " + CASE_RESULTS_TABLE + "(job varchar(255), build int, suite varchar(255), package varchar(255), className varchar(255), testName varchar(255), errorDetails varchar(255), skipped varchar(255))");
+                        statement.execute("CREATE TABLE " + CASE_RESULTS_TABLE + "(job varchar(255), build int, suite varchar(255), package varchar(255), className varchar(255), testName varchar(255), errorDetails varchar(255), skipped varchar(255), duration numeric)");
                         // TODO indices
                     }
                 }
@@ -670,7 +677,7 @@ public class TestResultStorageTest {
         int columnsNumber = rsmd.getColumnCount();
         for (int i = 1; i <= columnsNumber; i++) {
             if (i > 1) {
-                System.out.print(" | ");
+                System.out.print("\t|\t");
             }
             System.out.print(rsmd.getColumnName(i));
         }
@@ -678,7 +685,7 @@ public class TestResultStorageTest {
         while (rs.next()) {
             for (int i = 1; i <= columnsNumber; i++) {
                 if (i > 1) {
-                    System.out.print(" | ");
+                    System.out.print("\t|\t");
                 }
                 System.out.print(rs.getString(i));
             }

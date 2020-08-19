@@ -36,6 +36,8 @@ import hudson.model.Run;
 import hudson.tasks.test.TestResult;
 
 import org.dom4j.Element;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.Beta;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.export.Exported;
 
@@ -130,7 +132,8 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         this.skippedMessage = null;
     }
 
-    public CaseResult(SuiteResult parent, String className, String testName, String errorDetails, String skippedMessage) {
+    @Restricted(Beta.class)
+    public CaseResult(SuiteResult parent, String className, String testName, String errorDetails, String skippedMessage, float duration) {
         this.className = className;
         this.testName = testName;
         this.errorStackTrace = null;
@@ -138,7 +141,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         this.parent = parent;
         this.stdout = null;
         this.stderr = null;
-        this.duration = 0.0f;
+        this.duration = duration;
         
         this.skipped = skippedMessage != null;
         this.skippedMessage = skippedMessage;
