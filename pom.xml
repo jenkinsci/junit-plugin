@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>4.3</version>
+        <version>4.6</version>
         <relativePath />
     </parent>
     <artifactId>junit</artifactId>
@@ -15,7 +15,7 @@
     <properties>
         <revision>1.32</revision>
         <changelist>-SNAPSHOT</changelist>
-        <jenkins.version>2.204.4</jenkins.version>
+        <jenkins.version>2.204.6</jenkins.version>
         <java.level>8</java.level>
         <no-test-jar>false</no-test-jar>
     </properties>
@@ -116,27 +116,19 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>database</artifactId>
-            <version>1.5</version>
+            <version>1.6</version>
             <scope>test</scope>
-            <exclusions> <!-- TODO pending fixes upstream -->
-                <exclusion>
+            <exclusions>
+                <exclusion> <!-- TODO move to bom in Jenkins core -->
                     <groupId>antlr</groupId>
                     <artifactId>antlr</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>javax.validation</groupId>
-                    <artifactId>validation-api</artifactId>
-                </exclusion>
-                <exclusion> <!-- clashes with org.jenkins-ci.dom4j:dom4j -->
-                    <groupId>dom4j</groupId>
-                    <artifactId>dom4j</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>database-h2</artifactId>
-            <version>1.1</version>
+            <version>1.2</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
