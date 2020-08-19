@@ -26,6 +26,7 @@ package hudson.tasks.junit.storage;
 
 import com.google.common.collect.ImmutableSet;
 import com.thoughtworks.xstream.XStream;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Util;
 import hudson.model.Job;
 import hudson.model.Label;
@@ -104,7 +105,7 @@ public class TestResultStorageTest {
         GlobalDatabaseConfiguration.get().setDatabase(new LocalH2Database(database.getPath(), true));
     }
 
-    @Test public void   smokes() throws Exception {
+    @Test public void smokes() throws Exception {
         DumbSlave remote = r.createOnlineSlave(Label.get("remote"));
         //((Channel) remote.getChannel()).addListener(new LoggingChannelListener(Logger.getLogger(TestResultStorageTest.class.getName()), Level.INFO));
         WorkflowJob p = r.createProject(WorkflowJob.class, "p");
@@ -196,7 +197,6 @@ public class TestResultStorageTest {
             List<CaseResult> rootPassedTests = root.getPassedTests();
             assertEquals(1, rootPassedTests.size());
             assertEquals("Klazz", rootPassedTests.get(0).getClassName());
-
 
             List<TrendTestResultSummary> trendTestResultSummary = requireNonNull(a.getResult().getPluggableStorage()).getTrendTestResultSummary();
             assertThat(trendTestResultSummary, hasSize(1));
@@ -540,7 +540,9 @@ public class TestResultStorageTest {
                     return getByPackage(packageName, "AND errordetails IS NULL AND skipped IS NULL");
                 }
 
-                @Override public TestResult getResultByNodes(List<String> nodeIds) {
+                @NonNull
+                @Override 
+                public TestResult getResultByNodes(@NonNull List<String> nodeIds) {
                     return new TestResult(this); // TODO
                 }
             };
