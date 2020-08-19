@@ -24,14 +24,14 @@
 
 package hudson.tasks.junit.storage;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Run;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.ClassResult;
 import hudson.tasks.junit.PackageResult;
 import hudson.tasks.junit.TestResult;
+import hudson.tasks.junit.TrendTestResultSummary;
 import java.util.List;
-import java.util.Map;
-import javax.annotation.Nonnull;
 
 /**
  * Pluggable implementation of {@link TestResult}.
@@ -49,9 +49,16 @@ public interface TestResultImpl {
     List<CaseResult> getPassedTestsByPackage(String packageName);
     PackageResult getPackageResult(String packageName);
     List<PackageResult> getAllPackageResults();
+
+    /**
+     * Retrieves results for trend graphs
+     * @return test summary for all runs associated to the job
+     */
+    List<TrendTestResultSummary> getTrendTestResultSummary();
     
     Run<?, ?> getFailedSinceRun(CaseResult caseResult);
-    @Nonnull TestResult getResultByNodes(@Nonnull List<String> nodeIds);
+    @NonNull
+    TestResult getResultByNodes(@NonNull List<String> nodeIds);
 
     // These methods don't take into account context of packages
     // so could easily lookup the wrong test
