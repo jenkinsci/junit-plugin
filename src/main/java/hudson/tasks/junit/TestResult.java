@@ -23,9 +23,11 @@
  */
 package hudson.tasks.junit;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.AbortException;
 import hudson.Util;
 import hudson.model.Run;
+import hudson.tasks.junit.storage.TestResultImpl;
 import hudson.tasks.test.AbstractTestResultAction;
 import hudson.tasks.test.PipelineTestDetails;
 import hudson.tasks.test.PipelineBlockWithTests;
@@ -44,6 +46,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import javax.annotation.CheckForNull;
 
 import org.apache.tools.ant.DirectoryScanner;
 import org.dom4j.DocumentException;
@@ -59,6 +62,9 @@ import javax.annotation.Nonnull;
  * @author Kohsuke Kawaguchi
  */
 public final class TestResult extends MetaTabulatedResult {
+
+    @SuppressFBWarnings(value = "SE_BAD_FIELD", justification = "We do not expect TestResult to be serialized when this field is set.")
+    private final @CheckForNull TestResultImpl impl;
 
     /**
      * List of all {@link SuiteResult}s in this test.
@@ -118,6 +124,7 @@ public final class TestResult extends MetaTabulatedResult {
      */
     public TestResult(boolean keepLongStdio) {
         this.keepLongStdio = keepLongStdio;
+        impl = null;
     }
 
     @Deprecated
@@ -140,7 +147,18 @@ public final class TestResult extends MetaTabulatedResult {
     public TestResult(long buildTime, DirectoryScanner results, boolean keepLongStdio,
                       PipelineTestDetails pipelineTestDetails) throws IOException {
         this.keepLongStdio = keepLongStdio;
+        impl = null;
         parse(buildTime, results, pipelineTestDetails);
+    }
+
+    public TestResult(TestResultImpl impl) {
+        this.impl = impl;
+        keepLongStdio = false; // irrelevant
+    }
+
+    @CheckForNull
+    public TestResultImpl getPluggableStorage() {
+        return impl;
     }
 
     public TestObject getParent() {
@@ -344,6 +362,9 @@ public final class TestResult extends MetaTabulatedResult {
      * @since 1.22
      */
     public void parse(File reportFile, PipelineTestDetails pipelineTestDetails) throws IOException {
+        if (impl != null) {
+            throw new IllegalStateException("Cannot reparse using a pluggable impl");
+        }
         try {
             for (SuiteResult suiteResult : SuiteResult.parse(reportFile, keepLongStdio, pipelineTestDetails))
                 add(suiteResult);
@@ -440,12 +461,18 @@ public final class TestResult extends MetaTabulatedResult {
     @Exported(visibility=999)
     @Override
     public int getPassCount() {
+        if (impl != null) {
+            return impl.getPassCount();
+        }
         return totalTests-getFailCount()-getSkipCount();
     }
 
     @Exported(visibility=999)
     @Override
     public int getFailCount() {
+        if (impl != null) {
+            return impl.getFailCount();
+        }
         if(failedTests==null)
             return 0;
         else
@@ -455,7 +482,18 @@ public final class TestResult extends MetaTabulatedResult {
     @Exported(visibility=999)
     @Override
     public int getSkipCount() {
+        if (impl != null) {
+            return impl.getSkipCount();
+        }
         return skippedTestsCounter;
+    }
+
+    @Override
+    public int getTotalCount() {
+        if (impl != null) {
+            return impl.getTotalCount();
+        }
+        return super.getTotalCount();
     }
     
     /**
@@ -471,6 +509,9 @@ public final class TestResult extends MetaTabulatedResult {
 
     @Override
     public List<CaseResult> getFailedTests() {
+        if (impl != null) {
+            return impl.getFailedTests();
+        }
         return failedTests;
     }
 
@@ -481,6 +522,10 @@ public final class TestResult extends MetaTabulatedResult {
      */
     @Override
     public synchronized List<CaseResult> getPassedTests() {
+        if (impl != null) {
+            return impl.getPassedTests();
+        }
+        
         if(passedTests == null){
             passedTests = new ArrayList<CaseResult>();
             for(SuiteResult s : suites) {
@@ -502,6 +547,10 @@ public final class TestResult extends MetaTabulatedResult {
      */
     @Override
     public synchronized List<CaseResult> getSkippedTests() {
+        if (impl != null) {
+            return impl.getSkippedTests();
+        }
+        
         if(skippedTests == null){
             skippedTests = new ArrayList<CaseResult>();
             for(SuiteResult s : suites) {
@@ -598,6 +647,11 @@ public final class TestResult extends MetaTabulatedResult {
 
     @Override
     public Collection<PackageResult> getChildren() {
+        if (impl != null) {
+            List<PackageResult> allPackageResults = impl.getAllPackageResults();
+            return allPackageResults;
+        }
+        
         return byPackages.values();
     }
 
@@ -635,6 +689,10 @@ public final class TestResult extends MetaTabulatedResult {
     }
 
     public PackageResult byPackage(String packageName) {
+        if (impl != null) {
+            return impl.getPackageResult(packageName);
+        }
+        
         return byPackages.get(packageName);
     }
 
@@ -649,6 +707,9 @@ public final class TestResult extends MetaTabulatedResult {
 
     @Nonnull
     public TestResult getResultByNodes(@Nonnull List<String> nodeIds) {
+        if (impl != null) {
+            return impl.getResultByNodes(nodeIds);
+        }
         TestResult result = new TestResult();
         for (String n : nodeIds) {
             List<SuiteResult> suites = suitesByNode.get(n);
@@ -679,6 +740,7 @@ public final class TestResult extends MetaTabulatedResult {
      */
     @Override
     public void tally() {
+        // TODO allow TestResultStorage to cancel this
         /// Empty out data structures
         // TODO: free children? memmory leak?
         suitesByName = new HashMap<>();
@@ -706,7 +768,7 @@ public final class TestResult extends MetaTabulatedResult {
                 cr.setParentAction(this.parentAction);
                 cr.setParentSuiteResult(s);
                 cr.tally();
-                String pkg = cr.getPackageName(), spkg = safe(pkg);
+            String pkg = cr.getPackageName(), spkg = safe(pkg);
                 PackageResult pr = byPackage(spkg);
                 if(pr==null)
                     byPackages.put(spkg,pr=new PackageResult(this,pkg));
@@ -731,6 +793,7 @@ public final class TestResult extends MetaTabulatedResult {
      * and then freeze can be called again.
      */
     public void freeze(TestResultAction parent) {
+        assert impl == null;
         this.parentAction = parent;
         if(suitesByName==null) {
             // freeze for the first time

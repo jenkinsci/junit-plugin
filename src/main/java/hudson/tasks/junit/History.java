@@ -77,6 +77,7 @@ public class History {
 	
     public List<TestResult> getList(int start, int end) {
     	List<TestResult> list = new ArrayList<>();
+        // TODO this must not stand
     	end = Math.min(end, testObject.getRun().getParent().getBuilds().size());
     	for (Run<?,?> b: testObject.getRun().getParent().getBuilds().subList(start, end)) {
     		if (b.isBuilding()) continue;
@@ -245,6 +246,7 @@ public class History {
     }
 
     class ChartLabel implements Comparable<ChartLabel> {
+        // TODO allow use of a simplified label that does not force Run loading
     	TestResult o;
         String url;
         public ChartLabel(TestResult o) {

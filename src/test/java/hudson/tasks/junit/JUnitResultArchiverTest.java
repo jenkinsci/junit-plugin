@@ -133,7 +133,8 @@ public class JUnitResultArchiverTest {
         basic();
     }
 
-    private void assertTestResults(FreeStyleBuild build) {
+    private void assertTestResults(FreeStyleBuild build) throws Exception {
+        j.assertBuildStatus(Result.UNSTABLE, build);
         TestResultAction testResultAction = build.getAction(TestResultAction.class);
         assertNotNull("no TestResultAction", testResultAction);
 

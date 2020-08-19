@@ -33,6 +33,7 @@ import hudson.model.BuildListener;
 import hudson.model.Job;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.tasks.junit.storage.TestResultStorage;
 import hudson.tasks.test.AbstractTestResultAction;
 import hudson.tasks.test.TestObject;
 import hudson.tasks.test.TestResultProjectAction;
@@ -49,6 +50,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 import jenkins.tasks.SimpleBuildStep;
 
 /**
@@ -64,11 +66,12 @@ import jenkins.tasks.SimpleBuildStep;
 public class TestResultAction extends AbstractTestResultAction<TestResultAction> implements StaplerProxy, SimpleBuildStep.LastBuildAction {
     private transient WeakReference<TestResult> result;
 
+    /** null only if there is a {@link TestResultStorage} */
+    private @Nullable Integer failCount;
+    private @Nullable Integer skipCount;
     // Hudson < 1.25 didn't set these fields, so use Integer
     // so that we can distinguish between 0 tests vs not-computed-yet.
-    private int failCount;
-    private int skipCount;
-    private Integer totalCount;
+    private @Nullable Integer totalCount;
     private Double healthScaleFactor;
     private List<Data> testData = new ArrayList<>();
 
@@ -82,7 +85,9 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
      */
     public TestResultAction(Run owner, TestResult result, TaskListener listener) {
         super(owner);
-        setResult(result, listener);
+        if (TestResultStorage.find() == null) {
+            setResult(result, listener);
+        }
     }
 
     @Deprecated
@@ -105,6 +110,7 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
      * @since 1.2-beta-1
      */
     public synchronized void setResult(TestResult result, TaskListener listener) {
+        assert TestResultStorage.find() == null;
         result.freeze(this);
 
         totalCount = result.getTotalCount();
@@ -132,7 +138,12 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         return new XmlFile(XSTREAM, new File(run.getRootDir(), "junitResult.xml"));
     }
 
+    @Override
     public synchronized TestResult getResult() {
+        TestResultStorage storage = TestResultStorage.find();
+        if (storage != null) {
+            return new TestResult(storage.load(run.getParent().getFullName(), run.getNumber()));
+        }
         TestResult r;
         if(result==null) {
             r = load();
@@ -155,6 +166,10 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
 
     @Override
     public synchronized int getFailCount() {
+        TestResultStorage storage = TestResultStorage.find();
+        if (storage != null) {
+            return new TestResult(storage.load(run.getParent().getFullName(), run.getNumber())).getFailCount();
+        }
         if(totalCount==null)
             getResult();    // this will compute the result
         return failCount;
@@ -162,6 +177,10 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
 
     @Override
     public synchronized int getSkipCount() {
+        TestResultStorage storage = TestResultStorage.find();
+        if (storage != null) {
+            return new TestResult(storage.load(run.getParent().getFullName(), run.getNumber())).getSkipCount();
+        }
         if(totalCount==null)
             getResult();    // this will compute the result
         return skipCount;
@@ -169,6 +188,10 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
 
     @Override
     public synchronized int getTotalCount() {
+        TestResultStorage storage = TestResultStorage.find();
+        if (storage != null) {
+            return new TestResult(storage.load(run.getParent().getFullName(), run.getNumber())).getTotalCount();
+        }
         if(totalCount==null)
             getResult();    // this will compute the result
         return totalCount;
@@ -185,7 +208,8 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
 
     @Override
      public List<CaseResult> getFailedTests() {
-          return getResult().getFailedTests();
+        TestResult result = getResult();
+        return result.getFailedTests();
      }
 
     @Override

@@ -24,8 +24,11 @@
 package hudson.tasks.junit;
 
 import hudson.model.Run;
+import hudson.tasks.junit.storage.TestResultImpl;
+import hudson.tasks.junit.storage.TestResultStorage;
 import hudson.tasks.test.MetaTabulatedResult;
 import hudson.tasks.test.TestResult;
+import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
@@ -49,7 +52,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
     private final hudson.tasks.junit.TestResult parent;
     private float duration; 
 
-    PackageResult(hudson.tasks.junit.TestResult parent, String packageName) {
+    public PackageResult(hudson.tasks.junit.TestResult parent, String packageName) {
         this.packageName = packageName;
         this.parent = parent;
     }
@@ -144,11 +147,19 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
 
     @Override
     public Object getDynamic(String name, StaplerRequest req, StaplerResponse rsp) {
-        ClassResult result = getClassResult(name);
-        if (result != null) {
-        	return result;
+        TestResultStorage storage = TestResultStorage.find();
+        ClassResult result;
+        if (storage != null) {
+            Run<?, ?> run = Stapler.getCurrentRequest().findAncestorObject(Run.class);
+            TestResultImpl pluggableStorage = storage.load(run.getParent().getFullName(), run.getNumber());
+            result = pluggableStorage.getClassResult(name);
         } else {
-        	return super.getDynamic(name, req, rsp);
+            result = getClassResult(name);
+        }
+        if (result != null) {
+            return result;
+        } else {
+            return super.getDynamic(name, req, rsp);
         }
     }
 
@@ -175,6 +186,11 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
      * sort order
      */
     public List<CaseResult> getFailedTests() {
+        TestResultImpl pluggableStorage = parent.getPluggableStorage();
+        if (pluggableStorage != null) {
+           return pluggableStorage.getFailedTestsByPackage(packageName);
+       }
+        
         List<CaseResult> r = new ArrayList<CaseResult>();
         for (ClassResult clr : classes.values()) {
             for (CaseResult cr : clr.getChildren()) {
@@ -204,6 +220,11 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
      */
     @Override
     public List<CaseResult> getPassedTests() {
+        TestResultImpl pluggableStorage = parent.getPluggableStorage();
+        if (pluggableStorage != null) {
+            return pluggableStorage.getPassedTestsByPackage(packageName);
+        }
+
         List<CaseResult> r = new ArrayList<CaseResult>();
         for (ClassResult clr : classes.values()) {
             for (CaseResult cr : clr.getChildren()) {
@@ -223,6 +244,11 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
      */
     @Override
     public List<CaseResult> getSkippedTests() {
+        TestResultImpl pluggableStorage = parent.getPluggableStorage();
+        if (pluggableStorage != null) {
+            return pluggableStorage.getSkippedTestsByPackage(packageName);
+        } 
+        
         List<CaseResult> r = new ArrayList<CaseResult>();
         for (ClassResult clr : classes.values()) {
             for (CaseResult cr : clr.getChildren()) {

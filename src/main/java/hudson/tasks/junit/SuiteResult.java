@@ -112,7 +112,7 @@ public final class SuiteResult implements Serializable {
     /**
      * @since 1.22
      */
-    SuiteResult(String name, String stdout, String stderr, @CheckForNull PipelineTestDetails pipelineTestDetails) {
+    public SuiteResult(String name, String stdout, String stderr, @CheckForNull PipelineTestDetails pipelineTestDetails) {
         this.name = name;
         this.stderr = stderr;
         this.stdout = stdout;
@@ -446,7 +446,7 @@ public final class SuiteResult implements Serializable {
      * which requires a non-null parent.
      * @param parent
      */
-    void setParent(hudson.tasks.junit.TestResult parent) {
+    public void setParent(hudson.tasks.junit.TestResult parent) {
         this.parent = parent;
     }
 

@@ -24,6 +24,8 @@
 package hudson.tasks.junit;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import hudson.tasks.junit.storage.TestResultImpl;
+import hudson.tasks.junit.storage.TestResultStorage;
 import hudson.util.TextFile;
 import org.apache.commons.collections.iterators.ReverseListIterator;
 import org.apache.commons.io.FileUtils;
@@ -34,6 +36,7 @@ import hudson.model.Run;
 import hudson.tasks.test.TestResult;
 
 import org.dom4j.Element;
+import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.export.Exported;
 
 import javax.annotation.CheckForNull;
@@ -99,6 +102,46 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     private static float parseTime(Element testCase) {
         String time = testCase.attributeValue("time");
         return new TimeToFloat(time).parse();
+    }
+
+
+    /**
+     * Used to create a fake failure, when Hudson fails to load data from XML files.
+     * Public since 1.526.
+     *
+     * @param parent Parent result.
+     * @param testName Test name.
+     * @param errorStackTrace Error stack trace.
+     */
+    public CaseResult(SuiteResult parent, String testName, String errorStackTrace) {
+        this(parent, testName, errorStackTrace, "");
+    }
+
+    public CaseResult(SuiteResult parent, String testName, String errorStackTrace, String errorDetails) {
+        this.className = parent == null ? "unnamed" : parent.getName();
+        this.testName = testName;
+        this.errorStackTrace = errorStackTrace;
+        this.errorDetails = errorDetails;
+        this.parent = parent;
+        this.stdout = null;
+        this.stderr = null;
+        this.duration = 0.0f;
+        this.skipped = false;
+        this.skippedMessage = null;
+    }
+
+    public CaseResult(SuiteResult parent, String className, String testName, String errorDetails, String skippedMessage) {
+        this.className = className;
+        this.testName = testName;
+        this.errorStackTrace = null;
+        this.errorDetails = errorDetails;
+        this.parent = parent;
+        this.stdout = null;
+        this.stderr = null;
+        this.duration = 0.0f;
+        
+        this.skipped = skippedMessage != null;
+        this.skippedMessage = skippedMessage;
     }
 
     CaseResult(SuiteResult parent, Element testCase, String testClassName, boolean keepLongStdio) {
@@ -195,32 +238,6 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
             }
         }
         return HALF_MAX_SIZE;
-    }
-
-
-    /**
-     * Used to create a fake failure, when Hudson fails to load data from XML files.
-     * Public since 1.526.
-     *
-     * @param parent Parent result.
-     * @param testName Test name.
-     * @param errorStackTrace Error stack trace.
-     */
-    public CaseResult(SuiteResult parent, String testName, String errorStackTrace) {
-        this(parent, testName, errorStackTrace, "");
-    }
-
-    public CaseResult(SuiteResult parent, String testName, String errorStackTrace, String errorDetails) {
-        this.className = parent == null ? "unnamed" : parent.getName();
-        this.testName = testName;
-        this.errorStackTrace = errorStackTrace;
-        this.errorDetails = errorDetails;
-        this.parent = parent;
-        this.stdout = null;
-        this.stderr = null;
-        this.duration = 0.0f;
-        this.skipped = false;
-        this.skippedMessage = null;
     }
 
     public ClassResult getParent() {
@@ -427,6 +444,13 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     }
 
     public Run<?,?> getFailedSinceRun() {
+        TestResultStorage storage = TestResultStorage.find();
+        if (storage != null) {
+            Run<?, ?> run = Stapler.getCurrentRequest().findAncestorObject(Run.class);
+            TestResultImpl pluggableStorage = storage.load(run.getParent().getFullName(), run.getNumber());
+            return pluggableStorage.getFailedSinceRun(this);
+        }
+        
         return getRun().getParent().getBuildByNumber(getFailedSince());
     }
 
@@ -649,7 +673,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         // some old test data doesn't have failedSince value set, so for those compute them.
         recomputeFailedSinceIfNeeded();
     }
-
+    
     public int compareTo(CaseResult that) {
         if (this == that) {
             return 0;
@@ -693,7 +717,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         }
     }
 
-    /*package*/ void setClass(ClassResult classResult) {
+    public void setClass(ClassResult classResult) {
         this.classResult = classResult;
     }
 

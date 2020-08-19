@@ -6,8 +6,6 @@ import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.junit.JUnitResultArchiver;
-import hudson.tasks.junit.TestResult;
-import hudson.tasks.junit.TestResultAction;
 import hudson.tasks.junit.TestResultSummary;
 import hudson.tasks.test.PipelineTestDetails;
 import java.util.ArrayList;
@@ -22,6 +20,8 @@ import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.jenkinsci.plugins.workflow.steps.SynchronousNonBlockingStepExecution;
 
+import static java.util.Objects.requireNonNull;
+
 public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecution<TestResultSummary> {
 
     private transient final JUnitResultsStep step;
@@ -35,7 +35,7 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
     protected TestResultSummary run() throws Exception {
         FilePath workspace = getContext().get(FilePath.class);
         workspace.mkdirs();
-        Run<?,?> run = getContext().get(Run.class);
+        Run<?,?> run = requireNonNull(getContext().get(Run.class));
         TaskListener listener = getContext().get(TaskListener.class);
         Launcher launcher = getContext().get(Launcher.class);
         FlowNode node = getContext().get(FlowNode.class);
@@ -49,23 +49,21 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
         pipelineTestDetails.setEnclosingBlocks(getEnclosingBlockIds(enclosingBlocks));
         pipelineTestDetails.setEnclosingBlockNames(getEnclosingBlockNames(enclosingBlocks));
         try {
-            TestResultAction testResultAction = JUnitResultArchiver.parseAndAttach(step, pipelineTestDetails, run, workspace, launcher, listener);
+            TestResultSummary summary = JUnitResultArchiver.parseAndSummarize(step, pipelineTestDetails, run, workspace, launcher, listener);
 
-            if (testResultAction != null) {
-                TestResult testResult = testResultAction.getResult().getResultByNode(nodeId);
-                int testFailures = testResult.getFailCount();
+            if (summary.getFailCount() > 0) {
+                int testFailures = summary.getFailCount();
                 if (testFailures > 0) {
                     node.addOrReplaceAction(new WarningAction(Result.UNSTABLE).withMessage(testFailures + " tests failed"));
                     run.setResult(Result.UNSTABLE);
                 }
-                return new TestResultSummary(testResult);
             }
+            return summary;
         } catch (Exception e) {
+            assert listener != null;
             listener.getLogger().println(e.getMessage());
             throw e;
         }
-
-        return new TestResultSummary();
     }
 
     /**

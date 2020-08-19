@@ -190,7 +190,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
             Run<?,?> myBuild = cur.getRun();
             if (myBuild ==null) {
                 LOGGER.warning("trying to get relative path, but we can't determine the build that owns this result.");
-                return ""; // this won't take us to the right place, but it also won't 404. 
+                return ""; // this won't take us to the right place, but it also won't 404.
             }
             buf.insert(0,'/');
             buf.insert(0,myBuild.getUrl());
@@ -211,7 +211,9 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
                     return "";
 
                 }
-                buf.insert(0, '/');
+                if (!jenkinsUrl.endsWith("/")) {
+                    buf.insert(0, '/');
+                }
                 buf.insert(0, jenkinsUrl);
             }
 
@@ -234,6 +236,11 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
         if (owner != null) {
             return owner.getAction(AbstractTestResultAction.class);
         } else {
+            Run<?, ?> run = Stapler.getCurrentRequest().findAncestorObject(Run.class);
+            if (run != null) {
+                AbstractTestResultAction action = run.getAction(AbstractTestResultAction.class);
+                return action;
+            }
             LOGGER.warning("owner is null when trying to getTestResultAction.");
             return null;
         }

@@ -42,6 +42,7 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import hudson.tasks.junit.TestResultAction.Data;
+import hudson.tasks.junit.storage.TestResultStorage;
 import hudson.tasks.test.PipelineTestDetails;
 import hudson.util.DescribableList;
 import hudson.util.FormValidation;
@@ -122,6 +123,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
         setAllowEmptyResults(false);
     }
 
+    @Deprecated
     private TestResult parse(String expandedTestResults, Run<?,?> run, @Nonnull FilePath workspace, Launcher launcher, TaskListener listener)
             throws IOException, InterruptedException
     {
@@ -151,12 +153,13 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     @Override
     public void perform(Run build, FilePath workspace, Launcher launcher,
             TaskListener listener) throws InterruptedException, IOException {
-        TestResultAction action = parseAndAttach(this, null, build, workspace, launcher, listener);
-
-        if (action != null && action.getResult().getFailCount() > 0)
+        if (parseAndSummarize(this, null, build, workspace, launcher, listener).getFailCount() > 0) {
             build.setResult(Result.UNSTABLE);
+        }
     }
 
+    /** @deprecated use {@link #parseAndSummarize} instead */
+    @Deprecated
     public static TestResultAction parseAndAttach(@Nonnull JUnitTask task, PipelineTestDetails pipelineTestDetails,
                                                   Run build, FilePath workspace, Launcher launcher, TaskListener listener)
             throws InterruptedException, IOException {
@@ -211,6 +214,70 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
             }
 
             return action;
+        }
+    }
+
+    public static TestResultSummary parseAndSummarize(@Nonnull JUnitTask task, PipelineTestDetails pipelineTestDetails,
+                                                  Run<?, ?> build, FilePath workspace, Launcher launcher, TaskListener listener)
+            throws InterruptedException, IOException {
+        TestResultStorage storage = TestResultStorage.find();
+        if (storage == null) {
+            listener.getLogger().println(Messages.JUnitResultArchiver_Recording());
+        } // else let storage decide what to print
+
+        String testResults = build.getEnvironment(listener).expand(task.getTestResults());
+
+        TestResult result;
+        TestResultSummary summary;
+        if (storage == null) {
+            result = parse(task, pipelineTestDetails, testResults, build, workspace, launcher, listener);
+            summary = null; // see below
+        } else {
+            result = new TestResult(); // irrelevant
+            summary = new JUnitParser(task.isKeepLongStdio(), task.isAllowEmptyResults()).summarizeResult(testResults, build, pipelineTestDetails, workspace, launcher, listener, storage);
+        }
+
+        synchronized (build) {
+            // TODO can the build argument be omitted now, or is it used prior to the call to addAction?
+            TestResultAction action = build.getAction(TestResultAction.class);
+            boolean appending;
+            if (action == null) {
+                appending = false;
+                action = new TestResultAction(build, result, listener);
+            } else {
+                appending = true;
+                if (storage == null) {
+                    result.freeze(action);
+                    action.mergeResult(result, listener);
+                }
+            }
+            if (summary == null) {
+                assert storage == null;
+                // Cannot do this above since the result has not yet been frozen.
+                summary = new TestResultSummary(result);
+            }
+            action.setHealthScaleFactor(task.getHealthScaleFactor()); // overwrites previous value if appending
+            if (summary.getTotalCount() == 0 && /* maybe a secondary effect */ build.getResult() != Result.FAILURE) {
+                assert task.isAllowEmptyResults();
+                listener.getLogger().println(Messages.JUnitResultArchiver_ResultIsEmpty());
+            }
+
+            if (task.getTestDataPublishers() != null) {
+                for (TestDataPublisher tdp : task.getTestDataPublishers()) {
+                    Data d = tdp.contributeTestData(build, workspace, launcher, listener, result);
+                    if (d != null) {
+                        action.addData(d);
+                    }
+                }
+            }
+
+            if (appending) {
+                build.save();
+            } else if (summary.getTotalCount() > 0) {
+                build.addAction(action);
+            }
+
+            return summary;
         }
     }
 
