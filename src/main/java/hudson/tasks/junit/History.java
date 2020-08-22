@@ -23,294 +23,96 @@
  */
 package hudson.tasks.junit;
 
-import hudson.model.AbstractBuild;
+import edu.hm.hafner.echarts.ChartModelConfiguration;
+import edu.hm.hafner.echarts.JacksonFacade;
+import edu.hm.hafner.echarts.LinesChartModel;
 import hudson.model.Run;
-import jenkins.model.Jenkins;
+import hudson.tasks.junit.storage.TestResultImpl;
+import hudson.tasks.test.AbstractTestResultAction;
 import hudson.tasks.test.TestObject;
-import hudson.tasks.test.TestResult;
-import hudson.util.ChartUtil;
-import hudson.util.ColorPalette;
-import hudson.util.DataSetBuilder;
-import hudson.util.Graph;
-import hudson.util.ShiftedCategoryAxis;
-import hudson.util.StackedAreaRenderer2;
-
-import java.awt.Color;
-import java.awt.Paint;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.axis.CategoryAxis;
-import org.jfree.chart.axis.CategoryLabelPositions;
-import org.jfree.chart.axis.NumberAxis;
-import org.jfree.chart.plot.CategoryPlot;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.renderer.category.StackedAreaRenderer;
-import org.jfree.data.category.CategoryDataset;
-import org.jfree.ui.RectangleInsets;
-import org.kohsuke.stapler.Stapler;
+import hudson.tasks.test.TestResultActionIterable;
+import hudson.tasks.test.TestResultDurationChart;
+import hudson.tasks.test.TestResultTrendChart;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
+import org.kohsuke.stapler.bind.JavaScriptMethod;
 
 /**
  * History of {@link hudson.tasks.test.TestObject} over time.
  *
  * @since 1.320
  */
+@Restricted(NoExternalUse.class)
 public class History {
-	private final TestObject testObject;
+    private static final JacksonFacade JACKSON_FACADE = new JacksonFacade();
+    private final TestObject testObject;
 
-	public History(TestObject testObject) {
-		this.testObject = testObject;
-	}
+    public History(TestObject testObject) {
+        this.testObject = testObject;
+    }
 
-	public TestObject getTestObject() {
-		return testObject;
-	}
-	
+    @SuppressWarnings("unused") // Called by jelly view
+    public TestObject getTestObject() {
+        return testObject;
+    }
+
+    @SuppressWarnings("unused") // Called by jelly view
     public boolean historyAvailable() {
-        if (testObject.getRun().getParent().getBuilds().size() > 1)
-           return true;
-        else
-           return false; 
-    }
-	
-    public List<TestResult> getList(int start, int end) {
-    	List<TestResult> list = new ArrayList<>();
-        // TODO this must not stand
-    	end = Math.min(end, testObject.getRun().getParent().getBuilds().size());
-    	for (Run<?,?> b: testObject.getRun().getParent().getBuilds().subList(start, end)) {
-    		if (b.isBuilding()) continue;
-    		TestResult o = testObject.getResultInRun(b);
-    		if (o != null) {
-    			list.add(o);
-    		}
-    	}
-    	return list;
-    }
-    
-	public List<TestResult> getList() {
-		return getList(0, testObject.getRun().getParent().getBuilds().size());
-	}
-
-    /**
-     * Graph of duration of tests over time.
-     *
-     * @return a graph of duration of tests over time.
-     */
-    public Graph getDurationGraph() {
-       return new GraphImpl("seconds") {
-    	   
-           protected DataSetBuilder<String, ChartLabel> createDataSet() {
-               DataSetBuilder<String, ChartLabel> data = new DataSetBuilder<>();
-               
-               List<TestResult> list;
-               try {
-               	list = getList(
-               			Integer.parseInt(Stapler.getCurrentRequest().getParameter("start")), 
-               			Integer.parseInt(Stapler.getCurrentRequest().getParameter("end")));
-               } catch (NumberFormatException e) {
-               	list = getList();
-               }
-               
-			for (hudson.tasks.test.TestResult o: list) {
-                   data.add(((double) o.getDuration()), "", new ChartLabel(o)  {
-                       @Override
-                       public Color getColor() {
-                           if (o.getFailCount() > 0)
-                               return ColorPalette.RED;
-                           else if (o.getSkipCount() > 0)
-                               return ColorPalette.YELLOW;
-                           else
-                               return ColorPalette.BLUE;
-                       }
-                   });
-               }
-               return data;
-           }
-           
-       };
-    }
-
-    /**
-     * Graph of # of tests over time.
-     *
-     * @return a graph of number of tests over time.
-     */
-    public Graph getCountGraph() {
-        return new GraphImpl("") {
-            protected DataSetBuilder<String, ChartLabel> createDataSet() {
-                DataSetBuilder<String, ChartLabel> data = new DataSetBuilder<>();
-
-                List<TestResult> list;
-                try {
-                	list = getList(
-                			Integer.parseInt(Stapler.getCurrentRequest().getParameter("start")), 
-                			Integer.parseInt(Stapler.getCurrentRequest().getParameter("end")));
-                } catch (NumberFormatException e) {
-                	list = getList();
-                }
-                
-                for (TestResult o: list) {
-                    data.add(o.getPassCount(), "2Passed", new ChartLabel(o));
-                    data.add(o.getFailCount(), "1Failed", new ChartLabel(o));
-                    data.add(o.getSkipCount(), "0Skipped", new ChartLabel(o));
-                }
-                return data;
+        if (testObject instanceof hudson.tasks.junit.TestResult) {
+            TestResultImpl pluggableStorage = ((hudson.tasks.junit.TestResult) testObject).getPluggableStorage();
+            if (pluggableStorage != null) {
+                return pluggableStorage.getCountOfBuildsWithTestResults() > 1;
             }
-        };
+        }
+
+        return testObject.getRun().getParent().getBuilds().size() > 1;
     }
 
-    private abstract class GraphImpl extends Graph {
-        private final String yLabel;
-
-        protected GraphImpl(String yLabel) {
-            super(-1,600,300); // cannot use timestamp, since ranges may change
-            this.yLabel =  yLabel;
-        }
-
-        protected abstract DataSetBuilder<String, ChartLabel> createDataSet();
-
-        protected JFreeChart createGraph() {
-            final CategoryDataset dataset = createDataSet().build();
-
-            final JFreeChart chart = ChartFactory.createStackedAreaChart(null, // chart
-                                                                                // title
-                    null, // unused
-                    yLabel, // range axis label
-                    dataset, // data
-                    PlotOrientation.VERTICAL, // orientation
-                    false, // include legend
-                    true, // tooltips
-                    false // urls
-                    );
-
-            chart.setBackgroundPaint(Color.white);
-
-            final CategoryPlot plot = chart.getCategoryPlot();
-
-            // plot.setAxisOffset(new Spacer(Spacer.ABSOLUTE, 5.0, 5.0, 5.0, 5.0));
-            plot.setBackgroundPaint(Color.WHITE);
-            plot.setOutlinePaint(null);
-            plot.setForegroundAlpha(0.8f);
-            // plot.setDomainGridlinesVisible(true);
-            // plot.setDomainGridlinePaint(Color.white);
-            plot.setRangeGridlinesVisible(true);
-            plot.setRangeGridlinePaint(Color.black);
-
-            CategoryAxis domainAxis = new ShiftedCategoryAxis(null);
-            plot.setDomainAxis(domainAxis);
-            domainAxis.setCategoryLabelPositions(CategoryLabelPositions.UP_90);
-            domainAxis.setLowerMargin(0.0);
-            domainAxis.setUpperMargin(0.0);
-            domainAxis.setCategoryMargin(0.0);
-
-            final NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
-            ChartUtil.adjustChebyshev(dataset, rangeAxis);
-            rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
-            rangeAxis.setAutoRange(true);
-
-            StackedAreaRenderer ar = new StackedAreaRenderer2() {
-                @Override
-                public Paint getItemPaint(int row, int column) {
-                    ChartLabel key = (ChartLabel) dataset.getColumnKey(column);
-                    if (key.getColor() != null) return key.getColor();
-                    return super.getItemPaint(row, column);
-                }
-
-                @Override
-                public String generateURL(CategoryDataset dataset, int row,
-                        int column) {
-                    ChartLabel label = (ChartLabel) dataset.getColumnKey(column);
-                    return label.getUrl();
-                }
-
-                @Override
-                public String generateToolTip(CategoryDataset dataset, int row,
-                        int column) {
-                    ChartLabel label = (ChartLabel) dataset.getColumnKey(column);
-                    return label.o.getRun().getDisplayName() + " : "
-                            + label.o.getDurationString();
-                }
-            };
-            plot.setRenderer(ar);
-            ar.setSeriesPaint(0,ColorPalette.YELLOW); // Skips.
-            ar.setSeriesPaint(1,ColorPalette.RED); // Failures.
-            ar.setSeriesPaint(2,ColorPalette.BLUE); // Total.
-
-            // crop extra space around the graph
-            plot.setInsets(new RectangleInsets(0, 0, 0, 5.0));
-
-            return chart;
-        }
+    @JavaScriptMethod
+    @SuppressWarnings("unused") // Called by jelly view
+    public String getTestResultTrend() {
+        return JACKSON_FACADE.toJson(createTestResultTrend());
     }
 
-    class ChartLabel implements Comparable<ChartLabel> {
-        // TODO allow use of a simplified label that does not force Run loading
-    	TestResult o;
-        String url;
-        public ChartLabel(TestResult o) {
-            this.o = o;
-            this.url = null;
-        }
-
-        public String getUrl() {
-            if (this.url == null) generateUrl();
-            return url;
-        }
-
-        private void generateUrl() {
-            Run<?,?> build = o.getRun();
-            String buildLink = build.getUrl();
-            String actionUrl = o.getTestResultAction().getUrlName();
-            final String rootUrl = Jenkins.get().getRootUrl();
-            if (rootUrl == null) {
-                throw new IllegalStateException("Jenkins root URL not available");
+    private LinesChartModel createTestResultTrend() {
+        if (testObject instanceof hudson.tasks.junit.TestResult) {
+            TestResultImpl pluggableStorage = ((hudson.tasks.junit.TestResult) testObject).getPluggableStorage();
+            if (pluggableStorage != null) {
+                return new TestResultTrendChart().create(pluggableStorage.getTrendTestResultSummary());
             }
-            this.url = rootUrl + buildLink + actionUrl + o.getUrl();
         }
 
-        public int compareTo(ChartLabel that) {
-            return this.o.getRun().number - that.o.getRun().number;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-        	if (!(o instanceof ChartLabel)) {
-            	return false;
-            }
-            ChartLabel that = (ChartLabel) o;
-            return this.o == that.o;
-        }
-
-        public Color getColor() {
-        	return null;
-        }
-
-        @Override
-        public int hashCode() {
-            return o.hashCode();
-        }
-
-        @Override
-        public String toString() {
-            Run<?, ?> run = o.getRun();
-            String l = run.getDisplayName();
-            String s = run instanceof AbstractBuild ? ((AbstractBuild) run).getBuiltOnStr() : null;
-            if (s != null)
-                l += ' ' + s;
-            return l;
-//            return o.getDisplayName() + " " + o.getOwner().getDisplayName();
-        }
-
+        return new TestResultTrendChart().create(createBuildHistory(testObject.getRun()), new ChartModelConfiguration());
     }
 
-    public static int asInt(String s, int defalutValue) {
-        if (s==null)    return defalutValue;
+    @JavaScriptMethod
+    @SuppressWarnings("unused") // Called by jelly view
+    public String getTestDurationTrend() {
+        return JACKSON_FACADE.toJson(createTestDurationResultTrend());
+    }
+
+    private LinesChartModel createTestDurationResultTrend() {
+        if (testObject instanceof hudson.tasks.junit.TestResult) {
+            TestResultImpl pluggableStorage = ((hudson.tasks.junit.TestResult) testObject).getPluggableStorage();
+            if (pluggableStorage != null) {
+                return new TestResultDurationChart().create(pluggableStorage.getTestDurationResultSummary());
+            }
+        }
+
+        return new TestResultDurationChart().create(createBuildHistory(testObject.getRun()), new ChartModelConfiguration());
+    }
+
+    private TestResultActionIterable createBuildHistory(Run<?, ?> lastCompletedBuild) {
+        return new TestResultActionIterable(lastCompletedBuild.getAction(AbstractTestResultAction.class));
+    }
+
+    @SuppressWarnings("unused") // Called by jelly view
+    public static int asInt(String s, int defaultValue) {
+        if (s == null) return defaultValue;
         try {
             return Integer.parseInt(s);
         } catch (NumberFormatException e) {
-            return defalutValue;
+            return defaultValue;
         }
     }
 }
