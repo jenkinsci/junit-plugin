@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>4.6</version>
+        <version>4.7</version>
         <relativePath />
     </parent>
     <artifactId>junit</artifactId>
@@ -15,6 +15,7 @@
     <properties>
         <revision>1.33</revision>
         <changelist>-SNAPSHOT</changelist>
+        <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
         <jenkins.version>2.204.6</jenkins.version>
         <java.level>8</java.level>
         <no-test-jar>false</no-test-jar>
@@ -26,9 +27,9 @@
         </license>
     </licenses>
     <scm>
-        <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
-        <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
-        <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
+        <connection>scm:git:git://github.com/${gitHubRepo}.git</connection>
+        <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
+        <url>https://github.com/${gitHubRepo}</url>
       <tag>${scmTag}</tag>
     </scm>
     <repositories>
