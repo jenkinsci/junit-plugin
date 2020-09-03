@@ -81,7 +81,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
-import org.jvnet.hudson.test.RandomlyFails;
 import org.jvnet.hudson.test.SingleFileSCM;
 import org.jvnet.hudson.test.TestExtension;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -118,9 +117,9 @@ public class JUnitResultArchiverTest {
 
     }
 
-   @RandomlyFails("TimeoutException from basic")
    @LocalData("All")
    @Test public void slave() throws Exception {
+       Assume.assumeFalse("TODO frequent TimeoutException from basic", Functions.isWindows());
         DumbSlave s = j.createOnlineSlave();
         project.setAssignedLabel(s.getSelfLabel());
 

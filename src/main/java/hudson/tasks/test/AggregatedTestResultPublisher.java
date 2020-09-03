@@ -60,7 +60,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import javax.annotation.CheckForNull;
-import org.acegisecurity.AccessDeniedException;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
@@ -171,8 +170,12 @@ public class AggregatedTestResultPublisher extends Recorder {
                         if (j != null) {
                             r.add(j);
                         }
-                    } catch (AccessDeniedException x) {
-                        // just skip it
+                    } catch (RuntimeException x) {
+                        if (x.getClass().getSimpleName().startsWith("AccessDeniedException")) {
+                            // just skip it
+                        } else {
+                            throw x;
+                        }
                     }
                 }
             }
