@@ -271,6 +271,14 @@ public class CaseResultTest {
         return rule.assertBuildStatus(Result.UNSTABLE, p.scheduleBuild2(0).get());
     }
 
+    @Test
+    public void emptyName() throws Exception {
+        FreeStyleProject p = rule.createFreeStyleProject();
+        rule.jenkins.getWorkspaceFor(p).child("x.xml").write("<testsuite><testcase classname=''></testcase></testsuite>", null);
+        p.getPublishersList().add(new JUnitResultArchiver("x.xml"));
+        rule.buildAndAssertSuccess(p);
+    }
+
     private String composeXPath(String[] fields) throws Exception {
         StringBuilder tmp = new StringBuilder(100);
         for ( String f : fields ) {
