@@ -320,9 +320,9 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      */
     @Exported(visibility=999)
     public @Override String getName() {
-    	if (testName.isEmpty()) {
-    		return "(?)";
-    	}
+        if (StringUtils.isEmpty(testName)) {
+            return "(?)";
+        }
         return testName;
     }
 
