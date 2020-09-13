@@ -24,8 +24,9 @@
 package hudson.tasks.junit;
 
 import hudson.model.Run;
-import hudson.tasks.junit.storage.TestResultImpl;
-import hudson.tasks.junit.storage.TestResultStorage;
+import io.jenkins.plugins.junit.storage.FileJunitTestResultStorage;
+import io.jenkins.plugins.junit.storage.TestResultImpl;
+import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
 import hudson.tasks.test.TabulatedResult;
 import hudson.tasks.test.TestResult;
 import hudson.tasks.test.TestObject;
@@ -131,9 +132,9 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
 
     @Override
     public Object getDynamic(String name, StaplerRequest req, StaplerResponse rsp) {
-        TestResultStorage storage = TestResultStorage.find();
+        JunitTestResultStorage storage = JunitTestResultStorage.find();
         CaseResult c;
-        if (storage != null) {
+        if (!(storage instanceof FileJunitTestResultStorage)) {
             Run<?, ?> run = Stapler.getCurrentRequest().findAncestorObject(Run.class);
             TestResultImpl pluggableStorage = storage.load(run.getParent().getFullName(), run.getNumber());
             c = pluggableStorage.getCaseResult(name);

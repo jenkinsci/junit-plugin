@@ -30,8 +30,9 @@ import hudson.*;
 import hudson.model.AbstractBuild;
 import hudson.model.Run;
 import hudson.remoting.VirtualChannel;
-import hudson.tasks.junit.storage.TestResultStorage;
+import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
 
+import io.jenkins.plugins.junit.storage.JunitTestResultStorage.RemotePublisher;
 import java.io.IOException;
 import java.io.File;
 
@@ -107,7 +108,7 @@ public class JUnitParser extends TestResultParser {
     }
 
     public TestResultSummary summarizeResult(String testResultLocations, Run<?,?> build, PipelineTestDetails pipelineTestDetails,
-                                  FilePath workspace, Launcher launcher, TaskListener listener, TestResultStorage storage)
+                                  FilePath workspace, Launcher launcher, TaskListener listener, JunitTestResultStorage storage)
             throws InterruptedException, IOException {
         return workspace.act(new StorageParseResultCallable(testResultLocations, build, keepLongStdio, allowEmptyResults, pipelineTestDetails, storage.createRemotePublisher(build), listener));
     }
@@ -173,10 +174,10 @@ public class JUnitParser extends TestResultParser {
 
     private static final class StorageParseResultCallable extends ParseResultCallable<TestResultSummary> {
 
-        private final TestResultStorage.RemotePublisher publisher;
+        private final RemotePublisher publisher;
         private final TaskListener listener;
 
-        StorageParseResultCallable(String testResults, Run<?,?> build, boolean keepLongStdio, boolean allowEmptyResults, PipelineTestDetails pipelineTestDetails, TestResultStorage.RemotePublisher publisher, TaskListener listener) {
+        StorageParseResultCallable(String testResults, Run<?,?> build, boolean keepLongStdio, boolean allowEmptyResults, PipelineTestDetails pipelineTestDetails, RemotePublisher publisher, TaskListener listener) {
             super(testResults, build, keepLongStdio, allowEmptyResults, pipelineTestDetails);
             this.publisher = publisher;
             this.listener = listener;

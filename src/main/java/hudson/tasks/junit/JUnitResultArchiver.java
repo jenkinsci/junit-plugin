@@ -42,7 +42,8 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import hudson.tasks.junit.TestResultAction.Data;
-import hudson.tasks.junit.storage.TestResultStorage;
+import io.jenkins.plugins.junit.storage.FileJunitTestResultStorage;
+import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
 import hudson.tasks.test.PipelineTestDetails;
 import hudson.util.DescribableList;
 import hudson.util.FormValidation;
@@ -220,8 +221,8 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     public static TestResultSummary parseAndSummarize(@Nonnull JUnitTask task, PipelineTestDetails pipelineTestDetails,
                                                   Run<?, ?> build, FilePath workspace, Launcher launcher, TaskListener listener)
             throws InterruptedException, IOException {
-        TestResultStorage storage = TestResultStorage.find();
-        if (storage == null) {
+        JunitTestResultStorage storage = JunitTestResultStorage.find();
+        if (storage instanceof FileJunitTestResultStorage) {
             listener.getLogger().println(Messages.JUnitResultArchiver_Recording());
         } // else let storage decide what to print
 
@@ -229,7 +230,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
 
         TestResult result;
         TestResultSummary summary;
-        if (storage == null) {
+        if (storage instanceof FileJunitTestResultStorage) {
             result = parse(task, pipelineTestDetails, testResults, build, workspace, launcher, listener);
             summary = null; // see below
         } else {
@@ -246,13 +247,13 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                 action = new TestResultAction(build, result, listener);
             } else {
                 appending = true;
-                if (storage == null) {
+                if (storage instanceof FileJunitTestResultStorage) {
                     result.freeze(action);
                     action.mergeResult(result, listener);
                 }
             }
             if (summary == null) {
-                assert storage == null;
+                assert storage instanceof FileJunitTestResultStorage;
                 // Cannot do this above since the result has not yet been frozen.
                 summary = new TestResultSummary(result);
             }

@@ -22,11 +22,12 @@
  * THE SOFTWARE.
  */
 
-package hudson.tasks.junit.storage;
+package io.jenkins.plugins.junit.storage;
 
 import com.google.common.collect.ImmutableSet;
 import com.thoughtworks.xstream.XStream;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.Extension;
 import hudson.Util;
 import hudson.model.Job;
 import hudson.model.Label;
@@ -42,6 +43,8 @@ import hudson.tasks.junit.TestResult;
 import hudson.tasks.junit.TestResultAction;
 import hudson.tasks.junit.TestResultSummary;
 import hudson.tasks.junit.TrendTestResultSummary;
+import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
+import io.jenkins.plugins.junit.storage.TestResultImpl;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -91,7 +94,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-public class TestResultStorageTest {
+public class TestResultStorageJunitTest {
     
     @ClassRule public static BuildWatcher buildWatcher = new BuildWatcher();
     
@@ -104,6 +107,7 @@ public class TestResultStorageTest {
     @Before public void autoServer() throws Exception {
         LocalH2Database database = (LocalH2Database) GlobalDatabaseConfiguration.get().getDatabase();
         GlobalDatabaseConfiguration.get().setDatabase(new LocalH2Database(database.getPath(), true));
+        JunitTestResultStorageConfiguration.get().setStorage(new Impl());
     }
 
     @Test public void smokes() throws Exception {
@@ -219,7 +223,7 @@ public class TestResultStorageTest {
         }
     }
 
-    @TestExtension public static class Impl implements TestResultStorage {
+    @TestExtension public static class Impl extends JunitTestResultStorage {
 
         static final String CASE_RESULTS_TABLE = "caseResults";
 
@@ -234,6 +238,16 @@ public class TestResultStorageTest {
                 throw new IOException(x);
             }
             return new RemotePublisherImpl(build.getParent().getFullName(), build.getNumber());
+        }
+
+        @Extension
+        public static class DescriptorImpl extends JunitTestResultStorageDescriptor {
+
+            @Override
+            public String getDisplayName() {
+                return "Test SQL";
+            }
+
         }
 
         @FunctionalInterface
