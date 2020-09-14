@@ -48,7 +48,7 @@
         <dependency>
             <groupId>io.jenkins.plugins</groupId>
             <artifactId>echarts-api</artifactId>
-            <version>4.7.0-4</version>
+            <version>4.8.0-2</version>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
