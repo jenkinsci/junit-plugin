@@ -26,11 +26,9 @@ package hudson.tasks.junit;
 import edu.hm.hafner.echarts.ChartModelConfiguration;
 import edu.hm.hafner.echarts.JacksonFacade;
 import edu.hm.hafner.echarts.LinesChartModel;
-import hudson.model.Run;
 import hudson.tasks.junit.storage.TestResultImpl;
-import hudson.tasks.test.AbstractTestResultAction;
 import hudson.tasks.test.TestObject;
-import hudson.tasks.test.TestResultActionIterable;
+import hudson.tasks.test.TestObjectIterable;
 import hudson.tasks.test.TestResultDurationChart;
 import hudson.tasks.test.TestResultTrendChart;
 import org.kohsuke.accmod.Restricted;
@@ -82,7 +80,7 @@ public class History {
             }
         }
 
-        return new TestResultTrendChart().create(createBuildHistory(testObject.getRun()), new ChartModelConfiguration());
+        return new TestResultTrendChart().createFromTestObject(createBuildHistory(testObject), new ChartModelConfiguration());
     }
 
     @JavaScriptMethod
@@ -99,11 +97,11 @@ public class History {
             }
         }
 
-        return new TestResultDurationChart().create(createBuildHistory(testObject.getRun()), new ChartModelConfiguration());
+        return new TestResultDurationChart().create(createBuildHistory(testObject), new ChartModelConfiguration());
     }
 
-    private TestResultActionIterable createBuildHistory(Run<?, ?> lastCompletedBuild) {
-        return new TestResultActionIterable(lastCompletedBuild.getAction(AbstractTestResultAction.class));
+    private TestObjectIterable createBuildHistory(TestObject testObject) {
+        return new TestObjectIterable(testObject);
     }
 
     @SuppressWarnings("unused") // Called by jelly view

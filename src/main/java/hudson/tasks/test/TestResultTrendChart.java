@@ -28,6 +28,14 @@ public class TestResultTrendChart {
 
         return getLinesChartModel(dataSet);
     }
+    
+    public LinesChartModel createFromTestObject(final Iterable results,
+                                  final ChartModelConfiguration configuration) {
+        TestObjectTrendSeriesBuilder builder = new TestObjectTrendSeriesBuilder();
+        LinesDataSet dataSet = builder.createDataSet(configuration, results);
+
+        return getLinesChartModel(dataSet);
+    }
 
     private LinesChartModel getLinesChartModel(LinesDataSet dataSet) {
         LinesChartModel model = new LinesChartModel();
