@@ -63,6 +63,7 @@ public interface TestResultImpl {
     /**
      * Retrieves duration for history graph
      * @return test duration summary for all runs associated to the job
+     * TODO Add API that only loads specific test object, will allow smaller scoped history graphs
      */
     List<TestDurationResultSummary> getTestDurationResultSummary();
 
