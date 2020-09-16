@@ -39,6 +39,7 @@ import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.ClassResult;
 import hudson.tasks.junit.PackageResult;
 import hudson.tasks.junit.SuiteResult;
+import hudson.tasks.junit.TestDurationResultSummary;
 import hudson.tasks.junit.TestResult;
 import hudson.tasks.junit.TestResultAction;
 import hudson.tasks.junit.TestResultSummary;
@@ -205,14 +206,20 @@ public class TestResultStorageJunitTest {
             assertEquals(1, rootPassedTests.size());
             assertEquals("Klazz", rootPassedTests.get(0).getClassName());
 
-            List<TrendTestResultSummary> trendTestResultSummary = requireNonNull(a.getResult().getPluggableStorage()).getTrendTestResultSummary();
+            TestResultImpl pluggableStorage = requireNonNull(a.getResult().getPluggableStorage());
+            List<TrendTestResultSummary> trendTestResultSummary = pluggableStorage.getTrendTestResultSummary();
             assertThat(trendTestResultSummary, hasSize(1));
             TestResultSummary testResultSummary = trendTestResultSummary.get(0).getTestResultSummary();
             assertThat(testResultSummary.getFailCount(), equalTo(2));
             assertThat(testResultSummary.getPassCount(), equalTo(1));
             assertThat(testResultSummary.getSkipCount(), equalTo(1));
             assertThat(testResultSummary.getTotalCount(), equalTo(4));
-            
+
+            int countOfBuildsWithTestResults = pluggableStorage.getCountOfBuildsWithTestResults();
+            assertThat(countOfBuildsWithTestResults, is(1));
+
+            final List<TestDurationResultSummary> testDurationResultSummary = pluggableStorage.getTestDurationResultSummary();
+            assertThat(testDurationResultSummary.get(0).getDuration(), is(200));
             // TODO test result summary i.e. failure content
             // TODO getFailedSinceRun, TestResult#getChildren, TestObject#getTestResultAction
             // TODO more detailed Java queries incl. ClassResult
@@ -256,7 +263,7 @@ public class TestResultStorageJunitTest {
         }
         @Override public TestResultImpl load(String job, int build) {
             return new TestResultImpl() {
-                private <T> T query(Querier<T> querier, T dflt) {
+                private <T> T query(Querier<T> querier) {
                     if (!queriesPermitted) {
                         throw new IllegalStateException("Should not have been running any queries yet");
                     }
@@ -278,7 +285,7 @@ public class TestResultStorageJunitTest {
                                 return anInt;
                             }
                         }
-                    }, 0);
+                    });
                 }
 
                 private List<CaseResult> retrieveCaseResult(String whereCondition) {
@@ -307,7 +314,7 @@ public class TestResultStorageJunitTest {
                                 return results;
                             }
                         }
-                    }, emptyList());
+                    });
                 }
 
                 @Override
@@ -327,7 +334,7 @@ public class TestResultStorageJunitTest {
                                 return results;
                             }
                         }
-                    }, emptyList());
+                    });
                 }
 
                 @Override
@@ -350,7 +357,41 @@ public class TestResultStorageJunitTest {
                                 return trendTestResultSummaries;
                             }
                         }
-                    }, emptyList());
+                    });
+                }
+
+                @Override
+                public List<TestDurationResultSummary> getTestDurationResultSummary() {
+                    return query(connection -> {
+                        try (PreparedStatement statement = connection.prepareStatement("SELECT build, sum(duration) as duration FROM " +  Impl.CASE_RESULTS_TABLE +  " WHERE job = ? group by build;")) {
+                            statement.setString(1, job);
+                            try (ResultSet result = statement.executeQuery()) {
+
+                                List<TestDurationResultSummary> testDurationResultSummaries = new ArrayList<>();
+                                while (result.next()) {
+                                    int buildNumber = result.getInt("build");
+                                    int duration = result.getInt("duration");
+
+                                    testDurationResultSummaries.add(new TestDurationResultSummary(buildNumber, duration));
+                                }
+                                return testDurationResultSummaries;
+                            }
+                        }
+                    });
+                }
+
+                @Override
+                public int getCountOfBuildsWithTestResults() {
+                    return query(connection -> {
+                        try (PreparedStatement statement = connection.prepareStatement("SELECT COUNT(DISTINCT build) as count FROM caseResults WHERE job = ?;")) {
+                            statement.setString(1, job);
+                            try (ResultSet result = statement.executeQuery()) {
+                                result.next();
+                                int count = result.getInt("count");
+                                return count;
+                            }
+                        }
+                    });
                 }
 
                 @Override
@@ -377,7 +418,7 @@ public class TestResultStorageJunitTest {
                                 return null;
                             }
                         }
-                    }, null);
+                    });
 
                 }
 
@@ -442,7 +483,7 @@ public class TestResultStorageJunitTest {
                                 return theJob.getBuildByNumber(firstFailingBuildAfterPassing);
                             }
                         }
-                    }, null);
+                    });
 
                 }
 
@@ -475,7 +516,7 @@ public class TestResultStorageJunitTest {
                                 return results;
                             }
                         }
-                    }, emptyList());
+                    });
                 }
 
 
@@ -510,7 +551,7 @@ public class TestResultStorageJunitTest {
                                 return caseResult;
                             }
                         }
-                    }, null);
+                    });
 
 
                 }
@@ -656,7 +697,7 @@ public class TestResultStorageJunitTest {
                 }
                 if (!exists) {
                     try (Statement statement = connection.createStatement()) {
-                        // TODO this and joined tables: errorStackTrace, stdout, stderr, duration, nodeId, enclosingBlocks, enclosingBlockNames, etc.
+                        // TODO this and joined tables: errorStackTrace, stdout, stderr, nodeId, enclosingBlocks, enclosingBlockNames, etc.
                         statement.execute("CREATE TABLE " + CASE_RESULTS_TABLE + "(job varchar(255), build int, suite varchar(255), package varchar(255), className varchar(255), testName varchar(255), errorDetails varchar(255), skipped varchar(255), duration numeric)");
                         // TODO indices
                     }

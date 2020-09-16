@@ -29,6 +29,7 @@ import hudson.model.Run;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.ClassResult;
 import hudson.tasks.junit.PackageResult;
+import hudson.tasks.junit.TestDurationResultSummary;
 import hudson.tasks.junit.TestResult;
 import hudson.tasks.junit.TrendTestResultSummary;
 import java.util.List;
@@ -58,6 +59,19 @@ public interface TestResultImpl {
      * @return test summary for all runs associated to the job
      */
     List<TrendTestResultSummary> getTrendTestResultSummary();
+
+    /**
+     * Retrieves duration for history graph
+     * @return test duration summary for all runs associated to the job
+     * TODO Add API that only loads specific test object, will allow smaller scoped history graphs
+     */
+    List<TestDurationResultSummary> getTestDurationResultSummary();
+
+    /**
+     * Determines if there is multiple builds with test results
+     * @return count of builds with tests results
+     */
+    int getCountOfBuildsWithTestResults();
     
     Run<?, ?> getFailedSinceRun(CaseResult caseResult);
     @NonNull
