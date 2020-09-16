@@ -31,11 +31,11 @@ import hudson.model.Action;
 import hudson.model.Job;
 import hudson.model.Run;
 import hudson.tasks.junit.JUnitResultArchiver;
-import hudson.tasks.junit.storage.TestResultImpl;
-import hudson.tasks.junit.storage.TestResultStorage;
+import io.jenkins.plugins.junit.storage.FileJunitTestResultStorage;
+import io.jenkins.plugins.junit.storage.TestResultImpl;
+import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
 import io.jenkins.plugins.echarts.AsyncTrendChart;
 import org.kohsuke.stapler.Ancestor;
-import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 
@@ -113,8 +113,8 @@ public class TestResultProjectAction implements Action, AsyncTrendChart {
     protected LinesChartModel createChartModel() {
         Run<?, ?> lastCompletedBuild = job.getLastCompletedBuild();
 
-        TestResultStorage storage = TestResultStorage.find();
-        if (storage != null) {
+        JunitTestResultStorage storage = JunitTestResultStorage.find();
+        if (!(storage instanceof FileJunitTestResultStorage)) {
             TestResultImpl pluggableStorage = storage.load(lastCompletedBuild.getParent().getFullName(), lastCompletedBuild.getNumber());
             return new TestResultTrendChart().create(pluggableStorage.getTrendTestResultSummary());
         }

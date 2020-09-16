@@ -24,8 +24,9 @@
 package hudson.tasks.junit;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import hudson.tasks.junit.storage.TestResultImpl;
-import hudson.tasks.junit.storage.TestResultStorage;
+import io.jenkins.plugins.junit.storage.FileJunitTestResultStorage;
+import io.jenkins.plugins.junit.storage.TestResultImpl;
+import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
 import hudson.util.TextFile;
 import org.apache.commons.collections.iterators.ReverseListIterator;
 import org.apache.commons.io.FileUtils;
@@ -447,8 +448,8 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     }
 
     public Run<?,?> getFailedSinceRun() {
-        TestResultStorage storage = TestResultStorage.find();
-        if (storage != null) {
+        JunitTestResultStorage storage = JunitTestResultStorage.find();
+        if (!(storage instanceof FileJunitTestResultStorage)) {
             Run<?, ?> run = Stapler.getCurrentRequest().findAncestorObject(Run.class);
             TestResultImpl pluggableStorage = storage.load(run.getParent().getFullName(), run.getNumber());
             return pluggableStorage.getFailedSinceRun(this);

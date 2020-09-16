@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-package hudson.tasks.junit.storage;
+package io.jenkins.plugins.junit.storage;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Run;

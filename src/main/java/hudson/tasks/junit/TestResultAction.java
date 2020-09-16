@@ -33,7 +33,8 @@ import hudson.model.BuildListener;
 import hudson.model.Job;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import hudson.tasks.junit.storage.TestResultStorage;
+import io.jenkins.plugins.junit.storage.FileJunitTestResultStorage;
+import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
 import hudson.tasks.test.AbstractTestResultAction;
 import hudson.tasks.test.TestObject;
 import hudson.tasks.test.TestResultProjectAction;
@@ -66,7 +67,7 @@ import jenkins.tasks.SimpleBuildStep;
 public class TestResultAction extends AbstractTestResultAction<TestResultAction> implements StaplerProxy, SimpleBuildStep.LastBuildAction {
     private transient WeakReference<TestResult> result;
 
-    /** null only if there is a {@link TestResultStorage} */
+    /** null only if there is a {@link JunitTestResultStorage} */
     private @Nullable Integer failCount;
     private @Nullable Integer skipCount;
     // Hudson < 1.25 didn't set these fields, so use Integer
@@ -85,7 +86,7 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
      */
     public TestResultAction(Run owner, TestResult result, TaskListener listener) {
         super(owner);
-        if (TestResultStorage.find() == null) {
+        if (JunitTestResultStorage.find() instanceof FileJunitTestResultStorage) {
             setResult(result, listener);
         }
     }
@@ -110,7 +111,7 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
      * @since 1.2-beta-1
      */
     public synchronized void setResult(TestResult result, TaskListener listener) {
-        assert TestResultStorage.find() == null;
+        assert JunitTestResultStorage.find() instanceof FileJunitTestResultStorage;
         result.freeze(this);
 
         totalCount = result.getTotalCount();
@@ -140,8 +141,8 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
 
     @Override
     public synchronized TestResult getResult() {
-        TestResultStorage storage = TestResultStorage.find();
-        if (storage != null) {
+        JunitTestResultStorage storage = JunitTestResultStorage.find();
+        if (!(storage instanceof FileJunitTestResultStorage)) {
             return new TestResult(storage.load(run.getParent().getFullName(), run.getNumber()));
         }
         TestResult r;
@@ -166,8 +167,8 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
 
     @Override
     public synchronized int getFailCount() {
-        TestResultStorage storage = TestResultStorage.find();
-        if (storage != null) {
+        JunitTestResultStorage storage = JunitTestResultStorage.find();
+        if (!(storage instanceof FileJunitTestResultStorage)) {
             return new TestResult(storage.load(run.getParent().getFullName(), run.getNumber())).getFailCount();
         }
         if(totalCount==null)
@@ -177,8 +178,8 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
 
     @Override
     public synchronized int getSkipCount() {
-        TestResultStorage storage = TestResultStorage.find();
-        if (storage != null) {
+        JunitTestResultStorage storage = JunitTestResultStorage.find();
+        if (!(storage instanceof FileJunitTestResultStorage)) {
             return new TestResult(storage.load(run.getParent().getFullName(), run.getNumber())).getSkipCount();
         }
         if(totalCount==null)
@@ -188,8 +189,8 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
 
     @Override
     public synchronized int getTotalCount() {
-        TestResultStorage storage = TestResultStorage.find();
-        if (storage != null) {
+        JunitTestResultStorage storage = JunitTestResultStorage.find();
+        if (!(storage instanceof FileJunitTestResultStorage)) {
             return new TestResult(storage.load(run.getParent().getFullName(), run.getNumber())).getTotalCount();
         }
         if(totalCount==null)

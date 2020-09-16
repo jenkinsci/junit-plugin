@@ -22,10 +22,10 @@
  * THE SOFTWARE.
  */
 
-package hudson.tasks.junit.storage;
+package io.jenkins.plugins.junit.storage;
 
-import hudson.ExtensionList;
 import hudson.ExtensionPoint;
+import hudson.model.AbstractDescribableImpl;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.junit.JUnitParser;
@@ -40,30 +40,26 @@ import org.kohsuke.accmod.restrictions.Beta;
  * Allows test results to be saved and loaded from an external storage service.
  */
 @Restricted(Beta.class)
-public interface TestResultStorage extends ExtensionPoint {
+public abstract class JunitTestResultStorage extends AbstractDescribableImpl<JunitTestResultStorage> implements ExtensionPoint {
 
     /**
      * Runs during {@link JUnitParser#summarizeResult}.
      */
-    RemotePublisher createRemotePublisher(Run<?,?> build) throws IOException;
+    public abstract RemotePublisher createRemotePublisher(Run<?,?> build) throws IOException;
 
     /**
      * Remotable hook to perform test result publishing.
      */
-    interface RemotePublisher extends SerializableOnlyOverRemoting {
+    public interface RemotePublisher extends SerializableOnlyOverRemoting {
         void publish(TestResult result, TaskListener listener) throws IOException;
     }
 
-    TestResultImpl load(String job, int build);
-
-    // TODO substitute trend graph for /job/*/ or /job/*/test/?width=800&height=600 from TestResultProjectAction/{index,floatingBox}
-    // TODO substitute count/duration graph for /job/*/*/testReport/pkg/SomeTest/method/history/ and similar from History/index
+    public abstract TestResultImpl load(String job, int build);
 
     // for now, AbstractTestResultAction.descriptions and testData are not pluggable
 
-    static @CheckForNull TestResultStorage find() {
-        ExtensionList<TestResultStorage> all = ExtensionList.lookup(TestResultStorage.class);
-        return all.isEmpty() ? null : all.iterator().next();
+    public static JunitTestResultStorage find() {
+        return JunitTestResultStorageConfiguration.get().getStorage();
     }
 
 }
