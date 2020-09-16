@@ -5,16 +5,18 @@ import edu.hm.hafner.echarts.LineSeries;
 import edu.hm.hafner.echarts.LinesChartModel;
 import edu.hm.hafner.echarts.LinesDataSet;
 import edu.hm.hafner.echarts.Palette;
+import hudson.tasks.junit.TestDurationResultSummary;
 import hudson.tasks.junit.TrendTestResultSummary;
 import java.util.List;
 
+import static hudson.tasks.test.TestDurationTrendSeriesBuilder.SECONDS;
 import static hudson.tasks.test.TestResultTrendSeriesBuilder.FAILED_KEY;
 import static hudson.tasks.test.TestResultTrendSeriesBuilder.PASSED_KEY;
 import static hudson.tasks.test.TestResultTrendSeriesBuilder.SKIPPED_KEY;
 
-public class TestResultTrendChart {
+public class TestResultDurationChart {
     
-    public LinesChartModel create(List<TrendTestResultSummary> results) {
+    public LinesChartModel create(List<TestDurationResultSummary> results) {
         LinesDataSet dataset = new LinesDataSet();
         results.forEach(result -> dataset.add(result.getDisplayName(), result.toMap(), result.getBuildNumber()));
         
@@ -23,15 +25,7 @@ public class TestResultTrendChart {
 
     public LinesChartModel create(final Iterable results,
                                   final ChartModelConfiguration configuration) {
-        TestResultTrendSeriesBuilder builder = new TestResultTrendSeriesBuilder();
-        LinesDataSet dataSet = builder.createDataSet(configuration, results);
-
-        return getLinesChartModel(dataSet);
-    }
-    
-    public LinesChartModel createFromTestObject(final Iterable results,
-                                  final ChartModelConfiguration configuration) {
-        TestObjectTrendSeriesBuilder builder = new TestObjectTrendSeriesBuilder();
+        TestDurationTrendSeriesBuilder builder = new TestDurationTrendSeriesBuilder();
         LinesDataSet dataSet = builder.createDataSet(configuration, results);
 
         return getLinesChartModel(dataSet);
@@ -42,21 +36,11 @@ public class TestResultTrendChart {
         model.setDomainAxisLabels(dataSet.getDomainAxisLabels());
         model.setBuildNumbers(dataSet.getBuildNumbers());
 
-        LineSeries failed = new LineSeries("Failed", Palette.RED.getNormal(),
+        LineSeries duration = new LineSeries(SECONDS, Palette.GREEN.getNormal(),
                 LineSeries.StackedMode.STACKED, LineSeries.FilledMode.FILLED);
-        failed.addAll(dataSet.getSeries(FAILED_KEY));
-        model.addSeries(failed);
-
-        LineSeries skipped = new LineSeries("Skipped", Palette.GRAY.getNormal(),
-                LineSeries.StackedMode.STACKED, LineSeries.FilledMode.FILLED);
-        skipped.addAll(dataSet.getSeries(SKIPPED_KEY));
-        model.addSeries(skipped);
-
-        LineSeries passed = new LineSeries("Passed", Palette.BLUE.getNormal(),
-                LineSeries.StackedMode.STACKED, LineSeries.FilledMode.FILLED);
-        passed.addAll(dataSet.getSeries(PASSED_KEY));
-        model.addSeries(passed);
-
+        duration.addAll(dataSet.getSeries(SECONDS));
+        model.addSeries(duration);
+        
         return model;
     }
 }
