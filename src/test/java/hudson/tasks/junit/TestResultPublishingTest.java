@@ -51,6 +51,7 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -253,8 +254,8 @@ public class TestResultPublishingTest {
 
         HtmlPage historyPage = wc.getPage(proj.getBuildByNumber(7),"/testReport/history/");
         rule.assertGoodStatus(historyPage);
-        rule.assertXPath(historyPage, "//img[@id='graph']");
-        rule.assertXPath(historyPage, "//table[@id='testresult']");
+        HtmlElement historyCard = (HtmlElement) historyPage.getByXPath( "//div[@class='card-body']").get(0);
+        assertThat(historyCard.getTextContent(), containsString("History"));
         DomElement wholeTable = historyPage.getElementById("testresult");
         assertNotNull("table with id 'testresult' exists", wholeTable);
         assertTrue("wholeTable is a table", wholeTable instanceof HtmlTable);
