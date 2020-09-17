@@ -20,7 +20,9 @@ public class JunitTestResultStorageConfiguration extends GlobalConfiguration {
     private JunitTestResultStorage storage = new FileJunitTestResultStorage();
 
     @DataBoundConstructor
-    public JunitTestResultStorageConfiguration() {}
+    public JunitTestResultStorageConfiguration() {
+        load();
+    }
 
     @DataBoundSetter
     public void setStorage(JunitTestResultStorage storage) {
