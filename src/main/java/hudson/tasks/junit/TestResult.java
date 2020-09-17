@@ -393,7 +393,14 @@ public final class TestResult extends MetaTabulatedResult {
 
     @Override
     public Run<?,?> getRun() {
-        return parentAction == null? null: parentAction.run;
+        if (parentAction != null) {
+            return parentAction.run;
+        }
+        if (impl == null) {
+            return null;
+        }
+        
+        return impl.getRun();
     }
 
     @Override
