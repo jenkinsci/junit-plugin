@@ -24,6 +24,7 @@
 
 package io.jenkins.plugins.junit.storage;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Job;
 import hudson.model.Run;
@@ -77,13 +78,20 @@ public interface TestResultImpl {
     int getCountOfBuildsWithTestResults();
     
     Run<?, ?> getFailedSinceRun(CaseResult caseResult);
+
+    @CheckForNull
     default Run<?, ?> getRun() {
-        Job<?, ?> theJob = Objects.requireNonNull(Jenkins.get().getItemByFullName(getJobName(), Job.class));
+        Job<?, ?> theJob = Jenkins.get().getItemByFullName(getJobName(), Job.class);
+        if (theJob == null) {
+            return null;
+        }
         return theJob.getBuildByNumber(getBuild());
     }
 
+    @NonNull
     String getJobName();
 
+    @NonNull
     int getBuild();
 
     @NonNull
