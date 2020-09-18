@@ -286,7 +286,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
         return failCount == 0 && skipCount == 0;
     }
 
-    void add(CaseResult r) {
+    public void add(CaseResult r) {
         String n = r.getSimpleName(), sn = safe(n);
         ClassResult c = getClassResult(sn);
         if (c == null) {

@@ -97,6 +97,8 @@ public interface TestResultImpl {
     @NonNull
     TestResult getResultByNodes(@NonNull List<String> nodeIds);
 
+    TestResult getPreviousResult();
+
     // These methods don't take into account context of packages
     // so could easily lookup the wrong test
     // they are used in the classic view for test results

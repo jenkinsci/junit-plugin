@@ -44,8 +44,6 @@ import hudson.tasks.junit.TestResult;
 import hudson.tasks.junit.TestResultAction;
 import hudson.tasks.junit.TestResultSummary;
 import hudson.tasks.junit.TrendTestResultSummary;
-import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
-import io.jenkins.plugins.junit.storage.TestResultImpl;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -58,7 +56,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
@@ -73,7 +74,6 @@ import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.remoting.SerializableOnlyOverRemoting;
 
-import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -321,18 +321,38 @@ public class TestResultStorageJunitTest {
                 @Override
                 public List<PackageResult> getAllPackageResults() {
                     return query(connection -> {
-                        try (PreparedStatement statement = connection.prepareStatement("SELECT DISTINCT package FROM " + Impl.CASE_RESULTS_TABLE + " WHERE job = ? AND build = ?")) {
+                        try (PreparedStatement statement = connection.prepareStatement("SELECT suite, testname, package, classname, errordetails, skipped, duration FROM " + Impl.CASE_RESULTS_TABLE + " WHERE job = ? AND build = ?")) {
                             statement.setString(1, job);
                             statement.setInt(2, build);
                             try (ResultSet result = statement.executeQuery()) {
 
-                                List<PackageResult> results = new ArrayList<>();
+                                Map<String, PackageResult> results = new HashMap<>();
                                 while (result.next()) {
+                                    String testName = result.getString("testname");
                                     String packageName = result.getString("package");
+                                    String errorDetails = result.getString("errordetails");
+                                    String suite = result.getString("suite");
+                                    String className = result.getString("classname");
+                                    String skipped = result.getString("skipped");
+                                    float duration = result.getFloat("duration");
 
-                                    results.add(new PackageResult(new TestResult(this), packageName));
+                                    SuiteResult suiteResult = new SuiteResult(suite, null, null, null);
+                                    suiteResult.setParent(new TestResult(this));
+                                    CaseResult caseResult = new CaseResult(suiteResult, className, testName, errorDetails, skipped, duration);
+                                    PackageResult packageResult = results.get(packageName);
+                                    if (packageResult == null) {
+                                        packageResult = new PackageResult(new TestResult(this), packageName);
+                                    }
+                                    caseResult.setClass(new ClassResult(packageResult, className));
+
+                                    packageResult.add(caseResult);
+                                    
+                                    results.put(packageName, packageResult);
                                 }
-                                return results;
+                                final List<PackageResult> resultList = new ArrayList<>(results.values());
+                                resultList.forEach((PackageResult::tally));
+                                resultList.sort(Comparator.comparing(PackageResult::getName, String::compareTo));
+                                return resultList;
                             }
                         }
                     });
@@ -397,7 +417,35 @@ public class TestResultStorageJunitTest {
 
                 @Override
                 public PackageResult getPackageResult(String packageName) {
-                    return new PackageResult(new TestResult(this), packageName);
+                    return query(connection -> {
+                        try (PreparedStatement statement = connection.prepareStatement("SELECT suite, testname, classname, errordetails, skipped, duration FROM " + Impl.CASE_RESULTS_TABLE + " WHERE job = ? AND build = ? AND package = ?")) {
+                            statement.setString(1, job);
+                            statement.setInt(2, build);
+                            statement.setString(3, packageName);
+                            try (ResultSet result = statement.executeQuery()) {
+
+                                PackageResult packageResult = new PackageResult(new TestResult(this), packageName);
+                                while (result.next()) {
+                                    String testName = result.getString("testname");
+                                    String errorDetails = result.getString("errordetails");
+                                    String suite = result.getString("suite");
+                                    String className = result.getString("classname");
+                                    String skipped = result.getString("skipped");
+                                    float duration = result.getFloat("duration");
+
+                                    SuiteResult suiteResult = new SuiteResult(suite, null, null, null);
+                                    suiteResult.setParent(new TestResult(this));
+                                    CaseResult caseResult = new CaseResult(suiteResult, className, testName, errorDetails, skipped, duration);
+                                    caseResult.setClass(new ClassResult(packageResult, className));
+                                    
+                                    packageResult.add(caseResult);
+                                }
+                                packageResult.tally();
+                                return packageResult;
+                            }
+                        }
+                    });
+
                 }
 
                 @Override
@@ -611,6 +659,28 @@ public class TestResultStorageJunitTest {
                 public List<CaseResult> getPassedTestsByPackage(String packageName) {
                     return getByPackage(packageName, "AND errordetails IS NULL AND skipped IS NULL");
                 }
+
+                @NonNull
+                @Override
+                public TestResult getPreviousResult() {
+                    return query(connection -> {
+                        try (PreparedStatement statement = connection.prepareStatement("SELECT build FROM " + Impl.CASE_RESULTS_TABLE + " WHERE job = ? AND build < ? ORDER BY build DESC LIMIT 1")) {
+                            statement.setString(1, job);
+                            statement.setInt(2, build);
+                            try (ResultSet result = statement.executeQuery()) {
+
+                                if (result.next()) {
+                                    int previousBuild = result.getInt("build");
+
+                                    return new TestResult(load(job, previousBuild));
+                                }
+                                return null;
+                            }
+                        }
+                    });
+
+                }
+                
 
                 @NonNull
                 @Override 
