@@ -26,6 +26,7 @@ package io.jenkins.plugins.junit.storage;
 
 import com.google.common.collect.ImmutableSet;
 import com.thoughtworks.xstream.XStream;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.Util;
@@ -660,8 +661,8 @@ public class TestResultStorageJunitTest {
                     return getByPackage(packageName, "AND errordetails IS NULL AND skipped IS NULL");
                 }
 
-                @NonNull
                 @Override
+                @CheckForNull
                 public TestResult getPreviousResult() {
                     return query(connection -> {
                         try (PreparedStatement statement = connection.prepareStatement("SELECT build FROM " + Impl.CASE_RESULTS_TABLE + " WHERE job = ? AND build < ? ORDER BY build DESC LIMIT 1")) {
@@ -678,9 +679,7 @@ public class TestResultStorageJunitTest {
                             }
                         }
                     });
-
                 }
-                
 
                 @NonNull
                 @Override 

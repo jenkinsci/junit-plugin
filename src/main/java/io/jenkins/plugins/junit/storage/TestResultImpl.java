@@ -97,6 +97,12 @@ public interface TestResultImpl {
     @NonNull
     TestResult getResultByNodes(@NonNull List<String> nodeIds);
 
+    /**
+     * The test result for the last run that has a test result
+     * Null when there's no previous result.
+     * @return the previous test result or null if there's no previous one.
+     */
+    @CheckForNull
     TestResult getPreviousResult();
 
     // These methods don't take into account context of packages
