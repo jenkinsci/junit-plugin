@@ -292,7 +292,7 @@ public final class SuiteResult implements Serializable {
         this.stderr = stderr;
     }
 
-    /*package*/ void addCase(CaseResult cr) {
+    public void addCase(CaseResult cr) {
         cases.add(cr);
         casesByName().put(cr.getTransformedFullDisplayName(), cr);
 

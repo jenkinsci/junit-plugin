@@ -31,6 +31,7 @@ import hudson.model.Run;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.ClassResult;
 import hudson.tasks.junit.PackageResult;
+import hudson.tasks.junit.SuiteResult;
 import hudson.tasks.junit.TestDurationResultSummary;
 import hudson.tasks.junit.TestResult;
 import hudson.tasks.junit.TrendTestResultSummary;
@@ -110,6 +111,10 @@ public interface TestResultImpl {
     // they are used in the classic view for test results
     ClassResult getClassResult(String name);
     CaseResult getCaseResult(String name);
+
+    SuiteResult getSuite(String name);
+
     // end dodgy methods with no context
 
+    float getTotalTestDuration();
 }

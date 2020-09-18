@@ -471,6 +471,10 @@ public final class TestResult extends MetaTabulatedResult {
     @Exported(visibility=999)
     @Override
     public float getDuration() {
+        if (impl != null) {
+            return impl.getTotalTestDuration();
+        }
+        
         return duration;
     }
 
@@ -713,6 +717,10 @@ public final class TestResult extends MetaTabulatedResult {
     }
 
     public SuiteResult getSuite(String name) {
+        if (impl != null) {
+            return impl.getSuite(name);
+        }
+        
         return suitesByName.get(name);
     }
 

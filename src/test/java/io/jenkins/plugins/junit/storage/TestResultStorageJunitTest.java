@@ -298,6 +298,8 @@ public class TestResultStorageJunitTest {
                             try (ResultSet result = statement.executeQuery()) {
 
                                 List<CaseResult> results = new ArrayList<>();
+                                Map<String, ClassResult> classResults = new HashMap<>();
+                                TestResult parent = new TestResult(this);
                                 while (result.next()) {
                                     String testName = result.getString("testname");
                                     String packageName = result.getString("package");
@@ -308,11 +310,18 @@ public class TestResultStorageJunitTest {
                                     float duration = result.getFloat("duration");
 
                                     SuiteResult suiteResult = new SuiteResult(suite, null, null, null);
-                                    suiteResult.setParent(new TestResult(this));
+                                    suiteResult.setParent(parent);
                                     CaseResult caseResult = new CaseResult(suiteResult, className, testName, errorDetails, skipped, duration);
-                                    caseResult.setClass(new ClassResult(new PackageResult(new TestResult(this), packageName), className));
+                                    ClassResult classResult = classResults.get(className);
+                                    if (classResult == null) {
+                                        classResult = new ClassResult(new PackageResult(new TestResult(this), packageName), className);
+                                    }
+                                    classResult.add(caseResult);
+                                    caseResult.setClass(classResult);
+                                    classResults.put(className, classResult);
                                     results.add(caseResult);
                                 }
+                                classResults.values().forEach(ClassResult::tally);
                                 return results;
                             }
                         }
@@ -328,6 +337,8 @@ public class TestResultStorageJunitTest {
                             try (ResultSet result = statement.executeQuery()) {
 
                                 Map<String, PackageResult> results = new HashMap<>();
+                                Map<String, ClassResult> classResults = new HashMap<>();
+                                TestResult parent = new TestResult(this);
                                 while (result.next()) {
                                     String testName = result.getString("testname");
                                     String packageName = result.getString("package");
@@ -338,18 +349,25 @@ public class TestResultStorageJunitTest {
                                     float duration = result.getFloat("duration");
 
                                     SuiteResult suiteResult = new SuiteResult(suite, null, null, null);
-                                    suiteResult.setParent(new TestResult(this));
+                                    suiteResult.setParent(parent);
                                     CaseResult caseResult = new CaseResult(suiteResult, className, testName, errorDetails, skipped, duration);
                                     PackageResult packageResult = results.get(packageName);
                                     if (packageResult == null) {
-                                        packageResult = new PackageResult(new TestResult(this), packageName);
+                                        packageResult = new PackageResult(parent, packageName);
                                     }
-                                    caseResult.setClass(new ClassResult(packageResult, className));
+                                    ClassResult classResult = classResults.get(className);
+                                    if (classResult == null) {
+                                        classResult = new ClassResult(new PackageResult(parent, packageName), className);
+                                    }
+                                    caseResult.setClass(classResult);
+                                    classResult.add(caseResult);
 
+                                    classResults.put(className, classResult);
                                     packageResult.add(caseResult);
                                     
                                     results.put(packageName, packageResult);
                                 }
+                                classResults.values().forEach(ClassResult::tally);
                                 final List<PackageResult> resultList = new ArrayList<>(results.values());
                                 resultList.forEach((PackageResult::tally));
                                 resultList.sort(Comparator.comparing(PackageResult::getName, String::compareTo));
@@ -426,6 +444,7 @@ public class TestResultStorageJunitTest {
                             try (ResultSet result = statement.executeQuery()) {
 
                                 PackageResult packageResult = new PackageResult(new TestResult(this), packageName);
+                                Map<String, ClassResult> classResults = new HashMap<>();
                                 while (result.next()) {
                                     String testName = result.getString("testname");
                                     String errorDetails = result.getString("errordetails");
@@ -437,10 +456,18 @@ public class TestResultStorageJunitTest {
                                     SuiteResult suiteResult = new SuiteResult(suite, null, null, null);
                                     suiteResult.setParent(new TestResult(this));
                                     CaseResult caseResult = new CaseResult(suiteResult, className, testName, errorDetails, skipped, duration);
-                                    caseResult.setClass(new ClassResult(packageResult, className));
+                                    
+                                    ClassResult classResult = classResults.get(className);
+                                    if (classResult == null) {
+                                        classResult = new ClassResult(packageResult, className);
+                                    }
+                                    classResult.add(caseResult);
+                                    classResults.put(className, classResult);
+                                    caseResult.setClass(classResult);
                                     
                                     packageResult.add(caseResult);
                                 }
+                                classResults.values().forEach(ClassResult::tally);
                                 packageResult.tally();
                                 return packageResult;
                             }
@@ -452,20 +479,37 @@ public class TestResultStorageJunitTest {
                 @Override
                 public ClassResult getClassResult(String name) {
                     return query(connection -> {
-                        try (PreparedStatement statement = connection.prepareStatement("SELECT package, classname FROM " + Impl.CASE_RESULTS_TABLE + " WHERE job = ? AND build = ? AND classname = ?")) {
+                        try (PreparedStatement statement = connection.prepareStatement("SELECT suite, package, testname, classname, errordetails, skipped, duration FROM " + Impl.CASE_RESULTS_TABLE + " WHERE job = ? AND build = ? AND classname = ?")) {
                             statement.setString(1, job);
                             statement.setInt(2, build);
                             statement.setString(3, name);
                             try (ResultSet result = statement.executeQuery()) {
 
-                                if (result.next()) {
+                                ClassResult classResult = null;
+                                TestResult parent = new TestResult(this);
+                                while (result.next()) {
+                                    String testName = result.getString("testname");
                                     String packageName = result.getString("package");
+                                    String errorDetails = result.getString("errordetails");
+                                    String suite = result.getString("suite");
                                     String className = result.getString("classname");
+                                    String skipped = result.getString("skipped");
+                                    float duration = result.getFloat("duration");
+                                    
+                                    if (classResult == null) {
+                                        classResult = new ClassResult(new PackageResult(new TestResult(this), packageName), className);
+                                    }
 
-                                    PackageResult packageResult = new PackageResult(new TestResult(this), packageName);
-                                    return new ClassResult(packageResult, className);
+                                    SuiteResult suiteResult = new SuiteResult(suite, null, null, null);
+                                    suiteResult.setParent(parent);
+                                    CaseResult caseResult = new CaseResult(suiteResult, className, testName, errorDetails, skipped, duration);
+                                    classResult.add(caseResult);
+                                    caseResult.setClass(classResult);
                                 }
-                                return null;
+                                if (classResult != null) {
+                                    classResult.tally();
+                                }
+                                return classResult;
                             }
                         }
                     });
@@ -594,6 +638,7 @@ public class TestResultStorageJunitTest {
                             try (ResultSet result = statement.executeQuery()) {
 
                                 CaseResult caseResult = null;
+                                
                                 if (result.next()) {
                                     String resultTestName = result.getString("testname");
                                     String errorDetails = result.getString("errordetails");
@@ -606,7 +651,13 @@ public class TestResultStorageJunitTest {
                                     SuiteResult suiteResult = new SuiteResult(suite, null, null, null);
                                     suiteResult.setParent(new TestResult(this));
                                     caseResult = new CaseResult(suiteResult, className, resultTestName, errorDetails, skipped, duration);
-                                    caseResult.setClass(new ClassResult(new PackageResult(new TestResult(this), packageName), className));
+                                    PackageResult packageResult = new PackageResult(new TestResult(this), packageName);
+                                    ClassResult classResult = new ClassResult(packageResult, className);
+                                    classResult.add(caseResult);
+                                    packageResult.add(caseResult);
+                                    packageResult.tally();
+                                    caseResult.tally();
+                                    caseResult.setClass(classResult);
                                 }
                                 return caseResult;
                             }
@@ -615,7 +666,57 @@ public class TestResultStorageJunitTest {
 
 
                 }
-                
+
+                @Override
+                public SuiteResult getSuite(String name) {
+                    return query(connection -> {
+                        try (PreparedStatement statement = connection.prepareStatement("SELECT testname, package, classname, errordetails, skipped, duration FROM " + Impl.CASE_RESULTS_TABLE + " WHERE job = ? AND build = ? AND suite = ?")) {
+                            statement.setString(1, job);
+                            statement.setInt(2, build);
+                            statement.setString(3, name);
+                            try (ResultSet result = statement.executeQuery()) {
+                                SuiteResult suiteResult = new SuiteResult(name, null, null, null);
+                                TestResult parent = new TestResult(this);
+                                while (result.next()) {
+                                    String resultTestName = result.getString("testname");
+                                    String errorDetails = result.getString("errordetails");
+                                    String packageName = result.getString("package");
+                                    String className = result.getString("classname");
+                                    String skipped = result.getString("skipped");
+                                    float duration = result.getFloat("duration");
+
+                                    suiteResult.setParent(parent);
+                                    CaseResult caseResult = new CaseResult(suiteResult, className, resultTestName, errorDetails, skipped, duration);
+                                    final PackageResult packageResult = new PackageResult(parent, packageName);
+                                    packageResult.add(caseResult);
+                                    ClassResult classResult = new ClassResult(packageResult, className);
+                                    classResult.add(caseResult);
+                                    caseResult.setClass(classResult);
+                                    suiteResult.addCase(caseResult);
+                                }
+                                return suiteResult;
+                            }
+                        }
+                    });
+
+                }
+
+                @Override
+                public float getTotalTestDuration() {
+                    return query(connection -> {
+                        try (PreparedStatement statement = connection.prepareStatement("SELECT sum(duration) as duration FROM " +  Impl.CASE_RESULTS_TABLE +  " WHERE job = ? and build = ?;")) {
+                            statement.setString(1, job);
+                            statement.setInt(2, build);
+                            try (ResultSet result = statement.executeQuery()) {
+                                if (result.next()) {
+                                    return result.getFloat("duration");
+                                }
+                                return 0f;
+                            }
+                        }
+                    });
+                }
+
                 @Override public int getFailCount() {
                     int caseCount = getCaseCount(" AND errorDetails IS NOT NULL");
                     return caseCount;
