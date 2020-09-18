@@ -244,6 +244,15 @@ public final class TestResult extends MetaTabulatedResult {
         }
     }
 
+    @Override
+    public hudson.tasks.test.TestResult getPreviousResult() {
+        if (impl != null) {
+            return impl.getPreviousResult();
+        }
+        
+        return super.getPreviousResult();
+    }
+
     @Deprecated
     public void parse(long buildTime, Iterable<File> reportFiles) throws IOException {
         parse(buildTime, reportFiles, null);
