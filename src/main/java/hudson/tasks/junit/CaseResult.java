@@ -588,7 +588,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      * @return true if the test was not skipped and did not fail, false otherwise.
      */
     public boolean isPassed() {
-        return !skipped && errorStackTrace==null;
+        return !skipped && errorDetails == null && errorStackTrace==null;
     }
 
     /**
