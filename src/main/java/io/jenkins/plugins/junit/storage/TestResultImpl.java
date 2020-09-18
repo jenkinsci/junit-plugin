@@ -24,7 +24,9 @@
 
 package io.jenkins.plugins.junit.storage;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.model.Job;
 import hudson.model.Run;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.ClassResult;
@@ -33,6 +35,8 @@ import hudson.tasks.junit.TestDurationResultSummary;
 import hudson.tasks.junit.TestResult;
 import hudson.tasks.junit.TrendTestResultSummary;
 import java.util.List;
+import java.util.Objects;
+import jenkins.model.Jenkins;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.Beta;
 
@@ -74,6 +78,22 @@ public interface TestResultImpl {
     int getCountOfBuildsWithTestResults();
     
     Run<?, ?> getFailedSinceRun(CaseResult caseResult);
+
+    @CheckForNull
+    default Run<?, ?> getRun() {
+        Job<?, ?> theJob = Jenkins.get().getItemByFullName(getJobName(), Job.class);
+        if (theJob == null) {
+            return null;
+        }
+        return theJob.getBuildByNumber(getBuild());
+    }
+
+    @NonNull
+    String getJobName();
+
+    @NonNull
+    int getBuild();
+
     @NonNull
     TestResult getResultByNodes(@NonNull List<String> nodeIds);
 
