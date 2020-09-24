@@ -24,12 +24,9 @@
 package hudson.tasks.junit;
 
 import hudson.model.Run;
-import io.jenkins.plugins.junit.storage.FileJunitTestResultStorage;
 import io.jenkins.plugins.junit.storage.TestResultImpl;
-import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
 import hudson.tasks.test.MetaTabulatedResult;
 import hudson.tasks.test.TestResult;
-import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
@@ -148,15 +145,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
 
     @Override
     public Object getDynamic(String name, StaplerRequest req, StaplerResponse rsp) {
-        JunitTestResultStorage storage = JunitTestResultStorage.find();
-        ClassResult result;
-        if (!(storage instanceof FileJunitTestResultStorage)) {
-            Run<?, ?> run = Stapler.getCurrentRequest().findAncestorObject(Run.class);
-            TestResultImpl pluggableStorage = storage.load(run.getParent().getFullName(), run.getNumber());
-            result = pluggableStorage.getClassResult(name);
-        } else {
-            result = getClassResult(name);
-        }
+        ClassResult result = getClassResult(name);
         if (result != null) {
             return result;
         } else {
