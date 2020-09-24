@@ -134,14 +134,24 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     }
 
     @Restricted(Beta.class)
-    public CaseResult(SuiteResult parent, String className, String testName, String errorDetails, String skippedMessage, float duration) {
+    public CaseResult(
+            SuiteResult parent, 
+            String className, 
+            String testName, 
+            String errorDetails, 
+            String skippedMessage, 
+            float duration,
+            String stdout,
+            String stderr,
+            String stacktrace
+    ) {
         this.className = className;
         this.testName = testName;
-        this.errorStackTrace = null;
+        this.errorStackTrace = stacktrace;
         this.errorDetails = errorDetails;
         this.parent = parent;
-        this.stdout = null;
-        this.stderr = null;
+        this.stdout = stdout;
+        this.stderr = stderr;
         this.duration = duration;
         
         this.skipped = skippedMessage != null;
