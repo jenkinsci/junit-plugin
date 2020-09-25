@@ -105,16 +105,7 @@ public interface TestResultImpl {
      */
     @CheckForNull
     TestResult getPreviousResult();
-
-    // These methods don't take into account context of packages
-    // so could easily lookup the wrong test
-    // they are used in the classic view for test results
-    ClassResult getClassResult(String name);
-    CaseResult getCaseResult(String name);
-
     SuiteResult getSuite(String name);
-
-    // end dodgy methods with no context
 
     float getTotalTestDuration();
 }
