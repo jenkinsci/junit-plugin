@@ -33,6 +33,8 @@ import hudson.model.BuildListener;
 import hudson.model.Job;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import io.jenkins.plugins.junit.storage.FileJunitTestResultStorage;
+import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
 import hudson.tasks.test.AbstractTestResultAction;
 import hudson.tasks.test.TestObject;
 import hudson.tasks.test.TestResultProjectAction;
@@ -49,6 +51,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 import jenkins.tasks.SimpleBuildStep;
 
 /**
@@ -64,13 +67,14 @@ import jenkins.tasks.SimpleBuildStep;
 public class TestResultAction extends AbstractTestResultAction<TestResultAction> implements StaplerProxy, SimpleBuildStep.LastBuildAction {
     private transient WeakReference<TestResult> result;
 
+    /** null only if there is a {@link JunitTestResultStorage} */
+    private @Nullable Integer failCount;
+    private @Nullable Integer skipCount;
     // Hudson < 1.25 didn't set these fields, so use Integer
     // so that we can distinguish between 0 tests vs not-computed-yet.
-    private int failCount;
-    private int skipCount;
-    private Integer totalCount;
+    private @Nullable Integer totalCount;
     private Double healthScaleFactor;
-    private List<Data> testData = new ArrayList<Data>();
+    private List<Data> testData = new ArrayList<>();
 
     @Deprecated
     public TestResultAction(AbstractBuild owner, TestResult result, BuildListener listener) {
@@ -82,7 +86,9 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
      */
     public TestResultAction(Run owner, TestResult result, TaskListener listener) {
         super(owner);
-        setResult(result, listener);
+        if (JunitTestResultStorage.find() instanceof FileJunitTestResultStorage) {
+            setResult(result, listener);
+        }
     }
 
     @Deprecated
@@ -105,6 +111,7 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
      * @since 1.2-beta-1
      */
     public synchronized void setResult(TestResult result, TaskListener listener) {
+        assert JunitTestResultStorage.find() instanceof FileJunitTestResultStorage;
         result.freeze(this);
 
         totalCount = result.getTotalCount();
@@ -132,7 +139,12 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         return new XmlFile(XSTREAM, new File(run.getRootDir(), "junitResult.xml"));
     }
 
+    @Override
     public synchronized TestResult getResult() {
+        JunitTestResultStorage storage = JunitTestResultStorage.find();
+        if (!(storage instanceof FileJunitTestResultStorage)) {
+            return new TestResult(storage.load(run.getParent().getFullName(), run.getNumber()));
+        }
         TestResult r;
         if(result==null) {
             r = load();
@@ -155,6 +167,10 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
 
     @Override
     public synchronized int getFailCount() {
+        JunitTestResultStorage storage = JunitTestResultStorage.find();
+        if (!(storage instanceof FileJunitTestResultStorage)) {
+            return new TestResult(storage.load(run.getParent().getFullName(), run.getNumber())).getFailCount();
+        }
         if(totalCount==null)
             getResult();    // this will compute the result
         return failCount;
@@ -162,6 +178,10 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
 
     @Override
     public synchronized int getSkipCount() {
+        JunitTestResultStorage storage = JunitTestResultStorage.find();
+        if (!(storage instanceof FileJunitTestResultStorage)) {
+            return new TestResult(storage.load(run.getParent().getFullName(), run.getNumber())).getSkipCount();
+        }
         if(totalCount==null)
             getResult();    // this will compute the result
         return skipCount;
@@ -169,6 +189,10 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
 
     @Override
     public synchronized int getTotalCount() {
+        JunitTestResultStorage storage = JunitTestResultStorage.find();
+        if (!(storage instanceof FileJunitTestResultStorage)) {
+            return new TestResult(storage.load(run.getParent().getFullName(), run.getNumber())).getTotalCount();
+        }
         if(totalCount==null)
             getResult();    // this will compute the result
         return totalCount;
@@ -185,7 +209,8 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
 
     @Override
      public List<CaseResult> getFailedTests() {
-          return getResult().getFailedTests();
+        TestResult result = getResult();
+        return result.getFailedTests();
      }
 
     @Override
@@ -222,10 +247,12 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         List<TestAction> result = new ArrayList<TestAction>();
         // Added check for null testData to avoid NPE from issue 4257.
         if (testData != null) {
-            for (Data data : testData)
-                for (TestAction ta : data.getTestAction(object))
-                    if (ta != null)
-                        result.add(ta);
+            synchronized (testData) {
+                for (Data data : testData)
+                    for (TestAction ta : data.getTestAction(object))
+                        if (ta != null)
+                            result.add(ta);
+            }
         }
         return Collections.unmodifiableList(result);
     }
@@ -234,14 +261,35 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         return testData;
     }
 
+    /**
+     * Replaces to collection of test data associated with this action.
+     *
+     * <p>
+     * This method will not automatically persist the data at the time of addition.
+     *
+     */
     public void setData(List<Data> testData) {
-	this.testData = testData;
+	      this.testData = testData;
+    }
+
+    /**
+     * Adds a {@link Data} to the test data associated with this action.
+     *
+     * <p>
+     * This method will not automatically persist the data at the time of addition.
+     *
+     * @since 1.21
+     */
+    public void addData(Data data) {
+        synchronized (testData) {
+            this.testData.add(data);
+        }
     }
 
     /**
      * Merges an additional test result into this one.
      */
-    void mergeResult(TestResult additionalResult, TaskListener listener) {
+    public void mergeResult(TestResult additionalResult, TaskListener listener) {
         TestResult original = getResult();
         original.merge(additionalResult);
         setResult(original, listener);
@@ -258,7 +306,7 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
     public static abstract class Data {
     	/**
     	 * Returns all TestActions for the testObject.
-         * 
+         *
          * @return
          *      Can be empty but never null. The caller must assume that the returned list is read-only.
     	 */
@@ -270,10 +318,10 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
     	if (testData == null) {
     		testData = new ArrayList<Data>(0);
     	}
-    	
+
     	return this;
     }
-    
+
     private static final Logger logger = Logger.getLogger(TestResultAction.class.getName());
 
     private static final XStream XSTREAM = new XStream2();

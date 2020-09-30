@@ -1,0 +1,25 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<testsuite name="org.catrobat.paintroid.test.integration.ActivityOpenedFromPocketCodeNewImageTest" tests="11" failures="0" errors="0" skipped="2" time="2.0" timestamp="2017-03-19T16:04:02" hostname="localhost">
+  <properties>
+    <property name="device" value="hudson_en-US_240_WVGA_android-18_x86(AVD) - 4.3.1" />
+    <property name="flavor" value="" />
+    <property name="project" value="Paintroid" />
+  </properties>
+  <testcase name="testDrawingSurfaceBitmapIsScreenSize" classname="org.catrobat.paintroid.test.integration.BitmapIntegrationTest" time="5.0" />
+  <testcase name="testCenterBitmapSimulateLoad" classname="org.catrobat.paintroid.test.integration.BitmapIntegrationTest" time="0.0">
+    <skipped />
+  </testcase>
+  <testcase name="testOpenColorPickerDialogChooseColorInLandscape" classname="org.catrobat.paintroid.test.integration.LandscapeTest" time="3.0" />
+  <testcase name="testToolBarOptionWidth" classname="org.catrobat.paintroid.test.integration.LandscapeTest" time="0.0">
+    <skipped />
+  </testcase>
+  <testcase name="testTools" classname="org.catrobat.paintroid.test.integration.LandscapeTest" time="0.0">
+    <skipped />
+  </testcase>
+  <testcase name="testColorPickerDialogSwitchTabsInLandscape" classname="org.catrobat.paintroid.test.integration.LandscapeTest" time="7.0" />
+  <testcase name="testOpenColorPickerDialogInLandscape" classname="org.catrobat.paintroid.test.integration.LandscapeTest" time="11.0" />
+  <testcase name="testLandscapeMode" classname="org.catrobat.paintroid.test.integration.LandscapeTest" time="13.0" />
+  <testcase name="testTopBarPosition" classname="org.catrobat.paintroid.test.integration.LandscapeTest" time="17.0" />
+  <testcase name="testBottomBarPosition" classname="org.catrobat.paintroid.test.integration.LandscapeTest" time="19.0" />
+  <testcase name="testToolBarOption" classname="org.catrobat.paintroid.test.integration.LandscapeTest" time="23.0" />
+</testsuite>

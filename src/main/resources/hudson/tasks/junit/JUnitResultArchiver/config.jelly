@@ -43,9 +43,7 @@ THE SOFTWARE.
             <f:repeatableHeteroProperty field="testDataPublishers" hasHeader="true" oneEach="true"/>
     </f:entry>
     </j:if>
-    <f:advanced>
-        <f:entry title="${%Allow empty results}" field="allowEmptyResults">
-            <f:checkbox default="false" title="${%Do not fail the build on empty test results}"/>
-        </f:entry>
-    </f:advanced>
+    <f:entry title="${%Allow empty results}" field="allowEmptyResults">
+        <f:checkbox default="false" title="${%Do not fail the build on empty test results}"/>
+    </f:entry>
 </j:jelly>

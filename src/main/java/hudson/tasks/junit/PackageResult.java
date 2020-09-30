@@ -24,6 +24,7 @@
 package hudson.tasks.junit;
 
 import hudson.model.Run;
+import io.jenkins.plugins.junit.storage.TestResultImpl;
 import hudson.tasks.test.MetaTabulatedResult;
 import hudson.tasks.test.TestResult;
 import org.kohsuke.stapler.StaplerRequest;
@@ -49,7 +50,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
     private final hudson.tasks.junit.TestResult parent;
     private float duration; 
 
-    PackageResult(hudson.tasks.junit.TestResult parent, String packageName) {
+    public PackageResult(hudson.tasks.junit.TestResult parent, String packageName) {
         this.packageName = packageName;
         this.parent = parent;
     }
@@ -73,7 +74,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
         if (safeName != null) {
             return safeName;
         }
-        Collection<PackageResult> siblings = parent == null ? Collections.EMPTY_LIST : parent.getChildren();
+        Collection<PackageResult> siblings = parent == null ? Collections.emptyList() : parent.getChildren();
         return safeName = uniquifyName(
                 siblings,
                 safe(getName()));
@@ -146,9 +147,9 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
     public Object getDynamic(String name, StaplerRequest req, StaplerResponse rsp) {
         ClassResult result = getClassResult(name);
         if (result != null) {
-        	return result;
+            return result;
         } else {
-        	return super.getDynamic(name, req, rsp);
+            return super.getDynamic(name, req, rsp);
         }
     }
 
@@ -175,6 +176,11 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
      * sort order
      */
     public List<CaseResult> getFailedTests() {
+        TestResultImpl pluggableStorage = parent.getPluggableStorage();
+        if (pluggableStorage != null) {
+           return pluggableStorage.getFailedTestsByPackage(packageName);
+       }
+        
         List<CaseResult> r = new ArrayList<CaseResult>();
         for (ClassResult clr : classes.values()) {
             for (CaseResult cr : clr.getChildren()) {
@@ -204,6 +210,11 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
      */
     @Override
     public List<CaseResult> getPassedTests() {
+        TestResultImpl pluggableStorage = parent.getPluggableStorage();
+        if (pluggableStorage != null) {
+            return pluggableStorage.getPassedTestsByPackage(packageName);
+        }
+
         List<CaseResult> r = new ArrayList<CaseResult>();
         for (ClassResult clr : classes.values()) {
             for (CaseResult cr : clr.getChildren()) {
@@ -223,6 +234,11 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
      */
     @Override
     public List<CaseResult> getSkippedTests() {
+        TestResultImpl pluggableStorage = parent.getPluggableStorage();
+        if (pluggableStorage != null) {
+            return pluggableStorage.getSkippedTestsByPackage(packageName);
+        } 
+        
         List<CaseResult> r = new ArrayList<CaseResult>();
         for (ClassResult clr : classes.values()) {
             for (CaseResult cr : clr.getChildren()) {
@@ -259,7 +275,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
         return failCount == 0 && skipCount == 0;
     }
 
-    void add(CaseResult r) {
+    public void add(CaseResult r) {
         String n = r.getSimpleName(), sn = safe(n);
         ClassResult c = getClassResult(sn);
         if (c == null) {

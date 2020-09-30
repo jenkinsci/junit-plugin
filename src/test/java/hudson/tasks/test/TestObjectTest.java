@@ -66,7 +66,7 @@ public class TestObjectTest {
 
     @Test
     public void testSafe() {
-        String name = "Foo#approve! is called by approve_on_foo?xyz/\\: 50%";
+        String name = "Foo#approve! is <called> by approve_on_foo?xyz/\\: 50%";
         String encoded = TestObject.safe(name);
         
         Assert.assertFalse(encoded.contains("#"));
@@ -75,6 +75,8 @@ public class TestObjectTest {
         Assert.assertFalse(encoded.contains("/"));
         Assert.assertFalse(encoded.contains(":"));
         Assert.assertFalse(encoded.contains("%"));
+        Assert.assertFalse(encoded.contains("<"));
+        Assert.assertFalse(encoded.contains(">"));
     }
 
     @Test public void uniquifyName() {

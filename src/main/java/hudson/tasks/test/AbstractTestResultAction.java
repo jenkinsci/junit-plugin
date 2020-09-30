@@ -52,6 +52,8 @@ import org.jfree.chart.renderer.category.StackedAreaRenderer;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.ui.RectangleInsets;
 import org.jvnet.localizer.Localizable;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
@@ -202,7 +204,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
      *
      * <p>
      * If such a concept doesn't make sense for a particular subtype,
-     * return <tt>this</tt>.
+     * return <code>this</code>.
      */
     public abstract Object getResult();
 
@@ -213,7 +215,8 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
         return (T)getPreviousResult(getClass(), true);
     }
 
-    private <U extends AbstractTestResultAction> U getPreviousResult(Class<U> type, boolean eager) {
+    @Restricted(NoExternalUse.class)
+    public <U extends AbstractTestResultAction> U getPreviousResult(Class<U> type, boolean eager) {
         Run<?,?> b = run;
         Set<Integer> loadedBuilds;
         if (!eager && run.getParent() instanceof LazyBuildMixIn.LazyLoadingJob) {
@@ -249,7 +252,11 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
     }
 
     public TestResult findCorrespondingResult(String id) {
-        return ((TestResult)getResult()).findCorrespondingResult(id);
+        final Object testResult = getResult();
+        if (!(testResult instanceof TestResult)) {
+            return null;
+        }
+        return ((TestResult)testResult).findCorrespondingResult(id);
     }
     
     /**
@@ -265,7 +272,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
      * A shortcut for scripting
      * 
      * @return List of passed tests from associated test result.
-     * @since TODO
+     * @since 1.10
      */
     @Nonnull
     public List<? extends TestResult> getPassedTests() {
@@ -276,7 +283,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
      * A shortcut for scripting
      * 
      * @return List of skipped tests from associated test result.
-     * @since TODO
+     * @since 1.10
      */
     @Nonnull
     public List<? extends TestResult> getSkippedTests() {
@@ -285,7 +292,10 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
 
     /**
      * Generates a PNG image for the test result trend.
+     * 
+     * @deprecated Replaced by echarts in TODO
      */
+    @Deprecated
     public void doGraph( StaplerRequest req, StaplerResponse rsp) throws IOException {
         if(ChartUtil.awtProblemCause!=null) {
             // not available. send out error message
@@ -332,6 +342,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
     private CategoryDataset buildDataSet(StaplerRequest req) {
         boolean failureOnly = Boolean.valueOf(req.getParameter("failureOnly"));
 
+        // TODO stop using ChartUtil.NumberOnlyBuildLabel as it forces loading of a Run; create a plainer Comparable
         DataSetBuilder<String,NumberOnlyBuildLabel> dsb = new DataSetBuilder<String,NumberOnlyBuildLabel>();
 
         int cap = Integer.getInteger(AbstractTestResultAction.class.getName() + ".test.trend.max", Integer.MAX_VALUE);

@@ -32,6 +32,7 @@ import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.Descriptor;
+import hudson.model.Item;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.Saveable;
@@ -41,6 +42,9 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import hudson.tasks.junit.TestResultAction.Data;
+import io.jenkins.plugins.junit.storage.FileJunitTestResultStorage;
+import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
+import hudson.tasks.test.PipelineTestDetails;
 import hudson.util.DescribableList;
 import hudson.util.FormValidation;
 import org.apache.tools.ant.DirectoryScanner;
@@ -61,7 +65,7 @@ import org.kohsuke.stapler.DataBoundSetter;
  *
  * @author Kohsuke Kawaguchi
  */
-public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
+public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JUnitTask {
 
     /**
      * {@link FileSet} "includes" string, like "foo/bar/*.xml"
@@ -120,11 +124,20 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
         setAllowEmptyResults(false);
     }
 
+    @Deprecated
     private TestResult parse(String expandedTestResults, Run<?,?> run, @Nonnull FilePath workspace, Launcher launcher, TaskListener listener)
             throws IOException, InterruptedException
     {
-        return new JUnitParser(this.isKeepLongStdio(),
-                               this.isAllowEmptyResults()).parseResult(expandedTestResults, run, workspace, launcher, listener);
+        return parse(this, null, expandedTestResults, run, workspace, launcher, listener);
+
+    }
+
+    private static TestResult parse(@Nonnull JUnitTask task, PipelineTestDetails pipelineTestDetails,
+                                    String expandedTestResults, Run<?,?> run, @Nonnull FilePath workspace,
+                                    Launcher launcher, TaskListener listener)
+            throws IOException, InterruptedException {
+        return new JUnitParser(task.isKeepLongStdio(), task.isAllowEmptyResults())
+                .parseResult(expandedTestResults, run, pipelineTestDetails, workspace, launcher, listener);
     }
 
     @Deprecated
@@ -141,11 +154,21 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
     @Override
     public void perform(Run build, FilePath workspace, Launcher launcher,
             TaskListener listener) throws InterruptedException, IOException {
+        if (parseAndSummarize(this, null, build, workspace, launcher, listener).getFailCount() > 0) {
+            build.setResult(Result.UNSTABLE);
+        }
+    }
+
+    /** @deprecated use {@link #parseAndSummarize} instead */
+    @Deprecated
+    public static TestResultAction parseAndAttach(@Nonnull JUnitTask task, PipelineTestDetails pipelineTestDetails,
+                                                  Run build, FilePath workspace, Launcher launcher, TaskListener listener)
+            throws InterruptedException, IOException {
         listener.getLogger().println(Messages.JUnitResultArchiver_Recording());
 
-        final String testResults = build.getEnvironment(listener).expand(this.testResults);
+        final String testResults = build.getEnvironment(listener).expand(task.getTestResults());
 
-        TestResult result = parse(testResults, build, workspace, launcher, listener);
+        TestResult result = parse(task, pipelineTestDetails, testResults, build, workspace, launcher, listener);
 
         synchronized (build) {
             // TODO can the build argument be omitted now, or is it used prior to the call to addAction?
@@ -159,29 +182,28 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
                 result.freeze(action);
                 action.mergeResult(result, listener);
             }
-            action.setHealthScaleFactor(getHealthScaleFactor()); // overwrites previous value if appending
+            action.setHealthScaleFactor(task.getHealthScaleFactor()); // overwrites previous value if appending
             if (result.isEmpty()) {
                 if (build.getResult() == Result.FAILURE) {
                     // most likely a build failed before it gets to the test phase.
                     // don't report confusing error message.
-                    return;
+                    return null;
                 }
-                if (this.allowEmptyResults) {
+                if (task.isAllowEmptyResults()) {
                     // User allow empty results
                     listener.getLogger().println(Messages.JUnitResultArchiver_ResultIsEmpty());
-                    return;
+                    return null;
                 }
                 // most likely a configuration error in the job - e.g. false pattern to match the JUnit result files
                 throw new AbortException(Messages.JUnitResultArchiver_ResultIsEmpty());
             }
 
             // TODO: Move into JUnitParser [BUG 3123310]
-            List<Data> data = action.getData();
-            if (testDataPublishers != null) {
-                for (TestDataPublisher tdp : testDataPublishers) {
+            if (task.getTestDataPublishers() != null) {
+                for (TestDataPublisher tdp : task.getTestDataPublishers()) {
                     Data d = tdp.contributeTestData(build, workspace, launcher, listener, result);
                     if (d != null) {
-                        data.add(d);
+                        action.addData(d);
                     }
                 }
             }
@@ -192,8 +214,71 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
                 build.addAction(action);
             }
 
-        if (action.getResult().getFailCount() > 0)
-            build.setResult(Result.UNSTABLE);
+            return action;
+        }
+    }
+
+    public static TestResultSummary parseAndSummarize(@Nonnull JUnitTask task, PipelineTestDetails pipelineTestDetails,
+                                                  Run<?, ?> build, FilePath workspace, Launcher launcher, TaskListener listener)
+            throws InterruptedException, IOException {
+        JunitTestResultStorage storage = JunitTestResultStorage.find();
+        if (storage instanceof FileJunitTestResultStorage) {
+            listener.getLogger().println(Messages.JUnitResultArchiver_Recording());
+        } // else let storage decide what to print
+
+        String testResults = build.getEnvironment(listener).expand(task.getTestResults());
+
+        TestResult result;
+        TestResultSummary summary;
+        if (storage instanceof FileJunitTestResultStorage) {
+            result = parse(task, pipelineTestDetails, testResults, build, workspace, launcher, listener);
+            summary = null; // see below
+        } else {
+            result = new TestResult(); // irrelevant
+            summary = new JUnitParser(task.isKeepLongStdio(), task.isAllowEmptyResults()).summarizeResult(testResults, build, pipelineTestDetails, workspace, launcher, listener, storage);
+        }
+
+        synchronized (build) {
+            // TODO can the build argument be omitted now, or is it used prior to the call to addAction?
+            TestResultAction action = build.getAction(TestResultAction.class);
+            boolean appending;
+            if (action == null) {
+                appending = false;
+                action = new TestResultAction(build, result, listener);
+            } else {
+                appending = true;
+                if (storage instanceof FileJunitTestResultStorage) {
+                    result.freeze(action);
+                    action.mergeResult(result, listener);
+                }
+            }
+            if (summary == null) {
+                assert storage instanceof FileJunitTestResultStorage;
+                // Cannot do this above since the result has not yet been frozen.
+                summary = new TestResultSummary(result);
+            }
+            action.setHealthScaleFactor(task.getHealthScaleFactor()); // overwrites previous value if appending
+            if (summary.getTotalCount() == 0 && /* maybe a secondary effect */ build.getResult() != Result.FAILURE) {
+                assert task.isAllowEmptyResults();
+                listener.getLogger().println(Messages.JUnitResultArchiver_ResultIsEmpty());
+            }
+
+            if (task.getTestDataPublishers() != null) {
+                for (TestDataPublisher tdp : task.getTestDataPublishers()) {
+                    Data d = tdp.contributeTestData(build, workspace, launcher, listener, result);
+                    if (d != null) {
+                        action.addData(d);
+                    }
+                }
+            }
+
+            if (appending) {
+                build.save();
+            } else if (summary.getTotalCount() > 0) {
+                build.addAction(action);
+            }
+
+            return summary;
         }
     }
 
@@ -232,7 +317,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
         this.healthScaleFactor = Math.max(0.0, healthScaleFactor);
     }
 
-    public @Nonnull List<? extends TestDataPublisher> getTestDataPublishers() {
+    public @Nonnull List<TestDataPublisher> getTestDataPublishers() {
         return testDataPublishers == null ? Collections.<TestDataPublisher>emptyList() : testDataPublishers;
     }
 
@@ -241,7 +326,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
      *
      * @since 1.2
      */
-    @DataBoundSetter public final void setTestDataPublishers(@Nonnull List<? extends TestDataPublisher> testDataPublishers) {
+    @DataBoundSetter public final void setTestDataPublishers(@Nonnull List<TestDataPublisher> testDataPublishers) {
         this.testDataPublishers = new DescribableList<TestDataPublisher,Descriptor<TestDataPublisher>>(Saveable.NOOP);
         this.testDataPublishers.addAll(testDataPublishers);
     }
@@ -294,7 +379,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep {
         public FormValidation doCheckTestResults(
                 @AncestorInPath AbstractProject project,
                 @QueryParameter String value) throws IOException {
-            if (project == null) {
+            if (project == null || !project.hasPermission(Item.WORKSPACE)) {
                 return FormValidation.ok();
             }
             return FilePath.validateFileMask(project.getSomeWorkspace(), value);

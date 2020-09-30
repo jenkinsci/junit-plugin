@@ -25,14 +25,14 @@ THE SOFTWARE.
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
          xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-    <table class="pane sortable bigtable" id="testresult">
+    <table class="pane sortable bigtable stripped" id="testresult">
       <tr>
         <td class="pane-header">${%Build}</td>
         <td class="pane-header">${%Description}</td>
-        <td class="pane-header" style="width:5em">${%Duration}</td>
-        <td class="pane-header" style="width:5em">${%Fail}</td>
-        <td class="pane-header" style="width:5em">${%Skip}</td>
-        <td class="pane-header" style="width:5em">${%Total}</td>
+        <td class="pane-header" style="width:5em; text-align:right;">${%Duration}</td>
+        <td class="pane-header" style="width:5em; text-align:right;">${%Fail}</td>
+        <td class="pane-header" style="width:5em; text-align:right;">${%Skip}</td>
+        <td class="pane-header" style="width:5em; text-align:right;">${%Total}</td>
       </tr>
       <tbody>
 	        <j:forEach var="b" items="${it.run.parent.builds}" begin="${start}" end="${end}">

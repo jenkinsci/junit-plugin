@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?><testsuite failures="0" name="cucumber.runtime.formatter.JUnitFormatter" skipped="1" tests="1" time="0.172697">
+<testcase classname="Test Sample" name="Test Example" time="0.172697">
+<skipped><![CDATA[Given skip This Test........................................................pending
+]]></skipped>
+</testcase>
+</testsuite>

@@ -27,7 +27,7 @@ THE SOFTWARE.
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson/test" xmlns:f="/lib/form">
   <j:if test="${it.failCount!=0}">
     <h2>${%All Failed Tests}</h2>
-    <table class="pane sortable bigtable">
+    <table class="pane sortable bigtable stripped">
       <tr>
         <td class="pane-header">${%Test Name}</td>
         <td class="pane-header" style="width:4em">${%Duration}</td>
@@ -49,18 +49,18 @@ THE SOFTWARE.
 
   <j:if test="${it.totalCount!=0}">
     <h2>${%All Tests}</h2>
-    <table class="pane sortable bigtable" id="testresult">
+    <table class="pane sortable bigtable stripped" id="testresult">
       <tr>
         <td class="pane-header">${it.childTitle}</td>
-        <td class="pane-header" style="width:5em">${%Duration}</td>
-        <td class="pane-header" style="width:5em">${%Fail}</td>
-        <td class="pane-header" style="width:1em; font-size:smaller; white-space:nowrap;">(${%diff})</td>
-        <td class="pane-header" style="width:5em">${%Skip}</td>
-        <td class="pane-header" style="width:1em; font-size:smaller; white-space:nowrap;">(${%diff})</td>
-        <td class="pane-header" style="width:5em">${%Pass}</td>
-        <td class="pane-header" style="width:1em; font-size:smaller; white-space:nowrap;">(${%diff})</td>
-        <td class="pane-header" style="width:5em">${%Total}</td>
-        <td class="pane-header" style="width:1em; font-size:smaller; white-space:nowrap;">(${%diff})</td>
+        <td class="pane-header" style="width:5em; text-align:right">${%Duration}</td>
+        <td class="pane-header" style="width:5em; text-align:right">${%Fail}</td>
+        <td class="pane-header" style="width:1em; text-align:right; font-size:smaller; white-space:nowrap;">(${%diff})</td>
+        <td class="pane-header" style="width:5em; text-align:right">${%Skip}</td>
+        <td class="pane-header" style="width:1em; text-align:right; font-size:smaller; white-space:nowrap;">(${%diff})</td>
+        <td class="pane-header" style="width:5em; text-align:right">${%Pass}</td>
+        <td class="pane-header" style="width:1em; text-align:right; font-size:smaller; white-space:nowrap;">(${%diff})</td>
+        <td class="pane-header" style="width:5em; text-align:right">${%Total}</td>
+        <td class="pane-header" style="width:1em; text-align:right; font-size:smaller; white-space:nowrap;">(${%diff})</td>
       </tr>
       <tbody>
         <j:set var="prevAll" value="${it.previousResult}" />

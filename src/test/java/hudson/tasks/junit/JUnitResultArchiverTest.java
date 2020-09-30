@@ -23,18 +23,31 @@
  */
 package hudson.tasks.junit;
 
+import hudson.Extension;
 import hudson.FilePath;
+import hudson.Functions;
 import hudson.matrix.AxisList;
 import hudson.matrix.MatrixBuild;
 import hudson.matrix.MatrixProject;
 import hudson.matrix.TextAxis;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
+import hudson.model.UnprotectedRootAction;
 import hudson.slaves.DumbSlave;
 import hudson.tasks.test.TestObject;
 
+import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
+import hudson.util.HttpResponses;
+import org.apache.commons.io.FileUtils;
+import org.jenkinsci.plugins.structs.describable.DescribableModel;
+import org.junit.Assume;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.TouchBuilder;
 import org.jvnet.hudson.test.recipes.LocalData;
 
@@ -68,10 +81,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
-import org.jvnet.hudson.test.RandomlyFails;
 import org.jvnet.hudson.test.SingleFileSCM;
 import org.jvnet.hudson.test.TestExtension;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.HttpResponse;
 
 public class JUnitResultArchiverTest {
 
@@ -87,7 +100,7 @@ public class JUnitResultArchiverTest {
         project.getBuildersList().add(new TouchBuilder());
     }
 
-    @LocalData
+    @LocalData("All")
     @Test public void basic() throws Exception {
         FreeStyleBuild build = project.scheduleBuild2(0).get(10, TimeUnit.SECONDS);
 
@@ -104,9 +117,9 @@ public class JUnitResultArchiverTest {
 
     }
 
-    @RandomlyFails("TimeoutException from basic")
-   @LocalData
+   @LocalData("All")
    @Test public void slave() throws Exception {
+       Assume.assumeFalse("TODO frequent TimeoutException from basic", Functions.isWindows());
         DumbSlave s = j.createOnlineSlave();
         project.setAssignedLabel(s.getSelfLabel());
 
@@ -119,7 +132,8 @@ public class JUnitResultArchiverTest {
         basic();
     }
 
-    private void assertTestResults(FreeStyleBuild build) {
+    private void assertTestResults(FreeStyleBuild build) throws Exception {
+        j.assertBuildStatus(Result.UNSTABLE, build);
         TestResultAction testResultAction = build.getAction(TestResultAction.class);
         assertNotNull("no TestResultAction", testResultAction);
 
@@ -131,9 +145,13 @@ public class JUnitResultArchiverTest {
 
         assertEquals("should have 132 total tests", 132, testResultAction.getTotalCount());
         assertEquals("should have 132 total tests", 132, result.getTotalCount());
+
+        for (SuiteResult suite : result.getSuites()) {
+            assertNull("No nodeId should be present on the SuiteResult", suite.getNodeId());
+        }
     }
 
-    @LocalData
+    @LocalData("All")
     @Test public void persistence() throws Exception {
         project.scheduleBuild2(0).get(60, TimeUnit.SECONDS);
 
@@ -149,7 +167,7 @@ public class JUnitResultArchiverTest {
         project = (FreeStyleProject) j.jenkins.getItem("junit");
     }
 
-    @LocalData
+    @LocalData("All")
     @Test public void setDescription() throws Exception {
         FreeStyleBuild build = project.scheduleBuild2(0).get(10, TimeUnit.SECONDS);
 
@@ -260,7 +278,7 @@ public class JUnitResultArchiverTest {
     @Test public void configRoundTrip() throws Exception {
         JUnitResultArchiver a = new JUnitResultArchiver("TEST-*.xml");
         a.setKeepLongStdio(true);
-        a.setTestDataPublishers(Collections.singletonList(new MockTestDataPublisher("testing")));
+        a.setTestDataPublishers(Collections.<TestDataPublisher>singletonList(new MockTestDataPublisher("testing")));
         a.setHealthScaleFactor(0.77);
         a = j.configRoundtrip(a);
         assertEquals("TEST-*.xml", a.getTestResults());
@@ -271,6 +289,7 @@ public class JUnitResultArchiverTest {
         assertEquals("testing", ((MockTestDataPublisher) testDataPublishers.get(0)).getName());
         assertEquals(0.77, a.getHealthScaleFactor(), 0.01);
     }
+
     public static class MockTestDataPublisher extends TestDataPublisher {
         private final String name;
         @DataBoundConstructor public MockTestDataPublisher(String name) {
@@ -282,7 +301,9 @@ public class JUnitResultArchiverTest {
         @Override public TestResultAction.Data contributeTestData(Run<?,?> run, FilePath workspace, Launcher launcher, TaskListener listener, TestResult testResult) throws IOException, InterruptedException {
             return null;
         }
-        @TestExtension("configRoundTrip") public static class DescriptorImpl extends Descriptor<TestDataPublisher> {
+
+        // Needed to make this extension available to all tests for {@link #testDescribableRoundTrip()}
+        @TestExtension public static class DescriptorImpl extends Descriptor<TestDataPublisher> {
             @Override public String getDisplayName() {
                 return "MockTestDataPublisher";
             }
@@ -306,6 +327,7 @@ public class JUnitResultArchiverTest {
     }
 
     @Test public void specialCharsInRelativePath() throws Exception {
+        Assume.assumeFalse(Functions.isWindows());
         final String ID_PREFIX = "test-../a=%3C%7C%23)/testReport/org.twia.vendor/VendorManagerTest/testCreateAdjustingFirm/";
         final String EXPECTED = "org.twia.dao.DAOException: [S2001] Hibernate encountered an error updating Claim [null]";
 
@@ -329,5 +351,123 @@ public class JUnitResultArchiverTest {
         ((HtmlAnchor) page.getElementById(ID_PREFIX + "-hidelink")).click();
         wc.waitForBackgroundJavaScript(10000L);
         assertThat(page.asText(), not(containsString(EXPECTED)));
+    }
+
+    @Issue("JENKINS-26535")
+    @Test
+    public void testDescribableRoundTrip() throws Exception {
+        DescribableModel<JUnitResultArchiver> model = new DescribableModel<JUnitResultArchiver>(JUnitResultArchiver.class);
+        Map<String,Object> args = new TreeMap<String,Object>();
+
+        args.put("testResults", "**/TEST-*.xml");
+        JUnitResultArchiver j = model.instantiate(args);
+        assertEquals("**/TEST-*.xml", j.getTestResults());
+        assertFalse(j.isAllowEmptyResults());
+        assertFalse(j.isKeepLongStdio());
+        assertEquals(1.0, j.getHealthScaleFactor(), 0);
+        assertTrue(j.getTestDataPublishers().isEmpty());
+        assertEquals(args, model.uninstantiate(model.instantiate(args)));
+
+        // Test roundtripping from a Pipeline-style describing of the publisher.
+        Map<String,Object> describedPublisher = new HashMap<String, Object>();
+        describedPublisher.put("$class", "MockTestDataPublisher");
+        describedPublisher.put("name", "test");
+        args.put("testDataPublishers", Collections.singletonList(describedPublisher));
+
+        Map<String,Object> described = model.uninstantiate(model.instantiate(args));
+        JUnitResultArchiver j2 = model.instantiate(described);
+        List<TestDataPublisher> testDataPublishers = j2.getTestDataPublishers();
+        assertFalse(testDataPublishers.isEmpty());
+        assertEquals(1, testDataPublishers.size());
+        assertEquals(MockTestDataPublisher.class, testDataPublishers.get(0).getClass());
+        assertEquals("test", ((MockTestDataPublisher)testDataPublishers.get(0)).getName());
+
+        assertEquals(described, model.uninstantiate(model.instantiate(described)));
+    }
+    
+    @Test
+    @Issue("SECURITY-521")
+    public void testXxe() throws Exception {
+        String oobInUserContentLink = j.getURL() + "userContent/oob.xml";
+        String triggerLink = j.getURL() + "triggerMe";
+        
+        String xxeFile = this.getClass().getResource("testXxe-xxe.xml").getFile();
+        String xxeFileContent = FileUtils.readFileToString(new File(xxeFile), StandardCharsets.UTF_8);
+        String adaptedXxeFileContent = xxeFileContent.replace("$OOB_LINK$", oobInUserContentLink);
+        
+        String oobFile = this.getClass().getResource("testXxe-oob.xml").getFile();
+        String oobFileContent = FileUtils.readFileToString(new File(oobFile), StandardCharsets.UTF_8);
+        String adaptedOobFileContent = oobFileContent.replace("$TARGET_URL$", triggerLink);
+        
+        File userContentDir = new File(j.jenkins.getRootDir(), "userContent");
+        FileUtils.writeStringToFile(new File(userContentDir, "oob.xml"), adaptedOobFileContent);
+        
+        FreeStyleProject project = j.createFreeStyleProject();
+        DownloadBuilder builder = new DownloadBuilder();
+        builder.fileContent = adaptedXxeFileContent;
+        project.getBuildersList().add(builder);
+        
+        JUnitResultArchiver publisher = new JUnitResultArchiver("xxe.xml");
+        project.getPublishersList().add(publisher);
+    
+        project.scheduleBuild2(0).get();
+        // UNSTABLE
+        // assertEquals(Result.SUCCESS, project.scheduleBuild2(0).get().getResult());
+        
+        YouCannotTriggerMe urlHandler = j.jenkins.getExtensionList(UnprotectedRootAction.class).get(YouCannotTriggerMe.class);
+        assertEquals(0, urlHandler.triggerCount);
+    }
+    
+    public static class DownloadBuilder extends Builder {
+        String fileContent;
+        
+        @Override
+        public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
+            try {
+                FileUtils.writeStringToFile(new File(build.getWorkspace().getRemote(), "xxe.xml"), fileContent);
+            } catch (IOException e) {
+                return false;
+            }
+            
+            return true;
+        }
+        
+        @Extension
+        public static class DescriptorImpl extends BuildStepDescriptor<Builder> {
+            @Override
+            public boolean isApplicable(Class<? extends AbstractProject> jobType) {
+                return true;
+            }
+            
+            @Override
+            public String getDisplayName() {
+                return null;
+            }
+        }
+    }
+    
+    @TestExtension("testXxe")
+    public static class YouCannotTriggerMe implements UnprotectedRootAction {
+        private int triggerCount = 0;
+        
+        @Override
+        public String getIconFileName() {
+            return null;
+        }
+        
+        @Override
+        public String getDisplayName() {
+            return null;
+        }
+        
+        @Override
+        public String getUrlName() {
+            return "triggerMe";
+        }
+        
+        public HttpResponse doIndex() {
+            triggerCount++;
+            return HttpResponses.plainText("triggered");
+        }
     }
 }
