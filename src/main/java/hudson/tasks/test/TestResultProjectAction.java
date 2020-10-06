@@ -26,6 +26,7 @@ package hudson.tasks.test;
 import edu.hm.hafner.echarts.ChartModelConfiguration;
 import edu.hm.hafner.echarts.JacksonFacade;
 import edu.hm.hafner.echarts.LinesChartModel;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.Job;
@@ -118,18 +119,28 @@ public class TestResultProjectAction implements Action, AsyncTrendChart {
             TestResultImpl pluggableStorage = storage.load(lastCompletedBuild.getParent().getFullName(), lastCompletedBuild.getNumber());
             return new TestResultTrendChart().create(pluggableStorage.getTrendTestResultSummary());
         }
-        
-        return new TestResultTrendChart().create(createBuildHistory(lastCompletedBuild), new ChartModelConfiguration());
+
+        TestResultActionIterable buildHistory = createBuildHistory(lastCompletedBuild);
+        if (buildHistory == null) {
+            return new LinesChartModel();
+        }
+        return new TestResultTrendChart().create(buildHistory, new ChartModelConfiguration());
     }
-    
+
+    @CheckForNull
     private TestResultActionIterable createBuildHistory(Run<?, ?> lastCompletedBuild) {
+        // some plugins that depend on junit seem to attach the action even though there's no run
+        // e.g. xUnit and cucumber
+        if (lastCompletedBuild == null) {
+            return null;
+        }
         AbstractTestResultAction<?> action = lastCompletedBuild.getAction(AbstractTestResultAction.class);
         if (action == null) {
             Run<?, ?> currentBuild = lastCompletedBuild;
             while (action == null) {
                 currentBuild = currentBuild.getPreviousBuild();
                 if (currentBuild == null) {
-                    return new TestResultActionIterable(null);
+                    return null;
                 }
                 action = currentBuild.getAction(AbstractTestResultAction.class);
             }
