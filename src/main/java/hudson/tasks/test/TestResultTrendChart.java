@@ -5,6 +5,7 @@ import edu.hm.hafner.echarts.LineSeries;
 import edu.hm.hafner.echarts.LinesChartModel;
 import edu.hm.hafner.echarts.LinesDataSet;
 import edu.hm.hafner.echarts.Palette;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.tasks.junit.TrendTestResultSummary;
 import java.util.List;
 
@@ -21,7 +22,7 @@ public class TestResultTrendChart {
         return getLinesChartModel(dataset);
     }
 
-    public LinesChartModel create(final Iterable results,
+    public LinesChartModel create(@NonNull final Iterable results,
                                   final ChartModelConfiguration configuration) {
         TestResultTrendSeriesBuilder builder = new TestResultTrendSeriesBuilder();
         LinesDataSet dataSet = builder.createDataSet(configuration, results);
