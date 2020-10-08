@@ -132,15 +132,7 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
 
     @Override
     public Object getDynamic(String name, StaplerRequest req, StaplerResponse rsp) {
-        JunitTestResultStorage storage = JunitTestResultStorage.find();
-        CaseResult c;
-        if (!(storage instanceof FileJunitTestResultStorage)) {
-            Run<?, ?> run = Stapler.getCurrentRequest().findAncestorObject(Run.class);
-            TestResultImpl pluggableStorage = storage.load(run.getParent().getFullName(), run.getNumber());
-            c = pluggableStorage.getCaseResult(name);
-        } else {
-            c = getCaseResult(name);
-        }
+        CaseResult c = getCaseResult(name);
     	if (c != null) {
             return c;
     	} else {
