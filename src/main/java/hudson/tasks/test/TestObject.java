@@ -104,12 +104,9 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
         return id;
     }
 
-    /**
-     * Returns url relative to TestResult
-     */
     @Override
     public String getUrl() {
-        return '/' + getId();
+        return getRun().getUrl() + getTestResultAction().getUrlName() + "/" + getId();
     }
 
     public String getFullDisplayName() {
