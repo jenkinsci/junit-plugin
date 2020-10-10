@@ -52,6 +52,23 @@
         </dependency>
         <dependency>
             <groupId>io.jenkins.plugins</groupId>
+            <artifactId>checks-api</artifactId>
+            <version>1.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jenkins.plugins</groupId>
+            <artifactId>github-checks</artifactId>
+            <version>1.0.1</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- TODO remove after https://github.com/jenkinsci/bom/pull/308 -->
+        <dependency>
+            <groupId>org.jenkins-ci.plugins</groupId>
+            <artifactId>branch-api</artifactId>
+            <version>2.6.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jenkins.plugins</groupId>
             <artifactId>bootstrap4-api</artifactId>
             <version>4.5.2-1</version>
         </dependency>

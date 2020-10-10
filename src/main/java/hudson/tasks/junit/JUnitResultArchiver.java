@@ -42,6 +42,7 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import hudson.tasks.junit.TestResultAction.Data;
+import io.jenkins.plugins.junit.checks.JUnitChecksPublisher;
 import io.jenkins.plugins.junit.storage.FileJunitTestResultStorage;
 import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
 import hudson.tasks.test.PipelineTestDetails;
@@ -91,6 +92,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
      * If true, don't throw exception on missing test results or no files found.
      */
     private boolean allowEmptyResults;
+    private boolean skipPublishingChecks;
 
     @DataBoundConstructor
     public JUnitResultArchiver(String testResults) {
@@ -278,6 +280,10 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                 build.addAction(action);
             }
 
+            if (!task.isSkipPublishingChecks()) {
+                new JUnitChecksPublisher(action, summary).publishChecks(listener);
+            }
+
             return summary;
         }
     }
@@ -353,6 +359,21 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
      */
     public boolean isAllowEmptyResults() {
         return allowEmptyResults;
+    }
+
+    /**
+     * Should we skip publishing checks to the checks API plugin.
+     * 
+     * @return if publishing checks should be skipped, {@code false} otherwise 
+     */
+    @Override
+    public boolean isSkipPublishingChecks() {
+        return skipPublishingChecks;
+    }
+
+    @DataBoundSetter
+    public void setSkipPublishingChecks(boolean skipPublishingChecks) {
+        this.skipPublishingChecks = skipPublishingChecks;
     }
 
     @DataBoundSetter public final void setAllowEmptyResults(boolean allowEmptyResults) {
