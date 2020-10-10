@@ -13,6 +13,7 @@ import io.jenkins.plugins.checks.api.ChecksPublisherFactory;
 import io.jenkins.plugins.checks.api.ChecksStatus;
 import io.jenkins.plugins.util.JenkinsFacade;
 import java.util.List;
+import jnr.ffi.Struct;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
 import org.kohsuke.accmod.Restricted;
@@ -43,7 +44,8 @@ public class JUnitChecksPublisher {
 
     @VisibleForTesting
     ChecksDetails extractChecksDetails() {
-        String text = extractChecksText();
+        String testsURL = DisplayURLProvider.get().getTestsURL(action.run);
+        String text = extractChecksText(testsURL);
         ChecksOutput output = new ChecksOutput.ChecksOutputBuilder()
                 .withTitle(extractChecksTitle())
                 .withSummary("<sub>Send us [feedback](https://github.com/jenkinsci/junit-plugin/issues)")
@@ -54,12 +56,12 @@ public class JUnitChecksPublisher {
                 .withName("Tests")
                 .withStatus(ChecksStatus.COMPLETED)
                 .withConclusion(summary.getFailCount() > 0 ? ChecksConclusion.FAILURE : ChecksConclusion.SUCCESS)
-                .withDetailsURL(DisplayURLProvider.get().getTestsURL(action.run))
+                .withDetailsURL(testsURL)
                 .withOutput(output)
                 .build();
     }
 
-    private String extractChecksText() {
+    private String extractChecksText(String testsURL) {
         StringBuilder builder = new StringBuilder();
         if (summary.getFailCount() > 0) {
             List<CaseResult> failedTests = action.getResult().getFailedTests();
@@ -71,7 +73,9 @@ public class JUnitChecksPublisher {
             failedTests.forEach(failedTest -> mapFailedTestToTestReport(builder, failedTest));
             if (summary.getFailCount() > 10) {
                 builder.append("\n")
-                        .append(summary.getFailCount() - 10).append(" more test results are not shown here, view them on Jenkins");
+                        .append(summary.getFailCount() - 10)
+                        .append(" more test results are not shown here, view them on [Jenkins](")
+                        .append(testsURL).append(")");
             }
         }
 
@@ -79,34 +83,35 @@ public class JUnitChecksPublisher {
     }
 
     private void mapFailedTestToTestReport(StringBuilder builder, CaseResult failedTest) {
-        builder.append("## <code>").append(failedTest.getTransformedFullDisplayName().trim()).append("</code>")
+        builder.append("## `").append(failedTest.getTransformedFullDisplayName().trim()).append("`")
                 .append("\n");
 
         if (StringUtils.isNotBlank(failedTest.getErrorDetails())) {
-            builder.append("<pre><code>").append(failedTest.getErrorDetails().trim()).append("</code></pre>")
+            builder.append(codeTextFencedBlock(failedTest.getErrorDetails()))
                     .append("\n");
         }
         if (StringUtils.isNotBlank(failedTest.getErrorStackTrace())) {
-            builder.append("<details><summary>Stack trace</summary>").append("\n")
-                    .append("<pre><code>").append(failedTest.getErrorStackTrace().trim()).append("</code></pre>")
-                    .append("</details>")
-                    .append("\n");
+            builder.append("<details><summary>Stack trace</summary>\n")
+                    .append(codeTextFencedBlock(failedTest.getErrorStackTrace()))
+                    .append("</details>\n");
         }
 
         if (StringUtils.isNotBlank(failedTest.getStderr())) {
-            builder.append("<details><summary>Standard error</summary>").append("\n")
-                    .append("<pre><code>").append(failedTest.getStderr().trim()).append("</code></pre>")
-                    .append("</details>")
-                    .append("\n");
+            builder.append("<details><summary>Standard error</summary>\n")
+                    .append(codeTextFencedBlock(failedTest.getStderr()))
+                    .append("</details>\n");
         }
 
         if (StringUtils.isNotBlank(failedTest.getStdout())) {
-            builder.append("<details><summary>Standard out</summary>").append("\n")
-                    .append("<pre><code>").append(failedTest.getStdout().trim()).append("</code></pre>")
-                    .append("</details>")
-                    .append("\n");
+            builder.append("<details><summary>Standard out</summary>\n")
+                    .append(codeTextFencedBlock(failedTest.getStdout()))
+                    .append("</details>\n");
         }
         builder.append("\n");
+    }
+    
+    private String codeTextFencedBlock(String body) {
+        return "\n```text\n" + body.trim() + "\n```\n";
     }
 
     private String extractChecksTitle() {
