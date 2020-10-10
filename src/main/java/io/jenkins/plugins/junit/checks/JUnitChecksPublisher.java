@@ -14,6 +14,7 @@ import io.jenkins.plugins.checks.api.ChecksStatus;
 import io.jenkins.plugins.util.JenkinsFacade;
 import java.util.List;
 import org.apache.commons.lang.StringUtils;
+import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
@@ -43,7 +44,6 @@ public class JUnitChecksPublisher {
     @VisibleForTesting
     ChecksDetails extractChecksDetails() {
         String text = extractChecksText();
-        System.out.println(text);
         ChecksOutput output = new ChecksOutput.ChecksOutputBuilder()
                 .withTitle(extractChecksTitle())
                 .withSummary("<sub>Send us [feedback](https://github.com/jenkinsci/junit-plugin/issues)")
@@ -54,7 +54,7 @@ public class JUnitChecksPublisher {
                 .withName("Tests")
                 .withStatus(ChecksStatus.COMPLETED)
                 .withConclusion(summary.getFailCount() > 0 ? ChecksConclusion.FAILURE : ChecksConclusion.SUCCESS)
-                .withDetailsURL(jenkinsFacade.getAbsoluteUrl(action.run.getUrl(), action.getUrlName()))
+                .withDetailsURL(DisplayURLProvider.get().getTestsURL(action.run))
                 .withOutput(output)
                 .build();
     }
