@@ -46,4 +46,8 @@ THE SOFTWARE.
     <f:entry title="${%Allow empty results}" field="allowEmptyResults">
         <f:checkbox default="false" title="${%Do not fail the build on empty test results}"/>
     </f:entry>
+    <f:entry title="${%Skip publishing checks}"
+             field="skipPublishingChecks">
+        <f:checkbox title="${%If unchecked, then issues will be published to SCM provider platforms}" />
+    </f:entry>
 </j:jelly>
