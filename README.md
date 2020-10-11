@@ -29,3 +29,24 @@ The JUnit publisher is configured at the job level by adding a Publish JUnit tes
   The factor is persisted with the build results, so changes will only be reflected in new builds.
 * **Allow empty results:** If checked, the default behavior of failing a build on missing test result files or empty test results is changed to not affect the status of the build. 
   Please note that this setting make it harder to spot misconfigured jobs or build failures where the test tool does not exit with an error code when not producing test report files.
+* **Skip publishing checks:** If this option is unchecked, then the plugin automatically publishes the test results to corresponding SCM hosting platforms.
+  For example, if you are using this feature for a GitHub organization project, the warnings will be published to
+  GitHub through the Checks API. If this operation slows down your build, or you don't want to publish the warnings to
+  SCM platforms, you can use this option to deactivate this feature.
+
+### Test result checks (for GitHub projects)
+
+:warning: This feature requires:
+* the installation of an additional plugin: [GitHub Checks Plugin](https://github.com/jenkinsci/github-checks-plugin)
+* the configuration of GitHub App credentails, see [this guide](https://docs.cloudbees.com/docs/cloudbees-ci/latest/cloud-admin-guide/github-app-auth) for more details.
+
+If not disabled in the job configuration, this plugin will publish test results to GitHub through [GitHub checks API](https://docs.github.com/en/rest/reference/checks).
+
+In the *Details* view of each check ([example](https://github.com/timja-org/junit-attachments-test/pull/4/checks?check_run_id=1237630805)), test results will be displayed.
+
+![checks](images/checks.png)
+
+In order to disable the checks feature, set the property `skipPublishingChecks` to `true`:
+```groovy
+junit skipPublishingChecks: true, testResults: 'test-results.xml'
+```
