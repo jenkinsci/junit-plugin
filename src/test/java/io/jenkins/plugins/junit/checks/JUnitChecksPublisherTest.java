@@ -1,6 +1,7 @@
 package io.jenkins.plugins.junit.checks;
 
 import hudson.FilePath;
+import hudson.Functions;
 import hudson.model.Result;
 import hudson.tasks.junit.TestResultAction;
 import hudson.tasks.junit.TestResultSummary;
@@ -22,6 +23,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assume.assumeFalse;
+import static org.junit.Assume.assumeTrue;
 
 public class JUnitChecksPublisherTest {
 
@@ -93,6 +96,9 @@ public class JUnitChecksPublisherTest {
     @Test
     @SuppressWarnings("OptionalGetWithoutIsPresent")
     public void extractChecksDetailsFailingMultipleTests() throws Exception {
+        // windows line endings make this test a nightmare in the assertions
+        assumeFalse(Functions.isWindows());
+
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "singleStep");
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
                 "  node {\n" +
