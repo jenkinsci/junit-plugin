@@ -11,9 +11,7 @@ import io.jenkins.plugins.checks.api.ChecksOutput;
 import io.jenkins.plugins.checks.api.ChecksPublisher;
 import io.jenkins.plugins.checks.api.ChecksPublisherFactory;
 import io.jenkins.plugins.checks.api.ChecksStatus;
-import io.jenkins.plugins.util.JenkinsFacade;
 import java.util.List;
-import jnr.ffi.Struct;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
 import org.kohsuke.accmod.Restricted;
@@ -22,17 +20,14 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 @Restricted(NoExternalUse.class)
 public class JUnitChecksPublisher {
     public static final String SEPARATOR = ", ";
+
+    // arbitrary cap to avoid hitting any API limits and to limit the size of the page
+    // can be tuned based on feedback
+    private static final int MAX_RESULTS_TO_SEND_TO_CHECKS_API = 10;
     private final TestResultAction action;
-    private final JenkinsFacade jenkinsFacade;
     private final TestResultSummary summary;
 
     public JUnitChecksPublisher(final TestResultAction action, final TestResultSummary summary) {
-        this(action, summary, new JenkinsFacade());
-    }
-
-    @VisibleForTesting
-    JUnitChecksPublisher(final TestResultAction action, final TestResultSummary summary, final JenkinsFacade jenkinsFacade) {
-        this.jenkinsFacade = jenkinsFacade;
         this.action = action;
         this.summary = summary;
     }
@@ -45,11 +40,10 @@ public class JUnitChecksPublisher {
     @VisibleForTesting
     ChecksDetails extractChecksDetails() {
         String testsURL = DisplayURLProvider.get().getTestsURL(action.run);
-        String text = extractChecksText(testsURL);
         ChecksOutput output = new ChecksOutput.ChecksOutputBuilder()
                 .withTitle(extractChecksTitle())
                 .withSummary("<sub>Send us [feedback](https://github.com/jenkinsci/junit-plugin/issues)")
-                .withText(text)
+                .withText(extractChecksText(testsURL))
                 .build();
 
         return new ChecksDetails.ChecksDetailsBuilder()
@@ -66,14 +60,14 @@ public class JUnitChecksPublisher {
         if (summary.getFailCount() > 0) {
             List<CaseResult> failedTests = action.getResult().getFailedTests();
             
-            if (failedTests.size() > 10) {
-                failedTests = failedTests.subList(0, 9);
+            if (failedTests.size() > MAX_RESULTS_TO_SEND_TO_CHECKS_API) {
+                failedTests = failedTests.subList(0, MAX_RESULTS_TO_SEND_TO_CHECKS_API - 1);
             }
             
             failedTests.forEach(failedTest -> mapFailedTestToTestReport(builder, failedTest));
-            if (summary.getFailCount() > 10) {
+            if (summary.getFailCount() > MAX_RESULTS_TO_SEND_TO_CHECKS_API) {
                 builder.append("\n")
-                        .append(summary.getFailCount() - 10)
+                        .append(summary.getFailCount() - MAX_RESULTS_TO_SEND_TO_CHECKS_API)
                         .append(" more test results are not shown here, view them on [Jenkins](")
                         .append(testsURL).append(")");
             }
