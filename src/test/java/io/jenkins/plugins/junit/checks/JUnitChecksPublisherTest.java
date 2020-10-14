@@ -83,10 +83,7 @@ public class JUnitChecksPublisherTest {
 
         ChecksOutput output = checksDetails.getOutput().get();
 
-        String expectedText = IOUtils.toString(this.getClass().getResourceAsStream("single-test-checks-result.md"), StandardCharsets.UTF_8);
-
         assertThat(output.getTitle().get(), is("some.package.somewhere.WhooHoo.testHudsonReporting failed"));
-        assertThat(output.getText().get().replaceAll("\r\n", ""), is(expectedText));
     }
 
     @Test
