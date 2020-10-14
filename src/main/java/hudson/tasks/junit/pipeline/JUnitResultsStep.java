@@ -52,6 +52,7 @@ public class JUnitResultsStep extends Step implements JUnitTask {
      * If true, don't throw exception on missing test results or no files found.
      */
     private boolean allowEmptyResults;
+    private boolean skipPublishingChecks;
 
     @DataBoundConstructor
     public JUnitResultsStep(String testResults) {
@@ -113,6 +114,21 @@ public class JUnitResultsStep extends Step implements JUnitTask {
      */
     public boolean isAllowEmptyResults() {
         return allowEmptyResults;
+    }
+
+    /**
+     * Should we skip publishing checks to the checks API plugin.
+     *
+     * @return if publishing checks should be skipped, {@code false} otherwise 
+     */
+    @Override
+    public boolean isSkipPublishingChecks() {
+        return skipPublishingChecks;
+    }
+
+    @DataBoundSetter
+    public void setSkipPublishingChecks(boolean skipPublishingChecks) {
+        this.skipPublishingChecks = skipPublishingChecks;
     }
 
     @DataBoundSetter public final void setAllowEmptyResults(boolean allowEmptyResults) {

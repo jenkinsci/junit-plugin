@@ -124,12 +124,12 @@ public class TestResultStorageJunitTest {
                     "<testcase classname='Klazz' name='test2' time='2.0'/>" +
                     "<testcase classname='other.Klazz' name='test3'><skipped message='Not actually run.'/></testcase>" +
                     "</testsuite>'''\n" +
-                "  def s = junit 'x.xml'\n" +
+                "  def s = junit testResults: 'x.xml', skipPublishingChecks: true\n" +
                 "  echo(/summary: fail=$s.failCount skip=$s.skipCount pass=$s.passCount total=$s.totalCount/)\n" +
                 "  writeFile file: 'x.xml', text: '''<testsuite name='supersweet'>" +
                     "<testcase classname='another.Klazz' name='test1'><error message='another failure'/></testcase>" +
                     "</testsuite>'''\n" +
-                "  s = junit 'x.xml'\n" +
+                "  s = junit testResults: 'x.xml', skipPublishingChecks: true\n" +
                 "  echo(/next summary: fail=$s.failCount skip=$s.skipCount pass=$s.passCount total=$s.totalCount/)\n" +
                 "}", true));
         WorkflowRun b = p.scheduleBuild2(0).get();
