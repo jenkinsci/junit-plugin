@@ -1,7 +1,6 @@
 package io.jenkins.plugins.junit.checks;
 
 import hudson.FilePath;
-import hudson.Functions;
 import hudson.model.Result;
 import hudson.tasks.junit.TestResultAction;
 import hudson.tasks.junit.TestResultSummary;
@@ -20,11 +19,8 @@ import org.jvnet.hudson.test.JenkinsRule;
 
 import static java.util.Objects.requireNonNull;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assume.assumeFalse;
-import static org.junit.Assume.assumeTrue;
 
 public class JUnitChecksPublisherTest {
 
@@ -91,40 +87,5 @@ public class JUnitChecksPublisherTest {
 
         assertThat(output.getTitle().get(), is("some.package.somewhere.WhooHoo.testHudsonReporting failed"));
         assertThat(output.getText().get().replaceAll("\r\n", ""), is(expectedText));
-    }
-
-    @Test
-    @SuppressWarnings("OptionalGetWithoutIsPresent")
-    public void extractChecksDetailsFailingMultipleTests() throws Exception {
-        // windows line endings make this test a nightmare in the assertions
-        assumeFalse(Functions.isWindows());
-
-        WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "singleStep");
-        j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
-                "  node {\n" +
-                "    def results = junit(testResults: '*.xml')\n" + // node id 7
-                "    assert results.totalCount == 6\n" +
-                "  }\n" +
-                "}\n", true));
-        FilePath ws = rule.jenkins.getWorkspaceFor(j);
-        FilePath testFile = requireNonNull(ws).child("test-result.xml");
-        testFile.copyFrom(TestResultTest.class.getResource("junit-report-20090516.xml"));
-
-        WorkflowRun r = rule.buildAndAssertStatus(Result.FAILURE, j);
-        TestResultAction action = r.getAction(TestResultAction.class);
-        assertNotNull(action);
-
-        TestResultSummary summary = new TestResultSummary(3, 0, 5, 8);
-        JUnitChecksPublisher publisher = new JUnitChecksPublisher(action, summary);
-        ChecksDetails checksDetails = publisher.extractChecksDetails();
-
-        assertThat(checksDetails.getConclusion(), is(ChecksConclusion.FAILURE));
-
-        ChecksOutput output = checksDetails.getOutput().get();
-
-        String expectedText = IOUtils.toString(this.getClass().getResourceAsStream("multiple-test-checks-result.md"), StandardCharsets.UTF_8);
-
-        assertThat(output.getTitle().get(), is("failed: 3, passed: 5"));
-        assertThat(output.getText().get().replaceAll("\r\n", ""), containsString(expectedText));
     }
 }
