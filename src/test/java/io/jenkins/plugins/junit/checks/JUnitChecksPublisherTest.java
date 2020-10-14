@@ -87,7 +87,7 @@ public class JUnitChecksPublisherTest {
         String expectedText = IOUtils.toString(this.getClass().getResourceAsStream("single-test-checks-result.md"), StandardCharsets.UTF_8);
 
         assertThat(output.getTitle().get(), is("some.package.somewhere.WhooHoo.testHudsonReporting failed"));
-        assertThat(output.getText().get(), is(expectedText));
+        assertThat(output.getText().get().replaceAll("\r\n", ""), is(expectedText));
     }
 
     @Test
@@ -119,6 +119,6 @@ public class JUnitChecksPublisherTest {
         String expectedText = IOUtils.toString(this.getClass().getResourceAsStream("multiple-test-checks-result.md"), StandardCharsets.UTF_8);
 
         assertThat(output.getTitle().get(), is("failed: 3, passed: 5"));
-        assertThat(output.getText().get().replaceAll("\r", ""), containsString(expectedText));
+        assertThat(output.getText().get().replaceAll("\r\n", ""), containsString(expectedText));
     }
 }
