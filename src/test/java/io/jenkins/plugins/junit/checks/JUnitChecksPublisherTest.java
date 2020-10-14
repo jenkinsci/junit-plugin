@@ -88,4 +88,33 @@ public class JUnitChecksPublisherTest {
         assertThat(output.getTitle().get(), is("some.package.somewhere.WhooHoo.testHudsonReporting failed"));
         assertThat(output.getText().get().replaceAll("\r\n", ""), is(expectedText));
     }
+
+    @Test
+    @SuppressWarnings("OptionalGetWithoutIsPresent")
+    public void extractChecksDetailsFailingMultipleTests() throws Exception {
+        WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "singleStep");
+        j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
+                "  node {\n" +
+                "    def results = junit(testResults: '*.xml')\n" + // node id 7
+                "    assert results.totalCount == 6\n" +
+                "  }\n" +
+                "}\n", true));
+        FilePath ws = rule.jenkins.getWorkspaceFor(j);
+        FilePath testFile = requireNonNull(ws).child("test-result.xml");
+        testFile.copyFrom(TestResultTest.class.getResource("junit-report-20090516.xml"));
+
+        WorkflowRun r = rule.buildAndAssertStatus(Result.FAILURE, j);
+        TestResultAction action = r.getAction(TestResultAction.class);
+        assertNotNull(action);
+
+        TestResultSummary summary = new TestResultSummary(3, 0, 5, 8);
+        JUnitChecksPublisher publisher = new JUnitChecksPublisher(action, summary);
+        ChecksDetails checksDetails = publisher.extractChecksDetails();
+
+        assertThat(checksDetails.getConclusion(), is(ChecksConclusion.FAILURE));
+
+        ChecksOutput output = checksDetails.getOutput().get();
+
+        assertThat(output.getTitle().get(), is("failed: 3, passed: 5"));
+    }
 }
