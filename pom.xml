@@ -82,7 +82,7 @@
         <dependency>
             <groupId>io.jenkins.plugins</groupId>
             <artifactId>bootstrap4-api</artifactId>
-            <version>4.5.2-1</version>
+            <version>4.5.3-1</version>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
