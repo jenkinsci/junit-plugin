@@ -44,6 +44,12 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
 
         List<FlowNode> enclosingBlocks = getEnclosingStagesAndParallels(node);
 
+        if (step.isIgnoreCurrentStage()) {
+            FlowNode newParent = enclosingBlocks.get(0);
+            enclosingBlocks.remove(newParent);
+            nodeId = newParent.getId();
+        }
+
         PipelineTestDetails pipelineTestDetails = new PipelineTestDetails();
         pipelineTestDetails.setNodeId(nodeId);
         pipelineTestDetails.setEnclosingBlocks(getEnclosingBlockIds(enclosingBlocks));

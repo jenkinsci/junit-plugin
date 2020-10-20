@@ -294,6 +294,47 @@ public class JUnitResultsStepTest {
     }
 
     @Test
+    public void stageInParallelIgnoreCurrentStage() throws Exception {
+        WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "stageInParallelIgnoreCurrentStage");
+        FilePath ws = rule.jenkins.getWorkspaceFor(j);
+        FilePath testFile = ws.child("first-result.xml");
+        testFile.copyFrom(TestResultTest.class.getResource("junit-report-1463.xml"));
+        FilePath secondTestFile = ws.child("second-result.xml");
+        secondTestFile.copyFrom(TestResultTest.class.getResource("junit-report-2874.xml"));
+        FilePath thirdTestFile = ws.child("third-result.xml");
+        thirdTestFile.copyFrom(TestResultTest.class.getResource("junit-report-nested-testsuites.xml"));
+
+        j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
+              "  node {\n" +
+              "    def second = junit(testResults: 'second-result.xml'); assert second.totalCount == 1\n" +
+              "  }\n" +
+              "}\n" +
+              "stage('second') {\n" +
+              "  node {\n" +
+              "    parallel(a: { def first = junit(testResults: 'first-result.xml', ignoreCurrentStage: true); assert first.totalCount == 6 },\n" +
+              "             c: { def third = junit(testResults: 'third-result.xml', ignoreCurrentStage: true); assert third.totalCount == 3 })\n" +
+              "  }\n" +
+              "}\n", true
+        ));
+        WorkflowRun r = rule.assertBuildStatus(Result.UNSTABLE,
+              rule.waitForCompletion(j.scheduleBuild2(0).waitForStart()));
+        TestResultAction action = r.getAction(TestResultAction.class);
+        assertNotNull(action);
+        assertEquals(5, action.getResult().getSuites().size());
+        assertEquals(10, action.getTotalCount());
+
+        TestResult stageResult = assertStageResults(r, 1, 1, 0, "first");
+        for (CaseResult c : stageResult.getPassedTests()) {
+            assertEquals("first / " + c.getTransformedTestName(), c.getDisplayName());
+        }
+
+        stageResult = assertStageResults(r, 4, 9, 1, "second");
+        for (CaseResult c : stageResult.getPassedTests()) {
+            assertEquals("second / " + c.getTransformedTestName(), c.getDisplayName());
+        }
+    }
+
+    @Test
     public void testTrends() throws Exception {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "testTrends");
         j.setDefinition(new CpsFlowDefinition("node {\n" +
@@ -413,12 +454,12 @@ public class JUnitResultsStepTest {
         }
     }
 
-    public static void assertStageResults(WorkflowRun run, int suiteCount, int testCount, int failCount, String stageName) {
+    public static TestResult assertStageResults(WorkflowRun run, int suiteCount, int testCount, int failCount, String stageName) {
         FlowExecution execution = run.getExecution();
         DepthFirstScanner scanner = new DepthFirstScanner();
         BlockStartNode aStage = (BlockStartNode)scanner.findFirstMatch(execution, stageForName(stageName));
         assertNotNull(aStage);
-        assertBlockResults(run, suiteCount, testCount, failCount, aStage);
+        return assertBlockResults(run, suiteCount, testCount, failCount, aStage);
     }
 
     private static TestResult assertBlockResults(WorkflowRun run, int suiteCount, int testCount, int failCount, BlockStartNode blockNode) {
