@@ -53,6 +53,7 @@ public class JUnitResultsStep extends Step implements JUnitTask {
      */
     private boolean allowEmptyResults;
     private boolean skipPublishingChecks;
+    private String checksName;
 
     @DataBoundConstructor
     public JUnitResultsStep(String testResults) {
@@ -129,6 +130,16 @@ public class JUnitResultsStep extends Step implements JUnitTask {
     @DataBoundSetter
     public void setSkipPublishingChecks(boolean skipPublishingChecks) {
         this.skipPublishingChecks = skipPublishingChecks;
+    }
+
+    @Override
+    public String getChecksName() {
+        return checksName;
+    }
+
+    @DataBoundSetter
+    public void setChecksName(String checksName) {
+        this.checksName = checksName;
     }
 
     @DataBoundSetter public final void setAllowEmptyResults(boolean allowEmptyResults) {

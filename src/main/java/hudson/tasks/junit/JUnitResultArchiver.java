@@ -93,6 +93,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
      */
     private boolean allowEmptyResults;
     private boolean skipPublishingChecks;
+    private String checksName;
 
     @DataBoundConstructor
     public JUnitResultArchiver(String testResults) {
@@ -185,6 +186,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                 action.mergeResult(result, listener);
             }
             action.setHealthScaleFactor(task.getHealthScaleFactor()); // overwrites previous value if appending
+            action.setChecksName(task.getChecksName());
             if (result.isEmpty()) {
                 if (build.getResult() == Result.FAILURE) {
                     // most likely a build failed before it gets to the test phase.
@@ -260,6 +262,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                 summary = new TestResultSummary(result);
             }
             action.setHealthScaleFactor(task.getHealthScaleFactor()); // overwrites previous value if appending
+            action.setChecksName(task.getChecksName());
             if (summary.getTotalCount() == 0 && /* maybe a secondary effect */ build.getResult() != Result.FAILURE) {
                 assert task.isAllowEmptyResults();
                 listener.getLogger().println(Messages.JUnitResultArchiver_ResultIsEmpty());
@@ -374,6 +377,16 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     @DataBoundSetter
     public void setSkipPublishingChecks(boolean skipPublishingChecks) {
         this.skipPublishingChecks = skipPublishingChecks;
+    }
+
+    @Override
+    public String getChecksName() {
+        return checksName;
+    }
+
+    @DataBoundSetter
+    public void setChecksName(String checksName) {
+        this.checksName = checksName;
     }
 
     @DataBoundSetter public final void setAllowEmptyResults(boolean allowEmptyResults) {

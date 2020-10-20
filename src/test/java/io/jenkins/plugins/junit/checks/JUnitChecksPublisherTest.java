@@ -50,6 +50,7 @@ public class JUnitChecksPublisherTest {
         ChecksDetails checksDetails = publisher.extractChecksDetails();
 
         assertThat(checksDetails.getConclusion(), is(ChecksConclusion.SUCCESS));
+        assertThat(checksDetails.getName().get(), is("Tests"));
 
         ChecksOutput output = checksDetails.getOutput().get();
 
@@ -113,5 +114,33 @@ public class JUnitChecksPublisherTest {
         ChecksOutput output = checksDetails.getOutput().get();
 
         assertThat(output.getTitle().get(), is("failed: 3, passed: 5"));
+    }
+
+    @Test
+    @SuppressWarnings("OptionalGetWithoutIsPresent")
+    public void setCustomCheckName() throws Exception {
+        WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "singleStep");
+        j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
+              "  node {\n" +
+              "    def results = junit(testResults: '*.xml', checksName: 'Custom Checks Name')\n" + // node id 7
+              "    assert results.totalCount == 6\n" +
+              "  }\n" +
+              "}\n", true));
+        FilePath ws = rule.jenkins.getWorkspaceFor(j);
+        FilePath testFile = requireNonNull(ws).child("test-result.xml");
+        testFile.copyFrom(TestResultTest.class.getResource("junit-report-1463.xml"));
+
+        WorkflowRun r = rule.buildAndAssertSuccess(j);
+        TestResultAction action = r.getAction(TestResultAction.class);
+        assertNotNull(action);
+
+        TestResultSummary summary = new TestResultSummary(0, 0, 6, 6);
+        JUnitChecksPublisher publisher = new JUnitChecksPublisher(action, summary);
+        ChecksDetails checksDetails = publisher.extractChecksDetails();
+
+        assertThat(checksDetails.getConclusion(), is(ChecksConclusion.SUCCESS));
+
+        assertThat(checksDetails.getName().get(), is("Custom Checks Name"));
+
     }
 }

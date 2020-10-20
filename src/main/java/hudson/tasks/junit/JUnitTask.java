@@ -14,4 +14,6 @@ public interface JUnitTask {
     boolean isAllowEmptyResults();
     
     boolean isSkipPublishingChecks();
+
+    String getChecksName();
 }
