@@ -33,7 +33,7 @@ public class JUnitChecksPublisherTest {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "singleStep");
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
                 "  node {\n" +
-                "    def results = junit(testResults: '*.xml')\n" + // node id 7
+                "    def results = junit(testResults: '*.xml')\n" +
                 "    assert results.totalCount == 6\n" +
                 "  }\n" +
                 "}\n", true));
@@ -64,7 +64,7 @@ public class JUnitChecksPublisherTest {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "singleStep");
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
                 "  node {\n" +
-                "    def results = junit(testResults: '*.xml')\n" + // node id 7
+                "    def results = junit(testResults: '*.xml')\n" +
                 "    assert results.totalCount == 6\n" +
                 "  }\n" +
                 "}\n", true));
@@ -93,7 +93,7 @@ public class JUnitChecksPublisherTest {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "singleStep");
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
                 "  node {\n" +
-                "    def results = junit(testResults: '*.xml')\n" + // node id 7
+                "    def results = junit(testResults: '*.xml')\n" +
                 "    assert results.totalCount == 6\n" +
                 "  }\n" +
                 "}\n", true));
@@ -122,7 +122,7 @@ public class JUnitChecksPublisherTest {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "singleStep");
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
               "  node {\n" +
-              "    def results = junit(testResults: '*.xml', checksName: 'Custom Checks Name')\n" + // node id 7
+              "    def results = junit(testResults: '*.xml', checksName: 'Custom Checks Name')\n" +
               "    assert results.totalCount == 6\n" +
               "  }\n" +
               "}\n", true));
