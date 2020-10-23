@@ -47,7 +47,7 @@ public class JUnitChecksPublisher {
                 .build();
 
         return new ChecksDetails.ChecksDetailsBuilder()
-                .withName(action.getChecksName() != null ? action.getChecksName() : "Tests")
+                .withName(action.getChecksName())
                 .withStatus(ChecksStatus.COMPLETED)
                 .withConclusion(summary.getFailCount() > 0 ? ChecksConclusion.FAILURE : ChecksConclusion.SUCCESS)
                 .withDetailsURL(testsURL)

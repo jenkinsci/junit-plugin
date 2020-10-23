@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
+import hudson.Util;
 import hudson.model.Descriptor;
 import hudson.model.Saveable;
 import hudson.model.TaskListener;
@@ -134,6 +135,10 @@ public class JUnitResultsStep extends Step implements JUnitTask {
 
     @Override
     public String getChecksName() {
+        if (Util.fixEmpty(checksName) == null) {
+            return "Tests";
+        }
+        
         return checksName;
     }
 

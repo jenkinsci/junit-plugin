@@ -288,6 +288,10 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
     }
 
     public String getChecksName() {
+        if (Util.fixEmpty(checksName) == null) {
+            return "Tests";
+        }
+        
         return checksName;
     }
 
