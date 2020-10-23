@@ -33,6 +33,8 @@ The JUnit publisher is configured at the job level by adding a Publish JUnit tes
   For example, if you are using this feature for a GitHub organization project, the warnings will be published to
   GitHub through the Checks API. If this operation slows down your build, or you don't want to publish the warnings to
   SCM platforms, you can use this option to deactivate this feature.
+* **Checks name:** If provided, and publishing checks enabled, the plugin will use this name when publishing
+  results to corresponding SCM hosting platforms. If not, a default of "Test" will be used.
 
 ### Test result checks (for GitHub projects)
 
@@ -49,4 +51,10 @@ In the *Details* view of each check ([example](https://github.com/timja-org/juni
 In order to disable the checks feature, set the property `skipPublishingChecks` to `true`:
 ```groovy
 junit skipPublishingChecks: true, testResults: 'test-results.xml'
+```
+
+In order to provide a custom check name, set the property `checksName`:
+
+```groovy
+junit checksName: 'Integration Tests', testResults: 'test-results.xml'
 ```

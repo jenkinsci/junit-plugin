@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
+import hudson.Util;
 import hudson.model.Descriptor;
 import hudson.model.Saveable;
 import hudson.model.TaskListener;
@@ -53,6 +54,7 @@ public class JUnitResultsStep extends Step implements JUnitTask {
      */
     private boolean allowEmptyResults;
     private boolean skipPublishingChecks;
+    private String checksName;
 
     @DataBoundConstructor
     public JUnitResultsStep(String testResults) {
@@ -129,6 +131,20 @@ public class JUnitResultsStep extends Step implements JUnitTask {
     @DataBoundSetter
     public void setSkipPublishingChecks(boolean skipPublishingChecks) {
         this.skipPublishingChecks = skipPublishingChecks;
+    }
+
+    @Override
+    public String getChecksName() {
+        if (Util.fixEmpty(checksName) == null) {
+            return "Tests";
+        }
+        
+        return checksName;
+    }
+
+    @DataBoundSetter
+    public void setChecksName(String checksName) {
+        this.checksName = checksName;
     }
 
     @DataBoundSetter public final void setAllowEmptyResults(boolean allowEmptyResults) {

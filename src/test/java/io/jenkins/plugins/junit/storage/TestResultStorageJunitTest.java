@@ -157,7 +157,7 @@ public class TestResultStorageJunitTest {
                     childNames.add(((Element) item).getTagName());
                 }
             }
-            assertEquals(buildXml, ImmutableSet.of("healthScaleFactor", "testData", "descriptions"), childNames);
+            assertEquals(buildXml, ImmutableSet.of("checksName", "healthScaleFactor", "testData", "descriptions"), childNames);
         }
         Impl.queriesPermitted = true;
         {
