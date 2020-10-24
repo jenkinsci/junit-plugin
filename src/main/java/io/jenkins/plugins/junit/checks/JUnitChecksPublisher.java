@@ -21,9 +21,7 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 public class JUnitChecksPublisher {
     public static final String SEPARATOR = ", ";
 
-    // arbitrary cap to avoid hitting any API limits and to limit the size of the page
-    // can be tuned based on feedback
-    private static final int MAX_RESULTS_TO_SEND_TO_CHECKS_API = 10;
+    // cap to avoid hitting check API message limit
     private static final int MAX_MSG_SIZE_TO_CHECKS_API = 65535;
     private final TestResultAction action;
     private final TestResultSummary summary;
@@ -61,34 +59,20 @@ public class JUnitChecksPublisher {
         if (summary.getFailCount() > 0) {
             List<CaseResult> failedTests = action.getResult().getFailedTests();
 
-            for (int i =0; i < failedTests.size(); i++) {
-                // limit adding number of tests
-                if (i > MAX_RESULTS_TO_SEND_TO_CHECKS_API){
-                    builder.append(messageOnMoreTests
-                            (summary.getFailCount() - MAX_RESULTS_TO_SEND_TO_CHECKS_API,testsURL));
-                    break;
-                }
-                String testReport = mapFailedTestToTestReport(failedTests.get(i));
-                // to ensure text is withing check API message limit
+            for (CaseResult failedTest: failedTests) {
+                String testReport = mapFailedTestToTestReport(failedTest);
                 int messageSize = testReport.getBytes().length + builder.toString().getBytes().length;
-                if (messageSize > (MAX_MSG_SIZE_TO_CHECKS_API - 100)){
-                    builder.append(messageOnMoreTests(summary.getFailCount()-i, testsURL));
+                // to ensure text size is withing check API message limit
+                if (messageSize > (MAX_MSG_SIZE_TO_CHECKS_API - 1024)){
+                    builder.append("\n")
+                            .append("more test results are not shown here, view them on [Jenkins](")
+                            .append(testsURL).append(")");
                     break;
                 }
                 builder.append(testReport);
             }
         }
 
-        return builder.toString();
-    }
-
-    // message text when not all failed test are not displayed
-    private String messageOnMoreTests(int testCount,String testsURL){
-        StringBuilder builder = new StringBuilder();
-        builder.append("\n")
-                .append(testCount)
-                .append(" more test results are not shown here, view them on [Jenkins](")
-                .append(testsURL).append(")");
         return builder.toString();
     }
 
