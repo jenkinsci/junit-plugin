@@ -11,6 +11,7 @@ import io.jenkins.plugins.checks.api.ChecksOutput;
 import io.jenkins.plugins.checks.api.ChecksPublisher;
 import io.jenkins.plugins.checks.api.ChecksPublisherFactory;
 import io.jenkins.plugins.checks.api.ChecksStatus;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
@@ -61,7 +62,7 @@ public class JUnitChecksPublisher {
 
             for (CaseResult failedTest: failedTests) {
                 String testReport = mapFailedTestToTestReport(failedTest);
-                int messageSize = testReport.getBytes().length + builder.toString().getBytes().length;
+                int messageSize = testReport.getBytes(StandardCharsets.UTF_8).length + builder.toString().getBytes(StandardCharsets.UTF_8).length;
                 // to ensure text size is withing check API message limit
                 if (messageSize > (MAX_MSG_SIZE_TO_CHECKS_API - 1024)){
                     builder.append("\n")
