@@ -21,9 +21,8 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 public class JUnitChecksPublisher {
     public static final String SEPARATOR = ", ";
 
-    // arbitrary cap to avoid hitting any API limits and to limit the size of the page
-    // can be tuned based on feedback
-    private static final int MAX_RESULTS_TO_SEND_TO_CHECKS_API = 10;
+    // cap to avoid hitting check API message limit
+    private static final int MAX_MSG_SIZE_TO_CHECKS_API = 65535;
     private final TestResultAction action;
     private final TestResultSummary summary;
 
@@ -59,24 +58,26 @@ public class JUnitChecksPublisher {
         StringBuilder builder = new StringBuilder();
         if (summary.getFailCount() > 0) {
             List<CaseResult> failedTests = action.getResult().getFailedTests();
-            
-            if (failedTests.size() > MAX_RESULTS_TO_SEND_TO_CHECKS_API) {
-                failedTests = failedTests.subList(0, MAX_RESULTS_TO_SEND_TO_CHECKS_API - 1);
-            }
-            
-            failedTests.forEach(failedTest -> mapFailedTestToTestReport(builder, failedTest));
-            if (summary.getFailCount() > MAX_RESULTS_TO_SEND_TO_CHECKS_API) {
-                builder.append("\n")
-                        .append(summary.getFailCount() - MAX_RESULTS_TO_SEND_TO_CHECKS_API)
-                        .append(" more test results are not shown here, view them on [Jenkins](")
-                        .append(testsURL).append(")");
+
+            for (CaseResult failedTest: failedTests) {
+                String testReport = mapFailedTestToTestReport(failedTest);
+                int messageSize = testReport.length() + builder.toString().length();
+                // to ensure text size is withing check API message limit
+                if (messageSize > (MAX_MSG_SIZE_TO_CHECKS_API - 1024)){
+                    builder.append("\n")
+                            .append("more test results are not shown here, view them on [Jenkins](")
+                            .append(testsURL).append(")");
+                    break;
+                }
+                builder.append(testReport);
             }
         }
 
         return builder.toString();
     }
 
-    private void mapFailedTestToTestReport(StringBuilder builder, CaseResult failedTest) {
+    private String mapFailedTestToTestReport(CaseResult failedTest) {
+        StringBuilder builder = new StringBuilder();
         builder.append("## `").append(failedTest.getTransformedFullDisplayName().trim()).append("`")
                 .append("\n");
 
@@ -102,6 +103,7 @@ public class JUnitChecksPublisher {
                     .append("</details>\n");
         }
         builder.append("\n");
+        return builder.toString();
     }
     
     private String codeTextFencedBlock(String body) {
