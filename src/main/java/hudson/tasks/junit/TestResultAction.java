@@ -75,7 +75,6 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
     private @Nullable Integer totalCount;
     private Double healthScaleFactor;
     private List<Data> testData = new ArrayList<>();
-    private String checksName;
 
     @Deprecated
     public TestResultAction(AbstractBuild owner, TestResult result, BuildListener listener) {
@@ -285,18 +284,6 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         synchronized (testData) {
             this.testData.add(data);
         }
-    }
-
-    public String getChecksName() {
-        if (Util.fixEmpty(checksName) == null) {
-            return "Tests";
-        }
-        
-        return checksName;
-    }
-
-    public void setChecksName(String checksName) {
-        this.checksName = checksName;
     }
 
     /**

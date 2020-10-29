@@ -44,7 +44,7 @@ public class JUnitChecksPublisherTest {
         assertNotNull(action);
 
         TestResultSummary summary = new TestResultSummary(0, 0, 6, 6);
-        JUnitChecksPublisher publisher = new JUnitChecksPublisher(action, summary);
+        JUnitChecksPublisher publisher = new JUnitChecksPublisher(r, null, action.getResult(), summary);
         ChecksDetails checksDetails = publisher.extractChecksDetails();
 
         assertThat(checksDetails.getConclusion(), is(ChecksConclusion.SUCCESS));
@@ -75,10 +75,11 @@ public class JUnitChecksPublisherTest {
         assertNotNull(action);
 
         TestResultSummary summary = new TestResultSummary(1, 0, 1, 2);
-        JUnitChecksPublisher publisher = new JUnitChecksPublisher(action, summary);
+        JUnitChecksPublisher publisher = new JUnitChecksPublisher(r, "", action.getResult(), summary);
         ChecksDetails checksDetails = publisher.extractChecksDetails();
 
         assertThat(checksDetails.getConclusion(), is(ChecksConclusion.FAILURE));
+        assertThat(checksDetails.getName().get(), is("Tests"));
 
         ChecksOutput output = checksDetails.getOutput().get();
 
@@ -104,10 +105,11 @@ public class JUnitChecksPublisherTest {
         assertNotNull(action);
 
         TestResultSummary summary = new TestResultSummary(3, 0, 5, 8);
-        JUnitChecksPublisher publisher = new JUnitChecksPublisher(action, summary);
+        JUnitChecksPublisher publisher = new JUnitChecksPublisher(r, "Tests", action.getResult(), summary);
         ChecksDetails checksDetails = publisher.extractChecksDetails();
 
         assertThat(checksDetails.getConclusion(), is(ChecksConclusion.FAILURE));
+        assertThat(checksDetails.getName().get(), is("Tests"));
 
         ChecksOutput output = checksDetails.getOutput().get();
 
@@ -133,7 +135,7 @@ public class JUnitChecksPublisherTest {
         assertNotNull(action);
 
         TestResultSummary summary = new TestResultSummary(0, 0, 6, 6);
-        JUnitChecksPublisher publisher = new JUnitChecksPublisher(action, summary);
+        JUnitChecksPublisher publisher = new JUnitChecksPublisher(r, "Custom Checks Name", action.getResult(), summary);
         ChecksDetails checksDetails = publisher.extractChecksDetails();
 
         assertThat(checksDetails.getConclusion(), is(ChecksConclusion.SUCCESS));
