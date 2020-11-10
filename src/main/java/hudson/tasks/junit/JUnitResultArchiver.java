@@ -186,7 +186,6 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                 action.mergeResult(result, listener);
             }
             action.setHealthScaleFactor(task.getHealthScaleFactor()); // overwrites previous value if appending
-            action.setChecksName(task.getChecksName());
             if (result.isEmpty()) {
                 if (build.getResult() == Result.FAILURE) {
                     // most likely a build failed before it gets to the test phase.
@@ -262,7 +261,6 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                 summary = new TestResultSummary(result);
             }
             action.setHealthScaleFactor(task.getHealthScaleFactor()); // overwrites previous value if appending
-            action.setChecksName(task.getChecksName());
             if (summary.getTotalCount() == 0 && /* maybe a secondary effect */ build.getResult() != Result.FAILURE) {
                 assert task.isAllowEmptyResults();
                 listener.getLogger().println(Messages.JUnitResultArchiver_ResultIsEmpty());
@@ -284,7 +282,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
             }
 
             if (!task.isSkipPublishingChecks()) {
-                new JUnitChecksPublisher(action, summary).publishChecks(listener);
+                new JUnitChecksPublisher(build, task.getChecksName(), result, summary).publishChecks(listener);
             }
 
             return summary;

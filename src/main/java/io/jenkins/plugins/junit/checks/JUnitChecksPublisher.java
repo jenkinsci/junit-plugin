@@ -1,8 +1,11 @@
 package io.jenkins.plugins.junit.checks;
 
 import edu.hm.hafner.util.VisibleForTesting;
+import hudson.Util;
+import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.junit.CaseResult;
+import hudson.tasks.junit.TestResult;
 import hudson.tasks.junit.TestResultAction;
 import hudson.tasks.junit.TestResultSummary;
 import io.jenkins.plugins.checks.api.ChecksConclusion;
@@ -23,22 +26,26 @@ public class JUnitChecksPublisher {
 
     // cap to avoid hitting check API message limit
     private static final int MAX_MSG_SIZE_TO_CHECKS_API = 65535;
-    private final TestResultAction action;
+    private final Run run;
+    private final String checksName;
+    private final TestResult result;
     private final TestResultSummary summary;
 
-    public JUnitChecksPublisher(final TestResultAction action, final TestResultSummary summary) {
-        this.action = action;
+    public JUnitChecksPublisher(final Run run, final String checksName, final TestResult result, final TestResultSummary summary) {
+        this.run = run;
+        this.checksName = Util.fixEmpty(checksName) == null ? "Tests" : checksName;
+        this.result = result;
         this.summary = summary;
     }
 
     public void publishChecks(TaskListener listener) {
-        ChecksPublisher publisher = ChecksPublisherFactory.fromRun(action.run, listener);
+        ChecksPublisher publisher = ChecksPublisherFactory.fromRun(run, listener);
         publisher.publish(extractChecksDetails());
     }
 
     @VisibleForTesting
     ChecksDetails extractChecksDetails() {
-        String testsURL = DisplayURLProvider.get().getTestsURL(action.run);
+        String testsURL = DisplayURLProvider.get().getTestsURL(run);
         ChecksOutput output = new ChecksOutput.ChecksOutputBuilder()
                 .withTitle(extractChecksTitle())
                 .withSummary("<sub>Send us [feedback](https://github.com/jenkinsci/junit-plugin/issues)")
@@ -46,7 +53,7 @@ public class JUnitChecksPublisher {
                 .build();
 
         return new ChecksDetails.ChecksDetailsBuilder()
-                .withName(action.getChecksName())
+                .withName(checksName)
                 .withStatus(ChecksStatus.COMPLETED)
                 .withConclusion(summary.getFailCount() > 0 ? ChecksConclusion.FAILURE : ChecksConclusion.SUCCESS)
                 .withDetailsURL(testsURL)
@@ -57,7 +64,7 @@ public class JUnitChecksPublisher {
     private String extractChecksText(String testsURL) {
         StringBuilder builder = new StringBuilder();
         if (summary.getFailCount() > 0) {
-            List<CaseResult> failedTests = action.getResult().getFailedTests();
+            List<CaseResult> failedTests = result.getFailedTests();
 
             for (CaseResult failedTest: failedTests) {
                 String testReport = mapFailedTestToTestReport(failedTest);
@@ -114,7 +121,7 @@ public class JUnitChecksPublisher {
         StringBuilder builder = new StringBuilder();
 
         if (summary.getFailCount() == 1) {
-            CaseResult failedTest = action.getResult().getFailedTests().get(0);
+            CaseResult failedTest = result.getFailedTests().get(0);
             builder.append(failedTest.getTransformedFullDisplayName()).append(" failed");
             return builder.toString();
         }
