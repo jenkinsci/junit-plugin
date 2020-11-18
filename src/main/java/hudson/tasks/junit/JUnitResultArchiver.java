@@ -28,6 +28,7 @@ import hudson.AbortException;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
+import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
@@ -285,10 +286,15 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
 
             if (!task.isSkipPublishingChecks()) {
                 // If we haven't been provided with a checks name, and we have pipeline test details, set the checks name
-                // to be a ' / '-joined string of the enclosing blocks names. JUnitChecksPublisher will handle defaults if
-                // checksName ends up being empty or null
-                String checksName = task.getChecksName() != null || pipelineTestDetails == null ? task.getChecksName() :
-                      StringUtils.join(new ReverseListIterator(pipelineTestDetails.getEnclosingBlockNames()), " / ");
+                // to be a ' / '-joined string of the enclosing blocks names. If all of that ends up being empty or null,
+                // set a default of 'Test'
+                String checksName = task.getChecksName();
+                if (checksName == null && pipelineTestDetails != null) {
+                    checksName = StringUtils.join(new ReverseListIterator(pipelineTestDetails.getEnclosingBlockNames()), " / ");
+                }
+                if (Util.fixEmpty(checksName) == null) {
+                    checksName = "Test";
+                }
                 new JUnitChecksPublisher(build, checksName, result, summary).publishChecks(listener);
             }
 
