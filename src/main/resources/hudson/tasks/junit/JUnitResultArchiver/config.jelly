@@ -51,6 +51,6 @@ THE SOFTWARE.
         <f:checkbox title="${%If unchecked, then issues will be published to SCM provider platforms}" />
     </f:entry>
     <f:entry title="${%Checks name}" field="checksName">
-        <f:textbox default="Tests" />
+        <f:textbox />
     </f:entry>
 </j:jelly>

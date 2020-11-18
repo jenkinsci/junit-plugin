@@ -42,24 +42,26 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import hudson.tasks.junit.TestResultAction.Data;
-import io.jenkins.plugins.junit.checks.JUnitChecksPublisher;
-import io.jenkins.plugins.junit.storage.FileJunitTestResultStorage;
-import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
 import hudson.tasks.test.PipelineTestDetails;
 import hudson.util.DescribableList;
 import hudson.util.FormValidation;
+import io.jenkins.plugins.junit.checks.JUnitChecksPublisher;
+import io.jenkins.plugins.junit.storage.FileJunitTestResultStorage;
+import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
+import jenkins.tasks.SimpleBuildStep;
+import org.apache.commons.collections.iterators.ReverseListIterator;
+import org.apache.commons.lang.StringUtils;
 import org.apache.tools.ant.DirectoryScanner;
 import org.apache.tools.ant.types.FileSet;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
-import javax.annotation.Nonnull;
-import jenkins.tasks.SimpleBuildStep;
-import org.kohsuke.stapler.DataBoundSetter;
 
 /**
  * Generates HTML report from JUnit test result XML files.
@@ -282,7 +284,12 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
             }
 
             if (!task.isSkipPublishingChecks()) {
-                new JUnitChecksPublisher(build, task.getChecksName(), result, summary).publishChecks(listener);
+                // If we haven't been provided with a checks name, and we have pipeline test details, set the checks name
+                // to be a ' / '-joined string of the enclosing blocks names. JUnitChecksPublisher will handle defaults if
+                // checksName ends up being empty or null
+                String checksName = task.getChecksName() != null || pipelineTestDetails == null ? task.getChecksName() :
+                      StringUtils.join(new ReverseListIterator(pipelineTestDetails.getEnclosingBlockNames()), " / ");
+                new JUnitChecksPublisher(build, checksName, result, summary).publishChecks(listener);
             }
 
             return summary;

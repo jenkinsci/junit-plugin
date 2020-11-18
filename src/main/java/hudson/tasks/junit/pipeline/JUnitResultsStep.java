@@ -135,11 +135,7 @@ public class JUnitResultsStep extends Step implements JUnitTask {
 
     @Override
     public String getChecksName() {
-        if (Util.fixEmpty(checksName) == null) {
-            return "Tests";
-        }
-        
-        return checksName;
+        return Util.fixEmpty(checksName);
     }
 
     @DataBoundSetter
