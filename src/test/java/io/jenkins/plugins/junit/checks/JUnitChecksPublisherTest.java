@@ -2,28 +2,39 @@ package io.jenkins.plugins.junit.checks;
 
 import hudson.FilePath;
 import hudson.model.Result;
-import hudson.tasks.junit.TestResultAction;
-import hudson.tasks.junit.TestResultSummary;
 import hudson.tasks.junit.TestResultTest;
 import io.jenkins.plugins.checks.api.ChecksConclusion;
 import io.jenkins.plugins.checks.api.ChecksDetails;
 import io.jenkins.plugins.checks.api.ChecksOutput;
+import io.jenkins.plugins.checks.api.ChecksStatus;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
-import org.jenkinsci.plugins.workflow.job.WorkflowRun;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.powermock.core.classloader.annotations.PowerMockIgnore;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import static java.util.Objects.requireNonNull;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.assertNotNull;
+import static org.mockito.ArgumentMatchers.*;
+import static org.powermock.api.mockito.PowerMockito.*;
 
+@RunWith(PowerMockRunner.class)
+@PowerMockIgnore({"javax.crypto.*", "javax.security.*", "javax.net.ssl.*"})
+@PrepareForTest({ChecksDetails.class, ChecksOutput.class})
 public class JUnitChecksPublisherTest {
 
     @Rule
     public final JenkinsRule rule = new JenkinsRule();
+
+    @Before
+    public void setupChecksDetails() throws Exception {
+        whenNew(ChecksDetails.class).withAnyArguments().thenReturn(mock(ChecksDetails.class));
+        whenNew(ChecksOutput.class).withAnyArguments().thenReturn(mock(ChecksOutput.class));
+    }
 
     @Test
     @SuppressWarnings("OptionalGetWithoutIsPresent")
@@ -39,21 +50,29 @@ public class JUnitChecksPublisherTest {
         FilePath testFile = requireNonNull(ws).child("test-result.xml");
         testFile.copyFrom(TestResultTest.class.getResource("junit-report-1463.xml"));
 
-        WorkflowRun r = rule.buildAndAssertSuccess(j);
-        TestResultAction action = r.getAction(TestResultAction.class);
-        assertNotNull(action);
+        rule.buildAndAssertSuccess(j);
 
-        TestResultSummary summary = new TestResultSummary(0, 0, 6, 6);
-        JUnitChecksPublisher publisher = new JUnitChecksPublisher(r, null, action.getResult(), summary);
-        ChecksDetails checksDetails = publisher.extractChecksDetails();
+        verifyNew(ChecksDetails.class).withArguments(
+                eq("first"),
+                eq(ChecksStatus.COMPLETED),
+                anyString(),
+                isNull(),
+                eq(ChecksConclusion.SUCCESS),
+                isNull(),
+                any(ChecksOutput.class),
+                anyList(),
+                isNull()
+        );
 
-        assertThat(checksDetails.getConclusion(), is(ChecksConclusion.SUCCESS));
-        assertThat(checksDetails.getName().get(), is("Tests"));
+        verifyNew(ChecksOutput.class).withArguments(
+                eq("passed: 6"),
+                anyString(),
+                eq(""),
+                anyList(),
+                anyList(),
+                isNull()
+        );
 
-        ChecksOutput output = checksDetails.getOutput().get();
-
-        assertThat(output.getTitle().get(), is("passed: 6"));
-        assertThat(output.getText().get(), is(""));
     }
 
     @Test
@@ -70,20 +89,29 @@ public class JUnitChecksPublisherTest {
         FilePath testFile = requireNonNull(ws).child("test-result.xml");
         testFile.copyFrom(TestResultTest.class.getResource("junit-report-errror-details.xml"));
 
-        WorkflowRun r = rule.buildAndAssertStatus(Result.FAILURE, j);
-        TestResultAction action = r.getAction(TestResultAction.class);
-        assertNotNull(action);
+        rule.buildAndAssertStatus(Result.FAILURE, j);
 
-        TestResultSummary summary = new TestResultSummary(1, 0, 1, 2);
-        JUnitChecksPublisher publisher = new JUnitChecksPublisher(r, "", action.getResult(), summary);
-        ChecksDetails checksDetails = publisher.extractChecksDetails();
+        verifyNew(ChecksDetails.class).withArguments(
+                eq("first"),
+                eq(ChecksStatus.COMPLETED),
+                anyString(),
+                isNull(),
+                eq(ChecksConclusion.FAILURE),
+                isNull(),
+                any(ChecksOutput.class),
+                anyList(),
+                isNull()
+        );
 
-        assertThat(checksDetails.getConclusion(), is(ChecksConclusion.FAILURE));
-        assertThat(checksDetails.getName().get(), is("Tests"));
+        verifyNew(ChecksOutput.class).withArguments(
+                eq("some.package.somewhere.WhooHoo.testHudsonReporting failed"),
+                anyString(),
+                anyString(),
+                anyList(),
+                anyList(),
+                isNull()
+        );
 
-        ChecksOutput output = checksDetails.getOutput().get();
-
-        assertThat(output.getTitle().get(), is("some.package.somewhere.WhooHoo.testHudsonReporting failed"));
     }
 
     @Test
@@ -100,20 +128,29 @@ public class JUnitChecksPublisherTest {
         FilePath testFile = requireNonNull(ws).child("test-result.xml");
         testFile.copyFrom(TestResultTest.class.getResource("junit-report-20090516.xml"));
 
-        WorkflowRun r = rule.buildAndAssertStatus(Result.FAILURE, j);
-        TestResultAction action = r.getAction(TestResultAction.class);
-        assertNotNull(action);
+        rule.buildAndAssertStatus(Result.FAILURE, j);
 
-        TestResultSummary summary = new TestResultSummary(3, 0, 5, 8);
-        JUnitChecksPublisher publisher = new JUnitChecksPublisher(r, "Tests", action.getResult(), summary);
-        ChecksDetails checksDetails = publisher.extractChecksDetails();
+        verifyNew(ChecksDetails.class).withArguments(
+                eq("first"),
+                eq(ChecksStatus.COMPLETED),
+                anyString(),
+                isNull(),
+                eq(ChecksConclusion.FAILURE),
+                isNull(),
+                any(ChecksOutput.class),
+                anyList(),
+                isNull()
+        );
 
-        assertThat(checksDetails.getConclusion(), is(ChecksConclusion.FAILURE));
-        assertThat(checksDetails.getName().get(), is("Tests"));
+        verifyNew(ChecksOutput.class).withArguments(
+                eq("failed: 3, passed: 5"),
+                anyString(),
+                anyString(),
+                anyList(),
+                anyList(),
+                isNull()
+        );
 
-        ChecksOutput output = checksDetails.getOutput().get();
-
-        assertThat(output.getTitle().get(), is("failed: 3, passed: 5"));
     }
 
     @Test
@@ -121,26 +158,27 @@ public class JUnitChecksPublisherTest {
     public void setCustomCheckName() throws Exception {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "singleStep");
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
-              "  node {\n" +
-              "    def results = junit(testResults: '*.xml', checksName: 'Custom Checks Name')\n" +
-              "    assert results.totalCount == 6\n" +
-              "  }\n" +
-              "}\n", true));
+                "  node {\n" +
+                "    def results = junit(testResults: '*.xml', checksName: 'Custom Checks Name')\n" +
+                "    assert results.totalCount == 6\n" +
+                "  }\n" +
+                "}\n", true));
         FilePath ws = rule.jenkins.getWorkspaceFor(j);
         FilePath testFile = requireNonNull(ws).child("test-result.xml");
         testFile.copyFrom(TestResultTest.class.getResource("junit-report-1463.xml"));
 
-        WorkflowRun r = rule.buildAndAssertSuccess(j);
-        TestResultAction action = r.getAction(TestResultAction.class);
-        assertNotNull(action);
+        rule.buildAndAssertSuccess(j);
 
-        TestResultSummary summary = new TestResultSummary(0, 0, 6, 6);
-        JUnitChecksPublisher publisher = new JUnitChecksPublisher(r, "Custom Checks Name", action.getResult(), summary);
-        ChecksDetails checksDetails = publisher.extractChecksDetails();
-
-        assertThat(checksDetails.getConclusion(), is(ChecksConclusion.SUCCESS));
-
-        assertThat(checksDetails.getName().get(), is("Custom Checks Name"));
-
+        verifyNew(ChecksDetails.class).withArguments(
+                eq("Custom Checks Name"),
+                eq(ChecksStatus.COMPLETED),
+                anyString(),
+                isNull(),
+                eq(ChecksConclusion.SUCCESS),
+                isNull(),
+                any(ChecksOutput.class),
+                anyList(),
+                isNull()
+        );
     }
 }
