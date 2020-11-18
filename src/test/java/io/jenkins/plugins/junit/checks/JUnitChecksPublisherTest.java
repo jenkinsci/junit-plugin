@@ -1,5 +1,6 @@
 package io.jenkins.plugins.junit.checks;
 
+import hudson.ExtensionList;
 import hudson.FilePath;
 import hudson.model.Job;
 import hudson.model.Result;
@@ -45,7 +46,7 @@ public class JUnitChecksPublisherTest {
     @TestExtension
     public static class InterceptingChecksPublisherFactory extends ChecksPublisherFactory {
 
-        static InterceptingChecksPublisher publisher = new InterceptingChecksPublisher();
+        InterceptingChecksPublisher publisher = new InterceptingChecksPublisher();
 
         @Override
         protected Optional<ChecksPublisher> createPublisher(Run<?, ?> run, TaskListener listener) {
@@ -58,13 +59,8 @@ public class JUnitChecksPublisherTest {
         }
     }
 
-    @After
-    public void clearDetails() {
-        InterceptingChecksPublisherFactory.publisher.details.clear();
-    }
-
     private ChecksDetails getDetail() {
-        List<ChecksDetails> details = InterceptingChecksPublisherFactory.publisher.details;
+        List<ChecksDetails> details = ExtensionList.lookupSingleton(InterceptingChecksPublisherFactory.class).publisher.details;
         assertThat(details.size(), is(1));
         return details.get(0);
     }

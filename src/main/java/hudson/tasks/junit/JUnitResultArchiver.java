@@ -287,7 +287,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
             if (!task.isSkipPublishingChecks()) {
                 // If we haven't been provided with a checks name, and we have pipeline test details, set the checks name
                 // to be a ' / '-joined string of the enclosing blocks names. If all of that ends up being empty or null,
-                // set a default of 'Test'
+                // set a default of 'Tests'
                 String checksName = task.getChecksName();
                 if (checksName == null && pipelineTestDetails != null) {
                     checksName = StringUtils.join(new ReverseListIterator(pipelineTestDetails.getEnclosingBlockNames()), " / ");
