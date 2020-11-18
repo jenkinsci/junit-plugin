@@ -1,39 +1,72 @@
 package io.jenkins.plugins.junit.checks;
 
 import hudson.FilePath;
+import hudson.model.Job;
 import hudson.model.Result;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.tasks.junit.TestResultTest;
 import io.jenkins.plugins.checks.api.ChecksConclusion;
 import io.jenkins.plugins.checks.api.ChecksDetails;
 import io.jenkins.plugins.checks.api.ChecksOutput;
-import io.jenkins.plugins.checks.api.ChecksStatus;
+import io.jenkins.plugins.checks.api.ChecksPublisher;
+import io.jenkins.plugins.checks.api.ChecksPublisherFactory;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
-import org.junit.Before;
+import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.jvnet.hudson.test.JenkinsRule;
-import org.powermock.core.classloader.annotations.PowerMockIgnore;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.powermock.modules.junit4.PowerMockRunner;
+import org.jvnet.hudson.test.TestExtension;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 import static java.util.Objects.requireNonNull;
-import static org.mockito.ArgumentMatchers.*;
-import static org.powermock.api.mockito.PowerMockito.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 
-@RunWith(PowerMockRunner.class)
-@PowerMockIgnore({"javax.crypto.*", "javax.security.*", "javax.net.ssl.*"})
-@PrepareForTest({ChecksDetails.class, ChecksOutput.class})
 public class JUnitChecksPublisherTest {
 
     @Rule
     public final JenkinsRule rule = new JenkinsRule();
 
-    @Before
-    public void setupChecksDetails() throws Exception {
-        whenNew(ChecksDetails.class).withAnyArguments().thenReturn(mock(ChecksDetails.class));
-        whenNew(ChecksOutput.class).withAnyArguments().thenReturn(mock(ChecksOutput.class));
+    static class InterceptingChecksPublisher extends ChecksPublisher {
+
+        final List<ChecksDetails> details = new ArrayList<>();
+
+        @Override
+        public void publish(ChecksDetails checksDetails) {
+            details.add(checksDetails);
+        }
+    }
+
+    @TestExtension
+    public static class InterceptingChecksPublisherFactory extends ChecksPublisherFactory {
+
+        static InterceptingChecksPublisher publisher = new InterceptingChecksPublisher();
+
+        @Override
+        protected Optional<ChecksPublisher> createPublisher(Run<?, ?> run, TaskListener listener) {
+            return Optional.of(publisher);
+        }
+
+        @Override
+        protected Optional<ChecksPublisher> createPublisher(Job<?, ?> job, TaskListener listener) {
+            return Optional.of(publisher);
+        }
+    }
+
+    @After
+    public void clearDetails() {
+        InterceptingChecksPublisherFactory.publisher.details.clear();
+    }
+
+    private ChecksDetails getDetail() {
+        List<ChecksDetails> details = InterceptingChecksPublisherFactory.publisher.details;
+        assertThat(details.size(), is(1));
+        return details.get(0);
     }
 
     @Test
@@ -52,26 +85,15 @@ public class JUnitChecksPublisherTest {
 
         rule.buildAndAssertSuccess(j);
 
-        verifyNew(ChecksDetails.class).withArguments(
-                eq("first"),
-                eq(ChecksStatus.COMPLETED),
-                anyString(),
-                isNull(),
-                eq(ChecksConclusion.SUCCESS),
-                isNull(),
-                any(ChecksOutput.class),
-                anyList(),
-                isNull()
-        );
+        ChecksDetails checksDetails = getDetail();
 
-        verifyNew(ChecksOutput.class).withArguments(
-                eq("passed: 6"),
-                anyString(),
-                eq(""),
-                anyList(),
-                anyList(),
-                isNull()
-        );
+        assertThat(checksDetails.getConclusion(), is(ChecksConclusion.SUCCESS));
+        assertThat(checksDetails.getName().get(), is("first"));
+
+        ChecksOutput output = checksDetails.getOutput().get();
+
+        assertThat(output.getTitle().get(), is("passed: 6"));
+        assertThat(output.getText().get(), is(""));
 
     }
 
@@ -91,26 +113,14 @@ public class JUnitChecksPublisherTest {
 
         rule.buildAndAssertStatus(Result.FAILURE, j);
 
-        verifyNew(ChecksDetails.class).withArguments(
-                eq("first"),
-                eq(ChecksStatus.COMPLETED),
-                anyString(),
-                isNull(),
-                eq(ChecksConclusion.FAILURE),
-                isNull(),
-                any(ChecksOutput.class),
-                anyList(),
-                isNull()
-        );
+        ChecksDetails checksDetails = getDetail();
 
-        verifyNew(ChecksOutput.class).withArguments(
-                eq("some.package.somewhere.WhooHoo.testHudsonReporting failed"),
-                anyString(),
-                anyString(),
-                anyList(),
-                anyList(),
-                isNull()
-        );
+        assertThat(checksDetails.getConclusion(), is(ChecksConclusion.FAILURE));
+        assertThat(checksDetails.getName().get(), is("first"));
+
+        ChecksOutput output = checksDetails.getOutput().get();
+
+        assertThat(output.getTitle().get(), is("some.package.somewhere.WhooHoo.testHudsonReporting failed"));
 
     }
 
@@ -130,26 +140,14 @@ public class JUnitChecksPublisherTest {
 
         rule.buildAndAssertStatus(Result.FAILURE, j);
 
-        verifyNew(ChecksDetails.class).withArguments(
-                eq("first"),
-                eq(ChecksStatus.COMPLETED),
-                anyString(),
-                isNull(),
-                eq(ChecksConclusion.FAILURE),
-                isNull(),
-                any(ChecksOutput.class),
-                anyList(),
-                isNull()
-        );
+        ChecksDetails checksDetails = getDetail();
 
-        verifyNew(ChecksOutput.class).withArguments(
-                eq("failed: 3, passed: 5"),
-                anyString(),
-                anyString(),
-                anyList(),
-                anyList(),
-                isNull()
-        );
+        assertThat(checksDetails.getConclusion(), is(ChecksConclusion.FAILURE));
+        assertThat(checksDetails.getName().get(), is("first"));
+
+        ChecksOutput output = checksDetails.getOutput().get();
+
+        assertThat(output.getTitle().get(), is("failed: 3, passed: 5"));
 
     }
 
@@ -169,17 +167,11 @@ public class JUnitChecksPublisherTest {
 
         rule.buildAndAssertSuccess(j);
 
-        verifyNew(ChecksDetails.class).withArguments(
-                eq("Custom Checks Name"),
-                eq(ChecksStatus.COMPLETED),
-                anyString(),
-                isNull(),
-                eq(ChecksConclusion.SUCCESS),
-                isNull(),
-                any(ChecksOutput.class),
-                anyList(),
-                isNull()
-        );
+        ChecksDetails checksDetails = getDetail();
+
+        assertThat(checksDetails.getConclusion(), is(ChecksConclusion.SUCCESS));
+
+        assertThat(checksDetails.getName().get(), is("Custom Checks Name"));
     }
 
 
@@ -197,17 +189,9 @@ public class JUnitChecksPublisherTest {
 
         rule.buildAndAssertSuccess(j);
 
-        verifyNew(ChecksDetails.class).withArguments(
-                eq("Tests"),
-                eq(ChecksStatus.COMPLETED),
-                anyString(),
-                isNull(),
-                eq(ChecksConclusion.SUCCESS),
-                isNull(),
-                any(ChecksOutput.class),
-                anyList(),
-                isNull()
-        );
+        ChecksDetails checksDetails = getDetail();
+
+        assertThat(checksDetails.getName().get(), is("Tests"));
     }
 
     @Test
@@ -226,16 +210,8 @@ public class JUnitChecksPublisherTest {
 
         rule.buildAndAssertSuccess(j);
 
-        verifyNew(ChecksDetails.class).withArguments(
-                eq("first / second"),
-                eq(ChecksStatus.COMPLETED),
-                anyString(),
-                isNull(),
-                eq(ChecksConclusion.SUCCESS),
-                isNull(),
-                any(ChecksOutput.class),
-                anyList(),
-                isNull()
-        );
+        ChecksDetails checksDetails = getDetail();
+
+        assertThat(checksDetails.getName().get(), is("first / second"));
     }
 }

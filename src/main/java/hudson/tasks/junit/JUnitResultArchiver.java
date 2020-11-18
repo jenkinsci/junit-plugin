@@ -293,7 +293,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                     checksName = StringUtils.join(new ReverseListIterator(pipelineTestDetails.getEnclosingBlockNames()), " / ");
                 }
                 if (Util.fixEmpty(checksName) == null) {
-                    checksName = "Test";
+                    checksName = "Tests";
                 }
                 new JUnitChecksPublisher(build, checksName, result, summary).publishChecks(listener);
             }
