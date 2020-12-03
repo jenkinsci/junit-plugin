@@ -61,6 +61,7 @@ import org.kohsuke.stapler.QueryParameter;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -97,6 +98,8 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     private boolean allowEmptyResults;
     private boolean skipPublishingChecks;
     private String checksName;
+
+    private static final String DEFAULT_CHECKS_NAME = "Tests";
 
     @DataBoundConstructor
     public JUnitResultArchiver(String testResults) {
@@ -286,14 +289,16 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
 
             if (!task.isSkipPublishingChecks()) {
                 // If we haven't been provided with a checks name, and we have pipeline test details, set the checks name
-                // to be a ' / '-joined string of the enclosing blocks names. If all of that ends up being empty or null,
-                // set a default of 'Tests'
+                // to be a ' / '-joined string of the enclosing blocks names, plus 'Tests' at the start. If there are no
+                // enclosing blocks, you'll end up with just 'Tests'.
                 String checksName = task.getChecksName();
                 if (checksName == null && pipelineTestDetails != null) {
-                    checksName = StringUtils.join(new ReverseListIterator(pipelineTestDetails.getEnclosingBlockNames()), " / ");
+                    List<String> checksComponents = new ArrayList<>(pipelineTestDetails.getEnclosingBlockNames());
+                    checksComponents.add(DEFAULT_CHECKS_NAME);
+                    checksName = StringUtils.join(new ReverseListIterator(checksComponents), " / ");
                 }
                 if (Util.fixEmpty(checksName) == null) {
-                    checksName = "Tests";
+                    checksName = DEFAULT_CHECKS_NAME;
                 }
                 new JUnitChecksPublisher(build, checksName, result, summary).publishChecks(listener);
             }

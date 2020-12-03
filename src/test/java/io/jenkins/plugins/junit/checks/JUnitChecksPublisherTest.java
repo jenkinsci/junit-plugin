@@ -14,7 +14,6 @@ import io.jenkins.plugins.checks.api.ChecksPublisher;
 import io.jenkins.plugins.checks.api.ChecksPublisherFactory;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
-import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -84,7 +83,7 @@ public class JUnitChecksPublisherTest {
         ChecksDetails checksDetails = getDetail();
 
         assertThat(checksDetails.getConclusion(), is(ChecksConclusion.SUCCESS));
-        assertThat(checksDetails.getName().get(), is("first"));
+        assertThat(checksDetails.getName().get(), is("Tests / first"));
 
         ChecksOutput output = checksDetails.getOutput().get();
 
@@ -112,7 +111,7 @@ public class JUnitChecksPublisherTest {
         ChecksDetails checksDetails = getDetail();
 
         assertThat(checksDetails.getConclusion(), is(ChecksConclusion.FAILURE));
-        assertThat(checksDetails.getName().get(), is("first"));
+        assertThat(checksDetails.getName().get(), is("Tests / first"));
 
         ChecksOutput output = checksDetails.getOutput().get();
 
@@ -139,7 +138,7 @@ public class JUnitChecksPublisherTest {
         ChecksDetails checksDetails = getDetail();
 
         assertThat(checksDetails.getConclusion(), is(ChecksConclusion.FAILURE));
-        assertThat(checksDetails.getName().get(), is("first"));
+        assertThat(checksDetails.getName().get(), is("Tests / first"));
 
         ChecksOutput output = checksDetails.getOutput().get();
 
@@ -208,6 +207,6 @@ public class JUnitChecksPublisherTest {
 
         ChecksDetails checksDetails = getDetail();
 
-        assertThat(checksDetails.getName().get(), is("first / second"));
+        assertThat(checksDetails.getName().get(), is("Tests / first / second"));
     }
 }
