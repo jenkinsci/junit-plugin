@@ -28,6 +28,7 @@ import hudson.AbortException;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
+import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
@@ -42,24 +43,27 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import hudson.tasks.junit.TestResultAction.Data;
-import io.jenkins.plugins.junit.checks.JUnitChecksPublisher;
-import io.jenkins.plugins.junit.storage.FileJunitTestResultStorage;
-import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
 import hudson.tasks.test.PipelineTestDetails;
 import hudson.util.DescribableList;
 import hudson.util.FormValidation;
+import io.jenkins.plugins.junit.checks.JUnitChecksPublisher;
+import io.jenkins.plugins.junit.storage.FileJunitTestResultStorage;
+import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
+import jenkins.tasks.SimpleBuildStep;
+import org.apache.commons.collections.iterators.ReverseListIterator;
+import org.apache.commons.lang.StringUtils;
 import org.apache.tools.ant.DirectoryScanner;
 import org.apache.tools.ant.types.FileSet;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
+import javax.annotation.Nonnull;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import javax.annotation.Nonnull;
-import jenkins.tasks.SimpleBuildStep;
-import org.kohsuke.stapler.DataBoundSetter;
 
 /**
  * Generates HTML report from JUnit test result XML files.
@@ -94,6 +98,8 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     private boolean allowEmptyResults;
     private boolean skipPublishingChecks;
     private String checksName;
+
+    private static final String DEFAULT_CHECKS_NAME = "Tests";
 
     @DataBoundConstructor
     public JUnitResultArchiver(String testResults) {
@@ -282,7 +288,19 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
             }
 
             if (!task.isSkipPublishingChecks()) {
-                new JUnitChecksPublisher(build, task.getChecksName(), result, summary).publishChecks(listener);
+                // If we haven't been provided with a checks name, and we have pipeline test details, set the checks name
+                // to be a ' / '-joined string of the enclosing blocks names, plus 'Tests' at the start. If there are no
+                // enclosing blocks, you'll end up with just 'Tests'.
+                String checksName = task.getChecksName();
+                if (checksName == null && pipelineTestDetails != null) {
+                    List<String> checksComponents = new ArrayList<>(pipelineTestDetails.getEnclosingBlockNames());
+                    checksComponents.add(DEFAULT_CHECKS_NAME);
+                    checksName = StringUtils.join(new ReverseListIterator(checksComponents), " / ");
+                }
+                if (Util.fixEmpty(checksName) == null) {
+                    checksName = DEFAULT_CHECKS_NAME;
+                }
+                new JUnitChecksPublisher(build, checksName, result, summary).publishChecks(listener);
             }
 
             return summary;

@@ -1,12 +1,10 @@
 package io.jenkins.plugins.junit.checks;
 
 import edu.hm.hafner.util.VisibleForTesting;
-import hudson.Util;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.TestResult;
-import hudson.tasks.junit.TestResultAction;
 import hudson.tasks.junit.TestResultSummary;
 import io.jenkins.plugins.checks.api.ChecksConclusion;
 import io.jenkins.plugins.checks.api.ChecksDetails;
@@ -14,11 +12,12 @@ import io.jenkins.plugins.checks.api.ChecksOutput;
 import io.jenkins.plugins.checks.api.ChecksPublisher;
 import io.jenkins.plugins.checks.api.ChecksPublisherFactory;
 import io.jenkins.plugins.checks.api.ChecksStatus;
-import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
+
+import java.util.List;
 
 @Restricted(NoExternalUse.class)
 public class JUnitChecksPublisher {
@@ -33,7 +32,7 @@ public class JUnitChecksPublisher {
 
     public JUnitChecksPublisher(final Run run, final String checksName, final TestResult result, final TestResultSummary summary) {
         this.run = run;
-        this.checksName = Util.fixEmpty(checksName) == null ? "Tests" : checksName;
+        this.checksName = checksName;
         this.result = result;
         this.summary = summary;
     }
