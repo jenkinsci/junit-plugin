@@ -79,8 +79,8 @@ public class JUnitChecksPublisher {
                 builder.append(testReport);
             }
         }
-
-        return builder.toString();
+        if (builder != null) return builder.toString();
+        return null;
     }
 
     private String mapFailedTestToTestReport(CaseResult failedTest) {
