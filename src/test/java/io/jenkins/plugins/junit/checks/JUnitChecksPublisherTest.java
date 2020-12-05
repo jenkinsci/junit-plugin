@@ -209,4 +209,27 @@ public class JUnitChecksPublisherTest {
 
         assertThat(checksDetails.getName().get(), is("Tests / first / second"));
     }
+
+    @Test
+    @SuppressWarnings("OptionalGetWithoutIsPresent")
+    public void extractChecksDetailsEmptySuite() throws Exception {
+        WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "singleStep");
+        j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
+                "  node {\n" +
+                "    def results = junit(testResults: '*.xml', allowEmptyResults: true)\n" +
+                "    assert results.totalCount == 0\n" +
+                "  }\n" +
+                "}\n", true));
+
+        rule.buildAndAssertSuccess(j);
+
+        ChecksDetails checksDetails = getDetail();
+
+        assertThat(checksDetails.getConclusion(), is(ChecksConclusion.SUCCESS));
+
+        ChecksOutput output = checksDetails.getOutput().get();
+
+        assertThat(output.getTitle().get(), is("No test results found"));
+        assertThat(output.getText().get(), is(""));
+    }
 }
