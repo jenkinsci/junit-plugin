@@ -117,6 +117,11 @@ public class JUnitChecksPublisher {
     }
 
     private String extractChecksTitle() {
+
+        if (summary.getTotalCount() == 0) {
+            return "No test results found";
+        }
+
         StringBuilder builder = new StringBuilder();
 
         if (summary.getFailCount() == 1) {
