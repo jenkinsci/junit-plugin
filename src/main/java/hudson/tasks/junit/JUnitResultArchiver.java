@@ -243,7 +243,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
             result = parse(task, pipelineTestDetails, testResults, build, workspace, launcher, listener);
             summary = null; // see below
         } else {
-            result = new TestResult(); // irrelevant
+            result = new TestResult(storage.load(build.getParent().getFullName(), build.getNumber())); // irrelevant
             summary = new JUnitParser(task.isKeepLongStdio(), task.isAllowEmptyResults()).summarizeResult(testResults, build, pipelineTestDetails, workspace, launcher, listener, storage);
         }
 
