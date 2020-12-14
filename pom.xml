@@ -59,7 +59,7 @@
         <dependency>
             <groupId>io.jenkins.plugins</groupId>
             <artifactId>plugin-util-api</artifactId>
-            <version>1.5.0</version>
+            <version>1.6.0</version>
             <exclusions>
                 <!-- TODO https://github.com/jenkinsci/analysis-pom-plugin/pull/153 -->
                 <exclusion>
