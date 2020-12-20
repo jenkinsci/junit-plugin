@@ -2,6 +2,7 @@ package hudson.tasks.junit.pipeline;
 
 import hudson.FilePath;
 import hudson.Launcher;
+import hudson.Util;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
@@ -10,7 +11,10 @@ import hudson.tasks.junit.TestResultSummary;
 import hudson.tasks.test.PipelineTestDetails;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import javax.annotation.Nonnull;
+
+import io.jenkins.plugins.checks.steps.ChecksInfo;
 import org.jenkinsci.plugins.workflow.actions.LabelAction;
 import org.jenkinsci.plugins.workflow.actions.ThreadNameAction;
 import org.jenkinsci.plugins.workflow.actions.WarningAction;
@@ -48,7 +52,14 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
         pipelineTestDetails.setNodeId(nodeId);
         pipelineTestDetails.setEnclosingBlocks(getEnclosingBlockIds(enclosingBlocks));
         pipelineTestDetails.setEnclosingBlockNames(getEnclosingBlockNames(enclosingBlocks));
+
         try {
+            // If we are within a withChecks context, and have not provided a name override in the step, apply the withChecks name
+            if (Util.fixEmpty(step.getChecksName()) == null) {
+                Optional.ofNullable(getContext().get(ChecksInfo.class))
+                        .map(ChecksInfo::getName)
+                        .ifPresent(step::setChecksName);
+            }
             TestResultSummary summary = JUnitResultArchiver.parseAndSummarize(step, pipelineTestDetails, run, workspace, launcher, listener);
 
             if (summary.getFailCount() > 0) {
