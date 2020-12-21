@@ -274,6 +274,43 @@ public class JUnitChecksPublisherTest {
 
     @Test
     @SuppressWarnings("OptionalGetWithoutIsPresent")
+    public void withChecksContextDeclarative() throws Exception {
+        WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "singleStep");
+        j.setDefinition(new CpsFlowDefinition("pipeline {\n" +
+                "  agent any\n" +
+                "  stages {\n" +
+                "    stage('first') {\n" +
+                "      steps {\n" +
+                "        withChecks('With Checks') {\n" +
+                "          junit(testResults: '*.xml')\n" +
+                "        }\n" +
+                "      }\n" +
+                "    }\n" +
+                "  }\n" +
+                "}", true));
+
+        FilePath ws = rule.jenkins.getWorkspaceFor(j);
+        FilePath testFile = requireNonNull(ws).child("test-result.xml");
+        testFile.copyFrom(TestResultTest.class.getResource("junit-report-1463.xml"));
+
+        rule.buildAndAssertSuccess(j);
+
+        List<ChecksDetails> checksDetails = getDetails();
+
+        assertThat(checksDetails.size(), is(2));
+
+        assertThat(checksDetails.get(0).getName().get(), is("With Checks"));
+        assertThat(checksDetails.get(0).getStatus(), is(ChecksStatus.IN_PROGRESS));
+        assertThat(checksDetails.get(0).getConclusion(), is(ChecksConclusion.NONE));
+
+        assertThat(checksDetails.get(1).getName().get(), is("With Checks"));
+        assertThat(checksDetails.get(1).getStatus(), is(ChecksStatus.COMPLETED));
+        assertThat(checksDetails.get(1).getConclusion(), is(ChecksConclusion.SUCCESS));
+
+    }
+
+    @Test
+    @SuppressWarnings("OptionalGetWithoutIsPresent")
     public void withChecksContextWithCustomName() throws Exception {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "singleStep");
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
