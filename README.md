@@ -53,6 +53,14 @@ In order to disable the checks feature, set the property `skipPublishingChecks` 
 junit skipPublishingChecks: true, testResults: 'test-results.xml'
 ```
 
+The plugin will use a checks name provided by a `withChecks` context.
+
+```groovy
+withChecks('Integration Tests') {
+  junit 'test-results.xml'
+}
+```
+
 In order to provide a custom check name, set the property `checksName`:
 
 ```groovy

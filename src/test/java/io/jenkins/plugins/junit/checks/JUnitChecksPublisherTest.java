@@ -246,7 +246,7 @@ public class JUnitChecksPublisherTest {
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
                 "  node {\n" +
                 "    withChecks('With Checks') {\n"+
-                "      def results = junit(testResults: '*.xml')\n" +
+                "      def results = junit '*.xml'\n" +
                 "      assert results.totalCount == 6\n" +
                 "    }\n" +
                 "  }\n" +
