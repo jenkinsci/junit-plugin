@@ -1,29 +1,22 @@
 package io.jenkins.plugins.junit.checks;
 
-import hudson.ExtensionList;
 import hudson.FilePath;
-import hudson.model.Job;
 import hudson.model.Result;
-import hudson.model.Run;
-import hudson.model.TaskListener;
 import hudson.tasks.junit.TestResultTest;
 import io.jenkins.plugins.checks.api.ChecksConclusion;
 import io.jenkins.plugins.checks.api.ChecksDetails;
 import io.jenkins.plugins.checks.api.ChecksOutput;
-import io.jenkins.plugins.checks.api.ChecksPublisher;
-import io.jenkins.plugins.checks.api.ChecksPublisherFactory;
 import io.jenkins.plugins.checks.api.ChecksStatus;
-import org.hibernate.annotations.Check;
+import io.jenkins.plugins.checks.util.CapturingChecksPublisher;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.junit.After;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import static java.util.Objects.requireNonNull;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -34,30 +27,12 @@ public class JUnitChecksPublisherTest {
     @Rule
     public final JenkinsRule rule = new JenkinsRule();
 
-    static class InterceptingChecksPublisher extends ChecksPublisher {
-
-        final List<ChecksDetails> details = new ArrayList<>();
-
-        @Override
-        public void publish(ChecksDetails checksDetails) {
-            details.add(checksDetails);
-        }
-    }
-
     @TestExtension
-    public static class InterceptingChecksPublisherFactory extends ChecksPublisherFactory {
+    public final static CapturingChecksPublisher.Factory PUBLISHER_FACTORY = new CapturingChecksPublisher.Factory();
 
-        InterceptingChecksPublisher publisher = new InterceptingChecksPublisher();
-
-        @Override
-        protected Optional<ChecksPublisher> createPublisher(Run<?, ?> run, TaskListener listener) {
-            return Optional.of(publisher);
-        }
-
-        @Override
-        protected Optional<ChecksPublisher> createPublisher(Job<?, ?> job, TaskListener listener) {
-            return Optional.of(publisher);
-        }
+    @After
+    public void clearPublishedChecks() {
+        PUBLISHER_FACTORY.getPublishedChecks().clear();
     }
 
     private ChecksDetails getDetail() {
@@ -67,7 +42,7 @@ public class JUnitChecksPublisherTest {
     }
 
     private List<ChecksDetails> getDetails() {
-        return ExtensionList.lookupSingleton(InterceptingChecksPublisherFactory.class).publisher.details;
+        return PUBLISHER_FACTORY.getPublishedChecks();
     }
 
     @Test
