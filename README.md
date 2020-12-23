@@ -53,8 +53,21 @@ In order to disable the checks feature, set the property `skipPublishingChecks` 
 junit skipPublishingChecks: true, testResults: 'test-results.xml'
 ```
 
-In order to provide a custom check name, set the property `checksName`:
+The plugin will default to using the stage name or branch of a parallel step prepended by `Tests` for the checks name.
+If there are no enclosing stages or branches, `Tests` will be used. The name can also be overridden by a `withChecks` step.
+
+The following snippet would publish three checks with the names `Tests / Integration`, `Tests` and `Integration Tests`, respectively.
 
 ```groovy
-junit checksName: 'Integration Tests', testResults: 'test-results.xml'
+stage('Integration') {
+  junit 'test-results.xml'
+}
+
+junit 'more-test-results.xml'
+
+stage('Ignored') {
+  withChecks('Integration Tests') {
+    junit 'yet-more-test-results.xml'
+  }
+}
 ```

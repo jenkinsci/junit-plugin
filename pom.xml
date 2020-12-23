@@ -20,6 +20,7 @@
         <java.level>8</java.level>
         <no-test-jar>false</no-test-jar>
         <configuration-as-code.version>1.46</configuration-as-code.version>
+        <checks-api.version>1.2.0</checks-api.version>
     </properties>
     <licenses>
         <license>
@@ -54,7 +55,14 @@
         <dependency>
             <groupId>io.jenkins.plugins</groupId>
             <artifactId>checks-api</artifactId>
-            <version>1.1.1</version>
+            <version>${checks-api.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jenkins.plugins</groupId>
+            <artifactId>checks-api</artifactId>
+            <version>${checks-api.version}</version>
+            <scope>test</scope>
+            <classifier>tests</classifier>
         </dependency>
         <dependency>
             <groupId>io.jenkins.plugins</groupId>
@@ -147,6 +155,17 @@
             <groupId>org.jenkins-ci.plugins.workflow</groupId>
             <artifactId>workflow-durable-task-step</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.jenkinsci.plugins</groupId>
+            <artifactId>pipeline-model-definition</artifactId>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>joda-time</groupId>
+                    <artifactId>joda-time</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
