@@ -7,7 +7,7 @@
         <relativePath />
     </parent>
     <artifactId>junit</artifactId>
-    <version>${revision}${changelist}</version>
+    <version>1.48</version>
     <packaging>hpi</packaging>
     <name>JUnit Plugin</name>
     <description>Allows JUnit-format test results to be published.</description>
@@ -32,7 +32,7 @@
         <connection>scm:git:git://github.com/${gitHubRepo}.git</connection>
         <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
         <url>https://github.com/${gitHubRepo}</url>
-      <tag>${scmTag}</tag>
+      <tag>junit-1.48</tag>
     </scm>
     <repositories>
         <repository>
