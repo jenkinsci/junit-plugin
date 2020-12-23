@@ -20,7 +20,7 @@
         <java.level>8</java.level>
         <no-test-jar>false</no-test-jar>
         <configuration-as-code.version>1.46</configuration-as-code.version>
-        <checks-api.version>1.2.0-rc169.c3cc84810770</checks-api.version>
+        <checks-api.version>1.2.0</checks-api.version>
     </properties>
     <licenses>
         <license>
@@ -61,6 +61,7 @@
             <groupId>io.jenkins.plugins</groupId>
             <artifactId>checks-api</artifactId>
             <version>${checks-api.version}</version>
+            <scope>test</scope>
             <classifier>tests</classifier>
         </dependency>
         <dependency>
