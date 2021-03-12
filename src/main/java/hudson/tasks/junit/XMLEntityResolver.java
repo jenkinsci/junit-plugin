@@ -1,18 +1,18 @@
 /*
  * The MIT License
- * 
+ *
  * Copyright (c) 2004-2009, Sun Microsystems, Inc., Kohsuke Kawaguchi, Jorg Heymans
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,6 +23,7 @@
  */
 package hudson.tasks.junit;
 
+import org.apache.commons.lang.StringUtils;
 import org.xml.sax.EntityResolver;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -46,7 +47,8 @@ import java.util.logging.Logger;
  */
 public class XMLEntityResolver implements EntityResolver {
 
-    private static final String TESTNG_NAMESPACE = "http://testng.org/";
+    private static final String TESTNG_HTTP_NAMESPACE = "http://testng.org/";
+    private static final String TESTNG_HTTPS_NAMESPACE = "https://testng.org/";
 
     /**
      * Intercepts the lookup of publicId, systemId
@@ -57,9 +59,9 @@ public class XMLEntityResolver implements EntityResolver {
                 LOGGER.fine("Will try to resolve systemId [" + systemId + "]");
             }
             // TestNG system-ids
-            if (systemId.startsWith(TESTNG_NAMESPACE)) {
+            if (systemId.startsWith(TESTNG_HTTP_NAMESPACE) || systemId.startsWith(TESTNG_HTTPS_NAMESPACE)) {
                 LOGGER.fine("It's a TestNG document, will try to lookup DTD in classpath");
-                String dtdFileName = systemId.substring(TESTNG_NAMESPACE.length());
+                String dtdFileName = StringUtils.substringAfterLast(systemId, "/");
 
                 URL url = getClass().getClassLoader().getResource(dtdFileName);
                 if (url != null)
