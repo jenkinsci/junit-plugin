@@ -1,12 +1,10 @@
 /* global jQuery3, view, echartsJenkinsApi */
-(function ($) {
-    redrawTrendCharts();
-    storeAndRestoreCarousel('trend-carousel');
-
-    /**
-     * Activate tooltips.
-     */
+(function ($, view) {
     $(function () {
+        redrawTrendCharts();
+        storeAndRestoreCarousel('trend-carousel');
+       
+       // Activate tooltips. 
         $('[data-toggle="tooltip"]').tooltip();
     });
 
@@ -18,15 +16,15 @@
 
         /**
          * Creates a build trend chart that shows the number of issues per tool.
-         * Requires that a DOM <div> element exists with the ID '#tools-trend-chart'.
+         * Requires that a DOM <div> element exists with the ID '#test-duration-trend-chart'.
          */
         view.getTestDurationTrend(function (lineModel) {
-            echartsJenkinsApi.renderZoomableTrendChart('test-duration-trend-chart', lineModel.responseJSON, redrawTrendCharts);
+            echartsJenkinsApi.renderZoomableTrendChart('test-result-trend-chart', lineModel.responseJSON, redrawTrendCharts);
         });
 
         /**
          * Creates a build trend chart that shows the number of issues for a couple of builds.
-         * Requires that a DOM <div> element exists with the ID '#severities-trend-chart'.
+         * Requires that a DOM <div> element exists with the ID '#test-result-trend-chart'.
          */
         view.getTestResultTrend(function (lineModel) {
             echartsJenkinsApi.renderZoomableTrendChart('test-result-trend-chart', lineModel.responseJSON, redrawTrendCharts);
@@ -53,4 +51,4 @@
             carousel.carousel(parseInt(activeCarousel));
         }
     }
-})(jQuery3);
+})(jQuery3, view);
