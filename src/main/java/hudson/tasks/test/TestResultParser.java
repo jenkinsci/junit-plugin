@@ -105,7 +105,7 @@ public abstract class TestResultParser {
      * <li>
      * Examine time stamp of test report files and if those are younger than the build, ignore them.
      * This is to ignore test reports created by earlier executions. Take the possible timestamp
-     * difference in the master/slave into account.
+     * difference in the controller/agent into account.
      * </ul>
      *
      * @param testResultLocations

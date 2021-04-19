@@ -229,11 +229,11 @@ public final class TestResult extends MetaTabulatedResult {
         if(!parsed) {
             long localTime = System.currentTimeMillis();
             if(localTime < buildTime-1000) /*margin*/
-                // build time is in the the future. clock on this slave must be running behind
+                // build time is in the the future. clock on this agent must be running behind
                 throw new AbortException(
-                    "Clock on this slave is out of sync with the master, and therefore \n" +
+                    "Clock on this agent is out of sync with the controller, and therefore \n" +
                     "I can't figure out what test results are new and what are old.\n" +
-                    "Please keep the slave clock in sync with the master.");
+                    "Please keep the agent clock in sync with the controller.");
 
             File f = new File(baseDir,reportFiles[0]);
             throw new AbortException(
@@ -282,11 +282,11 @@ public final class TestResult extends MetaTabulatedResult {
         if(!parsed) {
             long localTime = System.currentTimeMillis();
             if(localTime < buildTime-1000) /*margin*/
-                // build time is in the the future. clock on this slave must be running behind
+                // build time is in the the future. clock on this agent must be running behind
                 throw new AbortException(
-                    "Clock on this slave is out of sync with the master, and therefore \n" +
+                    "Clock on this agent is out of sync with the controller, and therefore \n" +
                     "I can't figure out what test results are new and what are old.\n" +
-                    "Please keep the slave clock in sync with the master.");
+                    "Please keep the agent clock in sync with the controller.");
 
             File f = reportFiles.iterator().next();
             throw new AbortException(
