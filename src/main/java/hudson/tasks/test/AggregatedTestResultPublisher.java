@@ -27,6 +27,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.AutoCompletionCandidates;
+import hudson.EnvVars;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.Util;
@@ -93,8 +94,19 @@ public class AggregatedTestResultPublisher extends Recorder {
 
     public boolean perform(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
         // add a TestResult just so that it can show up later.
-        build.addAction(new TestResultAction(jobs, includeFailedBuilds, build));
+    	// Expand the jobs String as it can contain variable
+    	String expandedJobs = this.getJobs(build.getEnvironment(listener));
+    	build.addAction(new TestResultAction(expandedJobs, includeFailedBuilds, build));
         return true;
+    }
+ 
+    /**
+     * Return the expanded job list
+     * @param env
+     * @return
+     */
+    public String getJobs(EnvVars env) {
+        return (env != null ? env.expand(this.jobs) : this.jobs);
     }
 
     public BuildStepMonitor getRequiredMonitorService() {
