@@ -27,6 +27,7 @@ package hudson.tasks.test;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -36,8 +37,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.servlet.ServletException;
-
-import com.google.common.collect.MapMaker;
 
 import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.HttpRedirect;
@@ -405,7 +404,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
             return uniquified;
         }
     }
-    private static final Map<String,Map<TestObject,Void>> UNIQUIFIED_NAMES = new MapMaker().makeMap();
+    private static final Map<String,Map<TestObject,Void>> UNIQUIFIED_NAMES = new HashMap<>();
 
     /**
      * Replaces URL-unsafe characters.

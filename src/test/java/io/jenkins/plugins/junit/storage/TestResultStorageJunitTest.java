@@ -24,7 +24,6 @@
 
 package io.jenkins.plugins.junit.storage;
 
-import com.google.common.collect.ImmutableSet;
 import com.thoughtworks.xstream.XStream;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -78,6 +77,7 @@ import org.jenkinsci.remoting.SerializableOnlyOverRemoting;
 
 import static java.util.Objects.requireNonNull;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.core.Is.is;
@@ -157,7 +157,7 @@ public class TestResultStorageJunitTest {
                     childNames.add(((Element) item).getTagName());
                 }
             }
-            assertEquals(buildXml, ImmutableSet.of("healthScaleFactor", "testData", "descriptions"), childNames);
+            assertThat(buildXml, childNames, containsInAnyOrder("healthScaleFactor", "testData", "descriptions"));
         }
         Impl.queriesPermitted = true;
         {
