@@ -1,6 +1,5 @@
 package hudson.tasks.test;
 
-import com.google.common.collect.ImmutableList;
 import hudson.Functions;
 import hudson.model.AbstractBuild;
 import hudson.model.FreeStyleBuild;
@@ -20,7 +19,10 @@ import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TouchBuilder;
 import org.jvnet.hudson.test.recipes.LocalData;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
@@ -140,7 +142,8 @@ public class AggregatedTestResultPublisherTest {
         build = j.buildAndAssertSuccess(upstreamProject);
         j.waitUntilNoActivity();
 
-        List<AbstractBuild<?, ?>> downstreamBuilds = ImmutableList.copyOf(build.getDownstreamBuilds(downstreamProject));
+        List<AbstractBuild<?, ?>> downstreamBuilds = StreamSupport.stream(
+                build.getDownstreamBuilds(downstreamProject).spliterator(), false).collect(Collectors.toList());
         assertThat(downstreamBuilds, hasSize(numberOfDownstreamBuilds));
     }
 
@@ -168,7 +171,7 @@ public class AggregatedTestResultPublisherTest {
         downstreamProject.setQuietPeriod(0);
         addFingerprinterToProject(downstreamProject, singleContents, singleFiles);
 
-        upstreamProject.getPublishersList().add(new BuildTrigger(ImmutableList.of(downstreamProject), Result.SUCCESS));
+        upstreamProject.getPublishersList().add(new BuildTrigger(Collections.singletonList(downstreamProject), Result.SUCCESS));
         upstreamProject.getPublishersList().add(new AggregatedTestResultPublisher(null));
 
         j.jenkins.rebuildDependencyGraph();
