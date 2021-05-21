@@ -1,5 +1,9 @@
-/* global jQuery3, view, echartsJenkinsApi */
+/* global jQuery3, bootstrap5, view, echartsJenkinsApi */
 (function ($) {
+    $('#defaultTrendConfiguration').on('hidden.bs.modal', function () {
+        redrawTrendCharts();
+    });
+
     redrawTrendCharts();
     storeAndRestoreCarousel('trend-carousel');
 
@@ -7,7 +11,10 @@
      * Activate tooltips.
      */
     $(function () {
-        $('[data-toggle="tooltip"]').tooltip();
+        $('[data-bs-toggle="tooltip"]').each(function () {
+            const tooltip = new bootstrap5.Tooltip($(this)[0]);
+            tooltip.enable();
+        });
     });
 
     /**
@@ -15,21 +22,23 @@
      * redraws the trend charts.
      */
     function redrawTrendCharts() {
+        const configuration = echartsJenkinsApi.readConfiguration('jenkins-echarts-test-history');
+        const trendConfigurationDialogId = 'defaultTrendConfiguration';
 
         /**
          * Creates a build trend chart that shows the number of issues per tool.
          * Requires that a DOM <div> element exists with the ID '#tools-trend-chart'.
          */
-        view.getTestDurationTrend(function (lineModel) {
-            echartsJenkinsApi.renderZoomableTrendChart('test-duration-trend-chart', lineModel.responseJSON, redrawTrendCharts);
+        view.getTestDurationTrend(configuration, function (lineModel) {
+            echartsJenkinsApi.renderConfigurableZoomableTrendChart('test-duration-trend-chart', lineModel.responseJSON, redrawTrendCharts, trendConfigurationDialogId);
         });
 
         /**
          * Creates a build trend chart that shows the number of issues for a couple of builds.
          * Requires that a DOM <div> element exists with the ID '#severities-trend-chart'.
          */
-        view.getTestResultTrend(function (lineModel) {
-            echartsJenkinsApi.renderZoomableTrendChart('test-result-trend-chart', lineModel.responseJSON, redrawTrendCharts);
+        view.getTestResultTrend(configuration, function (lineModel) {
+            echartsJenkinsApi.renderConfigurableZoomableTrendChart('test-result-trend-chart', lineModel.responseJSON, redrawTrendCharts, trendConfigurationDialogId);
         });
     }
 
@@ -50,7 +59,9 @@
         });
         const activeCarousel = localStorage.getItem(carouselId);
         if (activeCarousel) {
-            carousel.carousel(parseInt(activeCarousel));
+            const carouselControl = new bootstrap5.Carousel(carousel[0]);
+            carouselControl.to(parseInt(activeCarousel));
+            carouselControl.pause();
         }
     }
 })(jQuery3);

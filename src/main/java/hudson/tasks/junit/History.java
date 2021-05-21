@@ -26,14 +26,16 @@ package hudson.tasks.junit;
 import edu.hm.hafner.echarts.ChartModelConfiguration;
 import edu.hm.hafner.echarts.JacksonFacade;
 import edu.hm.hafner.echarts.LinesChartModel;
+
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
+import org.kohsuke.stapler.bind.JavaScriptMethod;
 import hudson.tasks.test.TestObject;
 import hudson.tasks.test.TestObjectIterable;
 import hudson.tasks.test.TestResultDurationChart;
 import hudson.tasks.test.TestResultTrendChart;
+
 import io.jenkins.plugins.junit.storage.TestResultImpl;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
-import org.kohsuke.stapler.bind.JavaScriptMethod;
 
 /**
  * History of {@link hudson.tasks.test.TestObject} over time.
@@ -43,9 +45,10 @@ import org.kohsuke.stapler.bind.JavaScriptMethod;
 @Restricted(NoExternalUse.class)
 public class History {
     private static final JacksonFacade JACKSON_FACADE = new JacksonFacade();
+    private static final String EMPTY_CONFIGURATION = "{}";
     private final TestObject testObject;
 
-    public History(TestObject testObject) {
+    public History(final TestObject testObject) {
         this.testObject = testObject;
     }
 
@@ -66,13 +69,20 @@ public class History {
         return testObject.getRun().getParent().getBuilds().size() > 1;
     }
 
-    @JavaScriptMethod
+    @Deprecated
     @SuppressWarnings("unused") // Called by jelly view
     public String getTestResultTrend() {
-        return JACKSON_FACADE.toJson(createTestResultTrend());
+        return getTestResultTrend(EMPTY_CONFIGURATION);
     }
 
-    private LinesChartModel createTestResultTrend() {
+    @JavaScriptMethod
+    @SuppressWarnings("unused") // Called by jelly view
+    public String getTestResultTrend(final String configuration) {
+        return JACKSON_FACADE.toJson(createTestResultTrend(ChartModelConfiguration.fromJson(configuration)));
+    }
+
+    private LinesChartModel createTestResultTrend(
+            final ChartModelConfiguration chartModelConfiguration) {
         if (testObject instanceof hudson.tasks.junit.TestResult) {
             TestResultImpl pluggableStorage = ((hudson.tasks.junit.TestResult) testObject).getPluggableStorage();
             if (pluggableStorage != null) {
@@ -80,16 +90,23 @@ public class History {
             }
         }
 
-        return new TestResultTrendChart().createFromTestObject(createBuildHistory(testObject), new ChartModelConfiguration());
+        return new TestResultTrendChart().createFromTestObject(createBuildHistory(testObject), chartModelConfiguration);
+    }
+
+    @Deprecated
+    @SuppressWarnings("unused") // Called by jelly view
+    public String getTestDurationTrend() {
+        return getTestDurationTrend(EMPTY_CONFIGURATION);
     }
 
     @JavaScriptMethod
     @SuppressWarnings("unused") // Called by jelly view
-    public String getTestDurationTrend() {
-        return JACKSON_FACADE.toJson(createTestDurationResultTrend());
+    public String getTestDurationTrend(final String configuration) {
+        return JACKSON_FACADE.toJson(createTestDurationResultTrend(ChartModelConfiguration.fromJson(configuration)));
     }
 
-    private LinesChartModel createTestDurationResultTrend() {
+    private LinesChartModel createTestDurationResultTrend(
+            final ChartModelConfiguration chartModelConfiguration) {
         if (testObject instanceof hudson.tasks.junit.TestResult) {
             TestResultImpl pluggableStorage = ((hudson.tasks.junit.TestResult) testObject).getPluggableStorage();
             if (pluggableStorage != null) {
@@ -97,15 +114,15 @@ public class History {
             }
         }
 
-        return new TestResultDurationChart().create(createBuildHistory(testObject), new ChartModelConfiguration());
+        return new TestResultDurationChart().create(createBuildHistory(testObject), chartModelConfiguration);
     }
 
-    private TestObjectIterable createBuildHistory(TestObject testObject) {
+    private TestObjectIterable createBuildHistory(final TestObject testObject) {
         return new TestObjectIterable(testObject);
     }
 
     @SuppressWarnings("unused") // Called by jelly view
-    public static int asInt(String s, int defaultValue) {
+    public static int asInt(final String s, final int defaultValue) {
         if (s == null) return defaultValue;
         try {
             return Integer.parseInt(s);
