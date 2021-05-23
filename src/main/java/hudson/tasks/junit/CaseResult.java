@@ -446,9 +446,9 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     private void recomputeFailedSinceIfNeeded() {
         if (failedSince==0 && getFailCount()==1) {
             CaseResult prev = getPreviousResult();
-            if(prev!=null && !prev.isPassed())
+            if (prev != null && prev.isFailed()) {
                 this.failedSince = prev.getFailedSince();
-            else if (getRun() != null) {
+            } else if (getRun() != null) {
                 this.failedSince = getRun().getNumber();
             } else {
                 LOGGER.warning("trouble calculating getFailedSince. We've got prev, but no owner.");
