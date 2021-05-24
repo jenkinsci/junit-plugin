@@ -69,12 +69,6 @@ public class History {
         return testObject.getRun().getParent().getBuilds().size() > 1;
     }
 
-    @Deprecated
-    @SuppressWarnings("unused") // Called by jelly view
-    public String getTestResultTrend() {
-        return getTestResultTrend(EMPTY_CONFIGURATION);
-    }
-
     @JavaScriptMethod
     @SuppressWarnings("unused") // Called by jelly view
     public String getTestResultTrend(final String configuration) {
@@ -91,12 +85,6 @@ public class History {
         }
 
         return new TestResultTrendChart().createFromTestObject(createBuildHistory(testObject), chartModelConfiguration);
-    }
-
-    @Deprecated
-    @SuppressWarnings("unused") // Called by jelly view
-    public String getTestDurationTrend() {
-        return getTestDurationTrend(EMPTY_CONFIGURATION);
     }
 
     @JavaScriptMethod
