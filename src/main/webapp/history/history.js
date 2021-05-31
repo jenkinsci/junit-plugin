@@ -1,6 +1,8 @@
 /* global jQuery3, bootstrap5, view, echartsJenkinsApi */
 (function ($) {
-    $('#defaultTrendConfiguration').on('hidden.bs.modal', function () {
+    const trendConfigurationDialogId = 'trend-configuration-default';
+
+    $('#' + trendConfigurationDialogId).on('hidden.bs.modal', function () {
         redrawTrendCharts();
     });
 
@@ -22,15 +24,14 @@
      * redraws the trend charts.
      */
     function redrawTrendCharts() {
-        const configuration = echartsJenkinsApi.readConfiguration('jenkins-echarts-test-history');
-        const trendConfigurationDialogId = 'defaultTrendConfiguration';
+        const configuration = JSON.stringify(echartsJenkinsApi.readConfiguration(trendDefaultStorageId));
 
         /**
          * Creates a build trend chart that shows the number of issues per tool.
          * Requires that a DOM <div> element exists with the ID '#tools-trend-chart'.
          */
         view.getTestDurationTrend(configuration, function (lineModel) {
-            echartsJenkinsApi.renderConfigurableZoomableTrendChart('test-duration-trend-chart', lineModel.responseJSON, redrawTrendCharts, trendConfigurationDialogId);
+            echartsJenkinsApi.renderConfigurableZoomableTrendChart('test-duration-trend-chart', lineModel.responseJSON, trendConfigurationDialogId);
         });
 
         /**
@@ -38,7 +39,7 @@
          * Requires that a DOM <div> element exists with the ID '#severities-trend-chart'.
          */
         view.getTestResultTrend(configuration, function (lineModel) {
-            echartsJenkinsApi.renderConfigurableZoomableTrendChart('test-result-trend-chart', lineModel.responseJSON, redrawTrendCharts, trendConfigurationDialogId);
+            echartsJenkinsApi.renderConfigurableZoomableTrendChart('test-result-trend-chart', lineModel.responseJSON, trendConfigurationDialogId);
         });
     }
 

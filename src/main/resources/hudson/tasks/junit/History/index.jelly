@@ -32,7 +32,7 @@ THE SOFTWARE.
 
     <st:adjunct includes="io.jenkins.plugins.echarts"/>
     <st:adjunct includes="io.jenkins.plugins.bootstrap5"/>
-    <st:adjunct includes="io.jenkins.plugins.echarts-trend-configuration-dialog"/>
+    <st:adjunct includes="io.jenkins.plugins.echarts-trend-default-setup"/>
 
     <st:include from="${it.testObject}" it="${it.testObject}" page="sidepanel.jelly"/>
     <l:main-panel>
