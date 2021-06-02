@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 <!-- Displays the chart that show how long builds are taking -->
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:bs="/bootstrap5">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:bs="/bootstrap5" xmlns:c="/charts">
   <bs:layout title="${%title(it.testObject.displayName)}">
     <j:set var="start" value="${it.asInt(request.getParameter('start'),0)}"/>
     <j:set var="end" value="${it.asInt(request.getParameter('end'),start+24)}"/>
@@ -32,7 +32,6 @@ THE SOFTWARE.
 
     <st:adjunct includes="io.jenkins.plugins.echarts"/>
     <st:adjunct includes="io.jenkins.plugins.bootstrap5"/>
-    <st:adjunct includes="io.jenkins.plugins.echarts-trend-default-setup"/>
 
     <st:include from="${it.testObject}" it="${it.testObject}" page="sidepanel.jelly"/>
     <l:main-panel>
@@ -80,8 +79,11 @@ THE SOFTWARE.
          
       </div>
     </l:main-panel>
-    <script>var view =
-      <st:bind value="${it}"/>
+
+    <c:chart-setup id="test-history"/>
+
+    <script>
+      var view =<st:bind value="${it}"/>
     </script>
     <script type="text/javascript" src="${resURL}/plugin/junit/history/history.js"/>
   </bs:layout>

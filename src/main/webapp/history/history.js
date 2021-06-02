@@ -1,6 +1,6 @@
 /* global jQuery3, bootstrap5, view, echartsJenkinsApi */
 (function ($) {
-    const trendConfigurationDialogId = 'trend-configuration-default';
+    const trendConfigurationDialogId = 'chart-configuration-test-history';
 
     $('#' + trendConfigurationDialogId).on('hidden.bs.modal', function () {
         redrawTrendCharts();
@@ -24,7 +24,7 @@
      * redraws the trend charts.
      */
     function redrawTrendCharts() {
-        const configuration = JSON.stringify(echartsJenkinsApi.readConfiguration(trendDefaultStorageId));
+        const configuration = JSON.stringify(echartsJenkinsApi.readFromLocalStorage('jenkins-echarts-chart-configuration-test-history'));
 
         /**
          * Creates a build trend chart that shows the number of issues per tool.
