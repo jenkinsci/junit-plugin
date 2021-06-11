@@ -220,7 +220,7 @@ public final class TestResult extends MetaTabulatedResult {
         for (String value : reportFiles) {
             File reportFile = new File(baseDir, value);
             // only count files that were actually updated during this build
-            if (buildTime-3000/*error margin*/ <= reportFile.lastModified()) {
+            if (buildTime-60000/*error margin*/ <= reportFile.lastModified()) {
                 parsePossiblyEmpty(reportFile, pipelineTestDetails);
                 parsed = true;
             }
@@ -273,7 +273,7 @@ public final class TestResult extends MetaTabulatedResult {
 
         for (File reportFile : reportFiles) {
             // only count files that were actually updated during this build
-            if (buildTime-3000/*error margin*/ <= reportFile.lastModified()) {
+            if (buildTime-60000/*error margin*/ <= reportFile.lastModified()) {
                 parsePossiblyEmpty(reportFile, pipelineTestDetails);
                 parsed = true;
             }
