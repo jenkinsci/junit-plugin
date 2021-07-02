@@ -98,6 +98,10 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     private boolean allowEmptyResults;
     private boolean skipPublishingChecks;
     private String checksName;
+    /**
+     * If true, the run won't be marked as unstable if there are failing tests. Only the stage will be marked as unstable.
+     */
+    private boolean skipMarkingBuildUnstable;
 
     private static final String DEFAULT_CHECKS_NAME = "Tests";
 
@@ -163,7 +167,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     @Override
     public void perform(Run build, FilePath workspace, Launcher launcher,
             TaskListener listener) throws InterruptedException, IOException {
-        if (parseAndSummarize(this, null, build, workspace, launcher, listener).getFailCount() > 0) {
+        if (parseAndSummarize(this, null, build, workspace, launcher, listener).getFailCount() > 0 && !skipMarkingBuildUnstable) {
             build.setResult(Result.UNSTABLE);
         }
     }
@@ -409,6 +413,14 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
         this.allowEmptyResults = allowEmptyResults;
     }
 
+    public boolean isSkipMarkingBuildUnstable() {
+        return skipMarkingBuildUnstable;
+    }
+
+    @DataBoundSetter
+    public void setSkipMarkingBuildUnstable(boolean skipMarkingBuildUnstable) {
+        this.skipMarkingBuildUnstable = skipMarkingBuildUnstable;
+    }
 
     private static final long serialVersionUID = 1L;
 
