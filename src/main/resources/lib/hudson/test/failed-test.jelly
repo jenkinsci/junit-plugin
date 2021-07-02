@@ -25,19 +25,19 @@ THE SOFTWARE.
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
   <st:documentation>
-    Display link to the failed test.
+    Display link to the test.
     @since 1.538
     <st:attribute name="url" type="String">
-      Path to the failed test.
+      Path to the test.
     </st:attribute>
     <st:attribute name="result" type="TestObject">
-      Failed test object
+      Test object
     </st:attribute>
   </st:documentation>
     <st:once>
       <script type="text/javascript">
       <!-- TODO make sure load doesn't happen every time -->
-      function showFailureSummary(id,query) {
+      function showSummary(id,query) {
         var element = document.getElementById(id)
         element.style.display = "";
         document.getElementById(id + "-showlink").style.display = "none";
@@ -51,39 +51,39 @@ THE SOFTWARE.
         }
       }
 
-      function hideFailureSummary(id) {
+      function hideSummary(id) {
         document.getElementById(id).style.display = "none";
         document.getElementById(id + "-showlink").style.display = "";
         document.getElementById(id + "-hidelink").style.display = "none";
       }
     </script>
     <style type="text/css">
-      .failure-summary {
+      .summary {
         margin-left: 2em;
       }
 
-      .failure-summary h4 {
+      .summary h4 {
         margin: 0.5em 0 0.5em 0;
       }
 
-      .failure-summary h4 a {
+      .summary h4 a {
         text-decoration: none;
         color: inherit;
       }
 
-      .failure-summary h4 a img {
+      .summary h4 a img {
         width: 8px;
         height: 8px;
       }
 
-      .failure-summary pre {
+      .summary pre {
         margin-left: 2em;
       }
     </style>
   </st:once>
   <j:set var="id" value="${h.jsStringEscape(url)}"/>
-  <j:set var="open" value="showFailureSummary('test-${id}','${url}/summary')"/>
-  <j:set var="close" value="hideFailureSummary('test-${id}')"/>
+  <j:set var="open" value="showSummary('test-${id}','${url}/summary')"/>
+  <j:set var="close" value="hideSummary('test-${id}')"/>
   <a id="test-${id}-showlink" onclick="${open}" title="${%Show details}">
     <l:icon class="icon-document-add icon-sm"/>
   </a>
@@ -95,7 +95,7 @@ THE SOFTWARE.
   <j:forEach var="badge" items="${result.testActions}">
     <st:include it="${badge}" page="badge.jelly" optional="true"/>
   </j:forEach>
-  <div id="test-${id}" class="failure-summary" style="display: none;">
+  <div id="test-${id}" class="summary" style="display: none;">
     ${%Loading...}
   </div>
 </j:jelly>

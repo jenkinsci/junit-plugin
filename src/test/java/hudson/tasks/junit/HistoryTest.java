@@ -108,7 +108,87 @@ public class HistoryTest {
         PackageResult smallPackage = tr5.byPackage("org.jvnet.hudson.examples.small");
         ClassResult miscClass = smallPackage.getClassResult("MiscTest");
         CaseResult eleanorCase = miscClass.getCaseResult("testEleanor");
+        assertNotNull(eleanorCase);
         assertTrue("eleanor failed", !eleanorCase.isPassed());
-        assertEquals("eleanor has failed since build 3", 3, eleanorCase.getFailedSince()); 
+        assertEquals("eleanor has failed since build 3", 3, eleanorCase.getFailedSince());
+    }
+
+    @LocalData
+    @Test
+    public void testSkippedSince() throws Exception {
+        assertNotNull("project should exist", project);
+
+        // Check the status of a few builds
+        FreeStyleBuild build8 = project.getBuildByNumber(8);
+        assertNotNull("build8", build8);
+        rule.assertBuildStatus(Result.SUCCESS, build8);
+
+        FreeStyleBuild build10 = project.getBuildByNumber(10);
+        assertNotNull("build10", build10);
+        rule.assertBuildStatus(Result.FAILURE, build10);
+
+        TestResult tr8 = build8.getAction(TestResultAction.class).getResult();
+        assertEquals(1,tr8.getSkippedTests().size());
+
+        // In build 8 and 9, we expect these tests to have skippedSince:
+        // org.jvnet.hudson.examples.small.deep.DeepTest.testScubaOnlyInRedSea skipped since 8
+
+        PackageResult deepPackage = tr8.byPackage("org.jvnet.hudson.examples.small.deep");
+        assertNotNull("deepPackage", deepPackage);
+        assertTrue("package is failed", !deepPackage.isPassed());
+        ClassResult deepClass = deepPackage.getClassResult("DeepTest");
+        assertNotNull(deepClass);
+        assertTrue("class is failed", !deepClass.isPassed());
+        CaseResult testScubaOnlyInRedSeaCase = deepClass.getCaseResult("testScubaOnlyInRedSea");
+        assertNotNull(testScubaOnlyInRedSeaCase);
+        assertTrue("scubaCase case is not skipped", testScubaOnlyInRedSeaCase.isSkipped());
+        int scubaSkippedSince = testScubaOnlyInRedSeaCase.getSkippedSince();
+        assertEquals("scubaCase should have skipped since build 8", 8, scubaSkippedSince);
+
+        // In build 9 the scuba in red sea test is still skipped
+        TestResult tr9 = project.getBuildByNumber(9).getAction(TestResultAction.class).getResult();
+        assertEquals(1,tr9.getSkippedTests().size());
+        deepPackage = tr9.byPackage("org.jvnet.hudson.examples.small.deep");
+        assertNotNull("deepPackage", deepPackage);
+        assertTrue("package is failed", !deepPackage.isPassed());
+        deepClass = deepPackage.getClassResult("DeepTest");
+        assertNotNull(deepClass);
+        assertTrue("class is failed", !deepClass.isPassed());
+        testScubaOnlyInRedSeaCase = deepClass.getCaseResult("testScubaOnlyInRedSea");
+        assertNotNull(testScubaOnlyInRedSeaCase);
+        assertTrue("testScubaOnlyInRedSea case is skipped", testScubaOnlyInRedSeaCase.isSkipped());
+        scubaSkippedSince = testScubaOnlyInRedSeaCase.getSkippedSince();
+        assertEquals("scubatestScubaOnlyInRedSeaCase should have skipped since build 8", 8, scubaSkippedSince);
+
+        // In build 10 the scuba in red sea test begins to fail
+        TestResult tr10 = project.getBuildByNumber(10).getAction(TestResultAction.class).getResult();
+        assertEquals(1,tr10.getFailedTests().size());
+        deepPackage = tr10.byPackage("org.jvnet.hudson.examples.small.deep");
+        assertNotNull("deepPackage", deepPackage);
+        assertTrue("package is failed", !deepPackage.isPassed());
+        deepClass = deepPackage.getClassResult("DeepTest");
+        assertNotNull(deepClass);
+        assertTrue("class is failed", !deepClass.isPassed());
+        testScubaOnlyInRedSeaCase = deepClass.getCaseResult("testScubaOnlyInRedSea");
+        assertNotNull(testScubaOnlyInRedSeaCase);
+        assertTrue("testScubaOnlyInRedSea case is failed", testScubaOnlyInRedSeaCase.isFailed());
+        scubaSkippedSince = testScubaOnlyInRedSeaCase.getSkippedSince();
+        assertEquals("scubatestScubaOnlyInRedSeaCase should have skipped since build 0", 0, scubaSkippedSince);
+
+        // In build11, testScubaOnlyInRedSea is skipped again - skippedSince becomes 11
+        TestResult tr11 = project.getBuildByNumber(11).getAction(TestResultAction.class).getResult();
+        assertEquals(0,tr11.getFailedTests().size());
+        assertEquals(1,tr11.getSkippedTests().size());
+        deepPackage = tr11.byPackage("org.jvnet.hudson.examples.small.deep");
+        assertNotNull("deepPackage", deepPackage);
+        assertTrue("package is failed", !deepPackage.isPassed());
+        deepClass = deepPackage.getClassResult("DeepTest");
+        assertNotNull(deepClass);
+        assertTrue("class is failed", !deepClass.isPassed());
+        testScubaOnlyInRedSeaCase = deepClass.getCaseResult("testScubaOnlyInRedSea");
+        assertNotNull(testScubaOnlyInRedSeaCase);
+        assertTrue("testScubaOnlyInRedSea case is skipped", testScubaOnlyInRedSeaCase.isSkipped());
+        scubaSkippedSince = testScubaOnlyInRedSeaCase.getSkippedSince();
+        assertEquals("scubatestScubaOnlyInRedSeaCase should have skipped since build 11", 11, scubaSkippedSince);
     }
 }

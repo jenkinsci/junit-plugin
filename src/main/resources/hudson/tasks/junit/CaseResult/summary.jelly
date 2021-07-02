@@ -31,8 +31,8 @@ THE SOFTWARE.
         <j:set var="id" value="${attrs.id}-${attrs.name}"/>
         <j:set var="display" value="${attrs.opened ? '' : 'none'}"/>
         <j:set var="idisplay" value="${attrs.opened ? 'none' : ''}"/>
-        <j:set var="open" value="javascript:showFailureSummary('${id}')"/>
-        <j:set var="close" value="javascript:hideFailureSummary('${id}')"/>
+        <j:set var="open" value="javascript:showSummary('${id}')"/>
+        <j:set var="close" value="javascript:hideSummary('${id}')"/>
         <h4>
           <a id="${id}-showlink" href="${open}" title="Show ${title}" style="display: ${idisplay}">
             <l:icon class="icon-document-add icon-sm"/><st:nbsp/>${title}
@@ -54,6 +54,7 @@ THE SOFTWARE.
 
   <j:set var="id" value="${h.generateId()}"/>
 
+  <local:item id="${id}" name="skipMessage" title="${%Skip Message}" value="${it.skippedMessage}" opened="true"/>
   <local:item id="${id}" name="error" title="${%Error Details}" value="${it.errorDetails}" opened="true"/>
   <local:item id="${id}" name="stacktrace" title="${%Stack Trace}" value="${it.errorStackTrace}"/>
   <local:item id="${id}" name="stdout" title="${%Standard Output}" value="${it.stdout}"/>

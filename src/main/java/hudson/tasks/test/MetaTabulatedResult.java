@@ -1,18 +1,18 @@
 /*
  * The MIT License
- * 
+ *
  * Copyright (c) 2004-2009, Sun Microsystems, Inc., Kohsuke Kawaguchi, Yahoo!, Inc.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,10 +25,11 @@ package hudson.tasks.test;
 
 
 import java.util.Collection;
+import java.util.Collections;
 
 /**
  * The purpose of this class is to provide a good place for the
- * jelly to bind to.  
+ * jelly to bind to.
  * {@link TabulatedResult} whose immediate children
  * are other {@link TabulatedResult}s.
  *
@@ -40,5 +41,12 @@ public abstract class MetaTabulatedResult extends TabulatedResult {
      * All failed tests.
      */
     public abstract Collection<? extends TestResult> getFailedTests();
+
+    /**
+     * All skipped tests.
+     */
+    public Collection<? extends TestResult> getSkippedTests() {
+        return Collections.emptyList();
+    }
 
 }

@@ -131,7 +131,7 @@ public class TestResultLinksTest {
         FreeStyleBuild build = new FreeStyleBuild(project) {
             @Override
             public FreeStyleBuild getPreviousBuild() {
-                fail("When no tests fail, we don't need tp load previous builds (expensive)");
+                fail("When no tests fail, we don't need to load previous builds (expensive)");
                 return null;
             }
         };
