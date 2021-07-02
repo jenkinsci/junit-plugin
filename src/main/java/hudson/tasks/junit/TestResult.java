@@ -110,6 +110,11 @@ public final class TestResult extends MetaTabulatedResult {
      */
     private transient List<CaseResult> failedTests;
 
+    /**
+     * Number of old tests.
+     */
+    private final List<File> oldTests = new ArrayList<File>();
+
     private final boolean keepLongStdio;
 
     /**
@@ -223,6 +228,8 @@ public final class TestResult extends MetaTabulatedResult {
             if (buildTime-3000/*error margin*/ <= reportFile.lastModified()) {
                 parsePossiblyEmpty(reportFile, pipelineTestDetails);
                 parsed = true;
+            } else {
+                oldTests.add(reportFile);
             }
         }
 
@@ -235,12 +242,7 @@ public final class TestResult extends MetaTabulatedResult {
                     "I can't figure out what test results are new and what are old.\n" +
                     "Please keep the agent clock in sync with the controller.");
 
-            File f = new File(baseDir,reportFiles[0]);
-            throw new AbortException(
-                String.format(
-                "Test reports were found but none of them are new. Did leafNodes run? %n"+
-                "For example, %s is %s old%n", f,
-                Util.getTimeSpanString(buildTime-f.lastModified())));
+            //throwing none-of-them-are-new exception happens in JUnitParser
         }
     }
 
@@ -276,6 +278,8 @@ public final class TestResult extends MetaTabulatedResult {
             if (buildTime-3000/*error margin*/ <= reportFile.lastModified()) {
                 parsePossiblyEmpty(reportFile, pipelineTestDetails);
                 parsed = true;
+            } else {
+                this.oldTests.add(reportFile);
             }
         }
 
@@ -288,12 +292,7 @@ public final class TestResult extends MetaTabulatedResult {
                     "I can't figure out what test results are new and what are old.\n" +
                     "Please keep the agent clock in sync with the controller.");
 
-            File f = reportFiles.iterator().next();
-            throw new AbortException(
-                String.format(
-                "Test reports were found but none of them are new. Did leafNodes run? %n"+
-                "For example, %s is %s old%n", f,
-                Util.getTimeSpanString(buildTime-f.lastModified())));
+            //throwing none-of-them-are-new exception happens in JUnitParser
         }
         
     }
@@ -934,4 +933,7 @@ public final class TestResult extends MetaTabulatedResult {
 
     private static final long serialVersionUID = 1L;
 
+    public List<File> getOldTests() {
+        return oldTests;
+    }
 }
