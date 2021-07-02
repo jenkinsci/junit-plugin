@@ -1,24 +1,24 @@
 package hudson.tasks.test;
 
+import java.util.List;
+
 import edu.hm.hafner.echarts.ChartModelConfiguration;
 import edu.hm.hafner.echarts.LineSeries;
 import edu.hm.hafner.echarts.LinesChartModel;
 import edu.hm.hafner.echarts.LinesDataSet;
 import edu.hm.hafner.echarts.Palette;
 import edu.umd.cs.findbugs.annotations.NonNull;
-import hudson.tasks.junit.TrendTestResultSummary;
-import java.util.List;
 
-import static hudson.tasks.test.TestResultTrendSeriesBuilder.FAILED_KEY;
-import static hudson.tasks.test.TestResultTrendSeriesBuilder.PASSED_KEY;
-import static hudson.tasks.test.TestResultTrendSeriesBuilder.SKIPPED_KEY;
+import hudson.tasks.junit.TrendTestResultSummary;
+
+import static hudson.tasks.test.TestResultTrendSeriesBuilder.*;
 
 public class TestResultTrendChart {
-    
-    public LinesChartModel create(List<TrendTestResultSummary> results) {
+
+    public LinesChartModel create(final List<TrendTestResultSummary> results) {
         LinesDataSet dataset = new LinesDataSet();
         results.forEach(result -> dataset.add(result.getDisplayName(), result.toMap(), result.getBuildNumber()));
-        
+
         return getLinesChartModel(dataset);
     }
 
@@ -29,7 +29,7 @@ public class TestResultTrendChart {
 
         return getLinesChartModel(dataSet);
     }
-    
+
     public LinesChartModel createFromTestObject(final Iterable results,
                                   final ChartModelConfiguration configuration) {
         TestObjectTrendSeriesBuilder builder = new TestObjectTrendSeriesBuilder();
@@ -38,11 +38,8 @@ public class TestResultTrendChart {
         return getLinesChartModel(dataSet);
     }
 
-    private LinesChartModel getLinesChartModel(LinesDataSet dataSet) {
-        LinesChartModel model = new LinesChartModel();
-        model.setDomainAxisLabels(dataSet.getDomainAxisLabels());
-        model.setBuildNumbers(dataSet.getBuildNumbers());
-
+    private LinesChartModel getLinesChartModel(final LinesDataSet dataSet) {
+        LinesChartModel model = new LinesChartModel(dataSet);
         LineSeries failed = new LineSeries("Failed", Palette.RED.getNormal(),
                 LineSeries.StackedMode.STACKED, LineSeries.FilledMode.FILLED);
         failed.addAll(dataSet.getSeries(FAILED_KEY));
