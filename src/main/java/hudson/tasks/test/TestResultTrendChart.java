@@ -14,46 +14,62 @@ import hudson.tasks.junit.TrendTestResultSummary;
 import static hudson.tasks.test.TestResultTrendSeriesBuilder.*;
 
 public class TestResultTrendChart {
+    enum PassedColor {GREEN, BLUE}
 
     public LinesChartModel create(final List<TrendTestResultSummary> results) {
+        return create(results, PassedColor.BLUE);
+    }
+
+    public LinesChartModel create(final List<TrendTestResultSummary> results, final PassedColor useGreen) {
         LinesDataSet dataset = new LinesDataSet();
         results.forEach(result -> dataset.add(result.getDisplayName(), result.toMap(), result.getBuildNumber()));
 
-        return getLinesChartModel(dataset);
+        return getLinesChartModel(dataset, useGreen);
     }
 
-    public LinesChartModel create(@NonNull final Iterable results,
-                                  final ChartModelConfiguration configuration) {
+    public LinesChartModel create(@NonNull final Iterable results, final ChartModelConfiguration configuration) {
+        return create(results, configuration, PassedColor.BLUE);
+    }
+
+    public LinesChartModel create(@NonNull final Iterable results, final ChartModelConfiguration configuration,
+            final PassedColor useGreen) {
         TestResultTrendSeriesBuilder builder = new TestResultTrendSeriesBuilder();
         LinesDataSet dataSet = builder.createDataSet(configuration, results);
 
-        return getLinesChartModel(dataSet);
+        return getLinesChartModel(dataSet, useGreen);
     }
 
     public LinesChartModel createFromTestObject(final Iterable results,
-                                  final ChartModelConfiguration configuration) {
+            final ChartModelConfiguration configuration) {
+        return createFromTestObject(results, configuration, PassedColor.BLUE);
+    }
+
+    public LinesChartModel createFromTestObject(final Iterable results, final ChartModelConfiguration configuration,
+            final PassedColor useGreen) {
         TestObjectTrendSeriesBuilder builder = new TestObjectTrendSeriesBuilder();
         LinesDataSet dataSet = builder.createDataSet(configuration, results);
 
-        return getLinesChartModel(dataSet);
+        return getLinesChartModel(dataSet, useGreen);
     }
 
-    private LinesChartModel getLinesChartModel(final LinesDataSet dataSet) {
+    private LinesChartModel getLinesChartModel(final LinesDataSet dataSet, final PassedColor useGreen) {
         LinesChartModel model = new LinesChartModel(dataSet);
-        LineSeries failed = new LineSeries("Failed", Palette.RED.getNormal(),
+
+        LineSeries passed = new LineSeries("Passed",
+                useGreen == PassedColor.BLUE ? Palette.BLUE.getNormal() : Palette.GREEN.getNormal(),
                 LineSeries.StackedMode.STACKED, LineSeries.FilledMode.FILLED);
-        failed.addAll(dataSet.getSeries(FAILED_KEY));
-        model.addSeries(failed);
+        passed.addAll(dataSet.getSeries(PASSED_KEY));
+        model.addSeries(passed);
 
         LineSeries skipped = new LineSeries("Skipped", Palette.GRAY.getNormal(),
                 LineSeries.StackedMode.STACKED, LineSeries.FilledMode.FILLED);
         skipped.addAll(dataSet.getSeries(SKIPPED_KEY));
         model.addSeries(skipped);
 
-        LineSeries passed = new LineSeries("Passed", Palette.BLUE.getNormal(),
+        LineSeries failed = new LineSeries("Failed", Palette.RED.getNormal(),
                 LineSeries.StackedMode.STACKED, LineSeries.FilledMode.FILLED);
-        passed.addAll(dataSet.getSeries(PASSED_KEY));
-        model.addSeries(passed);
+        failed.addAll(dataSet.getSeries(FAILED_KEY));
+        model.addSeries(failed);
 
         return model;
     }
