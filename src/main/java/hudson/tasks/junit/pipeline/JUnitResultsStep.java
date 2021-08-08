@@ -55,6 +55,10 @@ public class JUnitResultsStep extends Step implements JUnitTask {
     private boolean allowEmptyResults;
     private boolean skipPublishingChecks;
     private String checksName;
+    /**
+     * If true, the run won't be marked as unstable if there are failing tests. Only the stage will be marked as unstable.
+     */
+    private boolean skipMarkingBuildUnstable;
 
     @DataBoundConstructor
     public JUnitResultsStep(String testResults) {
@@ -145,6 +149,15 @@ public class JUnitResultsStep extends Step implements JUnitTask {
 
     @DataBoundSetter public final void setAllowEmptyResults(boolean allowEmptyResults) {
         this.allowEmptyResults = allowEmptyResults;
+    }
+
+    public boolean isSkipMarkingBuildUnstable() {
+        return skipMarkingBuildUnstable;
+    }
+
+    @DataBoundSetter
+    public void setSkipMarkingBuildUnstable(boolean skipMarkingBuildUnstable) {
+        this.skipMarkingBuildUnstable = skipMarkingBuildUnstable;
     }
 
     @Override

@@ -73,6 +73,8 @@ public class JUnitResultsStepTest {
         MockTestDataPublisher publisher = new MockTestDataPublisher("testing");
         step.setTestDataPublishers(Collections.<TestDataPublisher>singletonList(publisher));
         st.assertRoundTrip(step, "junit allowEmptyResults: true, healthScaleFactor: 2.0, testDataPublishers: [[$class: 'MockTestDataPublisher', name: 'testing']], testResults: '**/target/surefire-reports/TEST-*.xml'");
+        step.setSkipMarkingBuildUnstable(true);
+        st.assertRoundTrip(step, "junit allowEmptyResults: true, healthScaleFactor: 2.0, skipMarkingBuildUnstable: true, testDataPublishers: [[$class: 'MockTestDataPublisher', name: 'testing']], testResults: '**/target/surefire-reports/TEST-*.xml'");
     }
 
     @Issue("JENKINS-48250")
@@ -371,6 +373,24 @@ public class JUnitResultsStepTest {
         testFile.copyFrom(JUnitResultsStepTest.class.getResource("junit-report-testTrends-first-2.xml"));
 
         rule.assertBuildStatus(Result.UNSTABLE, rule.waitForCompletion(j.scheduleBuild2(0).waitForStart()));
+    }
+
+    @Test
+    public void skipBuildUnstable() throws Exception {
+        WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "currentBuildResultUnstable");
+        j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
+                "  node {\n" +
+                "    def results = junit(skipMarkingBuildUnstable: true, testResults: '*.xml')\n" + // node id 7
+                "    assert results.totalCount == 8\n" +
+                "    assert currentBuild.result == null\n" +
+                "  }\n" +
+                "}\n", true));
+        FilePath ws = rule.jenkins.getWorkspaceFor(j);
+        FilePath testFile = ws.child("test-result.xml");
+        testFile.copyFrom(JUnitResultsStepTest.class.getResource("junit-report-testTrends-first-2.xml"));
+        WorkflowRun r = rule.waitForCompletion(j.scheduleBuild2(0).waitForStart());
+        rule.assertBuildStatus(Result.SUCCESS, r);
+        assertStageResults(r, 1, 8, 3, "first");
     }
 
 
