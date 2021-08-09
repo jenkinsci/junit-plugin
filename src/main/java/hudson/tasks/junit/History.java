@@ -30,10 +30,15 @@ import hudson.tasks.test.TestObject;
 import hudson.tasks.test.TestObjectIterable;
 import hudson.tasks.test.TestResultDurationChart;
 import hudson.tasks.test.TestResultTrendChart;
+import hudson.util.RunList;
 import io.jenkins.plugins.junit.storage.TestResultImpl;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * History of {@link hudson.tasks.test.TestObject} over time.
@@ -73,11 +78,9 @@ public class History {
     }
 
     private LinesChartModel createTestResultTrend() {
-        if (testObject instanceof hudson.tasks.junit.TestResult) {
-            TestResultImpl pluggableStorage = ((hudson.tasks.junit.TestResult) testObject).getPluggableStorage();
-            if (pluggableStorage != null) {
-                return new TestResultTrendChart().create(pluggableStorage.getTrendTestResultSummary());
-            }
+        TestResultImpl pluggableStorage = getPluggableStorage();
+        if (pluggableStorage != null) {
+            return new TestResultTrendChart().create(pluggableStorage.getTrendTestResultSummary());
         }
 
         return new TestResultTrendChart().createFromTestObject(createBuildHistory(testObject), new ChartModelConfiguration());
@@ -90,14 +93,82 @@ public class History {
     }
 
     private LinesChartModel createTestDurationResultTrend() {
-        if (testObject instanceof hudson.tasks.junit.TestResult) {
-            TestResultImpl pluggableStorage = ((hudson.tasks.junit.TestResult) testObject).getPluggableStorage();
-            if (pluggableStorage != null) {
-                return new TestResultDurationChart().create(pluggableStorage.getTestDurationResultSummary());
-            }
+        TestResultImpl pluggableStorage = getPluggableStorage();
+
+        if (pluggableStorage != null) {
+            return new TestResultDurationChart().create(pluggableStorage.getTestDurationResultSummary());
         }
 
         return new TestResultDurationChart().create(createBuildHistory(testObject), new ChartModelConfiguration());
+    }
+
+    private TestResultImpl getPluggableStorage() {
+        TestResultImpl pluggableStorage = null;
+        if (testObject instanceof TestResult) {
+            pluggableStorage = ((TestResult) testObject).getPluggableStorage();
+        } else if (testObject instanceof PackageResult) {
+            pluggableStorage = ((PackageResult) testObject).getParent().getPluggableStorage();
+        } else if (testObject instanceof ClassResult) {
+            pluggableStorage = ((ClassResult) testObject).getParent().getParent().getPluggableStorage();
+        } else if (testObject instanceof CaseResult) {
+            pluggableStorage = ((CaseResult) testObject).getParent().getParent().getParent().getPluggableStorage();
+        }
+        return pluggableStorage;
+    }
+
+    public static class HistoryTableResult {
+        private boolean descriptionAvailable;
+        private List<HistoryTestResultSummary> historySummaries;
+
+        public HistoryTableResult(List<HistoryTestResultSummary> historySummaries) {
+            this.descriptionAvailable = historySummaries.stream()
+            .anyMatch(summary -> summary.getDescription() != null);
+            this.historySummaries = historySummaries;
+        }
+
+        public boolean isDescriptionAvailable() {
+            return descriptionAvailable;
+        }
+
+        public List<HistoryTestResultSummary> getHistorySummaries() {
+            return historySummaries;
+        }
+    }
+
+    public HistoryTableResult retrieveHistorySummary(int userOffset) {
+        int offset = userOffset;
+        if (userOffset > 1000 || userOffset < 0) {
+            offset = 0;
+        }
+
+        TestResultImpl pluggableStorage = getPluggableStorage();
+
+        if (pluggableStorage != null) {
+            return new HistoryTableResult(pluggableStorage.getHistorySummary(offset));
+        }
+        return new HistoryTableResult(getHistoryFromFileStorage());
+    }
+
+    private List<HistoryTestResultSummary> getHistoryFromFileStorage() {
+        TestObject testObject = getTestObject();
+        RunList<?> builds = testObject.getRun().getParent().getBuilds();
+        return builds
+                .stream()
+                .map(build -> {
+                    hudson.tasks.test.TestResult resultInRun = testObject.getResultInRun(build);
+                    if (resultInRun == null) {
+                        return null;
+                    }
+
+                    return new HistoryTestResultSummary(build, resultInRun.getDuration(),
+                            resultInRun.getFailCount(),
+                            resultInRun.getSkipCount(),
+                            resultInRun.getPassCount(),
+                            resultInRun.getDescription()
+                    );
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     private TestObjectIterable createBuildHistory(TestObject testObject) {
