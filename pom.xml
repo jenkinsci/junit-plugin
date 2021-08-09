@@ -196,6 +196,12 @@
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
+            <!-- mockito and hibernete are conflicting (both test dependencies) -->
+            <dependency>
+                <groupId>net.bytebuddy</groupId>
+                <artifactId>byte-buddy</artifactId>
+                <version>1.11.8</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 </project>
