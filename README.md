@@ -71,3 +71,7 @@ stage('Ignored') {
   }
 }
 ```
+
+## Contributing
+
+Refer to our [contribution guidelines](https://github.com/jenkinsci/.github/blob/master/CONTRIBUTING.md)
