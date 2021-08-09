@@ -20,43 +20,43 @@ public class TestResultTrendChart {
         return create(results, PassedColor.BLUE);
     }
 
-    public LinesChartModel create(final List<TrendTestResultSummary> results, final PassedColor useGreen) {
+    public LinesChartModel create(final List<TrendTestResultSummary> results, final PassedColor passedColor) {
         LinesDataSet dataset = new LinesDataSet();
         results.forEach(result -> dataset.add(result.getDisplayName(), result.toMap(), result.getBuildNumber()));
 
-        return getLinesChartModel(dataset, useGreen);
+        return getLinesChartModel(dataset, passedColor);
     }
 
     public LinesChartModel create(@NonNull final Iterable results, final ChartModelConfiguration configuration) {
-        return create(results, configuration, PassedColor.BLUE);
+        return create(results, configuration, PassedColor.GREEN);
     }
 
     public LinesChartModel create(@NonNull final Iterable results, final ChartModelConfiguration configuration,
-            final PassedColor useGreen) {
+            final PassedColor passedColor) {
         TestResultTrendSeriesBuilder builder = new TestResultTrendSeriesBuilder();
         LinesDataSet dataSet = builder.createDataSet(configuration, results);
 
-        return getLinesChartModel(dataSet, useGreen);
+        return getLinesChartModel(dataSet, passedColor);
     }
 
     public LinesChartModel createFromTestObject(final Iterable results,
             final ChartModelConfiguration configuration) {
-        return createFromTestObject(results, configuration, PassedColor.BLUE);
+        return createFromTestObject(results, configuration, PassedColor.GREEN);
     }
 
     public LinesChartModel createFromTestObject(final Iterable results, final ChartModelConfiguration configuration,
-            final PassedColor useGreen) {
+            final PassedColor passedColor) {
         TestObjectTrendSeriesBuilder builder = new TestObjectTrendSeriesBuilder();
         LinesDataSet dataSet = builder.createDataSet(configuration, results);
 
-        return getLinesChartModel(dataSet, useGreen);
+        return getLinesChartModel(dataSet, passedColor);
     }
 
-    private LinesChartModel getLinesChartModel(final LinesDataSet dataSet, final PassedColor useGreen) {
+    private LinesChartModel getLinesChartModel(final LinesDataSet dataSet, final PassedColor passedColor) {
         LinesChartModel model = new LinesChartModel(dataSet);
 
         LineSeries passed = new LineSeries("Passed",
-                useGreen == PassedColor.BLUE ? Palette.BLUE.getNormal() : Palette.GREEN.getNormal(),
+                passedColor == PassedColor.BLUE ? Palette.BLUE.getNormal() : Palette.GREEN.getNormal(),
                 LineSeries.StackedMode.STACKED, LineSeries.FilledMode.FILLED);
         passed.addAll(dataSet.getSeries(PASSED_KEY));
         model.addSeries(passed);

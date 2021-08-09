@@ -122,20 +122,20 @@ public class TestResultProjectAction implements Action, AsyncTrendChart, AsyncCo
         return createChartModel(new ChartModelConfiguration(), PassedColor.BLUE);
     }
 
-    private LinesChartModel createChartModel(final ChartModelConfiguration configuration, final PassedColor useGreen) {
+    private LinesChartModel createChartModel(final ChartModelConfiguration configuration, final PassedColor passedColor) {
         Run<?, ?> lastCompletedBuild = job.getLastCompletedBuild();
 
         JunitTestResultStorage storage = JunitTestResultStorage.find();
         if (!(storage instanceof FileJunitTestResultStorage)) {
             TestResultImpl pluggableStorage = storage.load(lastCompletedBuild.getParent().getFullName(), lastCompletedBuild.getNumber());
-            return new TestResultTrendChart().create(pluggableStorage.getTrendTestResultSummary(), useGreen);
+            return new TestResultTrendChart().create(pluggableStorage.getTrendTestResultSummary(), passedColor);
         }
 
         TestResultActionIterable buildHistory = createBuildHistory(lastCompletedBuild);
         if (buildHistory == null) {
             return new LinesChartModel();
         }
-        return new TestResultTrendChart().create(buildHistory, configuration, useGreen);
+        return new TestResultTrendChart().create(buildHistory, configuration, passedColor);
     }
 
     @CheckForNull
@@ -227,8 +227,8 @@ public class TestResultProjectAction implements Action, AsyncTrendChart, AsyncCo
     @JavaScriptMethod
     @Override
     public String getConfigurableBuildTrendModel(final String configuration) {
-        PassedColor useGreen = JACKSON_FACADE.getBoolean(configuration, "useGreen", false) ? PassedColor.GREEN : PassedColor.BLUE;
-        return new JacksonFacade().toJson(createChartModel(ChartModelConfiguration.fromJson(configuration), useGreen));
+        PassedColor useBlue = JACKSON_FACADE.getBoolean(configuration, "useBlue", false) ? PassedColor.BLUE : PassedColor.GREEN;
+        return new JacksonFacade().toJson(createChartModel(ChartModelConfiguration.fromJson(configuration), useBlue));
     }
 
     @Override

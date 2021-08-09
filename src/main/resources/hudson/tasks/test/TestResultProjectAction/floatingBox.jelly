@@ -26,9 +26,9 @@ THE SOFTWARE.
 <j:jelly xmlns:j="jelly:core" xmlns:c="/charts">
   <c:trend-setup suffix="junit">
     <div class="mb-3">
-      <input class="form-check-input" type="checkbox" value="" id="junit-use-green" />
-      <label class="form-check-label" for="junit-use-green">
-        Show passed tests in green (and not in blue)
+      <input class="form-check-input" type="checkbox" value="" id="junit-use-blue" />
+      <label class="form-check-label" for="junit-use-blue">
+        Show passed tests in blue (rather than in green)
       </label>
     </div>
     <div class="mb-3">
@@ -42,13 +42,13 @@ THE SOFTWARE.
 
   <script>
     function fillJunit(trendConfiguration, jsonConfiguration) {
-      const useGreen = jsonConfiguration['useGreen'];
-      trendConfiguration.find('#junit-use-green').prop('checked', !!useGreen);
+      const useBlue = jsonConfiguration['useBlue'];
+      trendConfiguration.find('#junit-use-blue').prop('checked', !!useBlue);
     }
 
     function saveJunit(trendConfiguration) {
       return {
-        'useGreen': trendConfiguration.find('#junit-use-green').is(':checked')
+        'useBlue': trendConfiguration.find('#junit-use-blue').is(':checked')
       };
     }
 
