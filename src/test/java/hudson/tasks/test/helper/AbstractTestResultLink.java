@@ -3,8 +3,8 @@ package hudson.tasks.test.helper;
 import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertThat;
 
 public class AbstractTestResultLink<T extends AbstractTestResultLink<T>> {
     protected HtmlAnchor testResultLink;

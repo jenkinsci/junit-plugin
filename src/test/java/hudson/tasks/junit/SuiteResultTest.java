@@ -37,7 +37,9 @@ import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.io.Writer;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test cases for parsing JUnit report XML files.
