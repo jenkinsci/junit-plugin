@@ -298,7 +298,7 @@ public class TestResultPublishingTest {
             return;
         if (str.equals(""))
             return;
-        fail(msg + "(should be empty or null) : \'" + str + "\'"); 
+        fail(msg + "(should be empty or null) : '" + str + "'");
     }
 
     void assertPaneDiffText(String msg, int expectedValue, Object paneObj) { 
