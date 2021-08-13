@@ -272,8 +272,11 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
             }
             action.setHealthScaleFactor(task.getHealthScaleFactor()); // overwrites previous value if appending
             if (summary.getTotalCount() == 0 && /* maybe a secondary effect */ build.getResult() != Result.FAILURE) {
-                assert task.isAllowEmptyResults();
-                listener.getLogger().println(Messages.JUnitResultArchiver_ResultIsEmpty());
+                if (task.isAllowEmptyResults()) {
+                    listener.getLogger().println(Messages.JUnitResultArchiver_ResultIsEmpty());
+                } else {
+                    throw new AbortException(Messages.JUnitResultArchiver_ResultIsEmpty());
+                }
             }
 
             if (task.getTestDataPublishers() != null) {

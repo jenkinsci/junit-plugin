@@ -313,20 +313,56 @@ public class JUnitResultArchiverTest {
         }
     }
 
-    @Test public void emptyDirectoryAllowEmptyResult() throws Exception {
+    @Test public void noTestResultFilesAllowEmptyResult() throws Exception {
         JUnitResultArchiver a = new JUnitResultArchiver("TEST-*.xml");
         a.setAllowEmptyResults(true);
         FreeStyleProject freeStyleProject = j.createFreeStyleProject();
         freeStyleProject.getPublishersList().add(a);
-        j.assertBuildStatus(Result.SUCCESS, freeStyleProject.scheduleBuild2(0).get());
+        FreeStyleBuild build = freeStyleProject.scheduleBuild2(0).get();
+        j.assertBuildStatus(Result.SUCCESS, build);
+        j.assertLogContains(Messages.JUnitResultArchiver_NoTestReportFound(), build);
     }
 
-    @Test public void emptyDirectory() throws Exception {
+    @Test public void noTestResultFilesDisallowEmptyResult() throws Exception {
         JUnitResultArchiver a = new JUnitResultArchiver("TEST-*.xml");
         a.setAllowEmptyResults(false);
         FreeStyleProject freeStyleProject = j.createFreeStyleProject();
         freeStyleProject.getPublishersList().add(a);
-        j.assertBuildStatus(Result.FAILURE, freeStyleProject.scheduleBuild2(0).get());
+        FreeStyleBuild build = freeStyleProject.scheduleBuild2(0).get();
+        j.assertBuildStatus(Result.FAILURE, build);
+        j.assertLogContains(Messages.JUnitResultArchiver_NoTestReportFound(), build);
+    }
+
+    @Test public void noResultsInTestResultFilesAllowEmptyResult() throws Exception {
+        JUnitResultArchiver a = new JUnitResultArchiver("TEST-*.xml");
+        a.setAllowEmptyResults(true);
+        FreeStyleProject freeStyleProject = j.createFreeStyleProject();
+        freeStyleProject.getBuildersList().add(new NoResultsInTestResultFileBuilder());
+        freeStyleProject.getPublishersList().add(a);
+        FreeStyleBuild build = freeStyleProject.scheduleBuild2(0).get();
+        j.assertBuildStatus(Result.SUCCESS, build);
+        j.assertLogContains(Messages.JUnitResultArchiver_ResultIsEmpty(), build);
+    }
+
+    @Test public void noResultsInTestResultFilesDisallowEmptyResult() throws Exception {
+        JUnitResultArchiver a = new JUnitResultArchiver("TEST-*.xml");
+        a.setAllowEmptyResults(false);
+        FreeStyleProject freeStyleProject = j.createFreeStyleProject();
+        freeStyleProject.getBuildersList().add(new NoResultsInTestResultFileBuilder());
+        freeStyleProject.getPublishersList().add(a);
+        FreeStyleBuild build = freeStyleProject.scheduleBuild2(0).get();
+        j.assertBuildStatus(Result.FAILURE, build);
+        j.assertLogContains(Messages.JUnitResultArchiver_ResultIsEmpty(), build);
+    }
+
+    public static final class NoResultsInTestResultFileBuilder extends Builder {
+        @Override
+        public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+            String fileName = "TEST-foo.xml";
+            String fileContent = "<testsuite name=\"foo\" failures=\"0\" errors=\"0\" skipped=\"0\" tests=\"0\"/>";
+            build.getWorkspace().child(fileName).write(fileContent, "UTF-8");
+            return true;
+        }
     }
 
     @Test public void specialCharsInRelativePath() throws Exception {
