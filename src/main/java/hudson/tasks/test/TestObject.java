@@ -234,8 +234,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
         } else {
             Run<?, ?> run = Stapler.getCurrentRequest().findAncestorObject(Run.class);
             if (run != null) {
-                AbstractTestResultAction action = run.getAction(AbstractTestResultAction.class);
-                return action;
+                return run.getAction(AbstractTestResultAction.class);
             }
             LOGGER.warning("owner is null when trying to getTestResultAction.");
             return null;
