@@ -92,7 +92,7 @@ public abstract class DefaultTestResultParserImpl extends TestResultParser imple
                     throw new AbortException("No test reports that matches "+testResultLocations+" found. Configuration error?");
 
                 // since dir is local, paths all point to the local files
-                List<File> files = new ArrayList<File>(paths.length);
+                List<File> files = new ArrayList<>(paths.length);
                 for (FilePath path : paths) {
                     File report = new File(path.getRemote());
                     if (ignoreTimestampCheck || localBuildTime - 3000 /*error margin*/ < report.lastModified()) {

@@ -125,7 +125,7 @@ public class JUnitParserTest {
 
         Collection<? extends TestResult> failingTests = theResult.getFailedTests();
         assertEquals("should have one failed test", 1, failingTests.size());
-        Map<String, TestResult> failedTestsByName = new HashMap<String, TestResult>();
+        Map<String, TestResult> failedTestsByName = new HashMap<>();
         for (TestResult r: failingTests) {
             failedTestsByName.put(r.getName(), r);  
         }

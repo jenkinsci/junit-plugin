@@ -353,8 +353,8 @@ public class JUnitResultArchiverTest {
     @Issue("JENKINS-26535")
     @Test
     public void testDescribableRoundTrip() throws Exception {
-        DescribableModel<JUnitResultArchiver> model = new DescribableModel<JUnitResultArchiver>(JUnitResultArchiver.class);
-        Map<String,Object> args = new TreeMap<String,Object>();
+        DescribableModel<JUnitResultArchiver> model = new DescribableModel<>(JUnitResultArchiver.class);
+        Map<String,Object> args = new TreeMap<>();
 
         args.put("testResults", "**/TEST-*.xml");
         JUnitResultArchiver j = model.instantiate(args);
@@ -366,7 +366,7 @@ public class JUnitResultArchiverTest {
         assertEquals(args, model.uninstantiate(model.instantiate(args)));
 
         // Test roundtripping from a Pipeline-style describing of the publisher.
-        Map<String,Object> describedPublisher = new HashMap<String, Object>();
+        Map<String,Object> describedPublisher = new HashMap<>();
         describedPublisher.put("$class", "MockTestDataPublisher");
         describedPublisher.put("name", "test");
         args.put("testDataPublishers", Collections.singletonList(describedPublisher));

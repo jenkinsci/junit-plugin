@@ -44,7 +44,7 @@ public class CaseResultUnitTest {
     public void testLocalizationOfStatus() throws Exception {
         LocaleProvider old = LocaleProvider.getProvider();
         try {
-            final AtomicReference<Locale> locale = new AtomicReference<Locale>();
+            final AtomicReference<Locale> locale = new AtomicReference<>();
             LocaleProvider.setProvider(new LocaleProvider() {
                 public @Override Locale get() {
                     return locale.get();

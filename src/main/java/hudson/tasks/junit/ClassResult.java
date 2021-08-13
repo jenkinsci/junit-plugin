@@ -44,7 +44,7 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
     private final String className; // simple name
     private transient String safeName;
 
-    private final List<CaseResult> cases = new ArrayList<CaseResult>();
+    private final List<CaseResult> cases = new ArrayList<>();
 
     private int passCount,failCount,skipCount;
     

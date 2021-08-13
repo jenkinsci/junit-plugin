@@ -545,7 +545,7 @@ public final class TestResult extends MetaTabulatedResult {
         }
         
         if(passedTests == null){
-            passedTests = new ArrayList<CaseResult>();
+            passedTests = new ArrayList<>();
             for(SuiteResult s : suites) {
                 for(CaseResult cr : s.getCases()) {
                     if (cr.isPassed()) {
@@ -570,7 +570,7 @@ public final class TestResult extends MetaTabulatedResult {
         }
         
         if(skippedTests == null){
-            skippedTests = new ArrayList<CaseResult>();
+            skippedTests = new ArrayList<>();
             for(SuiteResult s : suites) {
                 for(CaseResult cr : s.getCases()) {
                     if (cr.isSkipped()) {
@@ -882,7 +882,7 @@ public final class TestResult extends MetaTabulatedResult {
         if (nodeId != null) {
             // If we don't already have an entry for this node, initialize a list for it.
             if (suitesByNode.get(nodeId) == null) {
-                suitesByNode.put(nodeId, new ArrayList<SuiteResult>());
+                suitesByNode.put(nodeId, new ArrayList<>());
             }
             // Add the suite to the list for the node in the map. Phew.
             suitesByNode.get(nodeId).add(s);

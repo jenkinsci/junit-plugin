@@ -162,7 +162,7 @@ public class AggregatedTestResultPublisher extends Recorder {
          * Gets the jobs to be monitored.
          */
         public Collection<AbstractProject> getJobs() {
-            List<AbstractProject> r = new ArrayList<AbstractProject>();
+            List<AbstractProject> r = new ArrayList<>();
             if (jobs != null) {
                 for (String job : Util.tokenize(jobs,",")) {
                     try {
@@ -264,9 +264,9 @@ public class AggregatedTestResultPublisher extends Recorder {
 
             int failCount = 0;
             int totalCount = 0;
-            List<AbstractTestResultAction> individuals = new ArrayList<AbstractTestResultAction>();
-            List<AbstractProject> didntRun = new ArrayList<AbstractProject>();
-            List<AbstractProject> noFingerprints = new ArrayList<AbstractProject>();
+            List<AbstractTestResultAction> individuals = new ArrayList<>();
+            List<AbstractProject> didntRun = new ArrayList<>();
+            List<AbstractProject> noFingerprints = new ArrayList<>();
             for (AbstractProject job : getJobs()) {
                 RangeSet rs = owner.getDownstreamRelationship(job);
                 if(rs.isEmpty()) {

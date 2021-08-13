@@ -80,7 +80,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
     @Deprecated
     public transient AbstractBuild<?,?> owner;
 
-    private Map<String,String> descriptions = new ConcurrentHashMap<String, String>();
+    private Map<String,String> descriptions = new ConcurrentHashMap<>();
 
     /** @since 1.545 */
     protected AbstractTestResultAction() {}
@@ -343,7 +343,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
         boolean failureOnly = Boolean.parseBoolean(req.getParameter("failureOnly"));
 
         // TODO stop using ChartUtil.NumberOnlyBuildLabel as it forces loading of a Run; create a plainer Comparable
-        DataSetBuilder<String,NumberOnlyBuildLabel> dsb = new DataSetBuilder<String,NumberOnlyBuildLabel>();
+        DataSetBuilder<String,NumberOnlyBuildLabel> dsb = new DataSetBuilder<>();
 
         int cap = Integer.getInteger(AbstractTestResultAction.class.getName() + ".test.trend.max", Integer.MAX_VALUE);
         int count = 0;
@@ -465,7 +465,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
 
     public Object readResolve() {
     	if (descriptions == null) {
-    		descriptions = new ConcurrentHashMap<String, String>();
+    		descriptions = new ConcurrentHashMap<>();
     	}
     	
     	return this;

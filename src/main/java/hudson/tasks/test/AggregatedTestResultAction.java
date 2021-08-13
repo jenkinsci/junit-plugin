@@ -65,7 +65,7 @@ public abstract class AggregatedTestResultAction extends AbstractTestResultActio
     /**
      * child builds whose test results are used for aggregation.
      */
-    public final List<Child> children = new ArrayList<Child>();
+    public final List<Child> children = new ArrayList<>();
 
     @Deprecated
     public AggregatedTestResultAction(AbstractBuild owner) {
@@ -109,7 +109,7 @@ public abstract class AggregatedTestResultAction extends AbstractTestResultActio
 
     @Override
     public List<? extends TestResult> getFailedTests() {
-        List<TestResult> failedTests = new ArrayList<TestResult>(failCount);
+        List<TestResult> failedTests = new ArrayList<>(failCount);
         for (ChildReport childReport : getChildReports()) {
             if (childReport.result instanceof TestResult) {
                 failedTests.addAll(((TestResult) childReport.result).getFailedTests());

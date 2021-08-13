@@ -100,7 +100,7 @@ public final class SuiteResult implements Serializable {
     /**
      * All test cases.
      */
-    private final List<CaseResult> cases = new ArrayList<CaseResult>();
+    private final List<CaseResult> cases = new ArrayList<>();
     private transient Map<String, CaseResult> casesByName;
     private transient hudson.tasks.junit.TestResult parent;
 
@@ -159,7 +159,7 @@ public final class SuiteResult implements Serializable {
      */
     static List<SuiteResult> parse(File xmlReport, boolean keepLongStdio, PipelineTestDetails pipelineTestDetails)
             throws DocumentException, IOException, InterruptedException {
-        List<SuiteResult> r = new ArrayList<SuiteResult>();
+        List<SuiteResult> r = new ArrayList<>();
 
         // parse into DOM
         SAXReader saxReader = new SAXReader();
@@ -428,7 +428,7 @@ public final class SuiteResult implements Serializable {
     }
 
     public Set<String> getClassNames() {
-        Set<String> result = new HashSet<String>();
+        Set<String> result = new HashSet<>();
         for (CaseResult c : cases) {
             result.add(c.getClassName());
         }

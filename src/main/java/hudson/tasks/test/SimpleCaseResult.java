@@ -206,7 +206,7 @@ public class SimpleCaseResult extends TestResult {
     /**
      * An empty list of actions, useful for tests
      */
-    public static final List<TestAction> EMPTY_ACTION_LIST = Collections.unmodifiableList(new ArrayList<TestAction>());
+    public static final List<TestAction> EMPTY_ACTION_LIST = Collections.unmodifiableList(new ArrayList<>());
 
 
 
