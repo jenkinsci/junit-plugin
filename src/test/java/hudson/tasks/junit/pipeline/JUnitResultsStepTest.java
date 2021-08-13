@@ -71,7 +71,7 @@ public class JUnitResultsStepTest {
         step.setHealthScaleFactor(2.0);
         st.assertRoundTrip(step, "junit allowEmptyResults: true, healthScaleFactor: 2.0, testResults: '**/target/surefire-reports/TEST-*.xml'");
         MockTestDataPublisher publisher = new MockTestDataPublisher("testing");
-        step.setTestDataPublishers(Collections.<TestDataPublisher>singletonList(publisher));
+        step.setTestDataPublishers(Collections.singletonList(publisher));
         st.assertRoundTrip(step, "junit allowEmptyResults: true, healthScaleFactor: 2.0, testDataPublishers: [[$class: 'MockTestDataPublisher', name: 'testing']], testResults: '**/target/surefire-reports/TEST-*.xml'");
         step.setSkipMarkingBuildUnstable(true);
         st.assertRoundTrip(step, "junit allowEmptyResults: true, healthScaleFactor: 2.0, skipMarkingBuildUnstable: true, testDataPublishers: [[$class: 'MockTestDataPublisher', name: 'testing']], testResults: '**/target/surefire-reports/TEST-*.xml'");

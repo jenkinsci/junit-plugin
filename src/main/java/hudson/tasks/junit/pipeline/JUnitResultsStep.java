@@ -85,7 +85,7 @@ public class JUnitResultsStep extends Step implements JUnitTask {
 
     public @Nonnull
     List<TestDataPublisher> getTestDataPublishers() {
-        return testDataPublishers == null ? Collections.<TestDataPublisher>emptyList() : testDataPublishers;
+        return testDataPublishers == null ? Collections.emptyList() : testDataPublishers;
     }
 
     /**
