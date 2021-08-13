@@ -87,12 +87,8 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
 			if (id.length() > caseNameStart) {
             	caseName = id.substring(caseNameStart);
             }
-        } 
-        CaseResult child = getCaseResult(caseName);
-        if (child != null) {
-            return child;
         }
-        return null;
+        return getCaseResult(caseName);
     }
 
     public String getTitle() {
