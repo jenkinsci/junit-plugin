@@ -127,7 +127,7 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         }
         }
 
-        this.result = new WeakReference<TestResult>(result);
+        this.result = new WeakReference<>(result);
     }
 
     @Deprecated
@@ -148,14 +148,14 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         TestResult r;
         if(result==null) {
             r = load();
-            result = new WeakReference<TestResult>(r);
+            result = new WeakReference<>(r);
         } else {
             r = result.get();
         }
 
         if(r==null) {
             r = load();
-            result = new WeakReference<TestResult>(r);
+            result = new WeakReference<>(r);
         }
         if(totalCount==null) {
             totalCount = r.getTotalCount();
@@ -244,7 +244,7 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
     }
 
     public List<TestAction> getActions(TestObject object) {
-        List<TestAction> result = new ArrayList<TestAction>();
+        List<TestAction> result = new ArrayList<>();
         // Added check for null testData to avoid NPE from issue 4257.
         if (testData != null) {
             synchronized (testData) {
@@ -316,7 +316,7 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
     public Object readResolve() {
         super.readResolve(); // let it do the post-deserialization work
     	if (testData == null) {
-    		testData = new ArrayList<Data>(0);
+    		testData = new ArrayList<>(0);
     	}
 
     	return this;

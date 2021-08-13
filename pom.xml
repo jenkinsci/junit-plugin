@@ -196,7 +196,7 @@
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
-            <!-- mockito and hibernete are conflicting (both test dependencies) -->
+            <!-- mockito and hibernate are conflicting (both test dependencies) -->
             <dependency>
                 <groupId>net.bytebuddy</groupId>
                 <artifactId>byte-buddy</artifactId>

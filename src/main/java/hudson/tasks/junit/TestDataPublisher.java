@@ -94,7 +94,7 @@ public abstract class TestDataPublisher extends AbstractDescribableImpl<TestData
     }
 
 	public static DescriptorExtensionList<TestDataPublisher, Descriptor<TestDataPublisher>> all() {
-		return Jenkins.get().<TestDataPublisher, Descriptor<TestDataPublisher>>getDescriptorList(TestDataPublisher.class);
+		return Jenkins.get().getDescriptorList(TestDataPublisher.class);
 	}
 
 }

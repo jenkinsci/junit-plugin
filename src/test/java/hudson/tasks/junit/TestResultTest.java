@@ -32,17 +32,17 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
 import org.junit.Test;
-import org.jvnet.hudson.test.Bug;
 
 import com.thoughtworks.xstream.XStream;
 import org.jvnet.hudson.test.Issue;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Tests the JUnit result XML file parsing in {@link TestResult}.
@@ -292,4 +292,3 @@ public class TestResultTest {
         XSTREAM.registerConverter(new HeapSpaceStringConverter(),100);
     }
 }
-

@@ -132,7 +132,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
             double healthScaleFactor) {
         this.testResults = testResults;
         setKeepLongStdio(keepLongStdio);
-        setTestDataPublishers(testDataPublishers == null ? Collections.<TestDataPublisher>emptyList() : testDataPublishers);
+        setTestDataPublishers(testDataPublishers == null ? Collections.emptyList() : testDataPublishers);
         setHealthScaleFactor(healthScaleFactor);
         setAllowEmptyResults(false);
     }
@@ -347,7 +347,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     }
 
     public @Nonnull List<TestDataPublisher> getTestDataPublishers() {
-        return testDataPublishers == null ? Collections.<TestDataPublisher>emptyList() : testDataPublishers;
+        return testDataPublishers == null ? Collections.emptyList() : testDataPublishers;
     }
 
     /**
@@ -356,7 +356,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
      * @since 1.2
      */
     @DataBoundSetter public final void setTestDataPublishers(@Nonnull List<TestDataPublisher> testDataPublishers) {
-        this.testDataPublishers = new DescribableList<TestDataPublisher,Descriptor<TestDataPublisher>>(Saveable.NOOP);
+        this.testDataPublishers = new DescribableList<>(Saveable.NOOP);
         this.testDataPublishers.addAll(testDataPublishers);
     }
 

@@ -85,7 +85,7 @@ public class JUnitResultsStep extends Step implements JUnitTask {
 
     public @Nonnull
     List<TestDataPublisher> getTestDataPublishers() {
-        return testDataPublishers == null ? Collections.<TestDataPublisher>emptyList() : testDataPublishers;
+        return testDataPublishers == null ? Collections.emptyList() : testDataPublishers;
     }
 
     /**
@@ -94,7 +94,7 @@ public class JUnitResultsStep extends Step implements JUnitTask {
      * @since 1.2
      */
     @DataBoundSetter public final void setTestDataPublishers(@Nonnull List<TestDataPublisher> testDataPublishers) {
-        this.testDataPublishers = new DescribableList<TestDataPublisher,Descriptor<TestDataPublisher>>(Saveable.NOOP);
+        this.testDataPublishers = new DescribableList<>(Saveable.NOOP);
         this.testDataPublishers.addAll(testDataPublishers);
     }
 

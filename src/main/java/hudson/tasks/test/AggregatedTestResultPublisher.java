@@ -30,13 +30,11 @@ import hudson.model.AutoCompletionCandidates;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.Util;
-import static hudson.Util.fixNull;
 import hudson.model.Action;
 import hudson.model.BuildListener;
 import hudson.model.Fingerprint.RangeSet;
 import hudson.model.InvisibleAction;
 import hudson.model.ItemGroup;
-import jenkins.model.Jenkins;
 import hudson.model.Item;
 import hudson.model.Job;
 import hudson.model.Result;
@@ -49,6 +47,7 @@ import hudson.tasks.Fingerprinter.FingerprintAction;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
+import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.QueryParameter;
@@ -62,6 +61,8 @@ import java.util.List;
 import javax.annotation.CheckForNull;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
+
+import static hudson.Util.fixNull;
 
 /**
  * Aggregates downstream test reports into a single consolidated report,
@@ -162,7 +163,7 @@ public class AggregatedTestResultPublisher extends Recorder {
          * Gets the jobs to be monitored.
          */
         public Collection<AbstractProject> getJobs() {
-            List<AbstractProject> r = new ArrayList<AbstractProject>();
+            List<AbstractProject> r = new ArrayList<>();
             if (jobs != null) {
                 for (String job : Util.tokenize(jobs,",")) {
                     try {
@@ -264,9 +265,9 @@ public class AggregatedTestResultPublisher extends Recorder {
 
             int failCount = 0;
             int totalCount = 0;
-            List<AbstractTestResultAction> individuals = new ArrayList<AbstractTestResultAction>();
-            List<AbstractProject> didntRun = new ArrayList<AbstractProject>();
-            List<AbstractProject> noFingerprints = new ArrayList<AbstractProject>();
+            List<AbstractTestResultAction> individuals = new ArrayList<>();
+            List<AbstractProject> didntRun = new ArrayList<>();
+            List<AbstractProject> noFingerprints = new ArrayList<>();
             for (AbstractProject job : getJobs()) {
                 RangeSet rs = owner.getDownstreamRelationship(job);
                 if(rs.isEmpty()) {

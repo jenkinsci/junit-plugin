@@ -45,7 +45,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
     /**
      * All {@link ClassResult}s keyed by their short name.
      */
-    private final Map<String,ClassResult> classes = new TreeMap<String,ClassResult>();
+    private final Map<String,ClassResult> classes = new TreeMap<>();
     private int passCount,failCount,skipCount;
     private final hudson.tasks.junit.TestResult parent;
     private float duration; 
@@ -181,7 +181,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
            return pluggableStorage.getFailedTestsByPackage(packageName);
        }
         
-        List<CaseResult> r = new ArrayList<CaseResult>();
+        List<CaseResult> r = new ArrayList<>();
         for (ClassResult clr : classes.values()) {
             for (CaseResult cr : clr.getChildren()) {
                 if (cr.isFailed()) {
@@ -199,7 +199,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
      */
     public List<CaseResult> getFailedTestsSortedByAge() {
         List<CaseResult> failedTests = getFailedTests();
-        Collections.sort(failedTests, CaseResult.BY_AGE);
+        failedTests.sort(CaseResult.BY_AGE);
         return failedTests;
     }
 
@@ -215,7 +215,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
             return pluggableStorage.getPassedTestsByPackage(packageName);
         }
 
-        List<CaseResult> r = new ArrayList<CaseResult>();
+        List<CaseResult> r = new ArrayList<>();
         for (ClassResult clr : classes.values()) {
             for (CaseResult cr : clr.getChildren()) {
                 if (cr.isPassed()) {
@@ -223,7 +223,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
                 }
             }
         }
-        Collections.sort(r,CaseResult.BY_AGE);
+        r.sort(CaseResult.BY_AGE);
         return r;
     }
 
@@ -239,7 +239,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
             return pluggableStorage.getSkippedTestsByPackage(packageName);
         } 
         
-        List<CaseResult> r = new ArrayList<CaseResult>();
+        List<CaseResult> r = new ArrayList<>();
         for (ClassResult clr : classes.values()) {
             for (CaseResult cr : clr.getChildren()) {
                 if (cr.isSkipped()) {
@@ -247,7 +247,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
                 }
             }
         }
-        Collections.sort(r, CaseResult.BY_AGE);
+        r.sort(CaseResult.BY_AGE);
         return r;
     }
 

@@ -72,10 +72,6 @@ import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.List;
 
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.*;
-
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -85,6 +81,16 @@ import org.jvnet.hudson.test.SingleFileSCM;
 import org.jvnet.hudson.test.TestExtension;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.HttpResponse;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class JUnitResultArchiverTest {
 
@@ -247,8 +253,7 @@ public class JUnitResultArchiverTest {
         }
         @Override public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
             FilePath ws = build.getWorkspace();
-            OutputStream os = ws.child(name + ".xml").write();
-            try {
+            try (OutputStream os = ws.child(name + ".xml").write()) {
                 PrintWriter pw = new PrintWriter(os);
                 pw.println("<testsuite failures=\"" + fail + "\" errors=\"0\" skipped=\"0\" tests=\"" + (pass + fail) + "\" name=\"" + name + "\">");
                 for (int i = 0; i < pass; i++) {
@@ -259,8 +264,6 @@ public class JUnitResultArchiverTest {
                 }
                 pw.println("</testsuite>");
                 pw.flush();
-            } finally {
-                os.close();
             }
             new JUnitResultArchiver(name + ".xml").perform(build, ws, launcher, listener);
             return true;
@@ -356,8 +359,8 @@ public class JUnitResultArchiverTest {
     @Issue("JENKINS-26535")
     @Test
     public void testDescribableRoundTrip() throws Exception {
-        DescribableModel<JUnitResultArchiver> model = new DescribableModel<JUnitResultArchiver>(JUnitResultArchiver.class);
-        Map<String,Object> args = new TreeMap<String,Object>();
+        DescribableModel<JUnitResultArchiver> model = new DescribableModel<>(JUnitResultArchiver.class);
+        Map<String,Object> args = new TreeMap<>();
 
         args.put("testResults", "**/TEST-*.xml");
         JUnitResultArchiver j = model.instantiate(args);
@@ -369,7 +372,7 @@ public class JUnitResultArchiverTest {
         assertEquals(args, model.uninstantiate(model.instantiate(args)));
 
         // Test roundtripping from a Pipeline-style describing of the publisher.
-        Map<String,Object> describedPublisher = new HashMap<String, Object>();
+        Map<String,Object> describedPublisher = new HashMap<>();
         describedPublisher.put("$class", "MockTestDataPublisher");
         describedPublisher.put("name", "test");
         args.put("testDataPublishers", Collections.singletonList(describedPublisher));

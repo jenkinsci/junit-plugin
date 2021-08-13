@@ -366,7 +366,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
             if(!Character.isJavaIdentifierPart(ch))
                 buf.setCharAt(i,'_');
         }
-        Collection<CaseResult> siblings = classResult ==null ? Collections.<CaseResult>emptyList(): classResult.getChildren();
+        Collection<CaseResult> siblings = classResult ==null ? Collections.emptyList(): classResult.getChildren();
         return safeName = uniquifyName(siblings, buf.toString());
     }
 
@@ -791,11 +791,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     /**
      * For sorting errors by age.
      */
-    /*package*/ static final Comparator<CaseResult> BY_AGE = new Comparator<CaseResult>() {
-        public int compare(CaseResult lhs, CaseResult rhs) {
-            return lhs.getAge()-rhs.getAge();
-        }
-    };
+    /*package*/ static final Comparator<CaseResult> BY_AGE = Comparator.comparingInt(CaseResult::getAge);
 
     private static final long serialVersionUID = 1L;
 

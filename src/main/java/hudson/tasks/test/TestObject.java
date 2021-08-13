@@ -234,8 +234,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
         } else {
             Run<?, ?> run = Stapler.getCurrentRequest().findAncestorObject(Run.class);
             if (run != null) {
-                AbstractTestResultAction action = run.getAction(AbstractTestResultAction.class);
-                return action;
+                return run.getAction(AbstractTestResultAction.class);
             }
             LOGGER.warning("owner is null when trying to getTestResultAction.");
             return null;
@@ -253,7 +252,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
             TestResultAction tra = (TestResultAction) atra;
             return tra.getActions(this);
         } else {
-            return new ArrayList<TestAction>();
+            return new ArrayList<>();
         }
     }
 
@@ -391,10 +390,10 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
             String uniquified = base;
             Map<TestObject,Void> taken = UNIQUIFIED_NAMES.get(base);
             if (taken == null) {
-                taken = new WeakHashMap<TestObject,Void>();
+                taken = new WeakHashMap<>();
                 UNIQUIFIED_NAMES.put(base, taken);
             } else {
-                Set<TestObject> similars = new HashSet<TestObject>(taken.keySet());
+                Set<TestObject> similars = new HashSet<>(taken.keySet());
                 similars.retainAll(new HashSet<TestObject>(siblings));
                 if (!similars.isEmpty()) {
                     uniquified = base + '_' + (similars.size() + 1);

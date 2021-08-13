@@ -48,10 +48,10 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 public class JUnitResultsStepTest {
@@ -71,7 +71,7 @@ public class JUnitResultsStepTest {
         step.setHealthScaleFactor(2.0);
         st.assertRoundTrip(step, "junit allowEmptyResults: true, healthScaleFactor: 2.0, testResults: '**/target/surefire-reports/TEST-*.xml'");
         MockTestDataPublisher publisher = new MockTestDataPublisher("testing");
-        step.setTestDataPublishers(Collections.<TestDataPublisher>singletonList(publisher));
+        step.setTestDataPublishers(Collections.singletonList(publisher));
         st.assertRoundTrip(step, "junit allowEmptyResults: true, healthScaleFactor: 2.0, testDataPublishers: [[$class: 'MockTestDataPublisher', name: 'testing']], testResults: '**/target/surefire-reports/TEST-*.xml'");
         step.setSkipMarkingBuildUnstable(true);
         st.assertRoundTrip(step, "junit allowEmptyResults: true, healthScaleFactor: 2.0, skipMarkingBuildUnstable: true, testDataPublishers: [[$class: 'MockTestDataPublisher', name: 'testing']], testResults: '**/target/surefire-reports/TEST-*.xml'");

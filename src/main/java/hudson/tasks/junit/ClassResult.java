@@ -24,13 +24,9 @@
 package hudson.tasks.junit;
 
 import hudson.model.Run;
-import io.jenkins.plugins.junit.storage.FileJunitTestResultStorage;
-import io.jenkins.plugins.junit.storage.TestResultImpl;
-import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
 import hudson.tasks.test.TabulatedResult;
 import hudson.tasks.test.TestResult;
 import hudson.tasks.test.TestObject;
-import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
@@ -48,7 +44,7 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
     private final String className; // simple name
     private transient String safeName;
 
-    private final List<CaseResult> cases = new ArrayList<CaseResult>();
+    private final List<CaseResult> cases = new ArrayList<>();
 
     private int passCount,failCount,skipCount;
     
@@ -91,12 +87,8 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
 			if (id.length() > caseNameStart) {
             	caseName = id.substring(caseNameStart);
             }
-        } 
-        CaseResult child = getCaseResult(caseName);
-        if (child != null) {
-            return child;
         }
-        return null;
+        return getCaseResult(caseName);
     }
 
     public String getTitle() {

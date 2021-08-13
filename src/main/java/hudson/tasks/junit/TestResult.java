@@ -377,9 +377,7 @@ public final class TestResult extends MetaTabulatedResult {
         try {
             for (SuiteResult suiteResult : SuiteResult.parse(reportFile, keepLongStdio, pipelineTestDetails))
                 add(suiteResult);
-        } catch (InterruptedException e) {
-            throw new IOException("Failed to read "+reportFile,e);
-        } catch (RuntimeException e) {
+        } catch (InterruptedException | RuntimeException e) {
             throw new IOException("Failed to read "+reportFile,e);
         } catch (DocumentException e) {
             if (!reportFile.getPath().endsWith(".xml")) {
@@ -547,7 +545,7 @@ public final class TestResult extends MetaTabulatedResult {
         }
         
         if(passedTests == null){
-            passedTests = new ArrayList<CaseResult>();
+            passedTests = new ArrayList<>();
             for(SuiteResult s : suites) {
                 for(CaseResult cr : s.getCases()) {
                     if (cr.isPassed()) {
@@ -572,7 +570,7 @@ public final class TestResult extends MetaTabulatedResult {
         }
         
         if(skippedTests == null){
-            skippedTests = new ArrayList<CaseResult>();
+            skippedTests = new ArrayList<>();
             for(SuiteResult s : suites) {
                 for(CaseResult cr : s.getCases()) {
                     if (cr.isSkipped()) {
@@ -668,8 +666,7 @@ public final class TestResult extends MetaTabulatedResult {
     @Override
     public Collection<PackageResult> getChildren() {
         if (impl != null) {
-            List<PackageResult> allPackageResults = impl.getAllPackageResults();
-            return allPackageResults;
+            return impl.getAllPackageResults();
         }
         
         return byPackages.values();
@@ -864,14 +861,14 @@ public final class TestResult extends MetaTabulatedResult {
             }
         }
 
-        Collections.sort(failedTests,CaseResult.BY_AGE);
+        failedTests.sort(CaseResult.BY_AGE);
 
         if(passedTests != null) {
-            Collections.sort(passedTests,CaseResult.BY_AGE);
+            passedTests.sort(CaseResult.BY_AGE);
         }
 
         if(skippedTests != null) {
-            Collections.sort(skippedTests,CaseResult.BY_AGE);
+            skippedTests.sort(CaseResult.BY_AGE);
         }
 
         for (PackageResult pr : byPackages.values())
@@ -884,7 +881,7 @@ public final class TestResult extends MetaTabulatedResult {
         if (nodeId != null) {
             // If we don't already have an entry for this node, initialize a list for it.
             if (suitesByNode.get(nodeId) == null) {
-                suitesByNode.put(nodeId, new ArrayList<SuiteResult>());
+                suitesByNode.put(nodeId, new ArrayList<>());
             }
             // Add the suite to the list for the node in the map. Phew.
             suitesByNode.get(nodeId).add(s);
