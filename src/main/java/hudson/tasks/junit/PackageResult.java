@@ -199,7 +199,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
      */
     public List<CaseResult> getFailedTestsSortedByAge() {
         List<CaseResult> failedTests = getFailedTests();
-        Collections.sort(failedTests, CaseResult.BY_AGE);
+        failedTests.sort(CaseResult.BY_AGE);
         return failedTests;
     }
 
@@ -223,7 +223,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
                 }
             }
         }
-        Collections.sort(r,CaseResult.BY_AGE);
+        r.sort(CaseResult.BY_AGE);
         return r;
     }
 
@@ -247,7 +247,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
                 }
             }
         }
-        Collections.sort(r, CaseResult.BY_AGE);
+        r.sort(CaseResult.BY_AGE);
         return r;
     }
 

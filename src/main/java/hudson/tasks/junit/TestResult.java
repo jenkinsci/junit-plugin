@@ -861,14 +861,14 @@ public final class TestResult extends MetaTabulatedResult {
             }
         }
 
-        Collections.sort(failedTests,CaseResult.BY_AGE);
+        failedTests.sort(CaseResult.BY_AGE);
 
         if(passedTests != null) {
-            Collections.sort(passedTests,CaseResult.BY_AGE);
+            passedTests.sort(CaseResult.BY_AGE);
         }
 
         if(skippedTests != null) {
-            Collections.sort(skippedTests,CaseResult.BY_AGE);
+            skippedTests.sort(CaseResult.BY_AGE);
         }
 
         for (PackageResult pr : byPackages.values())
