@@ -377,9 +377,7 @@ public final class TestResult extends MetaTabulatedResult {
         try {
             for (SuiteResult suiteResult : SuiteResult.parse(reportFile, keepLongStdio, pipelineTestDetails))
                 add(suiteResult);
-        } catch (InterruptedException e) {
-            throw new IOException("Failed to read "+reportFile,e);
-        } catch (RuntimeException e) {
+        } catch (InterruptedException | RuntimeException e) {
             throw new IOException("Failed to read "+reportFile,e);
         } catch (DocumentException e) {
             if (!reportFile.getPath().endsWith(".xml")) {
