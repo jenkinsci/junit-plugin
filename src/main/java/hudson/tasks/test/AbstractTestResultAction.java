@@ -340,7 +340,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
     }
     
     private CategoryDataset buildDataSet(StaplerRequest req) {
-        boolean failureOnly = Boolean.valueOf(req.getParameter("failureOnly"));
+        boolean failureOnly = Boolean.parseBoolean(req.getParameter("failureOnly"));
 
         // TODO stop using ChartUtil.NumberOnlyBuildLabel as it forces loading of a Run; create a plainer Comparable
         DataSetBuilder<String,NumberOnlyBuildLabel> dsb = new DataSetBuilder<String,NumberOnlyBuildLabel>();
