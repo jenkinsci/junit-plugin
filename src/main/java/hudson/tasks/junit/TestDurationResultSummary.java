@@ -5,10 +5,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static hudson.tasks.test.TestDurationTrendSeriesBuilder.SECONDS;
-import static hudson.tasks.test.TestResultTrendSeriesBuilder.FAILED_KEY;
-import static hudson.tasks.test.TestResultTrendSeriesBuilder.PASSED_KEY;
-import static hudson.tasks.test.TestResultTrendSeriesBuilder.SKIPPED_KEY;
-import static hudson.tasks.test.TestResultTrendSeriesBuilder.TOTALS_KEY;
 
 public class TestDurationResultSummary implements Serializable {
     

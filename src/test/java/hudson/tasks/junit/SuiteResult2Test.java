@@ -33,7 +33,6 @@ import java.util.List;
 import static org.jvnet.hudson.test.MemoryAssert.*;
 import static org.junit.Assert.*;
 
-import hudson.tasks.test.PipelineTestDetails;
 import org.junit.Test;
 
 public class SuiteResult2Test {

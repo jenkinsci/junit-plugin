@@ -30,7 +30,6 @@ import hudson.model.BuildListener;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.tasks.Builder;
-import hudson.tasks.test.PipelineTestDetails;
 import hudson.tasks.test.TestResult;
 import org.junit.Before;
 import org.junit.Rule;

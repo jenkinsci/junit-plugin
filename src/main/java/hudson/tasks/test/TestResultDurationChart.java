@@ -6,13 +6,9 @@ import edu.hm.hafner.echarts.LinesChartModel;
 import edu.hm.hafner.echarts.LinesDataSet;
 import edu.hm.hafner.echarts.Palette;
 import hudson.tasks.junit.TestDurationResultSummary;
-import hudson.tasks.junit.TrendTestResultSummary;
 import java.util.List;
 
 import static hudson.tasks.test.TestDurationTrendSeriesBuilder.SECONDS;
-import static hudson.tasks.test.TestResultTrendSeriesBuilder.FAILED_KEY;
-import static hudson.tasks.test.TestResultTrendSeriesBuilder.PASSED_KEY;
-import static hudson.tasks.test.TestResultTrendSeriesBuilder.SKIPPED_KEY;
 
 public class TestResultDurationChart {
     

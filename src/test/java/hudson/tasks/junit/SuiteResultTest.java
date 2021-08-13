@@ -30,7 +30,6 @@ import java.net.URISyntaxException;
 
 import hudson.XmlFile;
 
-import hudson.tasks.test.PipelineTestDetails;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
