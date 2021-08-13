@@ -791,11 +791,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     /**
      * For sorting errors by age.
      */
-    /*package*/ static final Comparator<CaseResult> BY_AGE = new Comparator<CaseResult>() {
-        public int compare(CaseResult lhs, CaseResult rhs) {
-            return lhs.getAge()-rhs.getAge();
-        }
-    };
+    /*package*/ static final Comparator<CaseResult> BY_AGE = Comparator.comparingInt(CaseResult::getAge);
 
     private static final long serialVersionUID = 1L;
 
