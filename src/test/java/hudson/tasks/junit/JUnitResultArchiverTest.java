@@ -247,8 +247,7 @@ public class JUnitResultArchiverTest {
         }
         @Override public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
             FilePath ws = build.getWorkspace();
-            OutputStream os = ws.child(name + ".xml").write();
-            try {
+            try (OutputStream os = ws.child(name + ".xml").write()) {
                 PrintWriter pw = new PrintWriter(os);
                 pw.println("<testsuite failures=\"" + fail + "\" errors=\"0\" skipped=\"0\" tests=\"" + (pass + fail) + "\" name=\"" + name + "\">");
                 for (int i = 0; i < pass; i++) {
@@ -259,8 +258,6 @@ public class JUnitResultArchiverTest {
                 }
                 pw.println("</testsuite>");
                 pw.flush();
-            } finally {
-                os.close();
             }
             new JUnitResultArchiver(name + ".xml").perform(build, ws, launcher, listener);
             return true;

@@ -173,14 +173,11 @@ public final class SuiteResult implements Serializable {
 
         saxReader.setEntityResolver(new XMLEntityResolver());
 
-        FileInputStream xmlReportStream = new FileInputStream(xmlReport);
-        try {
+        try (FileInputStream xmlReportStream = new FileInputStream(xmlReport)) {
             Document result = saxReader.read(xmlReportStream);
             Element root = result.getRootElement();
 
             parseSuite(xmlReport, keepLongStdio, r, root, pipelineTestDetails);
-        } finally {
-            xmlReportStream.close();
         }
 
         return r;

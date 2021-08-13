@@ -159,8 +159,7 @@ public class SuiteResultTest {
     public void testSuiteStdioTrimming() throws Exception {
         File data = File.createTempFile("testSuiteStdioTrimming", ".xml");
         try {
-            Writer w = new FileWriter(data);
-            try {
+            try (Writer w = new FileWriter(data)) {
                 PrintWriter pw = new PrintWriter(w);
                 pw.println("<testsuites name='x'>");
                 pw.println("<testsuite failures='0' errors='0' tests='1' name='x'>");
@@ -176,8 +175,6 @@ public class SuiteResultTest {
                 pw.println("</testsuite>");
                 pw.println("</testsuites>");
                 pw.flush();
-            } finally {
-                w.close();
             }
             SuiteResult sr = parseOne(data);
             assertEquals(sr.getStderr(), 1030, sr.getStderr().length());
@@ -190,8 +187,7 @@ public class SuiteResultTest {
     public void testSuiteStdioTrimmingOnFail() throws Exception {
         File data = File.createTempFile("testSuiteStdioTrimming", ".xml");
         try {
-            Writer w = new FileWriter(data);
-            try {
+            try (Writer w = new FileWriter(data)) {
                 PrintWriter pw = new PrintWriter(w);
                 pw.println("<testsuites name='x'>");
                 pw.println("<testsuite failures='1' errors='0' tests='1' name='x'>");
@@ -207,8 +203,6 @@ public class SuiteResultTest {
                 pw.println("</testsuite>");
                 pw.println("</testsuites>");
                 pw.flush();
-            } finally {
-                w.close();
             }
             SuiteResult sr = parseOne(data);
             assertEquals(sr.getStderr(), 100032, sr.getStderr().length());
