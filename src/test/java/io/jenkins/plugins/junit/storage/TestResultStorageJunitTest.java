@@ -880,6 +880,10 @@ public class TestResultStorageJunitTest {
             private static final XStream XSTREAM = new XStream();
             private final String databaseXml;
 
+            static {
+                XSTREAM.allowTypes(new Class[] {LocalH2Database.class});
+            }
+
             RemoteConnectionSupplier() {
                 databaseXml = XSTREAM.toXML(GlobalDatabaseConfiguration.get().getDatabase());
             }
