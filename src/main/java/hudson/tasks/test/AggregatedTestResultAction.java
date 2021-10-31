@@ -89,6 +89,7 @@ public abstract class AggregatedTestResultAction extends AbstractTestResultActio
         this.children.add(new Child(getChildName(child),child.run.number));
     }
 
+    @Override
     public int getFailCount() {
         return failCount;
     }
@@ -98,10 +99,12 @@ public abstract class AggregatedTestResultAction extends AbstractTestResultActio
         return skipCount;
     }
 
+    @Override
     public int getTotalCount() {
         return totalCount;
     }
    
+    @Override
     public List<ChildReport> getResult() {
         // I think this is a reasonable default.
         return getChildReports();
@@ -154,12 +157,14 @@ public abstract class AggregatedTestResultAction extends AbstractTestResultActio
     @Exported(inline=true)
     public List<ChildReport> getChildReports() {
         return new AbstractList<ChildReport>() {
+            @Override
             public ChildReport get(int index) {
                 return new ChildReport(
                         resolveRun(children.get(index)),
                         getChildReport(children.get(index)));
             }
 
+            @Override
             public int size() {
                 return children.size();
             }

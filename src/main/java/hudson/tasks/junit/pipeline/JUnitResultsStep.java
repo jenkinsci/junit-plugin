@@ -65,10 +65,12 @@ public class JUnitResultsStep extends Step implements JUnitTask {
         this.testResults = testResults;
     }
 
+    @Override
     public String getTestResults() {
         return testResults;
     }
 
+    @Override
     public double getHealthScaleFactor() {
         return healthScaleFactor == null ? 1.0 : healthScaleFactor;
     }
@@ -83,8 +85,9 @@ public class JUnitResultsStep extends Step implements JUnitTask {
         this.healthScaleFactor = Math.max(0.0, healthScaleFactor);
     }
 
-    public @Nonnull
-    List<TestDataPublisher> getTestDataPublishers() {
+    @Nonnull
+    @Override
+    public List<TestDataPublisher> getTestDataPublishers() {
         return testDataPublishers == null ? Collections.emptyList() : testDataPublishers;
     }
 
@@ -101,6 +104,7 @@ public class JUnitResultsStep extends Step implements JUnitTask {
     /**
      * @return the keepLongStdio.
      */
+    @Override
     public boolean isKeepLongStdio() {
         return keepLongStdio;
     }
@@ -118,6 +122,7 @@ public class JUnitResultsStep extends Step implements JUnitTask {
      *
      * @return the allowEmptyResults
      */
+    @Override
     public boolean isAllowEmptyResults() {
         return allowEmptyResults;
     }

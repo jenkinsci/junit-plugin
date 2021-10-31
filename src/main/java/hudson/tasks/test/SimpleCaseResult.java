@@ -184,6 +184,7 @@ public class SimpleCaseResult extends TestResult {
         return "Simple Case Result";  //
     }
 
+    @Override
     public String getDisplayName() {
         return "Simple Case Result";
     }

@@ -161,6 +161,7 @@ public final class TestResult extends MetaTabulatedResult {
         return impl;
     }
 
+    @Override
     public TestObject getParent() {
     	return parent;
     }
@@ -394,6 +395,7 @@ public final class TestResult extends MetaTabulatedResult {
         }
     }
 
+    @Override
     public String getDisplayName() {
         return Messages.TestResult_getDisplayName();
     }

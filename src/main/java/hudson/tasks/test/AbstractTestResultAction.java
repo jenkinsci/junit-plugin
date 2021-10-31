@@ -144,19 +144,23 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
         return " / "+Functions.getDiffString(this.getFailCount()-prev.getFailCount());
     }
 
+    @Override
     public String getDisplayName() {
         return Messages.AbstractTestResultAction_getDisplayName();
     }
 
     @Exported(visibility=2)
+    @Override
     public String getUrlName() {
         return "testReport";
     }
 
+    @Override
     public String getIconFileName() {
         return "clipboard.png";
     }
 
+    @Override
     public HealthReport getBuildHealth() {
         final double scaleFactor = getHealthScaleFactor();
         if (scaleFactor < 1e-7) {

@@ -62,6 +62,7 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
         return parent==null ? null: parent.getRun();
     }
 
+    @Override
     public PackageResult getParent() {
         return parent;
     }
@@ -91,6 +92,7 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
         return getCaseResult(caseName);
     }
 
+    @Override
     public String getTitle() {
         return Messages.ClassResult_getTitle(getDisplayName());
     }
@@ -101,6 +103,7 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
     }
 
     @Exported(visibility=999)
+    @Override
     public String getName() {
         int idx = className.lastIndexOf('.');
         if(idx<0)       return className;
@@ -134,30 +137,36 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
 
 
     @Exported(name="child")
+    @Override
     public List<CaseResult> getChildren() {
         return cases;
     }
 
+    @Override
     public boolean hasChildren() {
         return (cases != null) && (cases.size() > 0);
     }
 
     // TODO: wait for stapler 1.60     @Exported
+    @Override
     public float getDuration() {
         return duration; 
     }
     
     @Exported
+    @Override
     public int getPassCount() {
         return passCount;
     }
 
     @Exported
+    @Override
     public int getFailCount() {
         return failCount;
     }
 
     @Exported
+    @Override
     public int getSkipCount() {
         return skipCount;
     }
@@ -197,6 +206,7 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
     	return className;
     }
 
+    @Override
     public int compareTo(ClassResult that) {
         if (this.equals(that)) {
             return 0;
@@ -223,6 +233,7 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
         return System.identityHashCode(this);
     }
 
+    @Override
     public String getDisplayName() {
         return TestNameTransformer.getTransformedName(getName());
     }
@@ -235,6 +246,7 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
     	return getParent().getName() + "." + className;
     }
     
+    @Override
     public String getFullDisplayName() {
     	return getParent().getDisplayName() + "." + TestNameTransformer.getTransformedName(className);
     }

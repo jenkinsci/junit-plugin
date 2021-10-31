@@ -328,14 +328,17 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
         return new TestResult(buildTime, ds);
     }
 
+    @Override
     public BuildStepMonitor getRequiredMonitorService() {
         return BuildStepMonitor.NONE;
     }
 
+    @Override
     public String getTestResults() {
         return testResults;
     }
 
+    @Override
     public double getHealthScaleFactor() {
         return healthScaleFactor == null ? 1.0 : healthScaleFactor;
     }
@@ -349,7 +352,9 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
         this.healthScaleFactor = Math.max(0.0, healthScaleFactor);
     }
 
-    public @Nonnull List<TestDataPublisher> getTestDataPublishers() {
+    @Nonnull
+    @Override
+    public List<TestDataPublisher> getTestDataPublishers() {
         return testDataPublishers == null ? Collections.emptyList() : testDataPublishers;
     }
 
@@ -366,6 +371,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     /**
      * @return the keepLongStdio.
      */
+    @Override
     public boolean isKeepLongStdio() {
         return keepLongStdio;
     }
@@ -383,6 +389,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
      *
      * @return the allowEmptyResults
      */
+    @Override
     public boolean isAllowEmptyResults() {
         return allowEmptyResults;
     }
@@ -429,6 +436,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
 
     @Extension
     public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
+        @Override
         public String getDisplayName() {
             return Messages.JUnitResultArchiver_DisplayName();
         }
@@ -450,6 +458,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
             return FilePath.validateFileMask(project.getSomeWorkspace(), value);
         }
 
+        @Override
         public boolean isApplicable(Class<? extends AbstractProject> jobType) {
             return true;
         }

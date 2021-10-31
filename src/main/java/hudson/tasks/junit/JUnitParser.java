@@ -134,6 +134,7 @@ public class JUnitParser extends TestResultParser {
             this.listener = listener;
         }
 
+        @Override
         public T invoke(File ws, VirtualChannel channel) throws IOException {
             final long nowSlave = System.currentTimeMillis();
 
