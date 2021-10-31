@@ -82,14 +82,17 @@ public class TestResultProjectAction implements Action, AsyncTrendChart {
     /**
      * No task list item.
      */
+    @Override
     public String getIconFileName() {
         return null;
     }
 
+    @Override
     public String getDisplayName() {
         return "Test Report";
     }
 
+    @Override
     public String getUrlName() {
         return "test";
     }

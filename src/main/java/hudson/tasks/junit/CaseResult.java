@@ -254,6 +254,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         return HALF_MAX_SIZE;
     }
 
+    @Override
     public ClassResult getParent() {
         return classResult;
     }
@@ -304,6 +305,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         return TestNameTransformer.getTransformedName(getName());
     }
 
+    @Override
     public String getDisplayName() {
         return getNameWithEnclosingBlocks(getTransformedTestName());
     }
@@ -349,6 +351,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      * Gets the duration of the test, in seconds
      */
     @Exported(visibility=9)
+    @Override
     public float getDuration() {
         return duration;
     }
@@ -409,6 +412,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     /**
      * @since 1.515
      */
+    @Override
     public String getFullDisplayName() {
         return getNameWithEnclosingBlocks(getTransformedFullDisplayName());
     }
@@ -436,6 +440,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      * when this test started failing.
      */
     @Exported(visibility=9)
+    @Override
     public int getFailedSince() {
         // If we haven't calculated failedSince yet, and we should,
         // do it now.
@@ -457,6 +462,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         }
     }
 
+    @Override
     public Run<?,?> getFailedSinceRun() {
         JunitTestResultStorage storage = JunitTestResultStorage.find();
         if (!(storage instanceof FileJunitTestResultStorage)) {
@@ -500,6 +506,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      * @since 1.294
      */
     @Exported
+    @Override
     public String getStdout() {
         if(stdout!=null)    return stdout;
         SuiteResult sr = getSuiteResult();
@@ -514,6 +521,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      * @since 1.294
      */
     @Exported
+    @Override
     public String getStderr() {
         if(stderr!=null)    return stderr;
         SuiteResult sr = getSuiteResult();
@@ -582,6 +590,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      * If there was an error or a failure, this is the stack trace, or otherwise null.
      */
     @Exported
+    @Override
     public String getErrorStackTrace() {
         return errorStackTrace;
     }
@@ -590,6 +599,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      * If there was an error or a failure, this is the text from the message.
      */
     @Exported
+    @Override
     public String getErrorDetails() {
         return errorDetails;
     }
@@ -597,6 +607,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     /**
      * @return true if the test was not skipped and did not fail, false otherwise.
      */
+    @Override
     public boolean isPassed() {
         return !skipped && errorDetails == null && errorStackTrace==null;
     }
@@ -688,6 +699,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         recomputeFailedSinceIfNeeded();
     }
     
+    @Override
     public int compareTo(CaseResult that) {
         if (this == that) {
             return 0;

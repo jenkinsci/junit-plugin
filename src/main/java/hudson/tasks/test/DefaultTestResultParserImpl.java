@@ -81,6 +81,7 @@ public abstract class DefaultTestResultParserImpl extends TestResultParser imple
             final long buildTime = build.getTimestamp().getTimeInMillis();
             final long nowMaster = System.currentTimeMillis();
 
+            @Override
             public TestResult invoke(File dir, VirtualChannel channel) throws IOException, InterruptedException {
                 final long nowSlave = System.currentTimeMillis();
 

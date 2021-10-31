@@ -82,6 +82,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
      *
      * @return the parent {@link TestObject}.
      */
+    @Override
     public abstract TestObject getParent();
 
     @Override
@@ -276,9 +277,11 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
      *
      * @return null if no such counter part exists.
      */
+    @Override
     public abstract TestResult getPreviousResult();
 
     @Deprecated
+    @Override
     public TestResult getResultInBuild(AbstractBuild<?, ?> build) {
         return (TestResult) super.getResultInBuild(build);
     }
@@ -305,6 +308,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
     /**
      * Time took to run this test. In seconds.
      */
+    @Override
     public abstract float getDuration();
 
     /**
@@ -427,16 +431,19 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
     /**
      * Gets the total number of passed tests.
      */
+    @Override
     public abstract int getPassCount();
 
     /**
      * Gets the total number of failed tests.
      */
+    @Override
     public abstract int getFailCount();
 
     /**
      * Gets the total number of skipped tests.
      */
+    @Override
     public abstract int getSkipCount();
 
     /**

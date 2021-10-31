@@ -60,11 +60,13 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
         return parent == null ? null : parent.getRun();
     }
 
+    @Override
     public hudson.tasks.junit.TestResult getParent() {
     	return parent;
     }
 
     @Exported(visibility=999)
+    @Override
     public String getName() {
         return packageName;
     }
@@ -158,6 +160,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
 	}
 
     @Exported(name="child")
+    @Override
     public Collection<ClassResult> getChildren() {
         return classes.values();
     }
@@ -175,6 +178,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
      * Returns a list of the failed cases, in no particular
      * sort order
      */
+    @Override
     public List<CaseResult> getFailedTests() {
         TestResultImpl pluggableStorage = parent.getPluggableStorage();
         if (pluggableStorage != null) {
@@ -314,6 +318,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
         }
     }
 
+    @Override
     public int compareTo(PackageResult that) {
         if (this.equals(that)) {
             return 0;
@@ -340,6 +345,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
         return System.identityHashCode(this);
     }
 
+    @Override
     public String getDisplayName() {
         return TestNameTransformer.getTransformedName(packageName);
     }

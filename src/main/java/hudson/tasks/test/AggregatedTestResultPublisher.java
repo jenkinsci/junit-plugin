@@ -92,12 +92,14 @@ public class AggregatedTestResultPublisher extends Recorder {
         this.includeFailedBuilds = includeFailedBuilds;
     }
 
+    @Override
     public boolean perform(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
         // add a TestResult just so that it can show up later.
         build.addAction(new TestResultAction(jobs, includeFailedBuilds, build));
         return true;
     }
 
+    @Override
     public BuildStepMonitor getRequiredMonitorService() {
         return BuildStepMonitor.NONE;
     }
@@ -191,16 +193,19 @@ public class AggregatedTestResultPublisher extends Recorder {
             return owner.getProject();
         }
 
+        @Override
         public int getFailCount() {
             upToDateCheck();
             return failCount;
         }
 
+        @Override
         public int getTotalCount() {
             upToDateCheck();
             return totalCount;
         }
 
+        @Override
         public Object getResult() {
             upToDateCheck();
             return this;
@@ -341,10 +346,13 @@ public class AggregatedTestResultPublisher extends Recorder {
 
     @Extension
     public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
+
+        @Override
         public boolean isApplicable(Class<? extends AbstractProject> jobType) {
             return true;    // for all types
         }
 
+        @Override
         public String getDisplayName() {
             return Messages.AggregatedTestResultPublisher_DisplayName();
         }
