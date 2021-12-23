@@ -197,6 +197,8 @@
           <rerunFailingTestsCount>1</rerunFailingTestsCount>
           <includes>
             <include>**/SmokeTests.java</include>
+            <include>**/*Tests.java</include>
+            <include>**/*Test.java</include>
           </includes>
         </configuration>
       </plugin>
@@ -213,6 +215,16 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>${maven-compiler-plugin.version}</version>
+        <configuration>
+          <source>${java.version}</source>
+          <target>${java.version}</target>
+          <testSource>${java.version}</testSource>
+          <testTarget>${java.version}</testTarget>
+        </configuration>
       </plugin>
     </plugins>
   </build>
