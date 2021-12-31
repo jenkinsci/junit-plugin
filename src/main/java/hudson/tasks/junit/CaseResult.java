@@ -42,8 +42,8 @@ import org.kohsuke.accmod.restrictions.Beta;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.export.Exported;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -653,7 +653,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         return null;
     }
 
-    @Nonnull
+    @NonNull
     public List<String> getEnclosingFlowNodeIds() {
         List<String> enclosing = new ArrayList<>();
         if (parent != null) {
@@ -662,7 +662,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         return enclosing;
     }
 
-    @Nonnull
+    @NonNull
     public List<String> getEnclosingFlowNodeNames() {
         List<String> enclosing = new ArrayList<>();
         if (parent != null) {

@@ -38,7 +38,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import jenkins.model.RunAction2;
 import jenkins.model.lazy.LazyBuildMixIn;
 import org.jfree.chart.ChartFactory;
@@ -278,7 +278,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
      * @return List of passed tests from associated test result.
      * @since 1.10
      */
-    @Nonnull
+    @NonNull
     public List<? extends TestResult> getPassedTests() {
         return Collections.emptyList();
     }
@@ -289,7 +289,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
      * @return List of skipped tests from associated test result.
      * @since 1.10
      */
-    @Nonnull
+    @NonNull
     public List<? extends TestResult> getSkippedTests() {
         return Collections.emptyList();
     }

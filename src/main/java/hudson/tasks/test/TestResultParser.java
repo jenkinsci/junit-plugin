@@ -34,7 +34,7 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 
 import java.io.IOException;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Parses test result files and builds in-memory representation of it as {@link TestResult}.
@@ -84,7 +84,7 @@ public abstract class TestResultParser {
 
     @Deprecated
     public TestResult parseResult(String testResultLocations,
-                                  Run<?,?> run, @Nonnull FilePath workspace, Launcher launcher,
+                                  Run<?,?> run, @NonNull FilePath workspace, Launcher launcher,
                                   TaskListener listener)
             throws InterruptedException, IOException {
         return parseResult(testResultLocations, run, null, workspace, launcher, listener);
@@ -135,7 +135,7 @@ public abstract class TestResultParser {
      */
     public TestResult parseResult(String testResultLocations,
                                   Run<?,?> run, PipelineTestDetails pipelineTestDetails,
-                                  @Nonnull FilePath workspace, Launcher launcher, TaskListener listener)
+                                  @NonNull FilePath workspace, Launcher launcher, TaskListener listener)
             throws InterruptedException, IOException {
         if (run instanceof AbstractBuild) {
             return parse(testResultLocations, (AbstractBuild) run, launcher, listener);
