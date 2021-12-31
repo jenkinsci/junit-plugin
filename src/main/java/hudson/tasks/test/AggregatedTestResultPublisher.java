@@ -58,7 +58,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import javax.annotation.CheckForNull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 
@@ -375,7 +375,7 @@ public class AggregatedTestResultPublisher extends Recorder {
         @Override
         public AggregatedTestResultPublisher newInstance(StaplerRequest req, JSONObject formData) throws FormException {
             // Starting in 1.640, Descriptor#newInstance is
-            // newInstance(@CheckForNull StaplerRequest req, @Nonnull JSONObject formData)
+            // newInstance(@CheckForNull StaplerRequest req, @NonNull JSONObject formData)
             if (formData == null) {
                 // Should not happen. See above
                 throw new AssertionError("Null parameters to Descriptor#newInstance");

@@ -46,7 +46,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import javax.annotation.CheckForNull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 
 import org.apache.tools.ant.DirectoryScanner;
 import org.dom4j.DocumentException;
@@ -54,7 +54,7 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Root of all the test results for one build.
@@ -723,13 +723,13 @@ public final class TestResult extends MetaTabulatedResult {
         return suitesByName.get(name);
     }
 
-    @Nonnull
-    public TestResult getResultByNode(@Nonnull String nodeId) {
+    @NonNull
+    public TestResult getResultByNode(@NonNull String nodeId) {
         return getResultByNodes(Collections.singletonList(nodeId));
     }
 
-    @Nonnull
-    public TestResult getResultByNodes(@Nonnull List<String> nodeIds) {
+    @NonNull
+    public TestResult getResultByNodes(@NonNull List<String> nodeIds) {
         if (impl != null) {
             return impl.getResultByNodes(nodeIds);
         }
@@ -895,8 +895,8 @@ public final class TestResult extends MetaTabulatedResult {
         }
     }
 
-    @Nonnull
-    public TestResult getResultForPipelineBlock(@Nonnull String blockId) {
+    @NonNull
+    public TestResult getResultForPipelineBlock(@NonNull String blockId) {
         PipelineBlockWithTests block = getPipelineBlockWithTests(blockId);
         if (block != null) {
             return (TestResult)blockToTestResult(block, this);
@@ -909,8 +909,8 @@ public final class TestResult extends MetaTabulatedResult {
      * Get an aggregated {@link TestResult} for all test results in a {@link PipelineBlockWithTests} and any children it may have.
      */
     @Override
-    @Nonnull
-    public TabulatedResult blockToTestResult(@Nonnull PipelineBlockWithTests block, @Nonnull TabulatedResult fullResult) {
+    @NonNull
+    public TabulatedResult blockToTestResult(@NonNull PipelineBlockWithTests block, @NonNull TabulatedResult fullResult) {
         TestResult result = new TestResult();
         for (PipelineBlockWithTests child : block.getChildBlocks().values()) {
             TabulatedResult childResult = blockToTestResult(child, fullResult);

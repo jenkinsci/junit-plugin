@@ -35,8 +35,8 @@ import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 import org.xml.sax.SAXException;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -331,7 +331,7 @@ public final class SuiteResult implements Serializable {
      * @since 1.22
      */
     @Exported(visibility=9)
-    @Nonnull
+    @NonNull
     public List<String> getEnclosingBlocks() {
         if (enclosingBlocks != null) {
             return Collections.unmodifiableList(enclosingBlocks);
@@ -346,7 +346,7 @@ public final class SuiteResult implements Serializable {
      * @since 1.22
      */
     @Exported(visibility=9)
-    @Nonnull
+    @NonNull
     public List<String> getEnclosingBlockNames() {
         if (enclosingBlockNames != null) {
             return Collections.unmodifiableList(enclosingBlockNames);
