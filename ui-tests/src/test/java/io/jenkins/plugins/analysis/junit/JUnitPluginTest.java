@@ -78,6 +78,31 @@ public class JUnitPluginTest extends AbstractJUnitTest {
         assertMessage("TestNG.testScore", "expected:<42> but was:<2>");
     }
 
+    @Test
+    public void buildSummaryWithFailures() {
+        FreeStyleJob j = jenkins.jobs.create();
+        j.configure();
+        j.copyResource(resource("/parameterized/junit.xml"));
+        j.copyResource(resource("/parameterized/testng.xml"));
+        j.addPublisher(JUnitPublisher.class).testResults.set("*.xml");
+        j.save();
+
+        Build b = j.startBuild();
+        // TODO: check build status
+        assertThat(b.getResult(), is("UNSTABLE"));
+        verifyBuildSummaryWithFailures(b);
+    }
+
+    public void verifyBuildSummaryWithFailures(final Build build) {
+        build.open();
+
+        JUnitBuildSummary buildSummary = new JUnitBuildSummary(build, "junit");
+
+        // TODO: ... assertions
+//        assertThat(buildSummary)
+//                .hasTitleText("FindBugs: No warnings")
+    }
+
     private void assertMessage(String test, String content) {
         // Given that there may be several tests with the same name, we assert
         // that at least one of the pages have the requested content
