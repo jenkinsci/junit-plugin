@@ -2,6 +2,7 @@ package io.jenkins.plugins.analysis.junit;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.openqa.selenium.By;
@@ -24,6 +25,8 @@ public class JUnitBuildDetail extends PageObject {
     private final WebElement failedTestsTable;
     private final WebElement allTestsTable;
     //private final Map<FailedTest, WebElement> failedTestsTableElementsByFailedTest;
+
+    private final WebElement numberOfFailures;
 
     private final List<WebElement> testDetailLinks;
     private final List<WebElement> packageDetailLinks;
@@ -65,6 +68,10 @@ public class JUnitBuildDetail extends PageObject {
         failedTestsTable = pageContentChildren.get(failedTestsTableIndex);
         allTestsTable = pageContentChildren.get(allTestsTableIndex);
 
+        numberOfFailures = pageContent.findElements(By.cssSelector("h1 + div div")).get(0);
+
+
+
         List<WebElement> failedTestsTableItems = failedTestsTable.findElements(By.cssSelector("tbody tr"));
         List<WebElement> failedTestsTableItemsWithoutHeader = failedTestsTableItems.subList(1,
                 failedTestsTableItems.size());
@@ -99,7 +106,14 @@ public class JUnitBuildDetail extends PageObject {
         int duration = Integer.parseInt(durationString.substring(0, durationString.length() - " ms".length()));
         int age = Integer.parseInt(columns.get(2).findElement(By.cssSelector("a")).getText());
 
-        return new FailedTest(name, duration, age);
+        WebElement expandLink = columns.get(0).findElement(By.cssSelector("a[title=\"Show details\""));
+        expandLink.click();
+
+        List<WebElement> detailPreElements = columns.get(0).findElements(By.cssSelector("div.failure-summary pre"));
+        String errorDetails = detailPreElements.get(0).getText();
+        String stackTrace = detailPreElements.get(0).getText();
+
+        return new FailedTest(name, duration, age, errorDetails, stackTrace);
     }
 
     private Test webElementToTest(final WebElement trElement) {
@@ -130,6 +144,11 @@ public class JUnitBuildDetail extends PageObject {
      */
     public int getNumberOfFailures() {
         return failedTests.size();
+    }
+
+    public int getNumberOfFailuresInTitle() {
+        String text = numberOfFailures.getText().trim();
+        return Integer.parseInt(text.substring(0, text.indexOf(' ')));
     }
 
     public List<FailedTest> getFailedTests() {
@@ -169,10 +188,17 @@ class FailedTest {
 
     private final int age;
 
-    public FailedTest(final String name, final int duration, final int age) {
+    private final String errorDetails;
+
+    private final String stackTrace;
+
+    public FailedTest(final String name, final int duration, final int age, final String errorDetails,
+            final String stackTrace) {
         this.name = name;
         this.duration = duration;
         this.age = age;
+        this.errorDetails = errorDetails;
+        this.stackTrace = stackTrace;
     }
 
     public String getName() { return name; }
@@ -181,6 +207,9 @@ class FailedTest {
 
     public int getAge() { return age; }
 
+    public String getErrorDetails() { return errorDetails; }
+
+    public String getStackTrace() { return stackTrace; }
 }
 
 class Test {
