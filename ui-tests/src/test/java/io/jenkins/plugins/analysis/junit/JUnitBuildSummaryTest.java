@@ -11,6 +11,8 @@ import org.jenkinsci.test.acceptance.junit.WithPlugins;
 @WithPlugins("junit")
 public class JUnitBuildSummaryTest {
 
+    // TODO: Test here if test title (x failures) is correct
+
     public void verifySummaryNoFailures() {
 
     }

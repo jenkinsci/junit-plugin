@@ -58,6 +58,7 @@ public class JUnitBuildSummary extends PageObject {
         titleLink = summaryContent.findElement(By.cssSelector("a"));
         failedTestLinks = summaryContent.findElements(By.cssSelector("ul li a"));
 
+        // TODO: Fragen ob das bleibt oder wegkann. Build Status prüfen oder nicht?
         WebElement buildHeadline = getElement(By.className("page-headline"));
         if (hasBuildStatus("Unstable")) {
             buildStatus = "Unstable";
@@ -71,7 +72,7 @@ public class JUnitBuildSummary extends PageObject {
     }
 
     private Optional<WebElement> findIconInTableEntry(final WebElement tableEntry) {
-        return Optional.ofNullable(tableEntry.findElement(By.cssSelector("td img.icon-clipboard icon-xlg")));
+        return Optional.ofNullable(tableEntry.findElement(By.cssSelector("td img.icon-clipboard.icon-xlg")));
     }
 
     private Optional<WebElement> findContentInTableEntry(final WebElement tableEntry) {
