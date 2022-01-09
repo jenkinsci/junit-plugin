@@ -1,9 +1,7 @@
 package io.jenkins.plugins.analysis.junit;
 
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.openqa.selenium.By;

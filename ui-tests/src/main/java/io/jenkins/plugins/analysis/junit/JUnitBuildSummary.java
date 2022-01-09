@@ -51,7 +51,6 @@ public class JUnitBuildSummary extends PageObject {
                 .findFirst()
                 .orElseThrow(() -> new NoSuchElementException("junit build summary table"));
 
-
         summaryIcon = findIconInTableEntry(junitBuildSummaryTableEntry).get();
         summaryContent = findContentInTableEntry(junitBuildSummaryTableEntry).get();
 
@@ -72,15 +71,20 @@ public class JUnitBuildSummary extends PageObject {
     }
 
     private Optional<WebElement> findIconInTableEntry(final WebElement tableEntry) {
-        return Optional.ofNullable(tableEntry.findElement(By.cssSelector("td img.icon-clipboard.icon-xlg")));
+        return findOptionalElement(tableEntry, By.cssSelector("td img.icon-clipboard.icon-xlg"));
     }
 
     private Optional<WebElement> findContentInTableEntry(final WebElement tableEntry) {
         List<WebElement> foundElements = tableEntry.findElements(By.cssSelector("td"));
         return foundElements.stream()
-                .filter(foundElement -> foundElement.findElement(By.cssSelector("a")) != null &&
-                        foundElement.findElement(By.cssSelector("a")).getText().equals("Test Result"))
+                .filter(foundElement -> findOptionalElement(foundElement, By.cssSelector("a")).isPresent() &&
+                        findOptionalElement(foundElement, By.cssSelector("a")).get().getText().equals("Test Result"))
                 .findFirst();
+    }
+
+    private Optional<WebElement> findOptionalElement(final WebElement webElement, final By byArgument) {
+        List<WebElement> foundElements = webElement.findElements(byArgument);
+        return foundElements.isEmpty() ? Optional.empty() : Optional.of(foundElements.get(0));
     }
 
     /**
