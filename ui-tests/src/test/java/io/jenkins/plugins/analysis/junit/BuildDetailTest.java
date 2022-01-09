@@ -1,8 +1,14 @@
 package io.jenkins.plugins.analysis.junit;
 
+import java.util.Arrays;
+
 import org.junit.Test;
 
+import org.jenkinsci.test.acceptance.junit.AbstractJUnitTest;
 import org.jenkinsci.test.acceptance.junit.WithPlugins;
+import org.jenkinsci.test.acceptance.po.Build;
+
+import static org.assertj.core.api.AssertionsForClassTypes.*;
 
 /**
  * Tests the detail view of a build's failed Unit tests.
@@ -11,11 +17,26 @@ import org.jenkinsci.test.acceptance.junit.WithPlugins;
  * @author Nikolas Paripovic
  */
 @WithPlugins("junit")
-public class BuildDetailTest {
+public class BuildDetailTest extends AbstractJUnitTest {
 
     @Test
     public void verifyDetailWithFailures() {
         // TODO: verify listed failures, failure count, error details + stack trace by test
+
+        Build build = TestUtils.createFreeStyleJobWithResources(
+                this,
+                Arrays.asList("/parameterized/junit.xml", "/parameterized/testng.xml"), "UNSTABLE");
+
+        JUnitBuildSummary buildSummary = new JUnitBuildSummary(build, "junit");
+        JUnitBuildDetail buildDetail = buildSummary.openBuildDetailView();
+
+        assertThat(buildDetail.getNumberOfFailures()).isEqualTo(6);
+        assertThat(buildDetail.getNumberOfFailuresInTitle()).isEqualTo(6);
+        assertThat(buildDetail.getFailedTests()).asList();
+
+        //TODO: How to check with this API???
+        //TODO: Replace hamcrest API with assertj API
+
     }
 
     @Test
@@ -26,5 +47,10 @@ public class BuildDetailTest {
     @Test
     public void verifyDetailWithPreviousTests() {
         // TODO: verify change since last build
+    }
+
+    @Test
+    public void verifyLinkToTestDetails() {
+
     }
 }

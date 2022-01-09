@@ -147,6 +147,7 @@ public class JUnitBuildDetail extends PageObject {
     }
 
     public int getNumberOfFailuresInTitle() {
+        //TODO: Check the format of a succeeding detail view. "No failures" may cause problems here
         String text = numberOfFailures.getText().trim();
         return Integer.parseInt(text.substring(0, text.indexOf(' ')));
     }
