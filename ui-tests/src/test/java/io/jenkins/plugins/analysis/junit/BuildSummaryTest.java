@@ -26,7 +26,6 @@ import static org.hamcrest.MatcherAssert.*;
 @WithPlugins("junit")
 public class BuildSummaryTest extends AbstractJUnitTest {
 
-    // TODO: Test here if test title (x failures) is correct
     @Test
     public void verifySummaryNoFailures() {
         Build build = TestUtils.createFreeStyleJobWithResources(
@@ -34,8 +33,9 @@ public class BuildSummaryTest extends AbstractJUnitTest {
                 Arrays.asList("/success/com.simple.project.AppTest.txt", "/success/TEST-com.simple.project.AppTest.xml"), "SUCCESS");
 
         JUnitBuildSummary buildSummary = new JUnitBuildSummary(build, "junit");
-
         assertThat(buildSummary.getBuildStatus(), is("Success"));
+
+        assertThat(buildSummary.getTitleText(), containsString("no failures"));
         assertThatJson(buildSummary.getFailureNames())
                 .isArray()
                 .hasSize(0);
@@ -48,11 +48,11 @@ public class BuildSummaryTest extends AbstractJUnitTest {
                 Arrays.asList("/parameterized/junit.xml", "/parameterized/testng.xml"), "UNSTABLE");
 
         JUnitBuildSummary buildSummary = new JUnitBuildSummary(build, "junit");
-
         assertThat(buildSummary.getBuildStatus(), is("Unstable"));
+
+        assertThat(buildSummary.getTitleText(), containsString("6 failures"));
         assertThatJson(buildSummary.getFailureNames())
                 .isArray()
-                .hasSize(6)
                 .containsExactly("JUnit.testScore[0]", "JUnit.testScore[1]", "JUnit.testScore[2]", "TestNG.testScore", "TestNG.testScore", "TestNG.testScore");
     }
 }
