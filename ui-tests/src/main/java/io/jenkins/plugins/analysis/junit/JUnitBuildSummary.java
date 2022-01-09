@@ -45,6 +45,7 @@ public class JUnitBuildSummary extends PageObject {
         
         WebElement table = getElement(By.cssSelector("#main-panel table"));
         List<WebElement> tableEntries = table.findElements(By.cssSelector("tbody tr"));
+
         WebElement junitBuildSummaryTableEntry = tableEntries.stream()
                 .filter(trElement -> findIconInTableEntry(trElement).isPresent())
                 .filter(trElement -> findContentInTableEntry(trElement).isPresent())

@@ -9,7 +9,7 @@ import org.jenkinsci.test.acceptance.junit.WithPlugins;
  * @author Nikolas Paripovic
  */
 @WithPlugins("junit")
-public class JUnitTestDetailTest {
+public class TestDetailTest {
 
     public void verifyDetailNoFailures() {
 
