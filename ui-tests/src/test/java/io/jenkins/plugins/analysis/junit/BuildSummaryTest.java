@@ -29,7 +29,8 @@ public class BuildSummaryTest extends AbstractJUnitTest {
     // TODO: Test here if test title (x failures) is correct
     @Test
     public void verifySummaryNoFailures() {
-        Build build = createFreeStyleJobWithResources(
+        Build build = TestUtils.createFreeStyleJobWithResources(
+                this,
                 Arrays.asList("/success/com.simple.project.AppTest.txt", "/success/TEST-com.simple.project.AppTest.xml"), "SUCCESS");
 
         JUnitBuildSummary buildSummary = new JUnitBuildSummary(build, "junit");
@@ -42,7 +43,8 @@ public class BuildSummaryTest extends AbstractJUnitTest {
 
     @Test
     public void verifySummaryWithFailures() {
-        Build build = createFreeStyleJobWithResources(
+        Build build = TestUtils.createFreeStyleJobWithResources(
+                this,
                 Arrays.asList("/parameterized/junit.xml", "/parameterized/testng.xml"), "UNSTABLE");
 
         JUnitBuildSummary buildSummary = new JUnitBuildSummary(build, "junit");
@@ -52,20 +54,5 @@ public class BuildSummaryTest extends AbstractJUnitTest {
                 .isArray()
                 .hasSize(6)
                 .containsExactly("JUnit.testScore[0]", "JUnit.testScore[1]", "JUnit.testScore[2]", "TestNG.testScore", "TestNG.testScore", "TestNG.testScore");
-    }
-
-    private Build createFreeStyleJobWithResources(List<String> resourcePaths, String expectedBuildResult) {
-        FreeStyleJob j = jenkins.jobs.create();
-        j.configure();
-        for (String resourcePath : resourcePaths) {
-            j.copyResource(resource(resourcePath));
-        }
-        j.addPublisher(JUnitPublisher.class).testResults.set("*.xml");
-        j.save();
-
-        Build build = j.startBuild();
-        assertThat(build.getResult(), is(expectedBuildResult));
-        build.open();
-        return build;
     }
 }
