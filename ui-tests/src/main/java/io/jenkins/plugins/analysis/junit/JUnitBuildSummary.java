@@ -1,6 +1,7 @@
 package io.jenkins.plugins.analysis.junit;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
@@ -10,9 +11,9 @@ import org.jenkinsci.test.acceptance.po.PageObject;
 
 public class JUnitBuildSummary extends PageObject {
 
-    WebElement title;
-    WebElement failuresCounter;
+    WebElement testResultLinkElement;
     List<WebElement> failedTests;
+    String buildStatus;
 
     // TODO: was ist diese ID ?
     private final String id;
@@ -21,24 +22,40 @@ public class JUnitBuildSummary extends PageObject {
         super(parent, parent.url(id));
         this.id = id;
 
-        WebElement table = getElement(By.cssSelector("td:contains('Test Result')"));
+        testResultLinkElement = getElement(By.linkText("Test Result"));
+        WebElement table = getElement(By.cssSelector("ul[style='list-style-type: none; margin: 0;']"));
+        failedTests = table.findElements(By.cssSelector(".shown"));
 
-        title = table.findElement(By.linkText("Test Result"));
-        //        failuresCounter = table.findElement(By.)
-
-
-//        By.id(id + "-summary")
+        WebElement buildHeadline = getElement(By.className("page-headline"));
+        if (hasBuildStatus("Unstable")) {
+            buildStatus = "Unstable";
+        }
+        else if (hasBuildStatus("Failed")) {
+            buildStatus = "Failed";
+        }
+        else {
+            buildStatus = "Success";
+        }
     }
 
-    getTestResultLink() {
-
+    public WebElement getTestResultLink() {
+        return testResultLinkElement;
     }
 
-    getTestResultSummaryText() {
-
+    /**
+     * Returns the texts of the failed tests.
+     *
+     * @return the details
+     */
+    public List<String> getFailedTestNames() {
+        return failedTests.stream().map(WebElement::getText).collect(Collectors.toList());
     }
 
-    getFailedTestDetailLinks() {
+    public String getBuildStatus() {
+        return buildStatus;
+    }
 
+    private boolean hasBuildStatus(String buildStatus) {
+        return !driver.findElements(By.cssSelector("svg[tooltip=" + buildStatus + "]")).isEmpty();
     }
 }

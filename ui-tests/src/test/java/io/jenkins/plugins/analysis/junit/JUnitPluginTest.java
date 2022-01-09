@@ -13,6 +13,7 @@ import org.jenkinsci.test.acceptance.po.Build;
 import org.jenkinsci.test.acceptance.po.FreeStyleJob;
 import org.jenkinsci.test.acceptance.po.JUnitPublisher;
 
+import static net.javacrumbs.jsonunit.assertj.JsonAssertions.*;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.*;
 import static org.jenkinsci.test.acceptance.Matchers.*;
@@ -22,8 +23,9 @@ import static org.jenkinsci.test.acceptance.Matchers.*;
  */
 @WithPlugins("junit")
 public class JUnitPluginTest extends AbstractJUnitTest {
+
     @Test
-    public void publish_test_result_which_passed() {
+    public void buildSummaryWithNoFailures() {
         FreeStyleJob j = jenkins.jobs.create();
         j.configure();
         j.copyResource(resource("/success/com.simple.project.AppTest.txt"));
@@ -31,14 +33,19 @@ public class JUnitPluginTest extends AbstractJUnitTest {
         j.addPublisher(JUnitPublisher.class).testResults.set("*.xml");
         j.save();
 
-        j.startBuild().shouldSucceed().open();
+        Build build = j.startBuild().shouldSucceed();
+        build.open();
 
-        clickLink("Test Result");
-        assertThat(driver, hasContent("0 failures"));
+        JUnitBuildSummary buildSummary = new JUnitBuildSummary(build, "junit");
+
+        assertThat(buildSummary.getBuildStatus(), is("Success"));
+        assertThatJson(buildSummary.getFailedTestNames())
+                .isArray()
+                .hasSize(0);
     }
 
     @Test
-    public void publish_test_result_which_failed() {
+    public void buildSummaryWithOneFailure() {
         FreeStyleJob j = jenkins.jobs.create();
         j.configure();
         j.copyResource(resource("/failure/com.simple.project.AppTest.txt"));
@@ -46,61 +53,42 @@ public class JUnitPluginTest extends AbstractJUnitTest {
         j.addPublisher(JUnitPublisher.class).testResults.set("*.xml");
         j.save();
 
-        Build b = j.startBuild();
-        assertThat(b.getResult(), is("UNSTABLE"));
-
-        b.open();
-        clickLink("Test Result");
-        assertThat(driver, hasContent("1 failures"));
-    }
-
-    @Test
-    @Issue("JENKINS-22833")
-    public void publish_parametrized_tests() {
-        FreeStyleJob j = jenkins.jobs.create();
-        j.configure();
-        j.copyResource(resource("/parameterized/junit.xml"));
-        j.copyResource(resource("/parameterized/testng.xml"));
-        j.addPublisher(JUnitPublisher.class).testResults.set("*.xml");
-        j.save();
-
-        Build b = j.startBuild();
-        assertThat(b.getResult(), is("UNSTABLE"));
-
-        b.open();
-        clickLink("Test Result");
-        assertMessage("JUnit.testScore[0]", "expected:<42> but was:<0>");
-        assertMessage("JUnit.testScore[1]", "expected:<42> but was:<1>");
-        assertMessage("JUnit.testScore[2]", "expected:<42> but was:<2>");
-
-        assertMessage("TestNG.testScore", "expected:<42> but was:<0>");
-        assertMessage("TestNG.testScore", "expected:<42> but was:<1>");
-        assertMessage("TestNG.testScore", "expected:<42> but was:<2>");
-    }
-
-    @Test
-    public void buildSummaryWithFailures() {
-        FreeStyleJob j = jenkins.jobs.create();
-        j.configure();
-        j.copyResource(resource("/parameterized/junit.xml"));
-        j.copyResource(resource("/parameterized/testng.xml"));
-        j.addPublisher(JUnitPublisher.class).testResults.set("*.xml");
-        j.save();
-
-        Build b = j.startBuild();
-        // TODO: check build status
-        assertThat(b.getResult(), is("UNSTABLE"));
-        verifyBuildSummaryWithFailures(b);
-    }
-
-    public void verifyBuildSummaryWithFailures(final Build build) {
+        Build build = j.startBuild();
+        assertThat(build.getResult(), is("UNSTABLE"));
         build.open();
 
         JUnitBuildSummary buildSummary = new JUnitBuildSummary(build, "junit");
 
-        // TODO: ... assertions
-//        assertThat(buildSummary)
-//                .hasTitleText("FindBugs: No warnings")
+        assertThat(buildSummary.getBuildStatus(), is("Unstable"));
+        assertThatJson(buildSummary.getFailedTestNames())
+                .isArray()
+                .hasSize(1)
+                .contains("com.simple.project.AppTest.testApp");
+    }
+
+    @Test
+    public void buildSummaryWithMultipleFailures() {
+        FreeStyleJob j = jenkins.jobs.create();
+        j.configure();
+        j.copyResource(resource("/parameterized/junit.xml"));
+        j.copyResource(resource("/parameterized/testng.xml"));
+        j.addPublisher(JUnitPublisher.class).testResults.set("*.xml");
+        j.save();
+
+        Build build = j.startBuild();
+        assertThat(build.getResult(), is("UNSTABLE"));
+        build.open();
+
+        JUnitBuildSummary buildSummary = new JUnitBuildSummary(build, "junit");
+
+        assertThat(buildSummary.getBuildStatus(), is("Unstable"));
+        assertThatJson(buildSummary.getFailedTestNames())
+                .isArray()
+                .hasSize(6)
+                .contains("JUnit.testScore[0]")
+                .contains("JUnit.testScore[1]")
+                .contains("JUnit.testScore[2]")
+                .contains("TestNG.testScore");
     }
 
     private void assertMessage(String test, String content) {
@@ -116,7 +104,9 @@ public class JUnitPluginTest extends AbstractJUnitTest {
             driver.get(page);
             found = hasContent(content).matchesSafely(driver);
             driver.navigate().back();
-            if (found) break;
+            if (found) {
+                break;
+            }
         }
         assertThat("No test found with given content", found);
     }
