@@ -106,12 +106,12 @@ public class JUnitBuildDetail extends PageObject {
         int duration = Integer.parseInt(durationString.substring(0, durationString.length() - " ms".length()));
         int age = Integer.parseInt(columns.get(2).findElement(By.cssSelector("a")).getText());
 
-        WebElement expandLink = columns.get(0).findElement(By.cssSelector("a[title=\"Show details\""));
+        WebElement expandLink = columns.get(0).findElement(By.cssSelector("a[title=\"Show details\"]"));
         expandLink.click();
 
         List<WebElement> detailPreElements = columns.get(0).findElements(By.cssSelector("div.failure-summary pre"));
         String errorDetails = detailPreElements.get(0).getText();
-        String stackTrace = detailPreElements.get(0).getText();
+        String stackTrace = detailPreElements.get(1).getText();
 
         return new FailedTest(name, duration, age, errorDetails, stackTrace);
     }
