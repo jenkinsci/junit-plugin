@@ -53,6 +53,7 @@ public class JUnitBuildSummary extends PageObject {
                 .orElseThrow(() -> new NoSuchElementException("junit build summary table"));
 
         summaryIcon = findIconInTableEntry(junitBuildSummaryTableEntry).get();
+        // TODO: verify correct extraction => Actual   :"Test ResultTest Result (no failures)"
         summaryContent = findContentInTableEntry(junitBuildSummaryTableEntry).get();
 
         titleLink = summaryContent.findElement(By.cssSelector("a"));
