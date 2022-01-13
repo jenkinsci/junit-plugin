@@ -20,28 +20,20 @@ import org.jenkinsci.test.acceptance.po.PageObject;
  */
 public class JUnitBuildSummary extends PageObject {
 
-    private final String buildStatus;
-
     private final WebElement summaryIcon;
     private final WebElement summaryContent;
 
     private final WebElement titleLink;
     private final List<WebElement> failedTestLinks;
 
-    // TODO: was ist diese ID ?
-    private final String id;
-
     /**
      * Creates a new page object representing the junit summary on the build page of a job.
      *
      * @param parent
      *          a finished build configured with a static analysis tool
-     * @param id
-     *          the type of the result page (e.g. simion, checkstyle, cpd, etc.)
      */
-    public JUnitBuildSummary(final Build parent, final String id) {
-        super(parent, parent.url(id));
-        this.id = id;
+    public JUnitBuildSummary(final Build parent) {
+        super(parent, parent.url("testReport"));
         
         WebElement table = getElement(By.cssSelector("#main-panel table"));
         List<WebElement> tableEntries = table.findElements(By.cssSelector("tbody tr"));
@@ -58,18 +50,6 @@ public class JUnitBuildSummary extends PageObject {
 
         titleLink = summaryContent.findElement(By.cssSelector("a"));
         failedTestLinks = summaryContent.findElements(By.cssSelector("ul li a"));
-
-        // TODO: Fragen ob das bleibt oder wegkann. Build Status prüfen oder nicht?
-        WebElement buildHeadline = getElement(By.className("page-headline"));
-        if (hasBuildStatus("Unstable")) {
-            buildStatus = "Unstable";
-        }
-        else if (hasBuildStatus("Failed")) {
-            buildStatus = "Failed";
-        }
-        else {
-            buildStatus = "Success";
-        }
     }
 
     private Optional<WebElement> findIconInTableEntry(final WebElement tableEntry) {
@@ -127,10 +107,6 @@ public class JUnitBuildSummary extends PageObject {
                 .collect(Collectors.toMap(WebElement::getText, failedTestLink -> failedTestLink.getAttribute("href")));
     }
 
-    public String getBuildStatus() {
-        return buildStatus;
-    }
-
     public JUnitBuildDetail openBuildDetailView() {
         return openPage(titleLink, JUnitBuildDetail.class);
     }
@@ -146,12 +122,8 @@ public class JUnitBuildSummary extends PageObject {
 
     private <T extends PageObject> T openPage(final WebElement link, final Class<T> type) {
         String href = link.getAttribute("href");
-        T result = newInstance(type, injector, url(href), id);
+        T result = newInstance(type, injector, url(href));
         link.click();
         return result;
-    }
-
-    private boolean hasBuildStatus(final String expectedBuildStatus) {
-        return !driver.findElements(By.cssSelector("svg[tooltip=" + expectedBuildStatus + "]")).isEmpty();
     }
 }

@@ -8,9 +8,8 @@ import org.jenkinsci.test.acceptance.junit.AbstractJUnitTest;
 import org.jenkinsci.test.acceptance.junit.WithPlugins;
 import org.jenkinsci.test.acceptance.po.Build;
 
-import static net.javacrumbs.jsonunit.assertj.JsonAssertions.*;
-import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.MatcherAssert.*;
+import static io.jenkins.plugins.analysis.junit.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Tests the JUnit summary on the build page of a job.
@@ -27,13 +26,10 @@ public class BuildSummaryTest extends AbstractJUnitTest {
                 this,
                 Arrays.asList("/success/com.simple.project.AppTest.txt", "/success/TEST-com.simple.project.AppTest.xml"), "SUCCESS");
 
-        JUnitBuildSummary buildSummary = new JUnitBuildSummary(build, "junit");
-        assertThat(buildSummary.getBuildStatus(), is("Success"));
+        JUnitBuildSummary buildSummary = new JUnitBuildSummary(build);
 
-        assertThat(buildSummary.getTitleText(), containsString("no failures"));
-        assertThatJson(buildSummary.getFailureNames())
-                .isArray()
-                .hasSize(0);
+        assertThat(buildSummary).hasTitleText("no failures");
+        assertThat(buildSummary.getFailureNames()).isEmpty();
     }
 
     @Test
@@ -42,12 +38,10 @@ public class BuildSummaryTest extends AbstractJUnitTest {
                 this,
                 Arrays.asList("/parameterized/junit.xml", "/parameterized/testng.xml"), "UNSTABLE");
 
-        JUnitBuildSummary buildSummary = new JUnitBuildSummary(build, "junit");
-        assertThat(buildSummary.getBuildStatus(), is("Unstable"));
+        JUnitBuildSummary buildSummary = new JUnitBuildSummary(build);
 
-        assertThat(buildSummary.getTitleText(), containsString("6 failures"));
-        assertThatJson(buildSummary.getFailureNames())
-                .isArray()
-                .containsExactly("JUnit.testScore[0]", "JUnit.testScore[1]", "JUnit.testScore[2]", "TestNG.testScore", "TestNG.testScore", "TestNG.testScore");
+        assertThat(buildSummary.getTitleText()).contains("6 failures");
+        assertThat(buildSummary.getFailureNames())
+                .containsExactlyInAnyOrder("JUnit.testScore[0]", "JUnit.testScore[1]", "JUnit.testScore[2]", "TestNG.testScore", "TestNG.testScore", "TestNG.testScore");
     }
 }

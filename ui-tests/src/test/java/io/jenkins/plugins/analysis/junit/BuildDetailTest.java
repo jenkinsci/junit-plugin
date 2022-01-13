@@ -8,7 +8,7 @@ import org.jenkinsci.test.acceptance.junit.AbstractJUnitTest;
 import org.jenkinsci.test.acceptance.junit.WithPlugins;
 import org.jenkinsci.test.acceptance.po.Build;
 
-import static org.assertj.core.api.AssertionsForClassTypes.*;
+import static io.jenkins.plugins.analysis.junit.JUnitBuildDetailAssert.*;
 
 /**
  * Tests the detail view of a build's failed Unit tests.
@@ -27,15 +27,18 @@ public class BuildDetailTest extends AbstractJUnitTest {
                 this,
                 Arrays.asList("/parameterized/junit.xml", "/parameterized/testng.xml"), "UNSTABLE");
 
-        JUnitBuildSummary buildSummary = new JUnitBuildSummary(build, "junit");
+        JUnitBuildSummary buildSummary = new JUnitBuildSummary(build);
         JUnitBuildDetail buildDetail = buildSummary.openBuildDetailView();
 
-        assertThat(buildDetail.getNumberOfFailures()).isEqualTo(6);
+        assertThat(buildDetail).hasNumberOfFailures(6);
+        assertThat(buildDetail).hasNumberOfFailuresInTitle(6);
+
+
+        /*assertThat(buildDetail.getNumberOfFailures()).isEqualTo(6);
         assertThat(buildDetail.getNumberOfFailuresInTitle()).isEqualTo(6);
-        assertThat(buildDetail.getFailedTests()).asList();
+        assertThat(buildDetail.getFailedTests()).asList();*/
 
         //TODO: How to check with this API???
-        //TODO: Replace hamcrest API with assertj API
 
     }
 

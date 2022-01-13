@@ -37,7 +37,7 @@ public class TestDetailTest extends AbstractJUnitTest {
                 this,
                 Arrays.asList("/parameterized/junit.xml", "/parameterized/testng.xml"), "UNSTABLE");
 
-        JUnitBuildSummary buildSummary = new JUnitBuildSummary(build, "junit");
+        JUnitBuildSummary buildSummary = new JUnitBuildSummary(build);
         JUnitTestDetail testDetail = buildSummary.openTestDetailView("JUnit.testScore[0]");
 
         assertThat(testDetail.getTitle(), containsString("Failed"));

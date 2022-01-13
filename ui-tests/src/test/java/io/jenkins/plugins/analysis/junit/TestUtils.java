@@ -20,14 +20,15 @@ public class TestUtils {
 
     public static Build createFreeStyleJobWithResources(AbstractJUnitTest abstractJUnitTestBaseClass, List<String> resourcePaths, String expectedBuildResult) {
         FreeStyleJob j = abstractJUnitTestBaseClass.jenkins.jobs.create();
-        j.configure();
+        FixedCopyJobDecorator fixedCopyJob = new FixedCopyJobDecorator(j);
+        fixedCopyJob.getJob().configure();
         for (String resourcePath : resourcePaths) {
-            j.copyResource(abstractJUnitTestBaseClass.resource(resourcePath));
+            fixedCopyJob.copyResource(abstractJUnitTestBaseClass.resource(resourcePath));
         }
-        j.addPublisher(JUnitPublisher.class).testResults.set("*.xml");
-        j.save();
+        fixedCopyJob.getJob().addPublisher(JUnitPublisher.class).testResults.set("*.xml");
+        fixedCopyJob.getJob().save();
 
-        Build build = j.startBuild();
+        Build build = fixedCopyJob.getJob().startBuild();
         assertThat(build.getResult(), is(expectedBuildResult));
         build.open();
         return build;
