@@ -23,20 +23,14 @@ public class JUnitTestDetail extends PageObject {
     private final WebElement errorMessage;
     private final WebElement stackTrace;
 
-    // TODO: was ist diese ID ?
-    private final String id;
-
     /**
      * Creates a new page object representing the junit detail view of a failed JUnit test.
      *
      * @param parent
      *          a finished build configured with a static analysis tool
-     * @param id
-     *          the type of the result page (e.g. simion, checkstyle, cpd, etc.)
      */
-    public JUnitTestDetail(final Build parent, final String id) {
-        super(parent, parent.url(id));
-        this.id = id;
+    public JUnitTestDetail(final Build parent) {
+        super(parent, parent.url("testReport"));
 
         WebElement pageContent = getElement(By.cssSelector("#main-panel"));
 

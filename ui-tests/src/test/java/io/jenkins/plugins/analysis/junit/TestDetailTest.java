@@ -26,7 +26,7 @@ public class TestDetailTest extends AbstractJUnitTest {
                 this,
                 Arrays.asList("/success/com.simple.project.AppTest.txt", "/success/TEST-com.simple.project.AppTest.xml"), "SUCCESS");
 
-        JUnitTestDetail testDetail = new JUnitTestDetail(build, "junit");
+        JUnitTestDetail testDetail = new JUnitTestDetail(build);
 
         //TODO: Succeeding test details exist? How does the page look like? How to test?
     }

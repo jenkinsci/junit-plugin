@@ -19,8 +19,6 @@ import org.jenkinsci.test.acceptance.po.PageObject;
  */
 public class JUnitBuildDetail extends PageObject {
 
-    // TODO: was ist diese ID ?
-    private final String id;
 
     private final WebElement failedTestsTable;
     private final WebElement allTestsTable;
@@ -39,12 +37,9 @@ public class JUnitBuildDetail extends PageObject {
      *
      * @param parent
      *         a finished build configured with a static analysis tool
-     * @param id
-     *         the type of the result page (e.g. simion, checkstyle, cpd, etc.)
      */
-    public JUnitBuildDetail(final Build parent, final String id) {
-        super(parent, parent.url(id));
-        this.id = id;
+    public JUnitBuildDetail(final Build parent) {
+        super(parent, parent.url("testReport"));
 
         WebElement pageContent = getElement(By.cssSelector("#main-panel"));
 
@@ -173,7 +168,7 @@ public class JUnitBuildDetail extends PageObject {
 
     private <T extends PageObject> T openPage(final WebElement link, final Class<T> type) {
         String href = link.getAttribute("href");
-        T result = newInstance(type, injector, url(href), id);
+        T result = newInstance(type, injector, url(href));
         link.click();
         return result;
     }
