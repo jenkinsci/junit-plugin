@@ -37,7 +37,6 @@ public class JUnitTestDetail extends PageObject {
         title = pageContent.findElement(By.cssSelector(".result-failed"));
         subTitle = pageContent.findElement(By.cssSelector("p"));
 
-
         int errorMessageHeaderIndex = -1;
         int stackTraceIndex = -1;
         List<WebElement> pageContentChildren = pageContent.findElements(By.cssSelector("*"));

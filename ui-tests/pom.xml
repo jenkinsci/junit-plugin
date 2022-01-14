@@ -152,13 +152,13 @@
         <artifactId>assertj-assertions-generator-maven-plugin</artifactId>
         <configuration>
           <packages combine.children="append">
-            <package>io.jenkins.plugins.analysis.warnings</package>
+            <package>io.jenkins.plugins.analysis.junit</package>
           </packages>
           <excludes>
             <exclude>.*Test</exclude>
             <exclude>.*Table</exclude>
           </excludes>
-          <entryPointClassPackage>io.jenkins.plugins.analysis.warnings</entryPointClassPackage>
+          <entryPointClassPackage>io.jenkins.plugins.analysis.junit</entryPointClassPackage>
         </configuration>
       </plugin>
       <plugin>

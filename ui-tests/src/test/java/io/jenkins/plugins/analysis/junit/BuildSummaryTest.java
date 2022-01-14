@@ -8,7 +8,6 @@ import org.jenkinsci.test.acceptance.junit.AbstractJUnitTest;
 import org.jenkinsci.test.acceptance.junit.WithPlugins;
 import org.jenkinsci.test.acceptance.po.Build;
 
-import static io.jenkins.plugins.analysis.junit.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
