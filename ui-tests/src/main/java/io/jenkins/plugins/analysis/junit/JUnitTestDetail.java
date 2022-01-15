@@ -22,6 +22,7 @@ public class JUnitTestDetail extends PageObject {
 
     private final WebElement errorMessage;
     private final WebElement stackTrace;
+    private final WebElement standardOutput;
 
     /**
      * Creates a new page object representing the junit detail view of a failed JUnit test.
@@ -34,11 +35,12 @@ public class JUnitTestDetail extends PageObject {
 
         WebElement pageContent = getElement(By.cssSelector("#main-panel"));
 
-        title = pageContent.findElement(By.cssSelector(".result-failed"));
+        title = pageContent.findElement(By.cssSelector("h1"));
         subTitle = pageContent.findElement(By.cssSelector("p"));
 
         int errorMessageHeaderIndex = -1;
         int stackTraceIndex = -1;
+        int standardOutputIndex = -1;
         List<WebElement> pageContentChildren = pageContent.findElements(By.cssSelector("*"));
 
         int counter = 0;
@@ -50,12 +52,16 @@ public class JUnitTestDetail extends PageObject {
                 else if(element.getText().equals("Stacktrace")) {
                     stackTraceIndex = counter;
                 }
+                else if(element.getText().equals("Standard Output")) {
+                    standardOutputIndex = counter;
+                }
             }
             ++counter;
         }
 
-        errorMessage = pageContentChildren.get(errorMessageHeaderIndex);
-        stackTrace = pageContentChildren.get(stackTraceIndex);
+        errorMessage = errorMessageHeaderIndex >= 0 ? pageContentChildren.get(errorMessageHeaderIndex) : null;
+        stackTrace = stackTraceIndex >= 0 ? pageContentChildren.get(stackTraceIndex) : null;
+        standardOutput = standardOutputIndex >= 0 ? pageContentChildren.get(standardOutputIndex) : null;
 
     }
 
@@ -67,7 +73,7 @@ public class JUnitTestDetail extends PageObject {
     public String getTitle() { return title.getText(); }
 
     /**
-     * Returns the subtitle of the detail view, which is the failed test.
+     * Returns the subtitle of the detail view, which is the test.
      *
      * @return the subtitle of the detail view
      */
@@ -87,6 +93,11 @@ public class JUnitTestDetail extends PageObject {
      */
     public String getStackTrace() { return stackTrace.getText(); }
 
-
+    /**
+     * Returns the standard output providing more information about the test.
+     *
+     * @return the standard output of the test
+     */
+    public String getStandardOutput() { return standardOutput.getText(); }
 
 }
