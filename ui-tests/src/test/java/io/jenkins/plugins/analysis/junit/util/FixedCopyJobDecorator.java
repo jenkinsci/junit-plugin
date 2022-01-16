@@ -1,4 +1,4 @@
-package io.jenkins.plugins.analysis.junit;
+package io.jenkins.plugins.analysis.junit.util;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

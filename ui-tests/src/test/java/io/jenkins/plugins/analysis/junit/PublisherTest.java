@@ -8,8 +8,7 @@ import org.jenkinsci.test.acceptance.junit.AbstractJUnitTest;
 import org.jenkinsci.test.acceptance.po.Build;
 import org.jenkinsci.test.acceptance.po.FreeStyleJob;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.MatcherAssert.*;
+import static org.assertj.core.api.AssertionsForClassTypes.*;
 
 public class PublisherTest extends AbstractJUnitTest {
 
@@ -25,7 +24,7 @@ public class PublisherTest extends AbstractJUnitTest {
         j.save();
 
         Build build = j.startBuild();
-        assertThat(build.getResult(), is("SUCCESS"));
+        assertThat(build.getResult()).isEqualTo("SUCCESS");
     }
 
     @Test
@@ -54,7 +53,8 @@ public class PublisherTest extends AbstractJUnitTest {
 
         JUnitTestDetail testDetail = new JUnitTestDetail(build);
 
-        assertThat(testDetail.getStandardOutput(), not(containsString("truncated")));
+        assertThat(testDetail.getStandardOutput()).isPresent();
+        assertThat(testDetail.getStandardOutput().get()).doesNotContain("truncated");
     }
 
     // TODO: Check how to make it work
