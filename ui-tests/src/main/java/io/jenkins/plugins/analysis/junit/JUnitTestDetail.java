@@ -20,7 +20,6 @@ import org.jenkinsci.test.acceptance.po.PageObject;
  */
 public class JUnitTestDetail extends PageObject {
 
-
     private final WebElement title;
     private final WebElement subTitle;
 

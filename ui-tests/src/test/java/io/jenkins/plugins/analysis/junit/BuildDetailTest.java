@@ -2,13 +2,19 @@ package io.jenkins.plugins.analysis.junit;
 
 import java.util.Arrays;
 
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
 
 import org.jenkinsci.test.acceptance.junit.AbstractJUnitTest;
 import org.jenkinsci.test.acceptance.junit.WithPlugins;
 import org.jenkinsci.test.acceptance.po.Build;
+import org.jenkinsci.test.acceptance.po.FreeStyleJob;
+import org.jenkinsci.test.acceptance.po.Job;
+
+import io.jenkins.plugins.analysis.junit.util.TestUtils;
 
 import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 /**
  * Tests the detail view of a build's failed Unit tests.
@@ -55,5 +61,18 @@ public class BuildDetailTest extends AbstractJUnitTest {
     @Test
     public void verifyLinkToTestDetails() {
 
+    }
+    
+    @Test
+    public void verifyDirectUrlToTestReport() {
+        Job j = TestUtils.getCreatedFreeStyleJobWithResources(
+                this,
+                Arrays.asList("/success/TEST-com.simple.project.AppTest.xml"), "SUCCESS");
+
+        Build build = j.startBuild().shouldSucceed();
+        j.visit("/job/" + j.name + "/1/testReport");
+
+        JUnitBuildDetail buildDetail = new JUnitBuildDetail(build);
+        assertThat(buildDetail.getAllTests()).isEqualTo(1);
     }
 }

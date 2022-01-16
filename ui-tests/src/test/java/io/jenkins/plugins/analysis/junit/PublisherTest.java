@@ -50,7 +50,6 @@ public class PublisherTest extends AbstractJUnitTest {
         j.save();
         Build build = j.startBuild().shouldSucceed();
         j.visit("/job/" + j.name + "/1/testReport/(root)/JUnit/testScore_0_/");
-
         JUnitTestDetail testDetail = new JUnitTestDetail(build);
 
         assertThat(testDetail.getStandardOutput()).isPresent();

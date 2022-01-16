@@ -2,11 +2,14 @@ package io.jenkins.plugins.analysis.junit;
 
 import java.util.Arrays;
 
+import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.Test;
 
 import org.jenkinsci.test.acceptance.junit.AbstractJUnitTest;
 import org.jenkinsci.test.acceptance.junit.WithPlugins;
 import org.jenkinsci.test.acceptance.po.Build;
+import org.jenkinsci.test.acceptance.po.FreeStyleJob;
+import org.jenkinsci.test.acceptance.po.Job;
 
 import io.jenkins.plugins.analysis.junit.util.TestUtils;
 
