@@ -122,8 +122,9 @@ public class JUnitBuildSummary extends PageObject {
 
     private <T extends PageObject> T openPage(final WebElement link, final Class<T> type) {
         String href = link.getAttribute("href");
-        T result = newInstance(type, injector, url(href));
+
         link.click();
+        T result = newInstance(type, injector, url(href));
         return result;
     }
 }
