@@ -12,6 +12,8 @@ import org.openqa.selenium.WebElement;
 import org.jenkinsci.test.acceptance.po.Build;
 import org.jenkinsci.test.acceptance.po.PageObject;
 
+import io.jenkins.plugins.analysis.junit.builddetail.BuildDetailPackageView;
+
 /**
  * {@link PageObject} representing the JUnit summary on the build page of a job.
  *
@@ -107,8 +109,8 @@ public class JUnitBuildSummary extends PageObject {
                 .collect(Collectors.toMap(WebElement::getText, failedTestLink -> failedTestLink.getAttribute("href")));
     }
 
-    public JUnitBuildDetail openBuildDetailView() {
-        return openPage(titleLink, JUnitBuildDetail.class);
+    public BuildDetailPackageView openBuildDetailView() {
+        return openPage(titleLink, BuildDetailPackageView.class);
     }
 
     public JUnitTestDetail openTestDetailView(final String testName) {
@@ -124,7 +126,6 @@ public class JUnitBuildSummary extends PageObject {
         String href = link.getAttribute("href");
 
         link.click();
-        T result = newInstance(type, injector, url(href));
-        return result;
+        return newInstance(type, injector, url(href));
     }
 }

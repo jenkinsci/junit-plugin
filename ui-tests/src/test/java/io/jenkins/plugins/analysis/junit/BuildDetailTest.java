@@ -8,7 +8,11 @@ import org.jenkinsci.test.acceptance.junit.AbstractJUnitTest;
 import org.jenkinsci.test.acceptance.junit.WithPlugins;
 import org.jenkinsci.test.acceptance.po.Build;
 
-import static org.assertj.core.api.Assertions.*;
+import io.jenkins.plugins.analysis.junit.builddetail.BuildDetailPackageView;
+import io.jenkins.plugins.analysis.junit.util.TestUtils;
+
+import static io.jenkins.plugins.analysis.junit.builddetail.BuildDetailPackageViewAssert.*;
+import static org.assertj.core.api.AssertionsForClassTypes.*;
 
 /**
  * Tests the detail view of a build's failed Unit tests.
@@ -22,6 +26,20 @@ public class BuildDetailTest extends AbstractJUnitTest {
     @Test
     public void verifyDetailWithFailures() {
         // TODO: verify listed failures, failure count, error details + stack trace by test
+
+        Build build = TestUtils.createFreeStyleJobWithResources(
+                this,
+                Arrays.asList("/parameterized/junit.xml", "/parameterized/testng.xml"), "UNSTABLE");
+
+        JUnitBuildSummary buildSummary = new JUnitBuildSummary(build);
+        BuildDetailPackageView buildDetailPackageView = buildSummary.openBuildDetailView(); // TODO: Better access by navigation icon?
+
+        assertThat(buildDetailPackageView)
+                .hasNumberOfFailures(6)
+                .hasNumberOfTests(6);
+
+        assertThat(buildDetailPackageView.failedTestTableExists()).isEqualTo(true);
+        //assertThat(buildDetailPackageView.getFailedTestTableEntries())
 
 //        Build build = TestUtils.createFreeStyleJobWithResources(
 //                this,
