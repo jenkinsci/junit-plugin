@@ -19,7 +19,6 @@ import io.jenkins.plugins.analysis.junit.util.TestUtils;
 import static io.jenkins.plugins.analysis.junit.builddetail.BuildDetailPackageViewAssert.*;
 import static io.jenkins.plugins.analysis.junit.builddetail.BuildDetailClassViewAssert.*;
 import static org.assertj.core.api.AssertionsForClassTypes.*;
-import static org.assertj.core.api.CollectionAssert.*;
 
 /**
  * Tests the detail view of a build's failed Unit tests.
@@ -136,8 +135,6 @@ public class BuildDetailTest extends AbstractJUnitTest {
         BuildDetailClassView buildDetailClassView = buildSummary
                 .openBuildDetailView()
                 .openClassDetailView("com.simple.project");
-
-        //io.jenkins.plugins.analysis.junit.builddetail.BuildDetailClassViewAssert.assertThat(buildDetailClassView).hasNumb
 
         assertThat(buildDetailClassView)
                 .hasNumberOfFailures(2)
