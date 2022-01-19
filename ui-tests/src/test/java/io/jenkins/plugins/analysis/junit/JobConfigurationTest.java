@@ -1,7 +1,5 @@
 package io.jenkins.plugins.analysis.junit;
 
-import java.util.Arrays;
-
 import org.junit.Test;
 
 import org.jenkinsci.test.acceptance.junit.AbstractJUnitTest;
@@ -10,7 +8,7 @@ import org.jenkinsci.test.acceptance.po.FreeStyleJob;
 
 import static org.assertj.core.api.AssertionsForClassTypes.*;
 
-public class PublisherTest extends AbstractJUnitTest {
+public class JobConfigurationTest extends AbstractJUnitTest {
 
     @Test
     public void successfulBuildWhenSkipMarkingBuildAsUnstableOnTestFailureChecked() {
@@ -18,7 +16,7 @@ public class PublisherTest extends AbstractJUnitTest {
         j.configure();
         j.copyResource(resource("/failure/com.simple.project.AppTest.txt"));
         j.copyResource(resource("/failure/TEST-com.simple.project.AppTest.xml"));
-        JUnitPublisher publisher = j.addPublisher(JUnitPublisher.class);
+        JUnitJobConfiguration publisher = j.addPublisher(JUnitJobConfiguration.class);
         publisher.testResults.set("*.xml");
         publisher.setSkipMarkingBuildAsUnstableOnTestFailure(true);
         j.save();
@@ -31,7 +29,7 @@ public class PublisherTest extends AbstractJUnitTest {
     public void successfulBuildWhenEmptyTestResultsChecked() {
         FreeStyleJob j = jenkins.jobs.create();
         j.configure();
-        JUnitPublisher publisher = j.addPublisher(JUnitPublisher.class);
+        JUnitJobConfiguration publisher = j.addPublisher(JUnitJobConfiguration.class);
         publisher.setAllowEmptyResults(true);
         j.save();
 
@@ -43,14 +41,14 @@ public class PublisherTest extends AbstractJUnitTest {
         FreeStyleJob j = jenkins.jobs.create();
         j.configure();
         j.copyResource(resource("/success/junit-with-long-output.xml"));
-        JUnitPublisher publisher = j.addPublisher(JUnitPublisher.class);
+        JUnitJobConfiguration publisher = j.addPublisher(JUnitJobConfiguration.class);
         publisher.testResults.set("*.xml");
         publisher.setRetainLogStandardOutputError(true);
 
         j.save();
         Build build = j.startBuild().shouldSucceed();
         j.visit("/job/" + j.name + "/1/testReport/(root)/JUnit/testScore_0_/");
-        JUnitTestDetail testDetail = new JUnitTestDetail(build);
+        TestDetail testDetail = new TestDetail(build);
 
         assertThat(testDetail.getStandardOutput()).isPresent();
         assertThat(testDetail.getStandardOutput().get()).doesNotContain("truncated");

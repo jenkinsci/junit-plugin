@@ -2,8 +2,6 @@ package io.jenkins.plugins.analysis.junit;
 
 import java.util.Arrays;
 
-import org.assertj.core.api.InstanceOfAssertFactories;
-import org.assertj.core.api.InstanceOfAssertFactory;
 import org.junit.Test;
 
 import org.jenkinsci.test.acceptance.junit.AbstractJUnitTest;
@@ -12,7 +10,6 @@ import org.jenkinsci.test.acceptance.po.Build;
 
 import io.jenkins.plugins.analysis.junit.util.TestUtils;
 
-import static io.jenkins.plugins.analysis.junit.JUnitTestDetailAssert.*;
 import static org.assertj.core.api.AssertionsForClassTypes.*;
 
 /**
@@ -30,9 +27,40 @@ public class TestDetailTest extends AbstractJUnitTest {
                 this,
                 Arrays.asList("/success/com.simple.project.AppTest.txt", "/success/TEST-com.simple.project.AppTest.xml"), "SUCCESS");
 
-        JUnitTestDetail testDetail = new JUnitTestDetail(build);
+        JUnitBuildSummary buildSummary = new JUnitBuildSummary(build);
+        TestDetail testDetail = buildSummary.openBuildDetailView()
+                .openClassDetailView("com.simple.project")
+                .openTestDetailView("AppTest")
+                .openTestDetail("testApp");
 
-        //TODO: Succeeding test details exist? How does the page look like? How to test?
+        assertThat(testDetail.getTitle()).contains("Passed");
+        assertThat(testDetail.getSubTitle()).contains("com.simple.project.AppTest.testApp");
+
+        assertThat(testDetail.getErrorMessage()).isEmpty();
+        assertThat(testDetail.getStackTrace()).isEmpty();
+        assertThat(testDetail.getStandardOutput()).isEmpty();
+    }
+
+    @Test
+    public void verifyDetailNoFailuresIncludingStandardOutput() {
+        Build build = TestUtils.createFreeStyleJobWithResources(
+                this,
+                Arrays.asList("/success/com.simple.project.AppTest.txt", "/success/junit-with-long-output.xml"), "SUCCESS");
+
+        JUnitBuildSummary buildSummary = new JUnitBuildSummary(build);
+        TestDetail testDetail = buildSummary.openBuildDetailView()
+                .openClassDetailView("(root)")
+                .openTestDetailView("JUnit")
+                .openTestDetail("testScore[0]");
+
+        assertThat(testDetail.getTitle()).contains("Passed");
+        assertThat(testDetail.getSubTitle()).contains("JUnit.testScore[0]");
+
+        assertThat(testDetail.getErrorMessage()).isEmpty();
+        assertThat(testDetail.getStackTrace()).isEmpty();
+
+        assertThat(testDetail.getStandardOutput()).isPresent();
+        assertThat(testDetail.getStandardOutput().get()).contains("Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore");
     }
 
     @Test
@@ -42,17 +70,17 @@ public class TestDetailTest extends AbstractJUnitTest {
                 Arrays.asList("/parameterized/junit.xml", "/parameterized/testng.xml"), "UNSTABLE");
 
         JUnitBuildSummary buildSummary = new JUnitBuildSummary(build);
-        JUnitTestDetail testDetail = buildSummary.openTestDetailView("JUnit.testScore[0]");
+        TestDetail testDetail = buildSummary.openTestDetailView("JUnit.testScore[0]");
 
         assertThat(testDetail.getTitle()).contains("Failed");
-
         assertThat(testDetail.getStandardOutput()).isEmpty();
         assertThat(testDetail.getSubTitle()).contains("JUnit.testScore[0]");
-        assertThat(testDetail.getSubTitle()).contains("from [0]"); // TODO: How to combine these?
+
         assertThat(testDetail.getErrorMessage()).isPresent();
         assertThat(testDetail.getErrorMessage()).get().isEqualTo("expected:<42> but was:<0>");
+
         assertThat(testDetail.getStackTrace()).isPresent();
-        assertThat(testDetail.getStackTrace()).get().isEqualTo( // TODO: whitespace challenge
+        assertThat(testDetail.getStackTrace()).get().isEqualTo(
                 "java.lang.AssertionError: expected:<42> but was:<0>\n"
                         + " at org.junit.Assert.fail(Assert.java:88)\n"
                         + " at org.junit.Assert.failNotEquals(Assert.java:743)\n"

@@ -8,7 +8,6 @@ import hudson.model.Descriptor;
 import hudson.model.Saveable;
 import hudson.model.TaskListener;
 import hudson.tasks.junit.JUnitTask;
-import hudson.tasks.junit.Messages;
 import hudson.tasks.junit.TestDataPublisher;
 import hudson.util.DescribableList;
 import hudson.util.FormValidation;
@@ -188,16 +187,6 @@ public class JUnitResultsStep extends Step implements JUnitTask {
             Set<Class<?>> context = new HashSet<>();
             Collections.addAll(context, FilePath.class, FlowNode.class, TaskListener.class, Launcher.class);
             return Collections.unmodifiableSet(context);
-        }
-
-        public FormValidation doCheckHealthScaleFactor(@QueryParameter double value) {
-            if (value < 1e-7) return FormValidation.warning("Test health reporting disabled");
-            return FormValidation.ok(Messages.JUnitResultArchiver_HealthScaleFactorAnalysis(
-                    1,
-                    (int) (100.0 - Math.max(0.0, Math.min(100.0, 1 * value))),
-                    5,
-                    (int) (100.0 - Math.max(0.0, Math.min(100.0, 5 * value)))
-            ));
         }
 
     }

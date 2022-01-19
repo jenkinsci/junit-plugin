@@ -12,6 +12,8 @@ import org.openqa.selenium.WebElement;
 import org.jenkinsci.test.acceptance.po.Build;
 import org.jenkinsci.test.acceptance.po.PageObject;
 
+import io.jenkins.plugins.analysis.junit.testresults.BuildTestResults;
+
 /**
  * {@link PageObject} representing the JUnit summary on the build page of a job.
  *
@@ -107,24 +109,28 @@ public class JUnitBuildSummary extends PageObject {
                 .collect(Collectors.toMap(WebElement::getText, failedTestLink -> failedTestLink.getAttribute("href")));
     }
 
-    public JUnitBuildDetail openBuildDetailView() {
-        return openPage(titleLink, JUnitBuildDetail.class);
+    public BuildTestResults openBuildDetailView() {
+        return openPage(titleLink, BuildTestResults.class);
     }
 
-    public JUnitTestDetail openTestDetailView(final String testName) {
+    public BuildTestResults openBuildDetailViewBySidebarElement() {
+        // TODO: @Michi
+        return openPage(titleLink, BuildTestResults.class);
+    }
+
+    public TestDetail openTestDetailView(final String testName) {
         WebElement link = failedTestLinks.stream()
                 .filter(failedTestLink -> failedTestLink.getText().equals(testName))
                 .findFirst()
                 .orElseThrow(() -> new NoSuchElementException(testName));
 
-        return openPage(link, JUnitTestDetail.class);
+        return openPage(link, TestDetail.class);
     }
 
     private <T extends PageObject> T openPage(final WebElement link, final Class<T> type) {
         String href = link.getAttribute("href");
 
         link.click();
-        T result = newInstance(type, injector, url(href));
-        return result;
+        return newInstance(type, injector, url(href));
     }
 }

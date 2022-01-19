@@ -1,6 +1,9 @@
 package io.jenkins.plugins.analysis.junit.util;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import org.jenkinsci.test.acceptance.junit.AbstractJUnitTest;
 import org.jenkinsci.test.acceptance.po.Build;
@@ -8,14 +11,13 @@ import org.jenkinsci.test.acceptance.po.FreeStyleJob;
 import org.jenkinsci.test.acceptance.po.JUnitPublisher;
 import org.jenkinsci.test.acceptance.po.Job;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.MatcherAssert.*;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 public class TestUtils {
 
     public static Build createFreeStyleJobWithResources(AbstractJUnitTest abstractJUnitTestBaseClass, List<String> resourcePaths, String expectedBuildResult) {
         Build build = getCreatedFreeStyleJobWithResources(abstractJUnitTestBaseClass, resourcePaths, expectedBuildResult).startBuild();
-        assertThat(build.getResult(), is(expectedBuildResult));
+        assertThat(build.getResult()).isEqualTo(expectedBuildResult);
         build.open();
         return build;
     }
@@ -31,5 +33,12 @@ public class TestUtils {
         fixedCopyJob.getJob().save();
 
         return fixedCopyJob.getJob();
+    }
+
+    public static <ElementType> void assertElementInCollection(Collection<ElementType> collection, Predicate<ElementType>...predicates) {
+        assertThat(Stream.of(predicates).allMatch(predicate -> collection.stream()
+                .filter(predicate)
+                .findAny()
+                .isPresent())).isTrue();
     }
 }
