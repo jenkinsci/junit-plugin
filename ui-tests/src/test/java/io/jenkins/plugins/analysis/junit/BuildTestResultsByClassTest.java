@@ -21,7 +21,7 @@ import static io.jenkins.plugins.analysis.junit.testresults.BuildDetailPackageVi
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 /**
- * Tests the detail view of a build's failed Unit tests.
+ * Tests the published unit tests results of a build which are filtered by a class.
  *
  * @author Michael Müller
  * @author Nikolas Paripovic
