@@ -34,7 +34,7 @@ public class BuildTestResultsByPackageTest extends AbstractJUnitTest {
 
         Build build = TestUtils.createFreeStyleJobWithResources(
                 this,
-                Arrays.asList("/failure/three_failed_two_succeeded.xml"), "UNSTABLE");
+                Arrays.asList("/success/TEST-com.simple.project.AppTest.xml"), "UNSTABLE");
 
         JUnitBuildSummary buildSummary = new JUnitBuildSummary(build);
         BuildTestResultsByPackage buildTestResultsByPackage = buildSummary
@@ -61,7 +61,26 @@ public class BuildTestResultsByPackageTest extends AbstractJUnitTest {
 
     @Test
     public void verifyWithNoFailures() {
-        // TODO: @Michi: verify listed failures (0), failure count (0), test count (1)
+        
+        Build build = TestUtils.createFreeStyleJobWithResources(
+                this,
+                Arrays.asList("/success/TEST-com.simple.project.AppTest.xml"), "SUCCESS");
+
+        JUnitBuildSummary buildSummary = new JUnitBuildSummary(build);
+        BuildTestResultsByPackage buildTestResultsByPackage = buildSummary
+                .openBuildDetailView()
+                .openClassDetailView("com.simple.project");
+
+        assertThat(buildTestResultsByPackage)
+                .hasNumberOfFailures(0)
+                .hasNumberOfTests(1);
+
+        assertThat(buildTestResultsByPackage.failedTestTableExists()).isFalse();
+
+        assertThat(buildTestResultsByPackage.getClassTableEntries()).extracting(List::size).isEqualTo(1);
+
+        TestUtils.assertElementInCollection(buildTestResultsByPackage.getClassTableEntries(),
+                classTableEntry -> classTableEntry.getClassName().equals("AppTest"));
     }
 
     // TODO: Optional Test: compare diffs to old build in test result table
