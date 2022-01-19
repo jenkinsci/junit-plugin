@@ -1,4 +1,4 @@
-package io.jenkins.plugins.analysis.junit.builddetail.tableentry;
+package io.jenkins.plugins.analysis.junit.testresults.tableentry;
 
 import java.util.Optional;
 

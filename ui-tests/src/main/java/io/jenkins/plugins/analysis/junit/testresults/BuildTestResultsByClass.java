@@ -1,4 +1,4 @@
-package io.jenkins.plugins.analysis.junit.builddetail;
+package io.jenkins.plugins.analysis.junit.testresults;
 
 import java.net.URL;
 import java.util.List;
@@ -11,27 +11,27 @@ import org.openqa.selenium.WebElement;
 import com.google.inject.Injector;
 
 import org.jenkinsci.test.acceptance.po.Build;
-import io.jenkins.plugins.analysis.junit.JUnitTestDetail;
-import io.jenkins.plugins.analysis.junit.builddetail.tableentry.TestTableEntry;
+import io.jenkins.plugins.analysis.junit.TestDetail;
+import io.jenkins.plugins.analysis.junit.testresults.tableentry.TestTableEntry;
 
-public class BuildDetailTestView extends BuildDetailView {
+public class BuildTestResultsByClass extends TestResults {
 
     private final List<WebElement> testLinks;
     private final List<TestTableEntry> testTableEntries;
 
-    public BuildDetailTestView(final Build parent) {
+    public BuildTestResultsByClass(final Build parent) {
         super(parent);
 
         WebElement mainPanel = getElement(By.cssSelector("#main-panel"));
-        testLinks = TestResultTableUtil.getLinksOfTableItems(mainPanel);
+        testLinks = TestResultsTableUtil.getLinksOfTableItems(mainPanel);
         testTableEntries = initializeTestTableEntries(mainPanel);
     }
 
-    public BuildDetailTestView(final Injector injector, final URL url) {
+    public BuildTestResultsByClass(final Injector injector, final URL url) {
         super(injector, url);
 
         WebElement mainPanel = getElement(By.cssSelector("#main-panel"));
-        testLinks = TestResultTableUtil.getLinksOfTableItems(mainPanel);
+        testLinks = TestResultsTableUtil.getLinksOfTableItems(mainPanel);
         testTableEntries = initializeTestTableEntries(mainPanel);
     }
 
@@ -39,16 +39,16 @@ public class BuildDetailTestView extends BuildDetailView {
         return testTableEntries;
     }
 
-    public JUnitTestDetail openTestDetail(final String testName) {
+    public TestDetail openTestDetail(final String testName) {
         WebElement link = testLinks.stream()
                 .filter(classLink -> classLink.getText().equals(testName))
                 .findFirst()
                 .orElseThrow(() -> new NoSuchElementException(testName));
-        return openPage(link, JUnitTestDetail.class);
+        return openPage(link, TestDetail.class);
     }
 
     private List<TestTableEntry> initializeTestTableEntries(final WebElement mainPanel) {
-        return TestResultTableUtil.getTableItemsWithoutHeader(mainPanel).stream()
+        return TestResultsTableUtil.getTableItemsWithoutHeader(mainPanel).stream()
                 .map(this::webElementToTestTableEntry)
                 .collect(Collectors.toList());
     }

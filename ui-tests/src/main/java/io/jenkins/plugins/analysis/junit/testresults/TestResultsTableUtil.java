@@ -1,4 +1,4 @@
-package io.jenkins.plugins.analysis.junit.builddetail;
+package io.jenkins.plugins.analysis.junit.testresults;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 
-public class TestResultTableUtil {
+public class TestResultsTableUtil {
 
     public static List<WebElement> getTableItemsWithoutHeader(final WebElement mainPanelElement) {
         WebElement testResultTable = mainPanelElement.findElement(By.cssSelector("#testresult"));

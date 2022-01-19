@@ -18,8 +18,7 @@ import org.jenkinsci.test.acceptance.po.PageObject;
  * @author Michael Müller
  * @author Nikolas Paripovic
  */
-public class JUnitTestDetail extends PageObject {
-
+public class TestDetail extends PageObject {
 
     private final WebElement title;
     private final WebElement subTitle;
@@ -34,7 +33,7 @@ public class JUnitTestDetail extends PageObject {
      * @param parent
      *          a finished build configured with a static analysis tool
      */
-    public JUnitTestDetail(final Build parent) {
+    public TestDetail(final Build parent) {
         super(parent, parent.url("testReport"));
 
         WebElement pageContent = getElement(By.cssSelector("#main-panel"));
@@ -69,7 +68,6 @@ public class JUnitTestDetail extends PageObject {
 
     }
 
-    //TODO: Junit here
     /**
      * Creates an instance of the page displaying the details of the issues. This constructor is used for injecting a
      * filtered instance of the page (e.g. by clicking on links which open a filtered instance of a AnalysisResult.
@@ -80,7 +78,7 @@ public class JUnitTestDetail extends PageObject {
      *         the url of the page
      */
     @SuppressWarnings("unused") // Required to dynamically create page object using reflection
-    public JUnitTestDetail(final Injector injector, final URL url) {
+    public TestDetail(final Injector injector, final URL url) {
         super(injector, url);
 
         WebElement pageContent = getElement(By.cssSelector("#main-panel"));

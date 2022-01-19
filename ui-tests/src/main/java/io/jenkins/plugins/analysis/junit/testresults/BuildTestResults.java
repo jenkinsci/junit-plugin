@@ -1,4 +1,4 @@
-package io.jenkins.plugins.analysis.junit.builddetail;
+package io.jenkins.plugins.analysis.junit.testresults;
 
 import java.net.URL;
 import java.util.List;
@@ -13,26 +13,26 @@ import com.google.inject.Injector;
 
 import org.jenkinsci.test.acceptance.po.Build;
 
-import io.jenkins.plugins.analysis.junit.builddetail.tableentry.PackageTableEntry;
+import io.jenkins.plugins.analysis.junit.testresults.tableentry.PackageTableEntry;
 
-public class BuildDetailPackageView extends BuildDetailViewIncludingFailedTestTable {
+public class BuildTestResults extends TestResultsWithFailedTestTable {
 
     private final List<WebElement> packageLinks;
     private final List<PackageTableEntry> packageTableEntries;
 
-    public BuildDetailPackageView(final Build parent) {
+    public BuildTestResults(final Build parent) {
         super(parent);
 
         WebElement mainPanel = getElement(By.cssSelector("#main-panel"));
-        packageLinks = TestResultTableUtil.getLinksOfTableItems(mainPanel);
+        packageLinks = TestResultsTableUtil.getLinksOfTableItems(mainPanel);
         packageTableEntries = initializePackageTableEntries(mainPanel);
     }
 
-    public BuildDetailPackageView(final Injector injector, final URL url) {
+    public BuildTestResults(final Injector injector, final URL url) {
         super(injector, url);
 
         WebElement mainPanel = getElement(By.cssSelector("#main-panel"));
-        packageLinks = TestResultTableUtil.getLinksOfTableItems(mainPanel);
+        packageLinks = TestResultsTableUtil.getLinksOfTableItems(mainPanel);
         packageTableEntries = initializePackageTableEntries(mainPanel);
     }
 
@@ -40,16 +40,16 @@ public class BuildDetailPackageView extends BuildDetailViewIncludingFailedTestTa
         return packageTableEntries;
     }
 
-    public BuildDetailClassView openClassDetailView(final String packageName) {
+    public BuildTestResultsByPackage openClassDetailView(final String packageName) {
         WebElement link = packageLinks.stream()
                 .filter(packageLink -> packageLink.getText().equals(packageName))
                 .findFirst()
                 .orElseThrow(() -> new NoSuchElementException(packageName));
-        return openPage(link, BuildDetailClassView.class);
+        return openPage(link, BuildTestResultsByPackage.class);
     }
 
     private List<PackageTableEntry> initializePackageTableEntries(final WebElement mainPanel) {
-        return TestResultTableUtil.getTableItemsWithoutHeader(mainPanel).stream()
+        return TestResultsTableUtil.getTableItemsWithoutHeader(mainPanel).stream()
                 .map(this::webElementToPackageTableEntry)
                 .collect(Collectors.toList());
     }

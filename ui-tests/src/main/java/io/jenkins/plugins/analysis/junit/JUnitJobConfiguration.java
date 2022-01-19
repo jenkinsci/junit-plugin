@@ -10,7 +10,7 @@ import org.jenkinsci.test.acceptance.po.PostBuildStep;
  * @author Kohsuke Kawaguchi
  */
 @Describable("Publish JUnit test result report")
-public class JUnitPublisher extends AbstractStep implements PostBuildStep {
+public class JUnitJobConfiguration extends AbstractStep implements PostBuildStep {
     private final Control retainLogStandardOutputError = control("/keepLongStdio");
     private final Control allowEmptyResults = control("/allowEmptyResults");
     private final Control skipPublishingChecks = control("/skipPublishingChecks");
@@ -19,7 +19,7 @@ public class JUnitPublisher extends AbstractStep implements PostBuildStep {
 
     public final Control testResults = control("testResults");
 
-    public JUnitPublisher(Job parent, String path) {
+    public JUnitJobConfiguration(Job parent, String path) {
         super(parent, path);
     }
 

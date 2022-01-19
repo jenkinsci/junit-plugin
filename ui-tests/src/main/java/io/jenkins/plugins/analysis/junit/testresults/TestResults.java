@@ -1,8 +1,7 @@
-package io.jenkins.plugins.analysis.junit.builddetail;
+package io.jenkins.plugins.analysis.junit.testresults;
 
 import java.net.URL;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
@@ -13,19 +12,19 @@ import org.jenkinsci.test.acceptance.po.Build;
 import org.jenkinsci.test.acceptance.po.PageObject;
 
 
-public abstract class BuildDetailView extends PageObject {
+public abstract class TestResults extends PageObject {
 
     private final WebElement numberOfFailuresElement;
     private final WebElement numberOfTestsElement;
 
-    public BuildDetailView(final Build parent) {
+    public TestResults(final Build parent) {
         super(parent, parent.url("testReport"));
         WebElement mainPanel = getElement(By.cssSelector("#main-panel"));
         numberOfFailuresElement = initializeNumberOfFailuresElement(mainPanel);
         numberOfTestsElement = initializeNumberOfTestsElement(mainPanel);
     }
 
-    public BuildDetailView(final Injector injector, final URL url) {
+    public TestResults(final Injector injector, final URL url) {
         super(injector, url);
         WebElement mainPanel = getElement(By.cssSelector("#main-panel"));
         numberOfFailuresElement = initializeNumberOfFailuresElement(mainPanel);

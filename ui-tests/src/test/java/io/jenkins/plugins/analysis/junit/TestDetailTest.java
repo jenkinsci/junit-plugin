@@ -28,7 +28,7 @@ public class TestDetailTest extends AbstractJUnitTest {
                 Arrays.asList("/success/com.simple.project.AppTest.txt", "/success/TEST-com.simple.project.AppTest.xml"), "SUCCESS");
 
         JUnitBuildSummary buildSummary = new JUnitBuildSummary(build);
-        JUnitTestDetail testDetail = buildSummary.openBuildDetailView()
+        TestDetail testDetail = buildSummary.openBuildDetailView()
                 .openClassDetailView("com.simple.project")
                 .openTestDetailView("AppTest")
                 .openTestDetail("testApp");
@@ -48,7 +48,7 @@ public class TestDetailTest extends AbstractJUnitTest {
                 Arrays.asList("/success/com.simple.project.AppTest.txt", "/success/junit-with-long-output.xml"), "SUCCESS");
 
         JUnitBuildSummary buildSummary = new JUnitBuildSummary(build);
-        JUnitTestDetail testDetail = buildSummary.openBuildDetailView()
+        TestDetail testDetail = buildSummary.openBuildDetailView()
                 .openClassDetailView("(root)")
                 .openTestDetailView("JUnit")
                 .openTestDetail("testScore[0]");
@@ -70,7 +70,7 @@ public class TestDetailTest extends AbstractJUnitTest {
                 Arrays.asList("/parameterized/junit.xml", "/parameterized/testng.xml"), "UNSTABLE");
 
         JUnitBuildSummary buildSummary = new JUnitBuildSummary(build);
-        JUnitTestDetail testDetail = buildSummary.openTestDetailView("JUnit.testScore[0]");
+        TestDetail testDetail = buildSummary.openTestDetailView("JUnit.testScore[0]");
 
         assertThat(testDetail.getTitle()).contains("Failed");
         assertThat(testDetail.getStandardOutput()).isEmpty();

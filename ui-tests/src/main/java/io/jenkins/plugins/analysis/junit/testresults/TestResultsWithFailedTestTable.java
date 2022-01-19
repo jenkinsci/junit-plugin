@@ -1,4 +1,4 @@
-package io.jenkins.plugins.analysis.junit.builddetail;
+package io.jenkins.plugins.analysis.junit.testresults;
 
 import java.net.URL;
 import java.util.Collections;
@@ -14,17 +14,17 @@ import com.google.inject.Injector;
 
 import org.jenkinsci.test.acceptance.po.Build;
 
-import io.jenkins.plugins.analysis.junit.JUnitTestDetail;
-import io.jenkins.plugins.analysis.junit.builddetail.tableentry.FailedTestTableEntry;
+import io.jenkins.plugins.analysis.junit.TestDetail;
+import io.jenkins.plugins.analysis.junit.testresults.tableentry.FailedTestTableEntry;
 
-public class BuildDetailViewIncludingFailedTestTable extends BuildDetailView {
+public class TestResultsWithFailedTestTable extends TestResults {
 
     private final Optional<WebElement> failedTestsTable;
 
     private final List<WebElement> failedTestLinks;
     private final List<FailedTestTableEntry> failedTestTableEntries;
 
-    public BuildDetailViewIncludingFailedTestTable(final Build parent) {
+    public TestResultsWithFailedTestTable(final Build parent) {
         super(parent);
 
         WebElement mainPanel = getElement(By.cssSelector("#main-panel"));
@@ -40,7 +40,7 @@ public class BuildDetailViewIncludingFailedTestTable extends BuildDetailView {
         }
     }
 
-    public BuildDetailViewIncludingFailedTestTable(final Injector injector, final URL url) {
+    public TestResultsWithFailedTestTable(final Injector injector, final URL url) {
         super(injector, url);
 
         WebElement mainPanel = getElement(By.cssSelector("#main-panel"));
@@ -63,12 +63,12 @@ public class BuildDetailViewIncludingFailedTestTable extends BuildDetailView {
         return failedTestTableEntries;
     }
 
-    public JUnitTestDetail openTestDetail(final String testName) {
+    public TestDetail openTestDetail(final String testName) {
         WebElement link = failedTestLinks.stream()
                 .filter(failedTestLink -> failedTestLink.getText().equals(testName))
                 .findFirst()
                 .orElseThrow(() -> new NoSuchElementException(testName));
-        return openPage(link, JUnitTestDetail.class);
+        return openPage(link, TestDetail.class);
     }
 
     private List<WebElement> getFailedTestsTableItemsWithoutHeader(final WebElement failedTestsTableElement) {
