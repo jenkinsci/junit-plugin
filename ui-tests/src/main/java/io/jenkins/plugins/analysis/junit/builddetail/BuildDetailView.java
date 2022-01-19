@@ -20,21 +20,16 @@ public abstract class BuildDetailView extends PageObject {
 
     public BuildDetailView(final Build parent) {
         super(parent, parent.url("testReport"));
-
-        WebElement pageContent = getElement(By.cssSelector("#main-panel"));
-
-        numberOfFailuresElement = pageContent.findElements(By.cssSelector("h1 + div div")).get(0);
-        numberOfTestsElement = pageContent.findElements(By.cssSelector("h1 + div div")).get(2);
-
+        WebElement mainPanel = getElement(By.cssSelector("#main-panel"));
+        numberOfFailuresElement = initializeNumberOfFailuresElement(mainPanel);
+        numberOfTestsElement = initializeNumberOfTestsElement(mainPanel);
     }
 
     public BuildDetailView(final Injector injector, final URL url) {
         super(injector, url);
-
-        WebElement pageContent = getElement(By.cssSelector("#main-panel"));
-
-        numberOfFailuresElement = pageContent.findElements(By.cssSelector("h1 + div div")).get(0);
-        numberOfTestsElement = pageContent.findElements(By.cssSelector("h1 + div div")).get(2);
+        WebElement mainPanel = getElement(By.cssSelector("#main-panel"));
+        numberOfFailuresElement = initializeNumberOfFailuresElement(mainPanel);
+        numberOfTestsElement = initializeNumberOfTestsElement(mainPanel);
     }
 
     public int getNumberOfFailures() {
@@ -51,5 +46,19 @@ public abstract class BuildDetailView extends PageObject {
         String href = link.getAttribute("href");
         link.click();
         return newInstance(type, injector, url(href));
+    }
+
+    private WebElement initializeNumberOfTestsElement(WebElement mainPanel) {
+        List<WebElement> testsNumberElements = getTestsNumberElements(mainPanel);
+        return testsNumberElements.get(testsNumberElements.size() - 1);
+    }
+    
+    private WebElement initializeNumberOfFailuresElement(WebElement mainPanel) {
+        List<WebElement> testsNumberElements = getTestsNumberElements(mainPanel);
+        return testsNumberElements.get(0);
+    }
+
+    private List<WebElement> getTestsNumberElements(WebElement mainPanel) {
+        return mainPanel.findElements(By.cssSelector("h1 + div div"));
     }
 }

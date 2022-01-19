@@ -1,5 +1,7 @@
 package io.jenkins.plugins.analysis.junit.builddetail.tableentry;
 
+import java.util.Optional;
+
 public class FailedTestTableEntry {
 
     private final String testName;
@@ -10,13 +12,13 @@ public class FailedTestTableEntry {
 
     private final int age;
 
-    private final String errorDetails;
+    private final Optional<String> errorDetails;
 
-    private final String stackTrace;
+    private final Optional<String> stackTrace;
 
     public FailedTestTableEntry(final String testName, final String testLink, final int duration, final int age,
-            final String errorDetails,
-            final String stackTrace) {
+            final Optional<String> errorDetails,
+            final Optional<String> stackTrace) {
         this.testName = testName;
         this.testLink = testLink;
         this.duration = duration;
@@ -41,11 +43,11 @@ public class FailedTestTableEntry {
         return age;
     }
 
-    public String getErrorDetails() {
+    public  Optional<String> getErrorDetails() {
         return errorDetails;
     }
 
-    public String getStackTrace() {
+    public Optional<String> getStackTrace() {
         return stackTrace;
     }
 }

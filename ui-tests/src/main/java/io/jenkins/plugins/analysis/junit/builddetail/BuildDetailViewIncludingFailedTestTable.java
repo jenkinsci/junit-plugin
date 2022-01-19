@@ -105,7 +105,7 @@ public class BuildDetailViewIncludingFailedTestTable extends BuildDetailView {
             }
             ++counter;
         }
-        return failedTestsTableIndex >= 0 ? Optional.of(pageContentChildren.get(failedTestsTableIndex)) : Optional.empty();
+        return failedTestsTableIndex >= 0 ? Optional.of(pageContentChildren.get(failedTestsTableIndex + 1)) : Optional.empty();
     }
 
     private FailedTestTableEntry webElementToFailedTestTableEntry(final WebElement trElement) {
@@ -118,12 +118,56 @@ public class BuildDetailViewIncludingFailedTestTable extends BuildDetailView {
         int duration = Integer.parseInt(durationString.substring(0, durationString.length() - " ms".length()));
         int age = Integer.parseInt(columns.get(2).findElement(By.cssSelector("a")).getText());
 
+
         WebElement expandLink = columns.get(0).findElement(By.cssSelector("a[title=\"Show details\"]"));
         expandLink.click();
 
-        List<WebElement> detailPreElements = columns.get(0).findElements(By.cssSelector("div.failure-summary pre"));
+
+        WebElement failureSummary = columns.get(0).findElement(By.cssSelector("div.failure-summary"));
+
+        List<WebElement> showErrorDetailsLinks = failureSummary.findElements(By.cssSelector("a[title=\"Show Error Details\"]"));
+        if(showErrorDetailsLinks.size() > 0) {
+            WebElement showErrorDetailsLink = showErrorDetailsLinks.get(0);
+            if(!showErrorDetailsLink.getAttribute("style").contains("display: none;")) {
+                showErrorDetailsLink.click();
+            }
+        }
+
+        List<WebElement> showStackTraceLinks = failureSummary.findElements(By.cssSelector("a[title=\"Show Stack Trace\"]"));
+        if(showStackTraceLinks.size() > 0) {
+            WebElement showStackTraceLink = showStackTraceLinks.get(0);
+            if(!showStackTraceLink.getAttribute("style").contains("display: none;")) {
+                showStackTraceLink.click();
+            }
+        }
+
+
+
+        List<WebElement> failureSummaryChildren = failureSummary.findElements(By.cssSelector("*"));
+        int counter = 0;
+        int errorDetailsHeaderIndex = -1;
+        int stackTraceHeaderIndex = -1;
+        for (WebElement element : failureSummaryChildren) {
+            if (element.getTagName().equals("h4")) {
+                if(element.findElements(By.cssSelector("a[title=\"Show Error Details\"]")).size() > 0) {
+                    errorDetailsHeaderIndex = counter;
+                }
+                else if(element.findElements(By.cssSelector("a[title=\"Show Stack Trace\"]")).size() > 0) {
+                    stackTraceHeaderIndex = counter;
+                }
+            }
+            ++counter;
+        }
+
+        Optional<WebElement> errorDetailsPreElement = errorDetailsHeaderIndex == -1 ? Optional.empty() : Optional.of(failureSummaryChildren.get(errorDetailsHeaderIndex + 1));
+        Optional<WebElement> stackTracePreElement = stackTraceHeaderIndex == -1 ? Optional.empty() : Optional.of(failureSummaryChildren.get(stackTraceHeaderIndex + 1));
+
+        Optional<String> errorDetails = errorDetailsPreElement.map(WebElement::getText);
+        Optional<String> stackTrace = stackTracePreElement.map(WebElement::getText);
+
+        /*List<WebElement> detailPreElements = columns.get(0).findElements(By.cssSelector("div.failure-summary pre"));
         String errorDetails = detailPreElements.get(0).getText();
-        String stackTrace = detailPreElements.get(1).getText();
+        String stackTrace = detailPreElements.get(1).getText();*/
 
         return new FailedTestTableEntry(testName, testLink, duration, age, errorDetails, stackTrace);
     }

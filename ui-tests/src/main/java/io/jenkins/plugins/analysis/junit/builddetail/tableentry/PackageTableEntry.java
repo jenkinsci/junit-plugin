@@ -20,7 +20,7 @@ public class PackageTableEntry {
 
     private final int pass;
 
-    private final int passDiff;
+    private final Optional<Integer> passDiff;
 
     private final int total;
 
@@ -28,7 +28,7 @@ public class PackageTableEntry {
 
     public PackageTableEntry(final String packageName, final String packageLink, final int duration, final int fail,
             final Optional<Integer> failDiff, final int skip,
-            final Optional<Integer> skipDiff, final int pass, final int passDiff, final int total, final int totalDiff) {
+            final Optional<Integer> skipDiff, final int pass, final Optional<Integer> passDiff, final int total, final int totalDiff) {
         this.packageName = packageName;
         this.packageLink = packageLink;
         this.duration = duration;
@@ -74,7 +74,7 @@ public class PackageTableEntry {
         return pass;
     }
 
-    public int getPassDiff() {
+    public Optional<Integer> getPassDiff() {
         return passDiff;
     }
 
