@@ -40,7 +40,7 @@ public class BuildTestResultsByPackage extends TestResultsWithFailedTestTable {
         return classTableEntries;
     }
 
-    public BuildTestResultsByClass openTestDetailView(final String className) {
+    public BuildTestResultsByClass openTestResultsByClass(final String className) {
         WebElement link = classLinks.stream()
                 .filter(classLink -> classLink.getText().equals(className))
                 .findFirst()

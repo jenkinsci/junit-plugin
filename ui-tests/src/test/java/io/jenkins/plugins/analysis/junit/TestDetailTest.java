@@ -29,8 +29,8 @@ public class TestDetailTest extends AbstractJUnitTest {
 
         JUnitBuildSummary buildSummary = new JUnitBuildSummary(build);
         TestDetail testDetail = buildSummary.openBuildDetailView()
-                .openClassDetailView("com.simple.project")
-                .openTestDetailView("AppTest")
+                .openTestResultsByPackage("com.simple.project")
+                .openTestResultsByClass("AppTest")
                 .openTestDetail("testApp");
 
         assertThat(testDetail.getTitle()).contains("Passed");
@@ -49,8 +49,8 @@ public class TestDetailTest extends AbstractJUnitTest {
 
         JUnitBuildSummary buildSummary = new JUnitBuildSummary(build);
         TestDetail testDetail = buildSummary.openBuildDetailView()
-                .openClassDetailView("(root)")
-                .openTestDetailView("JUnit")
+                .openTestResultsByPackage("(root)")
+                .openTestResultsByClass("JUnit")
                 .openTestDetail("testScore[0]");
 
         assertThat(testDetail.getTitle()).contains("Passed");
