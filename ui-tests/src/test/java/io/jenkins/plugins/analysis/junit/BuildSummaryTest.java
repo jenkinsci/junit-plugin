@@ -18,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Tests the JUnit summary on the build page of a job.
  *
- * @author MichaelMüller
+ * @author Michael Müller
  * @author Nikolas Paripovic
  */
 @WithPlugins("junit")

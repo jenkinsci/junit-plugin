@@ -15,7 +15,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.*;
 /**
  * Tests the the detail view of a failed JUnit test.
  *
- * @author MichaelMüller
+ * @author Michael Müller
  * @author Nikolas Paripovic
  */
 @WithPlugins("junit")

@@ -23,7 +23,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 /**
  * Tests the detail view of a build's failed Unit tests.
  *
- * @author MichaelMüller
+ * @author Michael Müller
  * @author Nikolas Paripovic
  */
 @WithPlugins("junit")

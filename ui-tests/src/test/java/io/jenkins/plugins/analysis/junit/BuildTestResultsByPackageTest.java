@@ -23,7 +23,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 /**
  * Tests the detail view of a build's failed Unit tests.
  *
- * @author MichaelMüller
+ * @author Michael Müller
  * @author Nikolas Paripovic
  */
 @WithPlugins("junit")
@@ -61,7 +61,7 @@ public class BuildTestResultsByPackageTest extends AbstractJUnitTest {
 
     @Test
     public void verifyWithNoFailures() {
-        
+
         Build build = TestUtils.createFreeStyleJobWithResources(
                 this,
                 Arrays.asList("/success/TEST-com.simple.project.AppTest.xml"), "SUCCESS");
