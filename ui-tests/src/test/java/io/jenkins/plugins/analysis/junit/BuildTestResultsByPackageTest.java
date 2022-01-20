@@ -9,7 +9,6 @@ import org.jenkinsci.test.acceptance.junit.AbstractJUnitTest;
 import org.jenkinsci.test.acceptance.junit.WithPlugins;
 import org.jenkinsci.test.acceptance.po.Build;
 
-import io.jenkins.plugins.analysis.junit.testresults.BuildTestResults;
 import io.jenkins.plugins.analysis.junit.testresults.BuildTestResultsByPackage;
 import io.jenkins.plugins.analysis.junit.util.TestUtils;
 
@@ -102,7 +101,7 @@ public class BuildTestResultsByPackageTest extends AbstractJUnitTest {
 
     private BuildTestResultsByPackage createBuildJobAndOpenBuildTestResultsByPackage(String testResultsReport,
             String expectedBuildResult, String packageName) {
-        Build build = TestUtils.createFreeStyleJobWithResources(
+        Build build = TestUtils.createFreeStyleJobAndRunBuild(
                 this,
                 Arrays.asList(testResultsReport), expectedBuildResult);
 

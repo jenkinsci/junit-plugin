@@ -23,7 +23,7 @@ public class TestDetailTest extends AbstractJUnitTest {
 
     @Test
     public void verifyDetailNoFailures() {
-        Build build = TestUtils.createFreeStyleJobWithResources(
+        Build build = TestUtils.createFreeStyleJobAndRunBuild(
                 this,
                 Arrays.asList("/success/com.simple.project.AppTest.txt", "/success/TEST-com.simple.project.AppTest.xml"), "SUCCESS");
 
@@ -43,7 +43,7 @@ public class TestDetailTest extends AbstractJUnitTest {
 
     @Test
     public void verifyDetailNoFailuresIncludingStandardOutput() {
-        Build build = TestUtils.createFreeStyleJobWithResources(
+        Build build = TestUtils.createFreeStyleJobAndRunBuild(
                 this,
                 Arrays.asList("/success/com.simple.project.AppTest.txt", "/success/junit-with-long-output.xml"), "SUCCESS");
 
@@ -65,7 +65,7 @@ public class TestDetailTest extends AbstractJUnitTest {
 
     @Test
     public void verifyDetailWithFailures() {
-        Build build = TestUtils.createFreeStyleJobWithResources(
+        Build build = TestUtils.createFreeStyleJobAndRunBuild(
                 this,
                 Arrays.asList("/parameterized/junit.xml", "/parameterized/testng.xml"), "UNSTABLE");
 

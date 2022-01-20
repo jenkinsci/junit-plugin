@@ -11,38 +11,57 @@ import org.jenkinsci.test.acceptance.po.FreeStyleJob;
 import org.jenkinsci.test.acceptance.po.JUnitPublisher;
 import org.jenkinsci.test.acceptance.po.Job;
 
+import io.jenkins.plugins.analysis.junit.JUnitJobConfiguration;
+
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 public class TestUtils {
 
+    public static Build createFreeStyleJobAndRunBuild(AbstractJUnitTest abstractJUnitTestBaseClass,
+            List<String> resourcePaths, String expectedBuildResult) {
+        return createFreeStyleJobAndRunBuild(abstractJUnitTestBaseClass, resourcePaths, expectedBuildResult,
+                false, false, false);
+    }
+
     /**
      *
-     * @param abstractJUnitTestBaseClass
-     * @param resourcePaths
-     * @param expectedBuildResult
-     * @return
      */
-    public static Build createFreeStyleJobWithResources(AbstractJUnitTest abstractJUnitTestBaseClass, List<String> resourcePaths, String expectedBuildResult) {
-        Build build = getCreatedFreeStyleJobWithResources(abstractJUnitTestBaseClass, resourcePaths, expectedBuildResult).startBuild();
+    public static Build createFreeStyleJobAndRunBuild(AbstractJUnitTest abstractJUnitTestBaseClass,
+            List<String> resourcePaths, String expectedBuildResult,
+            Boolean setSkipMarkingBuildAsUnstableOnTestFailure, Boolean setAllowEmptyResults,
+            Boolean setRetainLogStandardOutputError) {
+        Build build = getCreatedFreeStyleJobWithResources(abstractJUnitTestBaseClass, resourcePaths,
+                setSkipMarkingBuildAsUnstableOnTestFailure, setAllowEmptyResults,
+                setRetainLogStandardOutputError).startBuild();
         assertThat(build.getResult()).isEqualTo(expectedBuildResult);
         build.open();
         return build;
     }
 
-    public static Job getCreatedFreeStyleJobWithResources(AbstractJUnitTest abstractJUnitTestBaseClass, List<String> resourcePaths, String expectedBuildResult) {
+    public static Job getCreatedFreeStyleJobWithResources(AbstractJUnitTest abstractJUnitTestBaseClass,
+            List<String> resourcePaths,
+            Boolean setSkipMarkingBuildAsUnstableOnTestFailure, Boolean setAllowEmptyResults,
+            Boolean setRetainLogStandardOutputError) {
         FreeStyleJob j = abstractJUnitTestBaseClass.jenkins.jobs.create();
         FixedCopyJobDecorator fixedCopyJob = new FixedCopyJobDecorator(j);
         fixedCopyJob.getJob().configure();
         for (String resourcePath : resourcePaths) {
             fixedCopyJob.copyResource(abstractJUnitTestBaseClass.resource(resourcePath));
         }
-        fixedCopyJob.getJob().addPublisher(JUnitPublisher.class).testResults.set("*.xml");
+        JUnitJobConfiguration publisher = fixedCopyJob.getJob().addPublisher(JUnitJobConfiguration.class);
+        publisher.testResults.set("*.xml");
+
+        publisher.setSkipMarkingBuildAsUnstableOnTestFailure(setSkipMarkingBuildAsUnstableOnTestFailure);
+        publisher.setRetainLogStandardOutputError(setRetainLogStandardOutputError);
+        publisher.setAllowEmptyResults(setAllowEmptyResults);
+
         fixedCopyJob.getJob().save();
 
         return fixedCopyJob.getJob();
     }
 
-    public static <ElementType> void assertElementInCollection(Collection<ElementType> collection, Predicate<ElementType>...predicates) {
+    public static <ElementType> void assertElementInCollection(Collection<ElementType> collection,
+            Predicate<ElementType>... predicates) {
         assertThat(Stream.of(predicates).allMatch(predicate -> collection.stream()
                 .filter(predicate)
                 .findAny()

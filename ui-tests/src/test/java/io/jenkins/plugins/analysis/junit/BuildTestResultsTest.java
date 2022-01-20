@@ -31,7 +31,7 @@ public class BuildTestResultsTest extends AbstractJUnitTest {
     @Test
     public void verifyWithFailures() {
 
-        Build build = TestUtils.createFreeStyleJobWithResources(
+        Build build = TestUtils.createFreeStyleJobAndRunBuild(
                 this,
                 Arrays.asList("/failure/three_failed_two_succeeded.xml"), "UNSTABLE");
 
@@ -63,7 +63,7 @@ public class BuildTestResultsTest extends AbstractJUnitTest {
     @Test
     public void verifyNoFailures() {
 
-        Build build = TestUtils.createFreeStyleJobWithResources(
+        Build build = TestUtils.createFreeStyleJobAndRunBuild(
                 this,
                 Arrays.asList("/success/TEST-com.simple.project.AppTest.xml"), "SUCCESS");
 

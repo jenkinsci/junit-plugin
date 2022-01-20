@@ -1,11 +1,19 @@
 package io.jenkins.plugins.analysis.junit;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import org.junit.Test;
 
 import org.jenkinsci.test.acceptance.junit.AbstractJUnitTest;
 import org.jenkinsci.test.acceptance.po.Build;
 import org.jenkinsci.test.acceptance.po.FreeStyleJob;
 import org.jenkinsci.test.acceptance.po.JUnitPublisher;
+import org.jenkinsci.test.acceptance.po.Job;
+
+import io.jenkins.plugins.analysis.junit.util.FixedCopyJobDecorator;
+import io.jenkins.plugins.analysis.junit.util.TestUtils;
 
 import static org.assertj.core.api.AssertionsForClassTypes.*;
 
@@ -21,10 +29,9 @@ public class JobConfigurationTest extends AbstractJUnitTest {
      * Tests if build is successful with test failures when checkbox "Skip publishing checks" is checked.
      */
     @Test
-    public void successfulBuildWhenSkipMarkingBuildAsUnstableOnTestFailureChecked() {
+    public void verifySuccessfulBuildWhenSkipMarkingBuildAsUnstableOnTestFailureChecked() {
         FreeStyleJob j = jenkins.jobs.create();
         j.configure();
-        j.copyResource(resource("/failure/com.simple.project.AppTest.txt"));
         j.copyResource(resource("/failure/TEST-com.simple.project.AppTest.xml"));
         JUnitJobConfiguration publisher = j.addPublisher(JUnitJobConfiguration.class);
         publisher.testResults.set("*.xml");
@@ -33,40 +40,46 @@ public class JobConfigurationTest extends AbstractJUnitTest {
 
         Build build = j.startBuild();
         assertThat(build.getResult()).isEqualTo("SUCCESS");
+
+        Job job = TestUtils.getCreatedFreeStyleJobWithResources(
+                this,
+                Collections.emptyList(),
+                false, true, false);
+
+        job.startBuild().shouldSucceed();
     }
 
     /**
      * Tests if build is successful with no test results when checkbox "Allow empty results" is checked.
      */
     @Test
-    public void successfulBuildWhenEmptyTestResultsChecked() {
-        FreeStyleJob j = jenkins.jobs.create();
-        j.configure();
-        JUnitJobConfiguration publisher = j.addPublisher(JUnitJobConfiguration.class);
-        publisher.setAllowEmptyResults(true);
-        j.save();
+    public void verifySuccessfulBuildWhenEmptyTestResultsChecked() {
+        Job job = TestUtils.getCreatedFreeStyleJobWithResources(
+                this,
+                Collections.emptyList(),
+                false, true, false);
 
-        j.startBuild().shouldSucceed();
+        job.startBuild().shouldSucceed();
     }
 
     /**
-     * Tests if long standard output is not truncated in test details when checkbox "Retain long standard output/error" is checked.
+     * Tests if long standard output is not truncated in test details when checkbox "Retain long standard output/error"
+     * is checked.
      */
     @Test
-    public void retainLongStandardOutputError() {
-        FreeStyleJob j = jenkins.jobs.create();
-        j.configure();
-        j.copyResource(resource("/success/junit-with-long-output.xml"));
-        JUnitJobConfiguration publisher = j.addPublisher(JUnitJobConfiguration.class);
-        publisher.testResults.set("*.xml");
-        publisher.setRetainLogStandardOutputError(true);
+    public void verifyRetainLongStandardOutputError() {
+        Job job = TestUtils.getCreatedFreeStyleJobWithResources(
+                this,
+                Arrays.asList("/success/junit-with-long-output.xml"),
+                false, false, true);
 
-        j.save();
-        Build build = j.startBuild().shouldSucceed();
-        j.visit("/job/" + j.name + "/1/testReport/(root)/JUnit/testScore_0_/");
-        TestDetail testDetail = new TestDetail(build);
+        job.startBuild().shouldSucceed();
+
+        job.getJenkins().visit("/job/" + job.name + "/1/testReport/(root)/JUnit/testScore_0_/");
+        TestDetail testDetail = new TestDetail(job.getLastBuild());
 
         assertThat(testDetail.getStandardOutput()).isPresent();
         assertThat(testDetail.getStandardOutput().get()).doesNotContain("truncated");
     }
+
 }

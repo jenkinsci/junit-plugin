@@ -91,7 +91,7 @@ public class BuildTestResultsByClassTest extends AbstractJUnitTest {
 
     private BuildTestResultsByClass createBuildJobAndOpenBuildTestResultsByClass(String testResultsReport,
             String expectedBuildResult, String packageName, String className) {
-        Build build = TestUtils.createFreeStyleJobWithResources(
+        Build build = TestUtils.createFreeStyleJobAndRunBuild(
                 this,
                 Arrays.asList(testResultsReport), expectedBuildResult);
 
