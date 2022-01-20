@@ -5,11 +5,21 @@ import org.junit.Test;
 import org.jenkinsci.test.acceptance.junit.AbstractJUnitTest;
 import org.jenkinsci.test.acceptance.po.Build;
 import org.jenkinsci.test.acceptance.po.FreeStyleJob;
+import org.jenkinsci.test.acceptance.po.JUnitPublisher;
 
 import static org.assertj.core.api.AssertionsForClassTypes.*;
 
+/**
+ * Tests the job configuration of the JUnit test results report publisher
+ *
+ * @author Michael Müller
+ * @author Nikolas Paripovic
+ */
 public class JobConfigurationTest extends AbstractJUnitTest {
 
+    /**
+     * Tests if build is successful with test failures when checkbox "Skip publishing checks" is checked.
+     */
     @Test
     public void successfulBuildWhenSkipMarkingBuildAsUnstableOnTestFailureChecked() {
         FreeStyleJob j = jenkins.jobs.create();
@@ -25,6 +35,9 @@ public class JobConfigurationTest extends AbstractJUnitTest {
         assertThat(build.getResult()).isEqualTo("SUCCESS");
     }
 
+    /**
+     * Tests if build is successful with no test results when checkbox "Allow empty results" is checked.
+     */
     @Test
     public void successfulBuildWhenEmptyTestResultsChecked() {
         FreeStyleJob j = jenkins.jobs.create();
@@ -36,6 +49,9 @@ public class JobConfigurationTest extends AbstractJUnitTest {
         j.startBuild().shouldSucceed();
     }
 
+    /**
+     * Tests if long standard output is not truncated in test details when checkbox "Retain long standard output/error" is checked.
+     */
     @Test
     public void retainLongStandardOutputError() {
         FreeStyleJob j = jenkins.jobs.create();
