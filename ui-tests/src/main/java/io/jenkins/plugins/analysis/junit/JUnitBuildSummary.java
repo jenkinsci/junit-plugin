@@ -29,7 +29,7 @@ public class JUnitBuildSummary extends PageObject {
     private final List<WebElement> failedTestLinks;
 
     /**
-     * Creates a new page object representing the junit summary on the build page of a job.
+     * Creates a new page object representing the JUnit summary on the build page of a job.
      *
      * @param parent
      *          a finished build configured with a static analysis tool
