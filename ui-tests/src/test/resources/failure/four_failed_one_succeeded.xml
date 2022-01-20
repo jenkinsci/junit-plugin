@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite failures="3" time="0.007" errors="0" skipped="0" tests="5" name="com.simple.project.AppTest">
+<testsuite failures="4" time="0.007" errors="0" skipped="0" tests="5" name="com.simple.project.AppTest">
   <testcase time="0.007" classname="com.simple.project.AppTest" name="testAppFailNoMessage">
     <failure type="junit.framework.AssertionFailedError">junit.framework.AssertionFailedError
       at junit.framework.Assert.fail(Assert.java:47)
@@ -15,7 +15,9 @@
 
   <testcase time="0.004" classname="com.simple.project.ApplicationTest" name="testAppSuccess"/>
 
-  <testcase time="0.022" classname="com.another.simple.project.ApplicationTest" name="testApplicationSuccess"/>
+  <testcase time="0.022" classname="com.another.simple.project.ApplicationTest" name="testApplicationSuccess">
+      <failure message="expected:&lt;100&gt; but was:&lt;0&gt;" type="junit.framework.AssertionFailedError"/>
+  </testcase>
 
   <testcase time="0.007" classname="com.another.simple.project.ApplicationTest" name="testAppFail">
     <failure message="expected:&lt;42&gt; but was:&lt;0&gt;">java.lang.AssertionError: expected:&lt;42&gt; but was:&lt;0&gt;

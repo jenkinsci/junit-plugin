@@ -8,9 +8,11 @@ import org.junit.Test;
 import org.jenkinsci.test.acceptance.junit.AbstractJUnitTest;
 import org.jenkinsci.test.acceptance.junit.WithPlugins;
 import org.jenkinsci.test.acceptance.po.Build;
+import org.jenkinsci.test.acceptance.po.FreeStyleJob;
+import org.jenkinsci.test.acceptance.po.JUnitPublisher;
 
-import io.jenkins.plugins.analysis.junit.testresults.BuildTestResultsByClass;
 import io.jenkins.plugins.analysis.junit.testresults.BuildTestResultsByPackage;
+import io.jenkins.plugins.analysis.junit.util.FixedCopyJobDecorator;
 import io.jenkins.plugins.analysis.junit.util.TestUtils;
 
 import static io.jenkins.plugins.analysis.junit.testresults.BuildDetailClassViewAssert.assertThat;
@@ -76,7 +78,27 @@ public class BuildTestResultsByPackageTest extends AbstractJUnitTest {
     // TODO: Optional Test: compare diffs to old build in test result table
     @Test
     public void verifyBuildDetailClassViewWithPreviousTests() {
-        // TODO: @Michi:
+
+        FreeStyleJob j = jenkins.jobs.create();
+        FixedCopyJobDecorator fixedCopyJob = new FixedCopyJobDecorator(j);
+        fixedCopyJob.getJob().configure();
+        fixedCopyJob.copyResource(resource("/failure/three_failed_two_succeeded.xml"));
+        fixedCopyJob.copyResource(resource("/failure/four_failed_one_succeeded.xml"));
+        fixedCopyJob.getJob().addPublisher(JUnitPublisher.class).testResults.set("three_failed_two_succeeded.xml");
+        fixedCopyJob.getJob().save();
+        fixedCopyJob.getJob().startBuild().shouldBeUnstable();
+
+        fixedCopyJob.getJob().configure();
+        fixedCopyJob.getJob().editPublisher(JUnitPublisher.class, (publisher) -> {
+            publisher.testResults.set("four_failed_one_succeeded.xml");
+        });
+
+        fixedCopyJob.getJob().startBuild().shouldBeUnstable().openStatusPage();
+        Build lastBuild = fixedCopyJob.getJob().getLastBuild();
+        JUnitBuildSummary buildSummary = new JUnitBuildSummary(lastBuild);
+        buildSummary.openBuildTestResults();
+
+
     }
 
     private BuildTestResultsByPackage createBuildJobAndOpenBuildTestResultsByPackage(String testResultsReport, String expectedBuildResult, String packageName) {
@@ -86,8 +108,9 @@ public class BuildTestResultsByPackageTest extends AbstractJUnitTest {
 
         JUnitBuildSummary buildSummary = new JUnitBuildSummary(build);
         return buildSummary
-                .openBuildDetailView()
+                .openBuildTestResults()
                 .openTestResultsByPackage(packageName);
 
     }
+
 }

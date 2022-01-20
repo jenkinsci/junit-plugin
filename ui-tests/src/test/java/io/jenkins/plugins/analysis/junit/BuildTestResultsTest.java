@@ -1,10 +1,7 @@
 package io.jenkins.plugins.analysis.junit;
 
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
-import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 import org.junit.Test;
 
@@ -13,12 +10,9 @@ import org.jenkinsci.test.acceptance.junit.WithPlugins;
 import org.jenkinsci.test.acceptance.po.Build;
 
 import io.jenkins.plugins.analysis.junit.testresults.BuildTestResults;
-import io.jenkins.plugins.analysis.junit.testresults.BuildTestResultsByPackage;
-import io.jenkins.plugins.analysis.junit.testresults.TestResults;
 import io.jenkins.plugins.analysis.junit.util.TestUtils;
 
 import static io.jenkins.plugins.analysis.junit.testresults.BuildDetailPackageViewAssert.*;
-import static io.jenkins.plugins.analysis.junit.testresults.BuildDetailClassViewAssert.*;
 import static org.assertj.core.api.AssertionsForClassTypes.*;
 
 /**
@@ -38,7 +32,7 @@ public class BuildTestResultsTest extends AbstractJUnitTest {
                 Arrays.asList("/failure/three_failed_two_succeeded.xml"), "UNSTABLE");
 
         JUnitBuildSummary buildSummary = new JUnitBuildSummary(build);
-        BuildTestResults buildTestResults = buildSummary.openBuildDetailView(); // TODO: Better access by navigation icon?
+        BuildTestResults buildTestResults = buildSummary.openBuildTestResults(); // TODO: Better access by navigation icon?
 
         assertThat(buildTestResults)
                 .hasNumberOfFailures(3)
@@ -67,7 +61,7 @@ public class BuildTestResultsTest extends AbstractJUnitTest {
                 Arrays.asList("/success/TEST-com.simple.project.AppTest.xml"), "SUCCESS");
 
         JUnitBuildSummary buildSummary = new JUnitBuildSummary(build);
-        BuildTestResults buildTestResults = buildSummary.openBuildDetailView(); // TODO: Better access by navigation icon?
+        BuildTestResults buildTestResults = buildSummary.openBuildTestResults(); // TODO: Better access by navigation icon?
 
         assertThat(buildTestResults)
                 .hasNumberOfFailures(0)

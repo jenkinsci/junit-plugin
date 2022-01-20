@@ -85,7 +85,7 @@ public class BuildTestResultsByClassTest extends AbstractJUnitTest {
 
         JUnitBuildSummary buildSummary = new JUnitBuildSummary(build);
         BuildTestResultsByPackage buildTestResultsByPackage = buildSummary
-                .openBuildDetailView()
+                .openBuildTestResults()
                 .openTestResultsByPackage(packageName);
 
         return buildTestResultsByPackage.openTestResultsByClass(className);

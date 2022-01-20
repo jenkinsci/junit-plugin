@@ -109,7 +109,7 @@ public class JUnitBuildSummary extends PageObject {
                 .collect(Collectors.toMap(WebElement::getText, failedTestLink -> failedTestLink.getAttribute("href")));
     }
 
-    public BuildTestResults openBuildDetailView() {
+    public BuildTestResults openBuildTestResults() {
         return openPage(titleLink, BuildTestResults.class);
     }
 

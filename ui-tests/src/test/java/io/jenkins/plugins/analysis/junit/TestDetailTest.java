@@ -28,7 +28,7 @@ public class TestDetailTest extends AbstractJUnitTest {
                 Arrays.asList("/success/com.simple.project.AppTest.txt", "/success/TEST-com.simple.project.AppTest.xml"), "SUCCESS");
 
         JUnitBuildSummary buildSummary = new JUnitBuildSummary(build);
-        TestDetail testDetail = buildSummary.openBuildDetailView()
+        TestDetail testDetail = buildSummary.openBuildTestResults()
                 .openTestResultsByPackage("com.simple.project")
                 .openTestResultsByClass("AppTest")
                 .openTestDetail("testApp");
@@ -48,7 +48,7 @@ public class TestDetailTest extends AbstractJUnitTest {
                 Arrays.asList("/success/com.simple.project.AppTest.txt", "/success/junit-with-long-output.xml"), "SUCCESS");
 
         JUnitBuildSummary buildSummary = new JUnitBuildSummary(build);
-        TestDetail testDetail = buildSummary.openBuildDetailView()
+        TestDetail testDetail = buildSummary.openBuildTestResults()
                 .openTestResultsByPackage("(root)")
                 .openTestResultsByClass("JUnit")
                 .openTestDetail("testScore[0]");
