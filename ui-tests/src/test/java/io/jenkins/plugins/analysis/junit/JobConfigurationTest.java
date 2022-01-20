@@ -27,7 +27,7 @@ public class JobConfigurationTest extends AbstractJUnitTest {
         j.copyResource(resource("/failure/com.simple.project.AppTest.txt"));
         j.copyResource(resource("/failure/TEST-com.simple.project.AppTest.xml"));
         JUnitJobConfiguration publisher = j.addPublisher(JUnitJobConfiguration.class);
-        publisher.testResults.set("*.xml");
+        publisher.setTestResults("*.xml");
         publisher.setSkipMarkingBuildAsUnstableOnTestFailure(true);
         j.save();
 
@@ -58,7 +58,7 @@ public class JobConfigurationTest extends AbstractJUnitTest {
         j.configure();
         j.copyResource(resource("/success/junit-with-long-output.xml"));
         JUnitJobConfiguration publisher = j.addPublisher(JUnitJobConfiguration.class);
-        publisher.testResults.set("*.xml");
+        publisher.setTestResults("*.xml");
         publisher.setRetainLogStandardOutputError(true);
 
         j.save();

@@ -20,8 +20,7 @@ public class JUnitJobConfiguration extends AbstractStep implements PostBuildStep
     private final Control skipPublishingChecks = control("/skipPublishingChecks");
     private final Control skipMarkingBuildAsUnstableOnTestFailure = control("/skipMarkingBuildUnstable");
     private final Control healthScaleFactor = control("/healthScaleFactor");
-
-    public final Control testResults = control("testResults");
+    private final Control testResults = control("testResults");
 
     /**
      * Creates a new page object representing the junit summary on the build page of a job.
@@ -31,6 +30,14 @@ public class JUnitJobConfiguration extends AbstractStep implements PostBuildStep
      */
     public JUnitJobConfiguration(Job parent, String path) {
         super(parent, path);
+    }
+
+    /**
+     * Set test results file.
+     * @param value to set test results
+     */
+    public void setTestResults(String value) {
+        this.testResults.set(value);
     }
 
     /**
