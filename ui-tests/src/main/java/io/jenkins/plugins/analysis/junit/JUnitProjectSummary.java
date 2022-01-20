@@ -5,7 +5,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.openqa.selenium.By;
@@ -24,44 +27,31 @@ public class JUnitProjectSummary extends PageObject {
 
     private final WebElement titleLink;
 
-    private final List<BuildChartEntry> buildChartEntries = Collections.emptyList();
+    private final List<BuildChartEntry> buildChartEntries;
 
-
-
-
-    public JUnitProjectSummary(final Build parent) {
+    public JUnitProjectSummary(final Build parent) throws JSONException {
         super(parent, parent.url(""));
 
         WebElement mainPanel = getElement(By.cssSelector("#main-panel"));
-        List<WebElement> tables = mainPanel.findElements(By.cssSelector("table tbody tr"));
+        WebElement junitJobSummaryTableEntry = getJunitJobSummaryTableEntry(mainPanel);
 
-        WebElement junitJobSummaryTableEntry = tables.stream()
+        summaryIcon = findIconInTableEntry(junitJobSummaryTableEntry).get();
+        summaryContent = findContentInTableEntry(junitJobSummaryTableEntry).get();
+        titleLink = summaryContent.findElement(By.cssSelector("a"));
+        buildChartEntries = initializeBuildChartEntries();
+    }
+
+    private WebElement getJunitJobSummaryTableEntry(WebElement mainPanel) {
+        List<WebElement> tables = mainPanel.findElements(By.cssSelector("table tbody tr"));
+        return tables.stream()
                 .filter(trElement -> findIconInTableEntry(trElement).isPresent())
                 .filter(trElement -> findContentInTableEntry(trElement).isPresent())
                 .findAny()
                 .orElseThrow(() -> new NoSuchElementException("junit job summary table"));
 
-        summaryIcon = findIconInTableEntry(junitJobSummaryTableEntry).get();
-        summaryContent = findContentInTableEntry(junitJobSummaryTableEntry).get();
-
-        titleLink = summaryContent.findElement(By.cssSelector("a"));
-        //failed
-
-        String chart = getChart();
-
-        System.out.println("TEST");
-
-
     }
 
-    public String getChart() {
-        Object result = executeScript(String.format(
-                "delete(window.Array.prototype.toJSON) %n"
-                        + "return JSON.stringify(echarts.getInstanceByDom(document.getElementsByClassName(\"echarts-trend\")[0]).getOption())"));
-        ScriptResult scriptResult = new ScriptResult(result);
 
-        return scriptResult.getJavaScriptResult().toString();
-    }
 
     /**
      * Returns the title text of the summary.
@@ -69,7 +59,7 @@ public class JUnitProjectSummary extends PageObject {
      * @return the title text
      */
     public String getTitleText() {
-        return titleLink.getText() + summaryContent.getText();
+        return summaryContent.getText();
     }
 
     /**
@@ -77,12 +67,36 @@ public class JUnitProjectSummary extends PageObject {
      *
      * @return the number of failures
      */
-    public int getNumberOfFailures() { return 5; }
+    public int getNumberOfFailures() {
+        String summaryContentText = summaryContent.getText().trim();
+        int fromIndex = summaryContentText.indexOf('(') + 1;
+        int toIndex = summaryContentText.indexOf(" ", fromIndex);
+        return Integer.parseInt(summaryContentText.substring(fromIndex, toIndex));
+    }
 
-    public int getFailureDifference() { return 5; }
+    public int getFailureDifference() {
+        String summaryContentText = summaryContent.getText().trim();
+        int fromIndex = summaryContentText.indexOf('/') + 2;
+        int toIndex = summaryContentText.length() - 1;
+        return Integer.parseInt(summaryContentText.substring(fromIndex, toIndex));
+    }
 
     public List<BuildChartEntry> getBuildChartEntries() {
         return buildChartEntries;
+    }
+
+    private List<BuildChartEntry> initializeBuildChartEntries() throws JSONException {
+        String canvasJson = getJUnitChart();
+        return canvasJsonToBuildChartEntries(canvasJson);
+    }
+
+    private String getJUnitChart() {
+        Object result = executeScript(String.format(
+                "delete(window.Array.prototype.toJSON) %n"
+                        + "return JSON.stringify(echarts.getInstanceByDom(document.getElementsByClassName(\"echarts-trend\")[0]).getOption())"));
+        ScriptResult scriptResult = new ScriptResult(result);
+
+        return scriptResult.getJavaScriptResult().toString();
     }
 
     private Optional<WebElement> findIconInTableEntry(final WebElement tableEntry) {
@@ -104,10 +118,47 @@ public class JUnitProjectSummary extends PageObject {
 
     private List<BuildChartEntry> canvasJsonToBuildChartEntries(String canvasJson) throws JSONException {
         JSONObject jsonObject = new JSONObject(canvasJson);
-        JSONObject xAxis = jsonObject.getJSONArray("xAxis").getJSONObject(0);
+        JSONArray buildIds = jsonObject.getJSONArray("xAxis").getJSONObject(0).getJSONArray("data");
+        JSONArray series = jsonObject.getJSONArray("series");
 
-        return null;
+        JSONArray failedTestNumbers = null;
+        JSONArray skippedTestNumbers = null;
+        JSONArray passedTestNumbers = null;
 
+        int seriesLength = series.length();
+        for(int i = 0; i < seriesLength; i++) {
+            JSONObject currentObject = series.getJSONObject(i);
+            String seriesName = currentObject.getString("name");
+            if(seriesName.equals("Failed")) {
+                failedTestNumbers = currentObject.getJSONArray("data");
+            }
+            else if(seriesName.equals("Skipped")) {
+                skippedTestNumbers = currentObject.getJSONArray("data");
+            }
+            else if(seriesName.equals("Passed")) {
+                passedTestNumbers = currentObject.getJSONArray("data");
+            }
+        }
+
+        JSONArray finalFailedTestNumbers = failedTestNumbers;
+        JSONArray finalSkippedTestNumbers = skippedTestNumbers;
+        JSONArray finalPassedTestNumbers = passedTestNumbers;
+        return IntStream.range(0, buildIds.length())
+                .boxed()
+                .map(index -> {
+                    try {
+                        String buildIdString = buildIds.getString(index);
+                        int buildId = Integer.parseInt(buildIdString.trim().substring(1));
+                        int failedTests = Integer.parseInt(finalFailedTestNumbers.getString(index));
+                        int skippedTests = Integer.parseInt(finalSkippedTestNumbers.getString(index));
+                        int passedTests = Integer.parseInt(finalPassedTestNumbers.getString(index));
+                        return new BuildChartEntry(buildId, skippedTests, failedTests, passedTests);
+                    }
+                    catch (JSONException e) {
+                        throw new NoSuchElementException();
+                    }
+                })
+                .collect(Collectors.toList());
     }
 
 
