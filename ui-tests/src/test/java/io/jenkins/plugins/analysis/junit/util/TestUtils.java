@@ -57,36 +57,6 @@ public class TestUtils {
     }
 
     /**
-     * Creates a freestyle Job with resources.
-     *
-     * @param abstractJUnitTestBaseClass the caller's test class
-     * @param resourcePaths resource paths of test result reports
-     * @param setSkipMarkingBuildAsUnstableOnTestFailure configures freestyle job to skip marking build as unstable on test failure
-     * @param setAllowEmptyResults configures freestyle job to allow empty test result reports
-     * @param setRetainLogStandardOutputError configures freestyle job to retain log standard output error
-     * @return created freestyle job.
-     */
-    public static Job getCreatedFreeStyleJobWithResources(AbstractJUnitTest abstractJUnitTestBaseClass,
-            List<String> resourcePaths, Boolean setSkipMarkingBuildAsUnstableOnTestFailure,
-            Boolean setRetainLogStandardOutputError, Boolean setAllowEmptyResults) {
-        FreeStyleJob j = abstractJUnitTestBaseClass.jenkins.jobs.create();
-        j.configure();
-        for (String resourcePath : resourcePaths) {
-            j.copyResource(abstractJUnitTestBaseClass.resource(resourcePath));
-        }
-
-        JUnitJobConfiguration publisher = j.addPublisher(JUnitJobConfiguration.class);
-        publisher.testResults.set("*.xml");
-
-        publisher.setSkipMarkingBuildAsUnstableOnTestFailure(setSkipMarkingBuildAsUnstableOnTestFailure);
-        publisher.setRetainLogStandardOutputError(setRetainLogStandardOutputError);
-        publisher.setAllowEmptyResults(setAllowEmptyResults);
-
-        j.save();
-        return j;
-    }
-
-    /**
      * Creates a freestyle and runs two consecutive builds with different test result report which increases failure count
      * in the second build.
      *
