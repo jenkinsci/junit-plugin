@@ -13,18 +13,38 @@ import org.codehaus.plexus.util.Base64;
 import org.jenkinsci.test.acceptance.junit.Resource;
 import org.jenkinsci.test.acceptance.po.Job;
 
+/**
+ * Wrapper around a {@link Job} with slightly modified behaviour in methods {@link #copyResource(Resource)}, {@link #copyResource(String)} and {@link #copyResource(Resource, String)}.
+ * Without these modifications, the following Jenkins error occurs when resources are copied by {@code xcopy} using Windows OS: {@Code Test reports were found but none of them are new. Did tests run?}.
+ * The solution applied here is to execute another command {@code touch} to update the timestamp and fix the error.
+ * @author Nikolas Paripovic
+ */
 public class FixedCopyJobDecorator {
 
     private final Job job;
 
+    /**
+     * Custom constructor. Creates object.
+     * @param job the jenkins job to apply the fix
+     */
     public FixedCopyJobDecorator(Job job) {
         this.job = job;
     }
 
+    /**
+     * Gets the origin object with default behaviour.
+     * If called {@link Job#copyResource(Resource)}, {@link Job#copyResource(String)} or {@link Job#copyResource(Resource, String)} on this object, no fix (described in this class description) is applied here.
+     * @return the origin object
+     */
     public Job getJob() {
         return job;
     }
 
+    /**
+     * Slightly modified behaviour of {@link Job#copyResource(Resource, String)} with the bugfix described in this class description.
+     * @param resource the resource to copy
+     * @param fileName the name of the resource to copy
+     */
     public void copyResource(Resource resource, String fileName) {
         if (SystemUtils.IS_OS_WINDOWS) {
             job.addBatchStep(copyResourceBatch(resource));
@@ -34,10 +54,18 @@ public class FixedCopyJobDecorator {
         }
     }
 
+    /**
+     * Slightly modified behaviour of {@link Job#copyResource(Resource)} with the bugfix described in this class description.
+     * @param resource the resource to copy
+     */
     public void copyResource(Resource resource) {
         copyResource(resource, resource.getName());
     }
 
+    /**
+     * Slightly modified behaviour of {@link Job#copyResource(String)} with the bugfix described in this class description.
+     * @param resourcePath the resource to copy
+     */
     public void copyResource(String resourcePath) {
         job.ensureConfigPage();
         final Resource res = job.resource(resourcePath);
