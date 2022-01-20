@@ -24,11 +24,11 @@ public class ClassTableEntry {
 
     private final int total;
 
-    private final int totalDiff;
+    private final Optional<Integer> totalDiff;
 
     public ClassTableEntry(final String className, final String classLink, final int duration, final int fail,
             final Optional<Integer> failDiff, final int skip,
-            final Optional<Integer> skipDiff, final int pass, final Optional<Integer> passDiff, final int total, final int totalDiff) {
+            final Optional<Integer> skipDiff, final int pass, final Optional<Integer> passDiff, final int total, final Optional<Integer> totalDiff) {
         this.className = className;
         this.classLink = classLink;
         this.duration = duration;
@@ -82,7 +82,7 @@ public class ClassTableEntry {
         return total;
     }
 
-    public int getTotalDiff() {
+    public Optional<Integer> getTotalDiff() {
         return totalDiff;
     }
 }

@@ -69,10 +69,11 @@ public class BuildTestResultsByPackage extends TestResultsWithFailedTestTable {
         String skipDiffString = columns.get(5).getText();
         Optional<Integer> skipDiff = skipDiffString.isEmpty() ? Optional.empty() : Optional.of(Integer.parseInt(skipDiffString));
         int pass = Integer.parseInt(columns.get(6).getText());
-        String passDiffString = columns.get(5).getText();
+        String passDiffString = columns.get(7).getText();
         Optional<Integer> passDiff = passDiffString.isEmpty() ? Optional.empty() : Optional.of(Integer.parseInt(passDiffString));
         int total = Integer.parseInt(columns.get(8).getText());
-        int totalDiff = Integer.parseInt(columns.get(9).getText());
+        String totalDiffString = columns.get(9).getText();
+        Optional<Integer> totalDiff = totalDiffString.isEmpty() ? Optional.empty() : Optional.of(Integer.parseInt(totalDiffString));
 
         return new ClassTableEntry(className, classLink, duration, fail, failDiff, skip, skipDiff,
                 pass, passDiff, total, totalDiff);

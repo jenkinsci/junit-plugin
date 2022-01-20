@@ -12,7 +12,7 @@ import org.jenkinsci.test.acceptance.po.Build;
 import io.jenkins.plugins.analysis.junit.testresults.BuildTestResults;
 import io.jenkins.plugins.analysis.junit.util.TestUtils;
 
-import static io.jenkins.plugins.analysis.junit.testresults.BuildDetailPackageViewAssert.*;
+import static io.jenkins.plugins.analysis.junit.testresults.BuildTestResultsAssert.*;
 import static org.assertj.core.api.AssertionsForClassTypes.*;
 
 /**

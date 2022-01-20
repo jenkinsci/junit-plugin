@@ -16,8 +16,8 @@ import io.jenkins.plugins.analysis.junit.testresults.BuildTestResultsByPackage;
 import io.jenkins.plugins.analysis.junit.util.FixedCopyJobDecorator;
 import io.jenkins.plugins.analysis.junit.util.TestUtils;
 
-import static io.jenkins.plugins.analysis.junit.testresults.BuildDetailClassViewAssert.assertThat;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static io.jenkins.plugins.analysis.junit.testresults.BuildTestResultsByPackageAssert.*;
+import static org.assertj.core.api.AssertionsForClassTypes.*;
 
 /**
  * Tests the published unit test results of a build which are filtered by a package.
