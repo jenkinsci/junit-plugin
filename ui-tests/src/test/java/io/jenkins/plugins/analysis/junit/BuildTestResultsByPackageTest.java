@@ -16,8 +16,8 @@ import io.jenkins.plugins.analysis.junit.testresults.BuildTestResultsByPackage;
 import io.jenkins.plugins.analysis.junit.util.FixedCopyJobDecorator;
 import io.jenkins.plugins.analysis.junit.util.TestUtils;
 
-import static io.jenkins.plugins.analysis.junit.testresults.BuildTestResultsByPackageAssert.*;
 import static org.assertj.core.api.AssertionsForClassTypes.*;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 /**
  * Tests the published unit test results of a build which are filtered by a package.
@@ -36,10 +36,6 @@ public class BuildTestResultsByPackageTest extends AbstractJUnitTest {
                 "UNSTABLE",
                 "com.simple.project"
         );
-
-        assertThat(buildTestResultsByPackage)
-                .hasNumberOfFailures(2)
-                .hasNumberOfTests(3);
 
         assertThat(buildTestResultsByPackage.failedTestTableExists()).isTrue();
         assertThat(buildTestResultsByPackage.getFailedTestTableEntries()).extracting(List::size).isEqualTo(2);
@@ -64,10 +60,6 @@ public class BuildTestResultsByPackageTest extends AbstractJUnitTest {
                 "com.simple.project"
         );
 
-        assertThat(buildTestResultsByPackage)
-                .hasNumberOfFailures(0)
-                .hasNumberOfTests(1);
-
         assertThat(buildTestResultsByPackage.failedTestTableExists()).isFalse();
 
         assertThat(buildTestResultsByPackage.getClassTableEntries()).extracting(List::size).isEqualTo(1);
@@ -76,25 +68,22 @@ public class BuildTestResultsByPackageTest extends AbstractJUnitTest {
                 classTableEntry -> classTableEntry.getClassName().equals("AppTest"));
     }
 
-    // TODO: Optional Test: compare diffs to old build in test result table
+    // TODO: verify emtpy result ?
     @Test
-    public void verifyBuildDetailClassViewWithPreviousTests() {
+    public void verifyFailureAndPassedTestsDifferenceToPreviousBuild() {
 
         Build lastBuild = TestUtils.createTwoBuildsWithIncreasedTestFailures(this);
         JUnitBuildSummary buildSummary = new JUnitBuildSummary(lastBuild);
         BuildTestResults buildTestResults = buildSummary.openBuildTestResults();
 
-        TestUtils.assertElementInCollection(buildTestResults.getPackageTableEntries(),
-                packageTableEntry -> packageTableEntry.getFailDiff().equals("+1"),
-                packageTableEntry -> packageTableEntry.getFailDiff().equals("")
-        );
+        assertThat(buildTestResults.getPackageTableEntries()).extracting(List::size).isEqualTo(2);
 
         TestUtils.assertElementInCollection(buildTestResults.getPackageTableEntries(),
-                packageTableEntry -> packageTableEntry.getPassDiff().equals("-1"),
-                packageTableEntry -> packageTableEntry.getFailDiff().equals("")
+                packageTableEntry -> packageTableEntry.getFailDiff().get().equals(1)
+                        && packageTableEntry.getPassDiff().get().equals(-1),
+                packageTableEntry -> !packageTableEntry.getFailDiff().isPresent()
+                        && !packageTableEntry.getPassDiff().isPresent()
         );
-
-
     }
 
     private BuildTestResultsByPackage createBuildJobAndOpenBuildTestResultsByPackage(String testResultsReport, String expectedBuildResult, String packageName) {

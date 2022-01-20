@@ -9,6 +9,7 @@ import org.jenkinsci.test.acceptance.junit.AbstractJUnitTest;
 import org.jenkinsci.test.acceptance.junit.WithPlugins;
 import org.jenkinsci.test.acceptance.po.Build;
 
+import io.jenkins.plugins.analysis.junit.testresults.BuildTestResults;
 import io.jenkins.plugins.analysis.junit.testresults.BuildTestResultsByClass;
 import io.jenkins.plugins.analysis.junit.testresults.BuildTestResultsByPackage;
 import io.jenkins.plugins.analysis.junit.util.TestUtils;
@@ -78,7 +79,24 @@ public class BuildTestResultsByClassTest extends AbstractJUnitTest {
         assertThat(testDetail.getTitle()).isEqualTo("Passed");
     }
 
-    private BuildTestResultsByClass createBuildJobAndOpenBuildTestResultsByClass(String testResultsReport, String expectedBuildResult, String packageName, String className) {
+    @Test
+    public void verifyFailureAndPassedTestsDifferenceToPreviousBuild() {
+
+        Build lastBuild = TestUtils.createTwoBuildsWithIncreasedTestFailures(this);
+
+        JUnitBuildSummary buildSummary = new JUnitBuildSummary(lastBuild);
+        BuildTestResultsByPackage buildTestResultsByPackage = buildSummary
+                .openBuildTestResults()
+                .openTestResultsByPackage("com.another.simple.project");
+
+        TestUtils.assertElementInCollection(buildTestResultsByPackage.getClassTableEntries(),
+                packageTableEntry -> packageTableEntry.getFailDiff().get().equals(1)
+                        && packageTableEntry.getPassDiff().get().equals(-1)
+        );
+    }
+
+    private BuildTestResultsByClass createBuildJobAndOpenBuildTestResultsByClass(String testResultsReport,
+            String expectedBuildResult, String packageName, String className) {
         Build build = TestUtils.createFreeStyleJobWithResources(
                 this,
                 Arrays.asList(testResultsReport), expectedBuildResult);
