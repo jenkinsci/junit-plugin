@@ -23,6 +23,10 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
  */
 @WithPlugins("junit")
 public class BuildTestResultsByClassTest extends AbstractJUnitTest {
+
+    /**
+     * Verifies failed tests are listed with correct test status.
+     */
     @Test
     public void verifyWithFailures() {
 
@@ -44,6 +48,9 @@ public class BuildTestResultsByClassTest extends AbstractJUnitTest {
                 testTableEntry -> testTableEntry.getStatus().equals("Failed"));
     }
 
+    /**
+     * Verifies passed tests are listed with correct test status.
+     */
     @Test
     public void verifyWithNoFailures() {
 
@@ -63,22 +70,27 @@ public class BuildTestResultsByClassTest extends AbstractJUnitTest {
                 testTableEntry -> testTableEntry.getStatus().equals("Passed"));
     }
 
+    /**
+     * Verifies test has status "Regression" when test failed after success in previous build.
+     */
     @Test
-    public void verifyLinkToTestDetail() {
+    public void verifiesTestHasStatusRegressionWhenTestFailedAfterSuccessfulTestBefore() {
 
-        BuildTestResultsByClass buildTestResultsByClass = createBuildJobAndOpenBuildTestResultsByClass(
-                "/success/TEST-com.simple.project.AppTest.xml",
-                "SUCCESS",
-                "com.simple.project",
-                "AppTest"
-        );
+        Build lastBuild = TestUtils.createTwoBuildsWithIncreasedTestFailures(this);
 
-        TestDetail testDetail = buildTestResultsByClass.openTestDetail("testApp");
+        JUnitBuildSummary buildSummary = new JUnitBuildSummary(lastBuild);
+        BuildTestResultsByClass buildTestResultsByClass = buildSummary
+                .openBuildTestResults()
+                .openTestResultsByPackage("com.another.simple.project")
+                .openTestResultsByClass("ApplicationTest");
 
-        assertThat(testDetail.getTitle()).isEqualTo("Passed");
+        TestUtils.assertElementInCollection(buildTestResultsByClass.getTestTableEntries(),
+                tableEntry -> tableEntry.getTestName().equals("testAppFail") && tableEntry.getStatus().equals("Failed"),
+                tableEntry -> tableEntry.getTestName().equals("testApplicationSuccess") && tableEntry.getStatus().equals("Regression"));
     }
 
-    private BuildTestResultsByClass createBuildJobAndOpenBuildTestResultsByClass(String testResultsReport, String expectedBuildResult, String packageName, String className) {
+    private BuildTestResultsByClass createBuildJobAndOpenBuildTestResultsByClass(String testResultsReport,
+            String expectedBuildResult, String packageName, String className) {
         Build build = TestUtils.createFreeStyleJobWithResources(
                 this,
                 Arrays.asList(testResultsReport), expectedBuildResult);

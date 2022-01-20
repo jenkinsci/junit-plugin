@@ -16,7 +16,7 @@ import static io.jenkins.plugins.analysis.junit.testresults.BuildTestResultsAsse
 import static org.assertj.core.api.AssertionsForClassTypes.*;
 
 /**
- * Tests the detail view of a build's failed Unit tests.
+ * Tests the detail view of failed unit tests of a build.
  *
  * @author Michael Müller
  * @author Nikolas Paripovic
@@ -24,6 +24,10 @@ import static org.assertj.core.api.AssertionsForClassTypes.*;
 @WithPlugins("junit")
 public class BuildTestResultsTest extends AbstractJUnitTest {
 
+    /**
+     * Verifies correct numbers total tests and failed tests shown when failures occurred.
+     * In addition listed names of failed tests and corresponding packages are verified.
+     */
     @Test
     public void verifyWithFailures() {
 
@@ -32,7 +36,7 @@ public class BuildTestResultsTest extends AbstractJUnitTest {
                 Arrays.asList("/failure/three_failed_two_succeeded.xml"), "UNSTABLE");
 
         JUnitBuildSummary buildSummary = new JUnitBuildSummary(build);
-        BuildTestResults buildTestResults = buildSummary.openBuildTestResults(); // TODO: Better access by navigation icon?
+        BuildTestResults buildTestResults = buildSummary.openBuildTestResults();
 
         assertThat(buildTestResults)
                 .hasNumberOfFailures(3)
@@ -53,6 +57,9 @@ public class BuildTestResultsTest extends AbstractJUnitTest {
                 packageTableEntry -> packageTableEntry.getPackageName().equals("com.another.simple.project"));
     }
 
+    /**
+     * Verifies correct numbers and lists of total tests and failed tests when no failures occurred.
+     */
     @Test
     public void verifyNoFailures() {
 
@@ -76,9 +83,23 @@ public class BuildTestResultsTest extends AbstractJUnitTest {
                 packageTableEntry -> packageTableEntry.getPackageName().equals("com.simple.project"));
     }
 
-    // TODO: Optional Test: compare diffs to old build in test result table
+    /**
+     * Verifies increase/ decrease in failure/ passed tests count of two consecutive builds are shown correctly
+     */
     @Test
-    public void verifyBuildDetailClassViewWithPreviousTests() {
-        // TODO: @Michi:
+    public void verifyFailureAndPassedTestsDifferenceToPreviousBuild() {
+
+        Build lastBuild = TestUtils.createTwoBuildsWithIncreasedTestFailures(this);
+        JUnitBuildSummary buildSummary = new JUnitBuildSummary(lastBuild);
+        BuildTestResults buildTestResults = buildSummary.openBuildTestResults();
+
+        assertThat(buildTestResults.getPackageTableEntries()).extracting(List::size).isEqualTo(2);
+
+        TestUtils.assertElementInCollection(buildTestResults.getPackageTableEntries(),
+                packageTableEntry -> packageTableEntry.getFailDiff().get().equals(1)
+                        && packageTableEntry.getPassDiff().get().equals(-1),
+                packageTableEntry -> !packageTableEntry.getFailDiff().isPresent()
+                        && !packageTableEntry.getPassDiff().isPresent()
+        );
     }
 }
