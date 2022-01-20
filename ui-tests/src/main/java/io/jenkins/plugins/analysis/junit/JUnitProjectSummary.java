@@ -41,14 +41,13 @@ public class JUnitProjectSummary extends PageObject {
         buildChartEntries = initializeBuildChartEntries();
     }
 
-    private WebElement getJunitJobSummaryTableEntry(WebElement mainPanel) {
+    private WebElement getJunitJobSummaryTableEntry(final WebElement mainPanel) {
         List<WebElement> tables = mainPanel.findElements(By.cssSelector("table tbody tr"));
         return tables.stream()
                 .filter(trElement -> findIconInTableEntry(trElement).isPresent())
                 .filter(trElement -> findContentInTableEntry(trElement).isPresent())
                 .findAny()
                 .orElseThrow(() -> new NoSuchElementException("junit job summary table"));
-
     }
 
 
@@ -116,7 +115,7 @@ public class JUnitProjectSummary extends PageObject {
         return foundElements.isEmpty() ? Optional.empty() : Optional.of(foundElements.get(0));
     }
 
-    private List<BuildChartEntry> canvasJsonToBuildChartEntries(String canvasJson) throws JSONException {
+    private List<BuildChartEntry> canvasJsonToBuildChartEntries(final String canvasJson) throws JSONException {
         JSONObject jsonObject = new JSONObject(canvasJson);
         JSONArray buildIds = jsonObject.getJSONArray("xAxis").getJSONObject(0).getJSONArray("data");
         JSONArray series = jsonObject.getJSONArray("series");
@@ -129,14 +128,16 @@ public class JUnitProjectSummary extends PageObject {
         for(int i = 0; i < seriesLength; i++) {
             JSONObject currentObject = series.getJSONObject(i);
             String seriesName = currentObject.getString("name");
-            if(seriesName.equals("Failed")) {
-                failedTestNumbers = currentObject.getJSONArray("data");
-            }
-            else if(seriesName.equals("Skipped")) {
-                skippedTestNumbers = currentObject.getJSONArray("data");
-            }
-            else if(seriesName.equals("Passed")) {
-                passedTestNumbers = currentObject.getJSONArray("data");
+            switch (seriesName) {
+                case "Failed":
+                    failedTestNumbers = currentObject.getJSONArray("data");
+                    break;
+                case "Skipped":
+                    skippedTestNumbers = currentObject.getJSONArray("data");
+                    break;
+                case "Passed":
+                    passedTestNumbers = currentObject.getJSONArray("data");
+                    break;
             }
         }
 
