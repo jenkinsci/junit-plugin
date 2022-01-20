@@ -3,8 +3,6 @@ package io.jenkins.plugins.analysis.junit;
 import org.json.JSONException;
 import org.junit.Test;
 
-import com.gargoylesoftware.htmlunit.ScriptResult;
-
 import org.jenkinsci.test.acceptance.junit.AbstractJUnitTest;
 import org.jenkinsci.test.acceptance.po.Build;
 
@@ -13,12 +11,22 @@ import io.jenkins.plugins.analysis.junit.util.TestUtils;
 import static io.jenkins.plugins.analysis.junit.JUnitProjectSummaryAssert.*;
 import static org.assertj.core.api.AssertionsForClassTypes.*;
 
+
+/**
+ * Tests the published results of JUnit tests on the job summary page.
+ *
+ * @author Michael Müller
+ * @author Nikolas Paripovic
+ */
 public class ProjectSummaryTest extends AbstractJUnitTest {
 
+    /**
+     * Verifies correct information at latest result link.
+     */
     @Test
-    public void verifyTestResults() throws JSONException {
+    public void verifyLatestTestResultsInformation() throws JSONException {
         Build lastBuild = TestUtils.createTwoBuildsWithIncreasedTestFailures(this);
-        lastBuild.clickLink("Back to Project");
+        lastBuild.job.open();
 
         JUnitProjectSummary projectSummary = new JUnitProjectSummary(lastBuild);
 
@@ -31,10 +39,13 @@ public class ProjectSummaryTest extends AbstractJUnitTest {
                 .contains("+1");
     }
 
+    /**
+     * Verifies correct information in the test result trend chart.
+     */
     @Test
-    public void verifyChart() throws JSONException {
+    public void verifyTrendChartForTwoConsecutiveBuilds() throws JSONException {
         Build lastBuild = TestUtils.createTwoBuildsWithIncreasedTestFailures(this);
-        lastBuild.clickLink("Back to Project");
+        lastBuild.job.open();
 
         JUnitProjectSummary projectSummary = new JUnitProjectSummary(lastBuild);
 
