@@ -109,15 +109,21 @@ public class JUnitBuildSummary extends PageObject {
                 .collect(Collectors.toMap(WebElement::getText, failedTestLink -> failedTestLink.getAttribute("href")));
     }
 
+    /**
+     * Opens the build test results page.
+     *
+     * @return build test results page object.
+     */
     public BuildTestResults openBuildTestResults() {
         return openPage(titleLink, BuildTestResults.class);
     }
 
-    public BuildTestResults openBuildDetailViewBySidebarElement() {
-        // TODO: @Michi
-        return openPage(titleLink, BuildTestResults.class);
-    }
-
+    /**
+     * Opens the detail view of a test.
+     *
+     * @param testName name of a test.
+     * @return test detail page object.
+     */
     public TestDetail openTestDetailView(final String testName) {
         WebElement link = failedTestLinks.stream()
                 .filter(failedTestLink -> failedTestLink.getText().equals(testName))

@@ -2,14 +2,16 @@ package io.jenkins.plugins.analysis.junit;
 
 import org.jenkinsci.test.acceptance.po.AbstractStep;
 import org.jenkinsci.test.acceptance.po.Control;
-import org.jenkinsci.test.acceptance.po.Describable;
 import org.jenkinsci.test.acceptance.po.Job;
+import org.jenkinsci.test.acceptance.po.PageObject;
 import org.jenkinsci.test.acceptance.po.PostBuildStep;
 
 /**
- * @author Kohsuke Kawaguchi
+ * {@link PageObject} representing the publish junit post build action in the freestyle job configuration.
+ *
+ * @author Michael Müller
+ * @author Nikolas Paripovic
  */
-@Describable("Publish JUnit test result report")
 public class JUnitJobConfiguration extends AbstractStep implements PostBuildStep {
     private final Control retainLogStandardOutputError = control("/keepLongStdio");
     private final Control allowEmptyResults = control("/allowEmptyResults");
@@ -19,6 +21,12 @@ public class JUnitJobConfiguration extends AbstractStep implements PostBuildStep
 
     public final Control testResults = control("testResults");
 
+    /**
+     * Creates a new page object representing the junit summary on the build page of a job.
+     *
+     * @param parent a created job
+     * @param path path of the
+     */
     public JUnitJobConfiguration(Job parent, String path) {
         super(parent, path);
     }
