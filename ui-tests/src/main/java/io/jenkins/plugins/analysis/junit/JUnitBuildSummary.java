@@ -60,8 +60,8 @@ public class JUnitBuildSummary extends PageObject {
     private Optional<WebElement> findContentInTableEntry(final WebElement tableEntry) {
         List<WebElement> foundElements = tableEntry.findElements(By.cssSelector("td"));
         return foundElements.stream()
-                .filter(foundElement -> findOptionalElement(foundElement, By.cssSelector("a")).isPresent() &&
-                        findOptionalElement(foundElement, By.cssSelector("a")).get().getText().equals("Test Result"))
+                .filter(foundElement -> findOptionalElement(foundElement, By.cssSelector("a")).isPresent()
+                        && findOptionalElement(foundElement, By.cssSelector("a")).get().getText().equals("Test Result"))
                 .findFirst();
     }
 
@@ -84,7 +84,9 @@ public class JUnitBuildSummary extends PageObject {
      *
      * @return the number of failures
      */
-    public int getNumberOfFailures() { return failedTestLinks.size(); }
+    public int getNumberOfFailures() {
+        return failedTestLinks.size();
+    }
 
     /**
      * Returns the failures' names, in appearance order.
