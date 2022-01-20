@@ -39,7 +39,7 @@ public class JobConfigurationTest extends AbstractJUnitTest {
         Job job = TestUtils.getCreatedFreeStyleJobWithResources(
                 this,
                 Collections.emptyList(),
-                false, true, false);
+                false, false, true);
 
         job.startBuild().shouldSucceed();
     }
@@ -53,7 +53,7 @@ public class JobConfigurationTest extends AbstractJUnitTest {
         Job job = TestUtils.getCreatedFreeStyleJobWithResources(
                 this,
                 Arrays.asList("/success/junit-with-long-output.xml"),
-                false, false, true);
+                false, true, false);
 
         job.startBuild().shouldSucceed();
 
