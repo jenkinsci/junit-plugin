@@ -11,7 +11,6 @@ import io.jenkins.plugins.analysis.junit.util.TestUtils;
 import static io.jenkins.plugins.analysis.junit.JUnitProjectSummaryAssert.*;
 import static org.assertj.core.api.AssertionsForClassTypes.*;
 
-
 /**
  * Tests the published results of JUnit tests on the job summary page.
  *
