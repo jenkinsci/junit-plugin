@@ -33,27 +33,43 @@ public class JUnitJobConfiguration extends AbstractStep implements PostBuildStep
         super(parent, path);
     }
 
+    /**
+     * Set checkbox to retain standard log output error.
+     * @param shouldRetainLogStandardOutputError Check or uncheck checkbox
+     */
     public void setRetainLogStandardOutputError(boolean shouldRetainLogStandardOutputError) {
         this.retainLogStandardOutputError.check(shouldRetainLogStandardOutputError);
     }
 
+    /**
+     * Set checkbox to allow empty results.
+     * @param shouldAllowEmptyResults Check or uncheck checkbox
+     */
     public void setAllowEmptyResults(boolean shouldAllowEmptyResults) {
         this.allowEmptyResults.check(shouldAllowEmptyResults);
     }
 
+    /**
+     * Set checkbox to skip publishing checks.
+     * @param shouldSkipPublishingChecks Check or uncheck checkbox
+     */
     public void setSkipPublishingChecks(boolean shouldSkipPublishingChecks) {
         this.retainLogStandardOutputError.check(shouldSkipPublishingChecks);
     }
 
+    /**
+     * Set checkbox to skip mark build as unstable on test failure.
+     * @param shouldSkipMarkingBuildAsUnstableOnTestFailure Check or uncheck checkbox
+     */
     public void setSkipMarkingBuildAsUnstableOnTestFailure(boolean shouldSkipMarkingBuildAsUnstableOnTestFailure) {
         this.skipMarkingBuildAsUnstableOnTestFailure.check(shouldSkipMarkingBuildAsUnstableOnTestFailure);
     }
 
+    /**
+     * Set input value of health scale factor.
+     * @param value value to set the health scale factor
+     */
     public void setHealthScaleFactor(String value) {
         this.healthScaleFactor.set(value);
-    }
-
-    private boolean isChecked(final Control control) {
-        return control.resolve().isSelected();
     }
 }
