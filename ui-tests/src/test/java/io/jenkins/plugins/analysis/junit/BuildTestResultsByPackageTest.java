@@ -80,22 +80,7 @@ public class BuildTestResultsByPackageTest extends AbstractJUnitTest {
     @Test
     public void verifyBuildDetailClassViewWithPreviousTests() {
 
-        FreeStyleJob j = jenkins.jobs.create();
-        FixedCopyJobDecorator fixedCopyJob = new FixedCopyJobDecorator(j);
-        fixedCopyJob.getJob().configure();
-        fixedCopyJob.copyResource(resource("/failure/three_failed_two_succeeded.xml"));
-        fixedCopyJob.copyResource(resource("/failure/four_failed_one_succeeded.xml"));
-        fixedCopyJob.getJob().addPublisher(JUnitPublisher.class).testResults.set("three_failed_two_succeeded.xml");
-        fixedCopyJob.getJob().save();
-        fixedCopyJob.getJob().startBuild().shouldBeUnstable();
-
-        fixedCopyJob.getJob().configure();
-        fixedCopyJob.getJob().editPublisher(JUnitPublisher.class, (publisher) -> {
-            publisher.testResults.set("four_failed_one_succeeded.xml");
-        });
-
-        fixedCopyJob.getJob().startBuild().shouldBeUnstable().openStatusPage();
-        Build lastBuild = fixedCopyJob.getJob().getLastBuild();
+        Build lastBuild = TestUtils.createTwoBuildsWithIncreasedTestFailures(this);
         JUnitBuildSummary buildSummary = new JUnitBuildSummary(lastBuild);
         BuildTestResults buildTestResults = buildSummary.openBuildTestResults();
 

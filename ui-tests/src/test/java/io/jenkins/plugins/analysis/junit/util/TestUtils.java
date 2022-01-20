@@ -41,4 +41,23 @@ public class TestUtils {
                 .findAny()
                 .isPresent())).isTrue();
     }
+
+    public static Build createTwoBuildsWithIncreasedTestFailures(AbstractJUnitTest abstractJUnitTestBaseClass) {
+        FreeStyleJob j = abstractJUnitTestBaseClass.jenkins.jobs.create();
+        FixedCopyJobDecorator fixedCopyJob = new FixedCopyJobDecorator(j);
+        fixedCopyJob.getJob().configure();
+        fixedCopyJob.copyResource(abstractJUnitTestBaseClass.resource("/failure/three_failed_two_succeeded.xml"));
+        fixedCopyJob.copyResource(abstractJUnitTestBaseClass.resource("/failure/four_failed_one_succeeded.xml"));
+        fixedCopyJob.getJob().addPublisher(JUnitPublisher.class).testResults.set("three_failed_two_succeeded.xml");
+        fixedCopyJob.getJob().save();
+        fixedCopyJob.getJob().startBuild().shouldBeUnstable();
+
+        fixedCopyJob.getJob().configure();
+        fixedCopyJob.getJob().editPublisher(JUnitPublisher.class, (publisher) -> {
+            publisher.testResults.set("four_failed_one_succeeded.xml");
+        });
+
+        fixedCopyJob.getJob().startBuild().shouldBeUnstable().openStatusPage();
+        return fixedCopyJob.getJob().getLastBuild();
+    }
 }
