@@ -12,14 +12,27 @@ import org.openqa.selenium.WebElement;
 import com.google.inject.Injector;
 
 import org.jenkinsci.test.acceptance.po.Build;
+import org.jenkinsci.test.acceptance.po.PageObject;
 
 import io.jenkins.plugins.analysis.junit.testresults.tableentry.PackageTableEntry;
 
+/**
+ * {@link PageObject} representing the first page of the test results of a build.
+ *
+ * @author Nikolas Paripovic
+ * @author Michael Müller
+ */
 public class BuildTestResults extends TestResultsWithFailedTestTable {
 
     private final List<WebElement> packageLinks;
     private final List<PackageTableEntry> packageTableEntries;
 
+    /**
+     * Creates a new page object representing the first page of the test results of a build.
+     *
+     * @param parent
+     *         a finished build configured with a static analysis tool
+     */
     public BuildTestResults(final Build parent) {
         super(parent);
 
@@ -28,6 +41,15 @@ public class BuildTestResults extends TestResultsWithFailedTestTable {
         packageTableEntries = initializePackageTableEntries(mainPanel);
     }
 
+    /**
+     * Creates an instance of the page. This constructor is used for injecting a
+     * filtered instance of the page (e.g. by clicking on links which open a filtered instance of a AnalysisResult.
+     *
+     * @param injector
+     *         the injector of the page
+     * @param url
+     *         the url of the page
+     */
     public BuildTestResults(final Injector injector, final URL url) {
         super(injector, url);
 
@@ -36,10 +58,19 @@ public class BuildTestResults extends TestResultsWithFailedTestTable {
         packageTableEntries = initializePackageTableEntries(mainPanel);
     }
 
+    /**
+     * Gets the entries of the package table.
+     * @return the package table entries
+     */
     public List<PackageTableEntry> getPackageTableEntries() {
         return packageTableEntries;
     }
 
+    /**
+     * Open the test results page, filtered by package.
+     * @param packageName the package to filter
+     * @return the opened page
+     */
     public BuildTestResultsByPackage openTestResultsByPackage(final String packageName) {
         WebElement link = packageLinks.stream()
                 .filter(packageLink -> packageLink.getText().equals(packageName))

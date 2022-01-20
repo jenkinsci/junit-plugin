@@ -12,14 +12,28 @@ import org.openqa.selenium.WebElement;
 import com.google.inject.Injector;
 
 import org.jenkinsci.test.acceptance.po.Build;
+import org.jenkinsci.test.acceptance.po.PageObject;
 
 import io.jenkins.plugins.analysis.junit.testresults.tableentry.ClassTableEntry;
 
+/**
+ * {@link PageObject} representing the second page of the test results of a build.
+ * This page contains tests filtered by a specific package.
+ *
+ * @author Nikolas Paripovic
+ * @author Michael Müller
+ */
 public class BuildTestResultsByPackage extends TestResultsWithFailedTestTable {
 
     private final List<WebElement> classLinks;
     private final List<ClassTableEntry> classTableEntries;
 
+    /**
+     * Creates a new page object representing the second page of the test results of a build.
+     *
+     * @param parent
+     *         a finished build configured with a static analysis tool
+     */
     public BuildTestResultsByPackage(final Build parent) {
         super(parent);
 
@@ -28,6 +42,15 @@ public class BuildTestResultsByPackage extends TestResultsWithFailedTestTable {
         classTableEntries = initializeClassTableEntries(mainPanel);
     }
 
+    /**
+     * Creates an instance of the page. This constructor is used for injecting a
+     * filtered instance of the page (e.g. by clicking on links which open a filtered instance of a AnalysisResult.
+     *
+     * @param injector
+     *         the injector of the page
+     * @param url
+     *         the url of the page
+     */
     public BuildTestResultsByPackage(final Injector injector, final URL url) {
         super(injector, url);
 
@@ -36,10 +59,19 @@ public class BuildTestResultsByPackage extends TestResultsWithFailedTestTable {
         classTableEntries = initializeClassTableEntries(mainPanel);
     }
 
+    /**
+     * Gets the entries of the class table.
+     * @return the class table entries
+     */
     public List<ClassTableEntry> getClassTableEntries() {
         return classTableEntries;
     }
 
+    /**
+     * Open the test results page, filtered by class name.
+     * @param className the class to filter
+     * @return the opened page
+     */
     public BuildTestResultsByClass openTestResultsByClass(final String className) {
         WebElement link = classLinks.stream()
                 .filter(classLink -> classLink.getText().equals(className))

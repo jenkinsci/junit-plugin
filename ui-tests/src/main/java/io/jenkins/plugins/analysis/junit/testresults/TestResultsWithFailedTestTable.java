@@ -13,17 +13,30 @@ import org.openqa.selenium.WebElement;
 import com.google.inject.Injector;
 
 import org.jenkinsci.test.acceptance.po.Build;
+import org.jenkinsci.test.acceptance.po.PageObject;
 
 import io.jenkins.plugins.analysis.junit.TestDetail;
 import io.jenkins.plugins.analysis.junit.testresults.tableentry.FailedTestTableEntry;
 
-public class TestResultsWithFailedTestTable extends TestResults {
+/**
+ * Abstract {@link PageObject} base class for test results pages including a failed test table.
+ *
+ * @author Nikolas Paripovic
+ * @author Michael Müller
+ */
+public abstract class TestResultsWithFailedTestTable extends TestResults {
 
     private final Optional<WebElement> failedTestsTable;
 
     private final List<WebElement> failedTestLinks;
     private final List<FailedTestTableEntry> failedTestTableEntries;
 
+    /**
+     * Creates a new abstract page object as a base class for test results pages.
+     *
+     * @param parent
+     *         a finished build configured with a static analysis tool
+     */
     public TestResultsWithFailedTestTable(final Build parent) {
         super(parent);
 
@@ -40,6 +53,15 @@ public class TestResultsWithFailedTestTable extends TestResults {
         }
     }
 
+    /**
+     * Creates an instance of the page. This constructor is used for injecting a
+     * filtered instance of the page (e.g. by clicking on links which open a filtered instance of a AnalysisResult.
+     *
+     * @param injector
+     *         the injector of the page
+     * @param url
+     *         the url of the page
+     */
     public TestResultsWithFailedTestTable(final Injector injector, final URL url) {
         super(injector, url);
 
@@ -57,12 +79,26 @@ public class TestResultsWithFailedTestTable extends TestResults {
 
     }
 
+    /**
+     * Checks whether the failed test table exists or not.
+     * With this knowledge, you can call {@link #getFailedTestTableEntries()}
+     * @return whether the failed test table exists or not
+     */
     public boolean failedTestTableExists() { return failedTestsTable.isPresent(); }
 
+    /**
+     * Gets the table entries of the failed tests.
+     * @return the failed test table entries.
+     */
     public List<FailedTestTableEntry> getFailedTestTableEntries() {
         return failedTestTableEntries;
     }
 
+    /**
+     * Opens the test detail page.
+     * @param testName the test to open
+     * @return the opened page
+     */
     public TestDetail openTestDetail(final String testName) {
         WebElement link = failedTestLinks.stream()
                 .filter(failedTestLink -> failedTestLink.getText().equals(testName))
@@ -118,10 +154,8 @@ public class TestResultsWithFailedTestTable extends TestResults {
         int duration = Integer.parseInt(durationString.substring(0, durationString.length() - " ms".length()));
         int age = Integer.parseInt(columns.get(2).findElement(By.cssSelector("a")).getText());
 
-
         WebElement expandLink = columns.get(0).findElement(By.cssSelector("a[title=\"Show details\"]"));
         expandLink.click();
-
 
         WebElement failureSummary = columns.get(0).findElement(By.cssSelector("div.failure-summary"));
 
@@ -140,8 +174,6 @@ public class TestResultsWithFailedTestTable extends TestResults {
                 showStackTraceLink.click();
             }
         }
-
-
 
         List<WebElement> failureSummaryChildren = failureSummary.findElements(By.cssSelector("*"));
         int counter = 0;
@@ -164,10 +196,6 @@ public class TestResultsWithFailedTestTable extends TestResults {
 
         Optional<String> errorDetails = errorDetailsPreElement.map(WebElement::getText);
         Optional<String> stackTrace = stackTracePreElement.map(WebElement::getText);
-
-        /*List<WebElement> detailPreElements = columns.get(0).findElements(By.cssSelector("div.failure-summary pre"));
-        String errorDetails = detailPreElements.get(0).getText();
-        String stackTrace = detailPreElements.get(1).getText();*/
 
         return new FailedTestTableEntry(testName, testLink, duration, age, errorDetails, stackTrace);
     }
