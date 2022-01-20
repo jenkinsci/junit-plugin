@@ -8,6 +8,7 @@ import org.jenkinsci.test.acceptance.junit.AbstractJUnitTest;
 import org.jenkinsci.test.acceptance.junit.WithPlugins;
 import org.jenkinsci.test.acceptance.po.Build;
 
+import io.jenkins.plugins.analysis.junit.testresults.BuildTestResultsByClass;
 import io.jenkins.plugins.analysis.junit.util.TestUtils;
 
 import static org.assertj.core.api.AssertionsForClassTypes.*;
@@ -120,6 +121,24 @@ public class TestDetailTest extends AbstractJUnitTest {
                         + " at org.eclipse.jdt.internal.junit.runner.RemoteTestRunner.run(RemoteTestRunner.java:390)\n"
                         + " at org.eclipse.jdt.internal.junit.runner.RemoteTestRunner.main(RemoteTestRunner.java:197)");
 
+    }
+
+    /**
+     * Verifies test has status "Regression" when test failed after success in previous build.
+     */
+    @Test
+    public void verifiesTestHasStatusRegressionWhenConsecutiveBuildFailed() {
+
+        Build lastBuild = TestUtils.createTwoBuildsWithIncreasedTestFailures(this);
+
+        JUnitBuildSummary buildSummary = new JUnitBuildSummary(lastBuild);
+        TestDetail testDetail = buildSummary
+                .openBuildTestResults()
+                .openTestResultsByPackage("com.another.simple.project")
+                .openTestResultsByClass("ApplicationTest")
+                .openTestDetail("testApplicationSuccess");
+
+        assertThat(testDetail.getTitle()).contains("Regression");
     }
 
 }

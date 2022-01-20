@@ -15,6 +15,13 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 public class TestUtils {
 
+    /**
+     *
+     * @param abstractJUnitTestBaseClass
+     * @param resourcePaths
+     * @param expectedBuildResult
+     * @return
+     */
     public static Build createFreeStyleJobWithResources(AbstractJUnitTest abstractJUnitTestBaseClass, List<String> resourcePaths, String expectedBuildResult) {
         Build build = getCreatedFreeStyleJobWithResources(abstractJUnitTestBaseClass, resourcePaths, expectedBuildResult).startBuild();
         assertThat(build.getResult()).isEqualTo(expectedBuildResult);

@@ -16,7 +16,7 @@ import io.jenkins.plugins.analysis.junit.util.TestUtils;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Tests the JUnit summary on the build page of a job.
+ * Tests the JUnit tests summary on the build summary page of a job.
  *
  * @author Michael Müller
  * @author Nikolas Paripovic
@@ -24,6 +24,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @WithPlugins("junit")
 public class BuildSummaryTest extends AbstractJUnitTest {
 
+    /**
+     * Verifies shown failure count when no failures occurred.
+     */
     @Test
     public void verifySummaryNoFailures() {
         Build build = TestUtils.createFreeStyleJobWithResources(
@@ -36,6 +39,9 @@ public class BuildSummaryTest extends AbstractJUnitTest {
         assertThat(buildSummary.getFailureNames()).isEmpty();
     }
 
+    /**
+     * Verifies shown failure count and listed failures when failures occurred.
+     */
     @Test
     public void verifySummaryWithFailures() {
         Build build = TestUtils.createFreeStyleJobWithResources(

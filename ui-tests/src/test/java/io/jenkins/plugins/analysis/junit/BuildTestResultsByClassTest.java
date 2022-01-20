@@ -9,7 +9,6 @@ import org.jenkinsci.test.acceptance.junit.AbstractJUnitTest;
 import org.jenkinsci.test.acceptance.junit.WithPlugins;
 import org.jenkinsci.test.acceptance.po.Build;
 
-import io.jenkins.plugins.analysis.junit.testresults.BuildTestResults;
 import io.jenkins.plugins.analysis.junit.testresults.BuildTestResultsByClass;
 import io.jenkins.plugins.analysis.junit.testresults.BuildTestResultsByPackage;
 import io.jenkins.plugins.analysis.junit.util.TestUtils;
@@ -24,6 +23,10 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
  */
 @WithPlugins("junit")
 public class BuildTestResultsByClassTest extends AbstractJUnitTest {
+
+    /**
+     * Verifies failed tests are listed with correct test status.
+     */
     @Test
     public void verifyWithFailures() {
 
@@ -45,6 +48,9 @@ public class BuildTestResultsByClassTest extends AbstractJUnitTest {
                 testTableEntry -> testTableEntry.getStatus().equals("Failed"));
     }
 
+    /**
+     * Verifies passed tests are listed with correct test status.
+     */
     @Test
     public void verifyWithNoFailures() {
 
@@ -64,35 +70,23 @@ public class BuildTestResultsByClassTest extends AbstractJUnitTest {
                 testTableEntry -> testTableEntry.getStatus().equals("Passed"));
     }
 
+    /**
+     * Verifies test has status "Regression" when test failed after success in previous build.
+     */
     @Test
-    public void verifyLinkToTestDetail() {
-
-        BuildTestResultsByClass buildTestResultsByClass = createBuildJobAndOpenBuildTestResultsByClass(
-                "/success/TEST-com.simple.project.AppTest.xml",
-                "SUCCESS",
-                "com.simple.project",
-                "AppTest"
-        );
-
-        TestDetail testDetail = buildTestResultsByClass.openTestDetail("testApp");
-
-        assertThat(testDetail.getTitle()).isEqualTo("Passed");
-    }
-
-    @Test
-    public void verifyFailureAndPassedTestsDifferenceToPreviousBuild() {
+    public void verifiesTestHasStatusRegressionWhenTestFailedAfterSuccessfulTestBefore() {
 
         Build lastBuild = TestUtils.createTwoBuildsWithIncreasedTestFailures(this);
 
         JUnitBuildSummary buildSummary = new JUnitBuildSummary(lastBuild);
-        BuildTestResultsByPackage buildTestResultsByPackage = buildSummary
+        BuildTestResultsByClass buildTestResultsByClass = buildSummary
                 .openBuildTestResults()
-                .openTestResultsByPackage("com.another.simple.project");
+                .openTestResultsByPackage("com.another.simple.project")
+                .openTestResultsByClass("ApplicationTest");
 
-        TestUtils.assertElementInCollection(buildTestResultsByPackage.getClassTableEntries(),
-                packageTableEntry -> packageTableEntry.getFailDiff().get().equals(1)
-                        && packageTableEntry.getPassDiff().get().equals(-1)
-        );
+        TestUtils.assertElementInCollection(buildTestResultsByClass.getTestTableEntries(),
+                tableEntry -> tableEntry.getTestName().equals("testAppFail") && tableEntry.getStatus().equals("Failed"),
+                tableEntry -> tableEntry.getTestName().equals("testApplicationSuccess") && tableEntry.getStatus().equals("Regression"));
     }
 
     private BuildTestResultsByClass createBuildJobAndOpenBuildTestResultsByClass(String testResultsReport,

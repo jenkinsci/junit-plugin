@@ -8,16 +8,13 @@ import org.junit.Test;
 import org.jenkinsci.test.acceptance.junit.AbstractJUnitTest;
 import org.jenkinsci.test.acceptance.junit.WithPlugins;
 import org.jenkinsci.test.acceptance.po.Build;
-import org.jenkinsci.test.acceptance.po.FreeStyleJob;
-import org.jenkinsci.test.acceptance.po.JUnitPublisher;
 
 import io.jenkins.plugins.analysis.junit.testresults.BuildTestResults;
 import io.jenkins.plugins.analysis.junit.testresults.BuildTestResultsByPackage;
-import io.jenkins.plugins.analysis.junit.util.FixedCopyJobDecorator;
 import io.jenkins.plugins.analysis.junit.util.TestUtils;
 
 import static org.assertj.core.api.AssertionsForClassTypes.*;
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static io.jenkins.plugins.analysis.junit.testresults.BuildTestResultsByPackageAssert.*;
 
 /**
  * Tests the published unit test results of a build which are filtered by a package.
@@ -28,6 +25,9 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @WithPlugins("junit")
 public class BuildTestResultsByPackageTest extends AbstractJUnitTest {
 
+    /**
+     * Verifies correct numbers of failed and passed tests, failed tests table and the test classes table are shown correctly.
+     */
     @Test
     public void verifyWithFailures() {
 
@@ -37,12 +37,18 @@ public class BuildTestResultsByPackageTest extends AbstractJUnitTest {
                 "com.simple.project"
         );
 
+        assertThat(buildTestResultsByPackage)
+                .hasNumberOfFailures(2)
+                .hasNumberOfTests(3);
+
         assertThat(buildTestResultsByPackage.failedTestTableExists()).isTrue();
         assertThat(buildTestResultsByPackage.getFailedTestTableEntries()).extracting(List::size).isEqualTo(2);
 
         TestUtils.assertElementInCollection(buildTestResultsByPackage.getFailedTestTableEntries(),
-                failedTestTableEntry -> failedTestTableEntry.getTestName().equals("com.simple.project.AppTest.testAppFailNoMessage"),
-                failedTestTableEntry -> failedTestTableEntry.getTestName().equals("com.simple.project.AppTest.testAppFailNoStacktrace"));
+                failedTestTableEntry -> failedTestTableEntry.getTestName()
+                        .equals("com.simple.project.AppTest.testAppFailNoMessage"),
+                failedTestTableEntry -> failedTestTableEntry.getTestName()
+                        .equals("com.simple.project.AppTest.testAppFailNoStacktrace"));
 
         assertThat(buildTestResultsByPackage.getClassTableEntries()).extracting(List::size).isEqualTo(2);
 
@@ -51,6 +57,9 @@ public class BuildTestResultsByPackageTest extends AbstractJUnitTest {
                 classTableEntry -> classTableEntry.getClassName().equals("ApplicationTest"));
     }
 
+    /**
+     * Verifies correct numbers of failed and passed tests, no failed tests table is shown and the test classes table is shown correctly.
+     */
     @Test
     public void verifyWithNoFailures() {
 
@@ -60,6 +69,10 @@ public class BuildTestResultsByPackageTest extends AbstractJUnitTest {
                 "com.simple.project"
         );
 
+        assertThat(buildTestResultsByPackage)
+                .hasNumberOfFailures(0)
+                .hasNumberOfTests(1);
+
         assertThat(buildTestResultsByPackage.failedTestTableExists()).isFalse();
 
         assertThat(buildTestResultsByPackage.getClassTableEntries()).extracting(List::size).isEqualTo(1);
@@ -68,25 +81,27 @@ public class BuildTestResultsByPackageTest extends AbstractJUnitTest {
                 classTableEntry -> classTableEntry.getClassName().equals("AppTest"));
     }
 
-    // TODO: verify emtpy result ?
+    /**
+     * Verifies increase/ decrease in failure/ passed tests count of two consecutive builds are shown correctly.
+     */
     @Test
-    public void verifyFailureAndPassedTestsDifferenceToPreviousBuild() {
+    public void verifiesTestHasStatusRegressionWhenTestFailedAfterSuccessfulTestBefore() {
 
         Build lastBuild = TestUtils.createTwoBuildsWithIncreasedTestFailures(this);
+
         JUnitBuildSummary buildSummary = new JUnitBuildSummary(lastBuild);
-        BuildTestResults buildTestResults = buildSummary.openBuildTestResults();
+        BuildTestResultsByPackage buildTestResultsByPackage = buildSummary
+                .openBuildTestResults()
+                .openTestResultsByPackage("com.another.simple.project");
 
-        assertThat(buildTestResults.getPackageTableEntries()).extracting(List::size).isEqualTo(2);
-
-        TestUtils.assertElementInCollection(buildTestResults.getPackageTableEntries(),
+        TestUtils.assertElementInCollection(buildTestResultsByPackage.getClassTableEntries(),
                 packageTableEntry -> packageTableEntry.getFailDiff().get().equals(1)
-                        && packageTableEntry.getPassDiff().get().equals(-1),
-                packageTableEntry -> !packageTableEntry.getFailDiff().isPresent()
-                        && !packageTableEntry.getPassDiff().isPresent()
+                        && packageTableEntry.getPassDiff().get().equals(-1)
         );
     }
 
-    private BuildTestResultsByPackage createBuildJobAndOpenBuildTestResultsByPackage(String testResultsReport, String expectedBuildResult, String packageName) {
+    private BuildTestResultsByPackage createBuildJobAndOpenBuildTestResultsByPackage(String testResultsReport,
+            String expectedBuildResult, String packageName) {
         Build build = TestUtils.createFreeStyleJobWithResources(
                 this,
                 Arrays.asList(testResultsReport), expectedBuildResult);
@@ -97,5 +112,4 @@ public class BuildTestResultsByPackageTest extends AbstractJUnitTest {
                 .openTestResultsByPackage(packageName);
 
     }
-
 }
