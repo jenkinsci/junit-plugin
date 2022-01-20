@@ -11,7 +11,7 @@ import org.jenkinsci.test.acceptance.po.FreeStyleJob;
 import static org.assertj.core.api.AssertionsForClassTypes.*;
 
 /**
- * Tests the job configuration of the JUnit test results report publisher
+ * Tests the job configuration of the JUnit test results report publisher.
  *
  * @author Michael Müller
  * @author Nikolas Paripovic

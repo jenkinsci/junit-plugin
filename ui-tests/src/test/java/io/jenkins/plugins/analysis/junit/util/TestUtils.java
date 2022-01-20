@@ -1,5 +1,6 @@
 package io.jenkins.plugins.analysis.junit.util;
 
+import java.lang.annotation.ElementType;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -12,10 +13,11 @@ import org.jenkinsci.test.acceptance.po.FreeStyleJob;
 import org.jenkinsci.test.acceptance.po.JUnitPublisher;
 import org.jenkinsci.test.acceptance.po.Job;
 
-import io.jenkins.plugins.analysis.junit.JUnitJobConfiguration;
-
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
+/**
+ * Util methods for tests.
+ */
 public class TestUtils {
 
     /**
@@ -74,9 +76,7 @@ public class TestUtils {
         fixedCopyJob.getJob().startBuild().shouldBeUnstable();
 
         fixedCopyJob.getJob().configure();
-        fixedCopyJob.getJob().editPublisher(JUnitPublisher.class, (publisher) -> {
-            publisher.testResults.set("four_failed_one_succeeded.xml");
-        });
+        fixedCopyJob.getJob().editPublisher(JUnitPublisher.class, publisher -> publisher.testResults.set("four_failed_one_succeeded.xml"));
 
         fixedCopyJob.getJob().startBuild().shouldBeUnstable().openStatusPage();
         return fixedCopyJob.getJob().getLastBuild();
@@ -87,10 +87,10 @@ public class TestUtils {
      *
      * @param collection collection to be asserted
      * @param predicates assertion criteria
-     * @param <ElementType> the type of elements in this collection
+     * @param <E> the type of elements in this collection
      */
-    public static <ElementType> void assertElementInCollection(Collection<ElementType> collection,
-            Predicate<ElementType>... predicates) {
+    public static <E> void assertElementInCollection(Collection<E> collection,
+            Predicate<E>... predicates) {
         assertThat(Stream.of(predicates).allMatch(predicate -> collection.stream()
                 .filter(predicate)
                 .findAny()

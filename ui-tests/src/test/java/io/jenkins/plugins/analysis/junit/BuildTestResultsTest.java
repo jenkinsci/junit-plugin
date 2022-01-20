@@ -84,7 +84,7 @@ public class BuildTestResultsTest extends AbstractJUnitTest {
     }
 
     /**
-     * Verifies increase/ decrease in failure/ passed tests count of two consecutive builds are shown correctly
+     * Verifies increase/ decrease in failure/ passed tests count of two consecutive builds are shown correctly.
      */
     @Test
     public void verifyFailureAndPassedTestsDifferenceToPreviousBuild() {

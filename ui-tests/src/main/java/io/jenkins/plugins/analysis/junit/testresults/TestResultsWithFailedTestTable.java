@@ -43,7 +43,7 @@ public abstract class TestResultsWithFailedTestTable extends TestResults {
         WebElement mainPanel = getElement(By.cssSelector("#main-panel"));
         failedTestsTable = initialFailedTestsTable(mainPanel);
 
-        if(failedTestsTable.isPresent()) {
+        if (failedTestsTable.isPresent()) {
             failedTestLinks = initializeFailedTestLinks(failedTestsTable.get());
             failedTestTableEntries = initializeFailedTestTableEntries(failedTestsTable.get());
         }
@@ -68,7 +68,7 @@ public abstract class TestResultsWithFailedTestTable extends TestResults {
         WebElement mainPanel = getElement(By.cssSelector("#main-panel"));
         failedTestsTable = initialFailedTestsTable(mainPanel);
 
-        if(failedTestsTable.isPresent()) {
+        if (failedTestsTable.isPresent()) {
             failedTestLinks = initializeFailedTestLinks(failedTestsTable.get());
             failedTestTableEntries = initializeFailedTestTableEntries(failedTestsTable.get());
         }
@@ -84,7 +84,9 @@ public abstract class TestResultsWithFailedTestTable extends TestResults {
      * With this knowledge, you can call {@link #getFailedTestTableEntries()}
      * @return whether the failed test table exists or not
      */
-    public boolean failedTestTableExists() { return failedTestsTable.isPresent(); }
+    public boolean failedTestTableExists() {
+        return failedTestsTable.isPresent();
+    }
 
     /**
      * Gets the table entries of the failed tests.
@@ -160,17 +162,17 @@ public abstract class TestResultsWithFailedTestTable extends TestResults {
         WebElement failureSummary = columns.get(0).findElement(By.cssSelector("div.failure-summary"));
 
         List<WebElement> showErrorDetailsLinks = failureSummary.findElements(By.cssSelector("a[title=\"Show Error Details\"]"));
-        if(showErrorDetailsLinks.size() > 0) {
+        if (showErrorDetailsLinks.size() > 0) {
             WebElement showErrorDetailsLink = showErrorDetailsLinks.get(0);
-            if(!showErrorDetailsLink.getAttribute("style").contains("display: none;")) {
+            if (!showErrorDetailsLink.getAttribute("style").contains("display: none;")) {
                 showErrorDetailsLink.click();
             }
         }
 
         List<WebElement> showStackTraceLinks = failureSummary.findElements(By.cssSelector("a[title=\"Show Stack Trace\"]"));
-        if(showStackTraceLinks.size() > 0) {
+        if (showStackTraceLinks.size() > 0) {
             WebElement showStackTraceLink = showStackTraceLinks.get(0);
-            if(!showStackTraceLink.getAttribute("style").contains("display: none;")) {
+            if (!showStackTraceLink.getAttribute("style").contains("display: none;")) {
                 showStackTraceLink.click();
             }
         }
@@ -181,10 +183,10 @@ public abstract class TestResultsWithFailedTestTable extends TestResults {
         int stackTraceHeaderIndex = -1;
         for (WebElement element : failureSummaryChildren) {
             if (element.getTagName().equals("h4")) {
-                if(element.findElements(By.cssSelector("a[title=\"Show Error Details\"]")).size() > 0) {
+                if (element.findElements(By.cssSelector("a[title=\"Show Error Details\"]")).size() > 0) {
                     errorDetailsHeaderIndex = counter;
                 }
-                else if(element.findElements(By.cssSelector("a[title=\"Show Stack Trace\"]")).size() > 0) {
+                else if (element.findElements(By.cssSelector("a[title=\"Show Stack Trace\"]")).size() > 0) {
                     stackTraceHeaderIndex = counter;
                 }
             }

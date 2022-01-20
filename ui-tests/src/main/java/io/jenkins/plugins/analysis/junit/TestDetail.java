@@ -46,15 +46,15 @@ public class TestDetail extends PageObject {
         List<WebElement> pageContentChildren = pageContent.findElements(By.cssSelector("*"));
 
         int counter = 0;
-        for(WebElement element : pageContentChildren) {
-            if(element.getTagName().equals("h3")) {
-                if(element.getText().equals("Error Message")) {
+        for (WebElement element : pageContentChildren) {
+            if (element.getTagName().equals("h3")) {
+                if (element.getText().equals("Error Message")) {
                     errorMessageHeaderIndex = counter;
                 }
-                else if(element.getText().equals("Stacktrace")) {
+                else if (element.getText().equals("Stacktrace")) {
                     stackTraceHeaderIndex = counter;
                 }
-                else if(element.getText().equals("Standard Output")) {
+                else if (element.getText().equals("Standard Output")) {
                     standardOutputHeaderIndex = counter;
                 }
             }
@@ -91,15 +91,15 @@ public class TestDetail extends PageObject {
         List<WebElement> pageContentChildren = pageContent.findElements(By.cssSelector("*"));
 
         int counter = 0;
-        for(WebElement element : pageContentChildren) {
-            if(element.getTagName().equals("h3")) {
-                if(element.getText().equals("Error Message")) {
+        for (WebElement element : pageContentChildren) {
+            if (element.getTagName().equals("h3")) {
+                if (element.getText().equals("Error Message")) {
                     errorMessageHeaderIndex = counter;
                 }
-                else if(element.getText().equals("Stacktrace")) {
+                else if (element.getText().equals("Stacktrace")) {
                     stackTraceHeaderIndex = counter;
                 }
-                else if(element.getText().equals("Standard Output")) {
+                else if (element.getText().equals("Standard Output")) {
                     standardOutputHeaderIndex = counter;
                 }
             }
@@ -116,34 +116,44 @@ public class TestDetail extends PageObject {
      *
      * @return the title of the detail view
      */
-    public String getTitle() { return title.getText(); }
+    public String getTitle() {
+        return title.getText();
+    }
 
     /**
      * Returns the subtitle of the detail view, which is the test.
      *
      * @return the subtitle of the detail view
      */
-    public String getSubTitle() { return subTitle.findElement(By.cssSelector("span")).getText() + subTitle.getText(); }
+    public String getSubTitle() {
+        return subTitle.findElement(By.cssSelector("span")).getText() + subTitle.getText();
+    }
 
     /**
      * Returns the error message telling the user why the test has failed.
      *
      * @return the error message
      */
-    public Optional<String> getErrorMessage() { return errorMessage.map(WebElement::getText); }
+    public Optional<String> getErrorMessage() {
+        return errorMessage.map(WebElement::getText);
+    }
 
     /**
      * Returns the stack trace providing more information about the failed test.
      *
      * @return the stack trace of the failed test
      */
-    public Optional<String> getStackTrace() { return stackTrace.map(WebElement::getText); }
+    public Optional<String> getStackTrace() {
+        return stackTrace.map(WebElement::getText);
+    }
 
     /**
      * Returns the standard output providing more information about the test.
      *
      * @return the standard output of the test
      */
-    public Optional<String> getStandardOutput() { return standardOutput.map(WebElement::getText); }
+    public Optional<String> getStandardOutput() {
+        return standardOutput.map(WebElement::getText);
+    }
 
 }

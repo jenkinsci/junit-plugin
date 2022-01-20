@@ -72,7 +72,8 @@ public class FixedCopyJobDecorator {
         //decide whether to utilize copyResource or copyDir
         if (res.asFile().isDirectory()) {
             job.copyDir(res);
-        } else {
+        }
+        else {
             copyResource(res);
         }
     }
@@ -105,7 +106,8 @@ public class FixedCopyJobDecorator {
             // fileName can include path portion like foo/bar/zot
             return String.format("(mkdir -p %1$s || true) && rm -r %1$s && base64 --decode << ENDOFFILE | gunzip > %1$s \n%2$s\nENDOFFILE",
                     fileName, new String(Base64.encodeBase64Chunked(out.toByteArray())));
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             throw new AssertionError(e);
         }
     }
