@@ -1,7 +1,5 @@
 package io.jenkins.plugins.analysis.junit;
 
-import java.net.URL;
-import java.util.Collections;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -13,13 +11,18 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.json.Json;
 
 import com.gargoylesoftware.htmlunit.ScriptResult;
 
 import org.jenkinsci.test.acceptance.po.Build;
 import org.jenkinsci.test.acceptance.po.PageObject;
 
+/**
+ * {@link PageObject} representing the JUnit summary on the job page.
+ *
+ * @author Michael Müller
+ * @author Nikolas Paripovic
+ */
 public class JUnitProjectSummary extends PageObject {
 
     private final WebElement summaryIcon;
@@ -29,6 +32,12 @@ public class JUnitProjectSummary extends PageObject {
 
     private final List<BuildChartEntry> buildChartEntries;
 
+    /**
+     * Creates a new page object representing the JUnit summary on the job page.
+     *
+     * @param parent
+     *         a finished build configured with a static analysis tool
+     */
     public JUnitProjectSummary(final Build parent) throws JSONException {
         super(parent, parent.url(""));
 
@@ -41,19 +50,8 @@ public class JUnitProjectSummary extends PageObject {
         buildChartEntries = initializeBuildChartEntries();
     }
 
-    private WebElement getJunitJobSummaryTableEntry(final WebElement mainPanel) {
-        List<WebElement> tables = mainPanel.findElements(By.cssSelector("table tbody tr"));
-        return tables.stream()
-                .filter(trElement -> findIconInTableEntry(trElement).isPresent())
-                .filter(trElement -> findContentInTableEntry(trElement).isPresent())
-                .findAny()
-                .orElseThrow(() -> new NoSuchElementException("junit job summary table"));
-    }
-
-
-
     /**
-     * Returns the title text of the summary.
+     * Gets the title text of the summary.
      *
      * @return the title text
      */
@@ -62,7 +60,7 @@ public class JUnitProjectSummary extends PageObject {
     }
 
     /**
-     * Returns the number of failures of this junit run.
+     * Gets the number of failures of this JUnit run.
      *
      * @return the number of failures
      */
@@ -73,6 +71,11 @@ public class JUnitProjectSummary extends PageObject {
         return Integer.parseInt(summaryContentText.substring(fromIndex, toIndex));
     }
 
+    /**
+     * Gets the failure difference.
+     *
+     * @return the failure difference
+     */
     public int getFailureDifference() {
         String summaryContentText = summaryContent.getText().trim();
         int fromIndex = summaryContentText.indexOf('/') + 2;
@@ -80,8 +83,22 @@ public class JUnitProjectSummary extends PageObject {
         return Integer.parseInt(summaryContentText.substring(fromIndex, toIndex));
     }
 
+    /**
+     * Gets the entries of the build chart.
+     *
+     * @return the entries of the build chart
+     */
     public List<BuildChartEntry> getBuildChartEntries() {
         return buildChartEntries;
+    }
+
+    private WebElement getJunitJobSummaryTableEntry(final WebElement mainPanel) {
+        List<WebElement> tables = mainPanel.findElements(By.cssSelector("table tbody tr"));
+        return tables.stream()
+                .filter(trElement -> findIconInTableEntry(trElement).isPresent())
+                .filter(trElement -> findContentInTableEntry(trElement).isPresent())
+                .findAny()
+                .orElseThrow(() -> new NoSuchElementException("junit job summary table"));
     }
 
     private List<BuildChartEntry> initializeBuildChartEntries() throws JSONException {
@@ -106,7 +123,9 @@ public class JUnitProjectSummary extends PageObject {
         List<WebElement> foundElements = tableEntry.findElements(By.cssSelector("td"));
         return foundElements.stream()
                 .filter(foundElement -> findOptionalElement(foundElement, By.cssSelector("a")).isPresent() &&
-                        findOptionalElement(foundElement, By.cssSelector("a")).get().getText().equals("Latest Test Result"))
+                        findOptionalElement(foundElement, By.cssSelector("a")).get()
+                                .getText()
+                                .equals("Latest Test Result"))
                 .findFirst();
     }
 
@@ -125,7 +144,7 @@ public class JUnitProjectSummary extends PageObject {
         JSONArray passedTestNumbers = null;
 
         int seriesLength = series.length();
-        for(int i = 0; i < seriesLength; i++) {
+        for (int i = 0; i < seriesLength; i++) {
             JSONObject currentObject = series.getJSONObject(i);
             String seriesName = currentObject.getString("name");
             switch (seriesName) {
@@ -160,42 +179,5 @@ public class JUnitProjectSummary extends PageObject {
                     }
                 })
                 .collect(Collectors.toList());
-    }
-
-
-}
-
-class BuildChartEntry {
-
-    final int buildId;
-
-    final int numberOfSkippedTests;
-
-    final int numberOfFailedTests;
-
-    final int numberOfPassedTests;
-
-    public BuildChartEntry(final int buildId, final int numberOfSkippedTests, final int numberOfFailedTests,
-            final int numberOfPassedTests) {
-        this.buildId = buildId;
-        this.numberOfSkippedTests = numberOfSkippedTests;
-        this.numberOfFailedTests = numberOfFailedTests;
-        this.numberOfPassedTests = numberOfPassedTests;
-    }
-
-    public int getBuildId() {
-        return buildId;
-    }
-
-    public int getNumberOfSkippedTests() {
-        return numberOfSkippedTests;
-    }
-
-    public int getNumberOfFailedTests() {
-        return numberOfFailedTests;
-    }
-
-    public int getNumberOfPassedTests() {
-        return numberOfPassedTests;
     }
 }
