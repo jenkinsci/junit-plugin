@@ -2,17 +2,10 @@ package io.jenkins.plugins.analysis.junit;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
-
 import org.junit.Test;
 
 import org.jenkinsci.test.acceptance.junit.AbstractJUnitTest;
-import org.jenkinsci.test.acceptance.po.Build;
-import org.jenkinsci.test.acceptance.po.FreeStyleJob;
-import org.jenkinsci.test.acceptance.po.JUnitPublisher;
 import org.jenkinsci.test.acceptance.po.Job;
-
-import io.jenkins.plugins.analysis.junit.util.FixedCopyJobDecorator;
 import io.jenkins.plugins.analysis.junit.util.TestUtils;
 
 import static org.assertj.core.api.AssertionsForClassTypes.*;
@@ -30,21 +23,10 @@ public class JobConfigurationTest extends AbstractJUnitTest {
      */
     @Test
     public void verifySuccessfulBuildWhenSkipMarkingBuildAsUnstableOnTestFailureChecked() {
-        FreeStyleJob j = jenkins.jobs.create();
-        j.configure();
-        j.copyResource(resource("/failure/TEST-com.simple.project.AppTest.xml"));
-        JUnitJobConfiguration publisher = j.addPublisher(JUnitJobConfiguration.class);
-        publisher.testResults.set("*.xml");
-        publisher.setSkipMarkingBuildAsUnstableOnTestFailure(true);
-        j.save();
-
-        Build build = j.startBuild();
-        assertThat(build.getResult()).isEqualTo("SUCCESS");
-
         Job job = TestUtils.getCreatedFreeStyleJobWithResources(
                 this,
-                Collections.emptyList(),
-                false, true, false);
+                Arrays.asList("/failure/TEST-com.simple.project.AppTest.xml"),
+                true, false, false);
 
         job.startBuild().shouldSucceed();
     }
@@ -81,5 +63,4 @@ public class JobConfigurationTest extends AbstractJUnitTest {
         assertThat(testDetail.getStandardOutput()).isPresent();
         assertThat(testDetail.getStandardOutput().get()).doesNotContain("truncated");
     }
-
 }
