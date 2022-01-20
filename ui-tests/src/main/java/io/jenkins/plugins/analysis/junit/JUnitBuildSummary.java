@@ -43,7 +43,7 @@ public class JUnitBuildSummary extends PageObject {
         WebElement junitBuildSummaryTableEntry = tableEntries.stream()
                 .filter(trElement -> findIconInTableEntry(trElement).isPresent())
                 .filter(trElement -> findContentInTableEntry(trElement).isPresent())
-                .findFirst()
+                .findAny()
                 .orElseThrow(() -> new NoSuchElementException("junit build summary table"));
 
         summaryIcon = findIconInTableEntry(junitBuildSummaryTableEntry).get();
