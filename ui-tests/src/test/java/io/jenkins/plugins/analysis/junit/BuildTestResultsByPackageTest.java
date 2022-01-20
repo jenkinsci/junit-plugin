@@ -11,6 +11,7 @@ import org.jenkinsci.test.acceptance.po.Build;
 import org.jenkinsci.test.acceptance.po.FreeStyleJob;
 import org.jenkinsci.test.acceptance.po.JUnitPublisher;
 
+import io.jenkins.plugins.analysis.junit.testresults.BuildTestResults;
 import io.jenkins.plugins.analysis.junit.testresults.BuildTestResultsByPackage;
 import io.jenkins.plugins.analysis.junit.util.FixedCopyJobDecorator;
 import io.jenkins.plugins.analysis.junit.util.TestUtils;
@@ -96,7 +97,17 @@ public class BuildTestResultsByPackageTest extends AbstractJUnitTest {
         fixedCopyJob.getJob().startBuild().shouldBeUnstable().openStatusPage();
         Build lastBuild = fixedCopyJob.getJob().getLastBuild();
         JUnitBuildSummary buildSummary = new JUnitBuildSummary(lastBuild);
-        buildSummary.openBuildTestResults();
+        BuildTestResults buildTestResults = buildSummary.openBuildTestResults();
+
+        TestUtils.assertElementInCollection(buildTestResults.getPackageTableEntries(),
+                packageTableEntry -> packageTableEntry.getFailDiff().equals("+1"),
+                packageTableEntry -> packageTableEntry.getFailDiff().equals("")
+        );
+
+        TestUtils.assertElementInCollection(buildTestResults.getPackageTableEntries(),
+                packageTableEntry -> packageTableEntry.getPassDiff().equals("-1"),
+                packageTableEntry -> packageTableEntry.getFailDiff().equals("")
+        );
 
 
     }
