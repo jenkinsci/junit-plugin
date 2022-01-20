@@ -21,8 +21,11 @@ import static org.assertj.core.api.AssertionsForClassTypes.*;
 @WithPlugins("junit")
 public class TestDetailTest extends AbstractJUnitTest {
 
+    /**
+     * Verifies detail information of passed test are displayed correctly.
+     */
     @Test
-    public void verifyDetailNoFailures() {
+    public void verifyTestDetailWhenFailed() {
         Build build = TestUtils.createFreeStyleJobAndRunBuild(
                 this,
                 Arrays.asList("/success/com.simple.project.AppTest.txt", "/success/TEST-com.simple.project.AppTest.xml"), "SUCCESS");
@@ -41,8 +44,11 @@ public class TestDetailTest extends AbstractJUnitTest {
         assertThat(testDetail.getStandardOutput()).isEmpty();
     }
 
+    /**
+     * Verifies detail information with standard output of passed test are displayed correctly.
+     */
     @Test
-    public void verifyDetailNoFailuresIncludingStandardOutput() {
+    public void verifyTestDetailWhenFailedWithStandardOutput() {
         Build build = TestUtils.createFreeStyleJobAndRunBuild(
                 this,
                 Arrays.asList("/success/com.simple.project.AppTest.txt", "/success/junit-with-long-output.xml"), "SUCCESS");
@@ -63,8 +69,11 @@ public class TestDetailTest extends AbstractJUnitTest {
         assertThat(testDetail.getStandardOutput().get()).contains("Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore");
     }
 
+    /**
+     * Verifies detail information of passed test are displayed correctly.
+     */
     @Test
-    public void verifyDetailWithFailures() {
+    public void verifyTestDetailWhenPassed() {
         Build build = TestUtils.createFreeStyleJobAndRunBuild(
                 this,
                 Arrays.asList("/parameterized/junit.xml", "/parameterized/testng.xml"), "UNSTABLE");
@@ -123,7 +132,7 @@ public class TestDetailTest extends AbstractJUnitTest {
     }
 
     /**
-     * Verifies test has status "Regression" when test failed after success in previous build.
+     * Verifies run unit test has status "Regression" when this test failed after success in previous build.
      */
     @Test
     public void verifiesTestHasStatusRegressionWhenConsecutiveBuildFailed() {
