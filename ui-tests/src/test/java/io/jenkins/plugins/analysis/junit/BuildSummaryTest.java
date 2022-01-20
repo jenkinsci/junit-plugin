@@ -2,14 +2,11 @@ package io.jenkins.plugins.analysis.junit;
 
 import java.util.Arrays;
 
-import org.assertj.core.api.AssertionsForClassTypes;
 import org.junit.Test;
 
 import org.jenkinsci.test.acceptance.junit.AbstractJUnitTest;
 import org.jenkinsci.test.acceptance.junit.WithPlugins;
 import org.jenkinsci.test.acceptance.po.Build;
-import org.jenkinsci.test.acceptance.po.FreeStyleJob;
-import org.jenkinsci.test.acceptance.po.Job;
 
 import io.jenkins.plugins.analysis.junit.util.TestUtils;
 
@@ -29,7 +26,7 @@ public class BuildSummaryTest extends AbstractJUnitTest {
      */
     @Test
     public void verifySummaryNoFailures() {
-        Build build = TestUtils.createFreeStyleJobWithResources(
+        Build build = TestUtils.createFreeStyleJobAndRunBuild(
                 this,
                 Arrays.asList("/success/com.simple.project.AppTest.txt", "/success/TEST-com.simple.project.AppTest.xml"), "SUCCESS");
 
@@ -44,7 +41,7 @@ public class BuildSummaryTest extends AbstractJUnitTest {
      */
     @Test
     public void verifySummaryWithFailures() {
-        Build build = TestUtils.createFreeStyleJobWithResources(
+        Build build = TestUtils.createFreeStyleJobAndRunBuild(
                 this,
                 Arrays.asList("/parameterized/junit.xml", "/parameterized/testng.xml"), "UNSTABLE");
 
