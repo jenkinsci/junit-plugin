@@ -69,28 +69,4 @@ public class JobConfigurationTest extends AbstractJUnitTest {
         assertThat(testDetail.getStandardOutput()).isPresent();
         assertThat(testDetail.getStandardOutput().get()).doesNotContain("truncated");
     }
-
-    // TODO: Check how to make it work
-    @Test
-    public void healthReportAmplificationFactor() {
-//        FreeStyleJob j = jenkins.jobs.create();
-//        j.configure();
-//        j.copyResource(resource("/parameterized/testng.xml"));
-//        JUnitPublisher publisher = j.addPublisher(JUnitPublisher.class);
-//        publisher.testResults.set("*.xml");
-//        publisher.setHealthScaleFactor("10.0");
-//
-//        j.save();
-//        j.startBuild();
-//        j.configure();
-//        j.copyResource(resource("/parameterized/junit.xml"));
-//        j.copyResource(resource("/parameterized/testng.xml"));
-//        publisher.testResults.set("*.xml");
-//        publisher.setHealthScaleFactor("10.0");
-//
-//        j.save();
-//        j.startBuild();
-    }
-
-
 }
