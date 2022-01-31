@@ -86,7 +86,7 @@ THE SOFTWARE.
             <j:if test="${item != null}">
               <tr>
                 <td class="pane">
-                  <a href="${app.rootUrl}${item.url}" class="model-link">${item.fullDisplayName}</a>
+                  <a href="${app.rootUrl}${item.url}">${item.fullDisplayName}</a>
                 </td>
                 <j:if test="${historySummary.descriptionAvailable}">
                   <td class="pane" style="text-align:right"><j:out value="${item.description}"/></td>

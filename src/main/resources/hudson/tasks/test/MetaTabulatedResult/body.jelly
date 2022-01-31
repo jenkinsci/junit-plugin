@@ -40,7 +40,7 @@ THE SOFTWARE.
             ${f.durationString}
           </td>
           <td class="pane" style="text-align:right;">
-            <a href="${rootURL}/${f.failedSinceRun.url}" class="model-link inside">${f.age}</a>
+            <a href="${rootURL}/${f.failedSinceRun.url}">${f.age}</a>
           </td>
         </tr>
       </j:forEach>
@@ -68,7 +68,7 @@ THE SOFTWARE.
           <j:set var="prev" value="${prevAll.findCorrespondingResult(p.id)}" />
           <tr>
             <td class="pane">
-              <a href="${p.safeName}/" class="model-link inside"><span style="${prev==null?'font-weight:bold':''}"><st:out value="${p.displayName}" /></span></a>
+              <a href="${p.safeName}/" class="body.jelly"><span style="${prev==null?'font-weight:bold':''}"><st:out value="${p.displayName}" /></span></a>
               <j:forEach var="badge" items="${p.testActions}">
                 <st:include it="${badge}" page="badge.jelly" optional="true"/>
               </j:forEach>
