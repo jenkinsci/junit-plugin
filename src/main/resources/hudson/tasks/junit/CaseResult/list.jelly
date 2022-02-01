@@ -26,15 +26,16 @@ THE SOFTWARE.
   Trend of test execution over time.
 -->
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
-         xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-  <table class="pane sortable bigtable stripped" id="testresult">
-    <tr>
-      <td class="pane-header" style="width:10em">${%Build}</td>
-      <td class="pane-header" style="width:10em">${%Test Description}</td>
-      <td class="pane-header" style="width:5em">${%Test Duration}</td>
-      <td class="pane-header" style="width:5em">${%Test Result}</td>
-    </tr>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler">
+  <table class="jenkins-table pane sortable" id="testresult">
+    <thead>
+      <tr>
+        <th class="pane-header" style="width:10em">${%Build}</th>
+        <th class="pane-header" style="width:10em">${%Test Description}</th>
+        <th class="pane-header" style="width:5em">${%Test Duration}</th>
+        <th class="pane-header" style="width:5em">${%Test Result}</th>
+      </tr>
+    </thead>
     <tbody>
       <j:forEach var="b" items="${it.run.parent.builds}" begin="${start}" end="${end}">
         <j:set var="test" value="${it.getResultInRun(b)}"/>

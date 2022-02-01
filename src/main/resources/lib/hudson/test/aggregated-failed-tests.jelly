@@ -23,7 +23,7 @@ THE SOFTWARE.
 -->
 
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson/test" xmlns:f="/lib/form">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:t="/lib/hudson/test" >
   <st:documentation>
     Display links to failed test from all child reports.
     @since 1.538
@@ -44,12 +44,14 @@ THE SOFTWARE.
           <a href="../${report.child.project.shortUrl}testReport">${report.child.project.name}</a>
         </h3>
 
-        <table class="pane sortable bigtable stripped">
-          <tr>
-            <td class="pane-header">Test Name</td>
-            <td class="pane-header" style="width:4em; text-align:right;">Duration</td>
-            <td class="pane-header" style="width:4em; text-align:right;">Age</td>
-          </tr>
+        <table class="jenkins-table pane sortable">
+          <thead>
+            <tr>
+              <th class="pane-header">Test Name</th>
+              <th class="pane-header" style="width:4em; text-align:right;">Duration</th>
+              <th class="pane-header" style="width:4em; text-align:right;">Age</th>
+            </tr>
+          </thead>
           <j:forEach var="f" items="${report.result.failedTests}" varStatus="i">
             <tr>
               <td class="pane no-wrap"><t:failed-test result="${f}" url="../${report.child.project.shortUrl}testReport/${f.getRelativePathFrom(report.result)}"/></td>

@@ -35,12 +35,14 @@ THE SOFTWARE.
         <j:otherwise>
           <test:bar/>
           <h2>${%Drill Down}</h2>
-          <table class="pane sortable stripped">
-            <tr>
-              <td class="pane-header">${%Test}</td>
-              <td class="pane-header" style="text-align:right">${%Fail}</td>
-              <td class="pane-header" style="text-align:right">${%Total}</td>
-            </tr>
+          <table class="jenkins-table pane sortable">
+            <thead>
+              <tr>
+                <th class="pane-header">${%Test}</th>
+                <th class="pane-header" style="text-align:right">${%Fail}</th>
+                <th class="pane-header" style="text-align:right">${%Total}</th>
+              </tr>
+            </thead>
             <j:forEach var="i" items="${it.individuals}">
               <j:set var="prev" value="${i.previousResult}" />
               <tr>
