@@ -216,32 +216,11 @@ public final class TestResult extends MetaTabulatedResult {
      */
     public void parse(long buildTime, File baseDir, PipelineTestDetails pipelineTestDetails, String[] reportFiles) throws IOException {
 
-        boolean parsed=false;
 
         for (String value : reportFiles) {
             File reportFile = new File(baseDir, value);
             // only count files that were actually updated during this build
-            if (buildTime-3000/*error margin*/ <= reportFile.lastModified()) {
-                parsePossiblyEmpty(reportFile, pipelineTestDetails);
-                parsed = true;
-            }
-        }
-
-        if(!parsed) {
-            long localTime = System.currentTimeMillis();
-            if(localTime < buildTime-1000) /*margin*/
-                // build time is in the the future. clock on this agent must be running behind
-                throw new AbortException(
-                    "Clock on this agent is out of sync with the controller, and therefore \n" +
-                    "I can't figure out what test results are new and what are old.\n" +
-                    "Please keep the agent clock in sync with the controller.");
-
-            File f = new File(baseDir,reportFiles[0]);
-            throw new AbortException(
-                String.format(
-                "Test reports were found but none of them are new. Did leafNodes run? %n"+
-                "For example, %s is %s old%n", f,
-                Util.getTimeSpanString(buildTime-f.lastModified())));
+            parsePossiblyEmpty(reportFile, pipelineTestDetails);
         }
     }
 
@@ -256,7 +235,7 @@ public final class TestResult extends MetaTabulatedResult {
 
     @Deprecated
     public void parse(long buildTime, Iterable<File> reportFiles) throws IOException {
-        parse(buildTime, reportFiles, null);
+        parse(reportFiles, null);
     }
 
     /**
@@ -268,35 +247,26 @@ public final class TestResult extends MetaTabulatedResult {
      *
      * @throws IOException if an error occurs.
      * @since 1.22
+     * @deprecated use {@link #parse(Iterable, PipelineTestDetails)}
      */
+    @Deprecated
     public void parse(long buildTime, Iterable<File> reportFiles, PipelineTestDetails pipelineTestDetails) throws IOException {
-        boolean parsed=false;
+        parse(reportFiles, pipelineTestDetails);
+    }
 
+    /**
+     * Collect reports from the given report files
+     *
+     * @param reportFiles Report files.
+     * @param pipelineTestDetails A {@link PipelineTestDetails} instance containing Pipeline-related additional arguments.
+     *
+     * @throws IOException if an error occurs.
+     */
+    public void parse(Iterable<File> reportFiles, PipelineTestDetails pipelineTestDetails) throws IOException {
         for (File reportFile : reportFiles) {
             // only count files that were actually updated during this build
-            if (buildTime-3000/*error margin*/ <= reportFile.lastModified()) {
-                parsePossiblyEmpty(reportFile, pipelineTestDetails);
-                parsed = true;
-            }
+            parsePossiblyEmpty(reportFile, pipelineTestDetails);
         }
-
-        if(!parsed) {
-            long localTime = System.currentTimeMillis();
-            if(localTime < buildTime-1000) /*margin*/
-                // build time is in the the future. clock on this agent must be running behind
-                throw new AbortException(
-                    "Clock on this agent is out of sync with the controller, and therefore \n" +
-                    "I can't figure out what test results are new and what are old.\n" +
-                    "Please keep the agent clock in sync with the controller.");
-
-            File f = reportFiles.iterator().next();
-            throw new AbortException(
-                String.format(
-                "Test reports were found but none of them are new. Did leafNodes run? %n"+
-                "For example, %s is %s old%n", f,
-                Util.getTimeSpanString(buildTime-f.lastModified())));
-        }
-        
     }
     
     private void parsePossiblyEmpty(File reportFile, PipelineTestDetails pipelineTestDetails) throws IOException {
