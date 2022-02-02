@@ -23,17 +23,18 @@ THE SOFTWARE.
 -->
 
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
-         xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-    <table class="pane sortable bigtable stripped" id="testresult">
-      <tr>
-        <td class="pane-header">${%Build}</td>
-        <td class="pane-header">${%Description}</td>
-        <td class="pane-header" style="width:5em; text-align:right;">${%Duration}</td>
-        <td class="pane-header" style="width:5em; text-align:right;">${%Fail}</td>
-        <td class="pane-header" style="width:5em; text-align:right;">${%Skip}</td>
-        <td class="pane-header" style="width:5em; text-align:right;">${%Total}</td>
-      </tr>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler">
+    <table class="jenkins-table pane sortable" id="testresult">
+      <thead>
+        <tr>
+          <th class="pane-header">${%Build}</th>
+          <th class="pane-header">${%Description}</th>
+          <th class="pane-header" style="width:5em; text-align:right;">${%Duration}</th>
+          <th class="pane-header" style="width:5em; text-align:right;">${%Fail}</th>
+          <th class="pane-header" style="width:5em; text-align:right;">${%Skip}</th>
+          <th class="pane-header" style="width:5em; text-align:right;">${%Total}</th>
+        </tr>
+      </thead>
       <tbody>
 	        <j:forEach var="b" items="${it.run.parent.builds}" begin="${start}" end="${end}">
 	          <j:set var="p" value="${it.getResultInRun(b)}"/>
