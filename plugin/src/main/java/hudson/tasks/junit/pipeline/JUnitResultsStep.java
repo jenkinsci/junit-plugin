@@ -21,7 +21,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -84,7 +84,7 @@ public class JUnitResultsStep extends Step implements JUnitTask {
         this.healthScaleFactor = Math.max(0.0, healthScaleFactor);
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public List<TestDataPublisher> getTestDataPublishers() {
         return testDataPublishers == null ? Collections.emptyList() : testDataPublishers;
@@ -95,7 +95,7 @@ public class JUnitResultsStep extends Step implements JUnitTask {
      *
      * @since 1.2
      */
-    @DataBoundSetter public final void setTestDataPublishers(@Nonnull List<TestDataPublisher> testDataPublishers) {
+    @DataBoundSetter public final void setTestDataPublishers(@NonNull List<TestDataPublisher> testDataPublishers) {
         this.testDataPublishers = new DescribableList<>(Saveable.NOOP);
         this.testDataPublishers.addAll(testDataPublishers);
     }
@@ -177,7 +177,7 @@ public class JUnitResultsStep extends Step implements JUnitTask {
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return "Archive JUnit-formatted test results";
         }

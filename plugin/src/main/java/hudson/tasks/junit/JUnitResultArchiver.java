@@ -59,7 +59,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -138,15 +138,15 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     }
 
     @Deprecated
-    private TestResult parse(String expandedTestResults, Run<?,?> run, @Nonnull FilePath workspace, Launcher launcher, TaskListener listener)
+    private TestResult parse(String expandedTestResults, Run<?,?> run, @NonNull FilePath workspace, Launcher launcher, TaskListener listener)
             throws IOException, InterruptedException
     {
         return parse(this, null, expandedTestResults, run, workspace, launcher, listener);
 
     }
 
-    private static TestResult parse(@Nonnull JUnitTask task, PipelineTestDetails pipelineTestDetails,
-                                    String expandedTestResults, Run<?,?> run, @Nonnull FilePath workspace,
+    private static TestResult parse(@NonNull JUnitTask task, PipelineTestDetails pipelineTestDetails,
+                                    String expandedTestResults, Run<?,?> run, @NonNull FilePath workspace,
                                     Launcher launcher, TaskListener listener)
             throws IOException, InterruptedException {
         return new JUnitParser(task.isKeepLongStdio(), task.isAllowEmptyResults())
@@ -174,7 +174,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
 
     /** @deprecated use {@link #parseAndSummarize} instead */
     @Deprecated
-    public static TestResultAction parseAndAttach(@Nonnull JUnitTask task, PipelineTestDetails pipelineTestDetails,
+    public static TestResultAction parseAndAttach(@NonNull JUnitTask task, PipelineTestDetails pipelineTestDetails,
                                                   Run build, FilePath workspace, Launcher launcher, TaskListener listener)
             throws InterruptedException, IOException {
         listener.getLogger().println(Messages.JUnitResultArchiver_Recording());
@@ -231,7 +231,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
         }
     }
 
-    public static TestResultSummary parseAndSummarize(@Nonnull JUnitTask task, PipelineTestDetails pipelineTestDetails,
+    public static TestResultSummary parseAndSummarize(@NonNull JUnitTask task, PipelineTestDetails pipelineTestDetails,
                                                   Run<?, ?> build, FilePath workspace, Launcher launcher, TaskListener listener)
             throws InterruptedException, IOException {
         JunitTestResultStorage storage = JunitTestResultStorage.find();
@@ -352,7 +352,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
         this.healthScaleFactor = Math.max(0.0, healthScaleFactor);
     }
 
-    @Nonnull
+    @NonNull
     @Override
     public List<TestDataPublisher> getTestDataPublishers() {
         return testDataPublishers == null ? Collections.emptyList() : testDataPublishers;
@@ -363,7 +363,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
      *
      * @since 1.2
      */
-    @DataBoundSetter public final void setTestDataPublishers(@Nonnull List<TestDataPublisher> testDataPublishers) {
+    @DataBoundSetter public final void setTestDataPublishers(@NonNull List<TestDataPublisher> testDataPublishers) {
         this.testDataPublishers = new DescribableList<>(Saveable.NOOP);
         this.testDataPublishers.addAll(testDataPublishers);
     }
