@@ -110,10 +110,7 @@
               <reuseForks>false</reuseForks>
               <trimStackTrace>false</trimStackTrace> <!-- SUREFIRE-1798 -->
               <environmentVariables>
-<!--                <PLUGINS_DIR>../plugin/target/test-classes/test-dependencies</PLUGINS_DIR>-->
-                <PLUGINS_DIR>
-                  /Users/michiprivat/dev/ws21/enterprise-testing/warning-ng-plugin-devenv-2/docker/volumes/jenkins-home/plugins
-                </PLUGINS_DIR>
+                <PLUGINS_DIR>../plugin/target/test-classes/test-dependencies</PLUGINS_DIR>
                 <JENKINS_VERSION>${jenkins.version}</JENKINS_VERSION>
                 <BROWSER>firefox</BROWSER>
               </environmentVariables>
@@ -177,7 +174,7 @@
                 <resource>
                   <directory>../plugin/target/</directory>
                   <includes>
-                    <include>warnings-ng.hpi</include>
+                    <include>junit.hpi</include>
                   </includes>
                   <filtering>false</filtering>
                 </resource>
@@ -193,10 +190,7 @@
           <reuseForks>false</reuseForks>
           <trimStackTrace>false</trimStackTrace> <!-- SUREFIRE-1798 -->
           <environmentVariables>
-            <PLUGINS_DIR>
-              /Users/michiprivat/dev/ws21/enterprise-testing/warning-ng-plugin-devenv-2/docker/volumes/jenkins-home/plugins
-            </PLUGINS_DIR>
-<!--            <PLUGINS_DIR>../plugin/target/test-classes/test-dependencies</PLUGINS_DIR>-->
+            <PLUGINS_DIR>../plugin/target/test-classes/test-dependencies</PLUGINS_DIR>
             <JENKINS_VERSION>${jenkins.version}</JENKINS_VERSION>
             <BROWSER>firefox-container</BROWSER>
           </environmentVariables>
