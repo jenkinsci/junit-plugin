@@ -13,6 +13,10 @@ import org.openqa.selenium.WebElement;
  * @author Nikolas Paripovic
  */
 public class TestResultsTableUtil {
+    static By aLink() {
+        return By.tagName("a");
+    }
+
 
     /**
      * Gets the test result table items, omitting the header table item.
@@ -34,7 +38,7 @@ public class TestResultsTableUtil {
      */
     public static List<WebElement> getLinksOfTableItems(final WebElement mainPanelElement) {
         return getTableItemsWithoutHeader(mainPanelElement).stream()
-                .map(trElement -> trElement.findElements(By.cssSelector("td")).get(0).findElement(By.cssSelector("a.model-link.inside")))
+                .map(trElement -> trElement.findElements(By.cssSelector("td")).get(0).findElement(aLink()))
                 .collect(Collectors.toList());
     }
 }

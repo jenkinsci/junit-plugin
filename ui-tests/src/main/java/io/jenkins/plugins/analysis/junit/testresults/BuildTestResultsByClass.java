@@ -89,7 +89,7 @@ public class BuildTestResultsByClass extends TestResults {
     private TestTableEntry webElementToTestTableEntry(final WebElement trElement) {
         List<WebElement> columns = trElement.findElements(By.cssSelector("td"));
 
-        WebElement linkElement = columns.get(0).findElement(By.cssSelector("a.model-link.inside"));
+        WebElement linkElement = columns.get(0).findElement(TestResultsTableUtil.aLink());
         String testName = linkElement.getText();
         String testLink = linkElement.getAttribute("href");
         String durationString = columns.get(1).getText().trim();

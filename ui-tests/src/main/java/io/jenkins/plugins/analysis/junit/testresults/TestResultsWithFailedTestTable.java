@@ -119,7 +119,7 @@ public abstract class TestResultsWithFailedTestTable extends TestResults {
         return failedTestsTableItemsWithoutHeader.stream()
                 .map(trElement -> trElement.findElements(By.cssSelector("td"))
                         .get(0)
-                        .findElement(By.cssSelector("a.model-link.inside")))
+                        .findElement(TestResultsTableUtil.aLink()))
                 .collect(Collectors.toList());
     }
 
@@ -149,7 +149,7 @@ public abstract class TestResultsWithFailedTestTable extends TestResults {
     private FailedTestTableEntry webElementToFailedTestTableEntry(final WebElement trElement) {
         List<WebElement> columns = trElement.findElements(By.cssSelector("td"));
 
-        WebElement linkElement = columns.get(0).findElement(By.cssSelector("a.model-link.inside"));
+        WebElement linkElement = columns.get(0).findElement(TestResultsTableUtil.aLink());
         String testName = linkElement.getText();
         String testLink = linkElement.getAttribute("href");
         String durationString = columns.get(1).getText().trim();

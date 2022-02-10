@@ -89,7 +89,7 @@ public class BuildTestResultsByPackage extends TestResultsWithFailedTestTable {
     private ClassTableEntry webElementToClassTableEntry(final WebElement trElement) {
         List<WebElement> columns = trElement.findElements(By.cssSelector("td"));
 
-        WebElement linkElement = columns.get(0).findElement(By.cssSelector("a.model-link.inside"));
+        WebElement linkElement = columns.get(0).findElement(TestResultsTableUtil.aLink());
         String className = linkElement.getText();
         String classLink = linkElement.getAttribute("href");
         String durationString = columns.get(1).getText().trim();
