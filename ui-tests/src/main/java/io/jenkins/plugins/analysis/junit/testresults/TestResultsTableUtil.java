@@ -14,9 +14,8 @@ import org.openqa.selenium.WebElement;
  */
 public class TestResultsTableUtil {
     static By aLink() {
-        return By.tagName("a");
+        return By.xpath("a[not(@id)]");
     }
-
 
     /**
      * Gets the test result table items, omitting the header table item.
@@ -27,7 +26,7 @@ public class TestResultsTableUtil {
         WebElement testResultTable = mainPanelElement.findElement(By.cssSelector("#testresult"));
 
         List<WebElement> testResultTableBodies = testResultTable.findElements(By.cssSelector("tbody"));
-        WebElement testResultTableBodyWithoutHeader = testResultTableBodies.get(1);
+        WebElement testResultTableBodyWithoutHeader = testResultTableBodies.get(0);
         return testResultTableBodyWithoutHeader.findElements(By.cssSelector("tr"));
     }
 

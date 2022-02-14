@@ -110,8 +110,7 @@ public abstract class TestResultsWithFailedTestTable extends TestResults {
     }
 
     private List<WebElement> getFailedTestsTableItemsWithoutHeader(final WebElement failedTestsTableElement) {
-        List<WebElement> failedTestsTableItems = failedTestsTableElement.findElements(By.cssSelector("tbody tr"));
-        return failedTestsTableItems.subList(1, failedTestsTableItems.size());
+        return failedTestsTableElement.findElements(By.cssSelector("tbody tr"));
     }
 
     private List<WebElement> initializeFailedTestLinks(final WebElement failedTestsTableElement) {
