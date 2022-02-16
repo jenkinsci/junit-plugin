@@ -1,1 +1,1 @@
-buildPlugin(useContainerAgent: true, platforms: ['linux'])
+buildPlugin(useContainerAgent: true, platforms: ['linux'], jdk: "11" )
