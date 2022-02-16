@@ -1,1 +1,4 @@
-buildPlugin(useContainerAgent: true, platforms: ['linux'], jdk: "11" )
+def configurations = [
+  [ platform: "linux", jdk: "11" ]
+]
+buildPlugin(useContainerAgent: true, configurations: configurations)
