@@ -60,7 +60,6 @@ jobs:
           java-version: '11'
           check-latest: true
           cache: 'maven'
-            ${{ runner.os }}-maven-
       - name: Build junit plugin and download dependencies
         run: mvn -V -ntp verify -Pskip --file plugin/pom.xml -Dgpg.skip
       - name: Run UI tests for the detail view of a failed JUnit test
