@@ -1,0 +1,155 @@
+name: 'Run UI tests'
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  build-summary:
+    runs-on: [ubuntu-latest]
+    name: Build summary UI tests
+
+    steps:
+      - uses: actions/checkout@v2.3.4
+      - name: Set up JDK 11
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+          check-latest: true
+          cache: 'maven'
+      - name: Build junit plugin and download dependencies
+        run: mvn -V -ntp verify -Pskip --file plugin/pom.xml -Dgpg.skip
+      - name: Run UI tests for the tests summary on the build summary page of a job
+        env:
+          BROWSER: firefox-container
+        run: mvn -V -ntp test --file ui-tests/pom.xml -Dtest=BuildSummaryTest -Dgpg.skip -Dsurefire.rerunFailingTestsCount=1
+
+  build-results:
+    runs-on: [ubuntu-latest]
+    name: Build results UI tests
+
+    steps:
+      - uses: actions/checkout@v2.3.4
+      - name: Set up JDK 11
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+          check-latest: true
+          cache: 'maven'
+      - name: Build junit plugin and download dependencies
+        run: mvn -V -ntp verify -Pskip --file plugin/pom.xml -Dgpg.skip
+      - name: Run UI tests for the detail view of failed unit tests of a build
+        env:
+          BROWSER: firefox-container
+        run: mvn -V -ntp test --file ui-tests/pom.xml -Dtest=BuildTestResultsTest -Dgpg.skip -Dsurefire.rerunFailingTestsCount=1
+
+  details:
+    runs-on: [ubuntu-latest]
+    name: Details UI tests
+
+    steps:
+      - uses: actions/checkout@v2.3.4
+      - name: Set up JDK 11
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+          check-latest: true
+          cache: 'maven'
+      - name: Build junit plugin and download dependencies
+        run: mvn -V -ntp verify -Pskip --file plugin/pom.xml -Dgpg.skip
+      - name: Run UI tests for the detail view of a failed JUnit test
+        env:
+          BROWSER: firefox-container
+        run: mvn -V -ntp test --file ui-tests/pom.xml -Dtest=TestDetailTest -Dgpg.skip -Dsurefire.rerunFailingTestsCount=1
+
+  publisher:
+    runs-on: [ubuntu-latest]
+    name: Publisher UI tests
+
+    steps:
+      - uses: actions/checkout@v2.3.4
+      - name: Set up JDK 11
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+          check-latest: true
+          cache: 'maven'
+      - name: Cache local Maven repository
+        uses: actions/cache@v2.1.7
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+      - name: Build junit plugin and download dependencies
+        run: mvn -V -ntp verify -Pskip --file plugin/pom.xml -Dgpg.skip
+      - name: Run UI tests for the job configuration of the JUnit test results report publisher
+        env:
+          BROWSER: firefox-container
+        run: mvn -V -ntp test --file ui-tests/pom.xml -Dtest=JobConfigurationTest -Dgpg.skip -Dsurefire.rerunFailingTestsCount=1
+
+  job-overview:
+    runs-on: [ubuntu-latest]
+    name: Job overview UI tests
+
+    steps:
+      - uses: actions/checkout@v2.3.4
+      - name: Set up JDK 11
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+          check-latest: true
+          cache: 'maven'
+      - name: Build junit plugin and download dependencies
+        run: mvn -V -ntp verify -Pskip --file plugin/pom.xml -Dgpg.skip
+      - name: Run UI tests for the the published results of JUnit tests on the job summary page
+        env:
+          BROWSER: firefox-container
+        run: mvn -V -ntp test --file ui-tests/pom.xml -Dtest=ProjectSummaryTest -Dgpg.skip -Dsurefire.rerunFailingTestsCount=1
+
+  class-filter:
+    runs-on: [ubuntu-latest]
+    name: Filtered by class UI tests
+
+    steps:
+      - uses: actions/checkout@v2.3.4
+      - name: Set up JDK 11
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+          check-latest: true
+          cache: 'maven'
+      - name: Build junit plugin and download dependencies
+        run: mvn -V -ntp verify -Pskip --file plugin/pom.xml -Dgpg.skip
+      - name: Run UI tests for the unit tests results of a build which are filtered by a class
+        env:
+          BROWSER: firefox-container
+        run: mvn -V -ntp test --file ui-tests/pom.xml -Dtest=BuildTestResultsByClassTest -Dgpg.skip -Dsurefire.rerunFailingTestsCount=1
+
+  package-filter:
+    runs-on: [ubuntu-latest]
+    name: Filtered by package UI tests
+
+    steps:
+      - uses: actions/checkout@v2.3.4
+      - name: Set up JDK 11
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+          check-latest: true
+          cache: 'maven'
+      - name: Build junit plugin and download dependencies
+        run: mvn -V -ntp verify -Pskip --file plugin/pom.xml -Dgpg.skip
+      - name: Run UI tests for the unit tests results of a build which are filtered by a package
+        env:
+          BROWSER: firefox-container
+        run: mvn -V -ntp test --file ui-tests/pom.xml -Dtest=BuildTestResultsByPackageTest -Dgpg.skip -Dsurefire.rerunFailingTestsCount=1
