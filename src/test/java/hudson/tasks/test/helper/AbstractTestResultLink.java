@@ -14,7 +14,7 @@ public class AbstractTestResultLink<T extends AbstractTestResultLink<T>> {
     }
 
     public String getResultText() {
-        return testResultLink.getNextSibling().asText();
+        return testResultLink.getNextSibling().asNormalizedText();
     }
     public T assertNoTests() {
         assertThat(getResultText(), containsString("no tests"));

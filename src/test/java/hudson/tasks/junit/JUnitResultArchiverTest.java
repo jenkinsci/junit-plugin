@@ -382,15 +382,15 @@ public class JUnitResultArchiverTest {
         WebClient wc = j.createWebClient();
         HtmlPage page = wc.getPage(b, "testReport");
 
-        assertThat(page.asText(), not(containsString(EXPECTED)));
+        assertThat(page.asNormalizedText(), not(containsString(EXPECTED)));
 
         ((HtmlAnchor) page.getElementById(ID_PREFIX + "-showlink")).click();
         wc.waitForBackgroundJavaScript(10000L);
-        assertThat(page.asText(), containsString(EXPECTED));
+        assertThat(page.asNormalizedText(), containsString(EXPECTED));
 
         ((HtmlAnchor) page.getElementById(ID_PREFIX + "-hidelink")).click();
         wc.waitForBackgroundJavaScript(10000L);
-        assertThat(page.asText(), not(containsString(EXPECTED)));
+        assertThat(page.asNormalizedText(), not(containsString(EXPECTED)));
     }
 
     @Issue("JENKINS-26535")

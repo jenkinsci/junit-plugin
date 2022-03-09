@@ -299,7 +299,7 @@ public class TestResultPublishingTest {
 
     void assertPaneDiffText(String msg, int expectedValue, Object paneObj) {
         assertTrue( "paneObj should be an HtmlElement, it was " + paneObj.getClass(), paneObj instanceof HtmlElement );
-        String paneText = ((HtmlElement) paneObj).asText();
+        String paneText = ((HtmlElement) paneObj).asNormalizedText();
         if (expectedValue==0) {
             assertStringEmptyOrNull(msg, paneText);
         } else {
