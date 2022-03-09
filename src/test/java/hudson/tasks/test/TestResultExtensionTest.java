@@ -28,26 +28,35 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import hudson.model.Run;
-import org.jvnet.hudson.test.HudsonTestCase;
+import org.junit.Rule;
+import org.junit.Test;
+import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TouchBuilder;
 
 import java.util.concurrent.TimeUnit;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 
 /**
  * A test case to make sure that the TestResult extension mechanism
  * is working properly. 
  */
-public class TestResultExtensionTest extends HudsonTestCase {
+public class TestResultExtensionTest {
 
+    @Rule
+    public JenkinsRule j = new JenkinsRule();
+
+    @Test
     public void testTrivialRecorder() throws Exception {
-        FreeStyleProject project = createFreeStyleProject("trivialtest");
+        FreeStyleProject project = j.createFreeStyleProject("trivialtest");
         TrivialTestResultRecorder recorder = new TrivialTestResultRecorder();
         project.getPublishersList().add(recorder);
         project.getBuildersList().add(new TouchBuilder());
 
         FreeStyleBuild build = project.scheduleBuild2(0).get(5, TimeUnit.MINUTES); /* leave room for debugging*/
-        assertBuildStatus(Result.SUCCESS, build);
+        j.assertBuildStatus(Result.SUCCESS, build);
         TrivialTestResultAction action = build.getAction(TrivialTestResultAction.class);
         assertNotNull("we should have an action", action);
         assertNotNull("parent action should have an owner", action.run);
@@ -61,11 +70,11 @@ public class TestResultExtensionTest extends HudsonTestCase {
         assertNotNull("we should have a list of test actions", result.getTestActions());
 
         // Validate that there are test results where I expect them to be:
-        HudsonTestCase.WebClient wc = new HudsonTestCase.WebClient();
+        JenkinsRule.WebClient wc = j.createWebClient();
         HtmlPage projectPage = wc.getPage(project);
-        assertGoodStatus(projectPage);
+        j.assertGoodStatus(projectPage);
         HtmlPage testReportPage = wc.getPage(project, "/lastBuild/testReport/");
-        assertGoodStatus(testReportPage);
+        j.assertGoodStatus(testReportPage);
 
 
     }
