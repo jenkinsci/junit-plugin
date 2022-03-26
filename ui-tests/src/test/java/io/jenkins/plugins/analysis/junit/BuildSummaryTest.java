@@ -32,7 +32,7 @@ public class BuildSummaryTest extends AbstractJUnitTest {
 
         JUnitBuildSummary buildSummary = new JUnitBuildSummary(build);
 
-        assertThat(buildSummary.getTitleText()).containsAnyOf("no failures", "0 failures");
+        assertThat(buildSummary.getTitleNumberOfFailuresText()).containsAnyOf("no failures", "0 failures");
         assertThat(buildSummary.getFailureNames()).isEmpty();
     }
 

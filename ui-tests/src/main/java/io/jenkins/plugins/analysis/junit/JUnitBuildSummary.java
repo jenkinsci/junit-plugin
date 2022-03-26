@@ -80,6 +80,27 @@ public class JUnitBuildSummary extends PageObject {
     }
 
     /**
+     * Returns the title link text of the summary.
+     *
+     * @return the title link text
+     */
+    public String getTitleLinkText() {
+        String text = summaryContent.getText();
+        return text.substring(0, text.indexOf('(') - 2);
+    }
+
+    /**
+     * Returns the number of failures text in the title of the summary.
+     *
+     * @return the number of failures text in the title
+     */
+    public String getTitleNumberOfFailuresText() {
+        String text = summaryContent.getText();
+        return text.substring(text.indexOf('('), text.length() - 1);
+    }
+
+
+    /**
      * Returns the number of failures of this junit run.
      *
      * @return the number of failures
