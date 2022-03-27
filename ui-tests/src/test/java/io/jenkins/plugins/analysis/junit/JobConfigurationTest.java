@@ -8,6 +8,7 @@ import org.jenkinsci.test.acceptance.junit.AbstractJUnitTest;
 import org.jenkinsci.test.acceptance.po.Build;
 import org.jenkinsci.test.acceptance.po.FreeStyleJob;
 
+import static io.jenkins.plugins.analysis.junit.JUnitProjectSummaryAssert.*;
 import static org.assertj.core.api.AssertionsForClassTypes.*;
 
 /**
@@ -31,8 +32,7 @@ public class JobConfigurationTest extends AbstractJUnitTest {
         publisher.setSkipMarkingBuildAsUnstableOnTestFailure(true);
         j.save();
 
-        Build build = j.startBuild();
-        assertThat(build.getResult()).isEqualTo("SUCCESS");
+        j.startBuild().shouldSucceed();
     }
 
     /**

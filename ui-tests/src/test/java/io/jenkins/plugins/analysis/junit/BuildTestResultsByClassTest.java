@@ -1,6 +1,7 @@
 package io.jenkins.plugins.analysis.junit;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import org.junit.Test;
@@ -11,9 +12,8 @@ import org.jenkinsci.test.acceptance.po.Build;
 
 import io.jenkins.plugins.analysis.junit.testresults.BuildTestResultsByClass;
 import io.jenkins.plugins.analysis.junit.testresults.BuildTestResultsByPackage;
+import io.jenkins.plugins.analysis.junit.testresults.tableentry.TestTableEntry;
 import io.jenkins.plugins.analysis.junit.util.TestUtils;
-
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 /**
  * Tests the published unit tests results of a build which are filtered by a class.
@@ -37,8 +37,6 @@ public class BuildTestResultsByClassTest extends AbstractJUnitTest {
                 "AppTest"
         );
 
-        assertThat(buildTestResultsByClass.getTestTableEntries()).extracting(List::size).isEqualTo(2);
-
         TestUtils.assertElementInCollection(buildTestResultsByClass.getTestTableEntries(),
                 testTableEntry -> testTableEntry.getTestName().equals("testAppFailNoMessage"),
                 testTableEntry -> testTableEntry.getTestName().equals("testAppFailNoStacktrace"));
@@ -60,8 +58,6 @@ public class BuildTestResultsByClassTest extends AbstractJUnitTest {
                 "com.simple.project",
                 "AppTest"
         );
-
-        assertThat(buildTestResultsByClass.getTestTableEntries()).extracting(List::size).isEqualTo(1);
 
         TestUtils.assertElementInCollection(buildTestResultsByClass.getTestTableEntries(),
                 testTableEntry -> testTableEntry.getTestName().equals("testApp"));

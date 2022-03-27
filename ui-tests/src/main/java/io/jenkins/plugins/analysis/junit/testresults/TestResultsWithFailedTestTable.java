@@ -79,6 +79,10 @@ public abstract class TestResultsWithFailedTestTable extends TestResults {
 
     }
 
+    public Optional<WebElement> getFailedTestsTable() {
+        return failedTestsTable;
+    }
+
     /**
      * Checks whether the failed test table exists or not.
      * With this knowledge, you can call {@link #getFailedTestTableEntries()}

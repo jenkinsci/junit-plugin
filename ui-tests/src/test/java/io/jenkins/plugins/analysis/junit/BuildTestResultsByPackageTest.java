@@ -2,6 +2,7 @@ package io.jenkins.plugins.analysis.junit;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.Test;
 
@@ -12,8 +13,7 @@ import org.jenkinsci.test.acceptance.po.Build;
 import io.jenkins.plugins.analysis.junit.testresults.BuildTestResultsByPackage;
 import io.jenkins.plugins.analysis.junit.util.TestUtils;
 
-import static org.assertj.core.api.AssertionsForClassTypes.*;
-import static io.jenkins.plugins.analysis.junit.testresults.BuildTestResultsByPackageAssert.*;
+import static io.jenkins.plugins.analysis.junit.Assertions.*;
 
 /**
  * Tests the published unit test results of a build which are filtered by a package.
@@ -40,16 +40,11 @@ public class BuildTestResultsByPackageTest extends AbstractJUnitTest {
                 .hasNumberOfFailures(2)
                 .hasNumberOfTests(3);
 
-        assertThat(buildTestResultsByPackage.failedTestTableExists()).isTrue();
-        assertThat(buildTestResultsByPackage.getFailedTestTableEntries()).extracting(List::size).isEqualTo(2);
-
         TestUtils.assertElementInCollection(buildTestResultsByPackage.getFailedTestTableEntries(),
                 failedTestTableEntry -> failedTestTableEntry.getTestName()
                         .equals("com.simple.project.AppTest.testAppFailNoMessage"),
                 failedTestTableEntry -> failedTestTableEntry.getTestName()
                         .equals("com.simple.project.AppTest.testAppFailNoStacktrace"));
-
-        assertThat(buildTestResultsByPackage.getClassTableEntries()).extracting(List::size).isEqualTo(2);
 
         TestUtils.assertElementInCollection(buildTestResultsByPackage.getClassTableEntries(),
                 classTableEntry -> classTableEntry.getClassName().equals("AppTest"),
@@ -72,9 +67,7 @@ public class BuildTestResultsByPackageTest extends AbstractJUnitTest {
                 .hasNumberOfFailures(0)
                 .hasNumberOfTests(1);
 
-        assertThat(buildTestResultsByPackage.failedTestTableExists()).isFalse();
-
-        assertThat(buildTestResultsByPackage.getClassTableEntries()).extracting(List::size).isEqualTo(1);
+        assertThat(buildTestResultsByPackage).hasFailedTestsTable(Optional.empty());
 
         TestUtils.assertElementInCollection(buildTestResultsByPackage.getClassTableEntries(),
                 classTableEntry -> classTableEntry.getClassName().equals("AppTest"));

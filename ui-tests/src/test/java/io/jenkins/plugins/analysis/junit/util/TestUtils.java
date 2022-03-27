@@ -23,9 +23,13 @@ public class TestUtils {
     /**
      * Creates a freestyle Job with resources and runs build with expected build result.
      *
-     * @param abstractJUnitTestBaseClass the caller's test class
-     * @param resourcePaths resource paths of test result reports
-     * @param expectedBuildResult expected build results for assertion
+     * @param abstractJUnitTestBaseClass
+     *         the caller's test class
+     * @param resourcePaths
+     *         resource paths of test result reports
+     * @param expectedBuildResult
+     *         expected build results for assertion
+     *
      * @return created and ran build
      */
     public static Build createFreeStyleJobAndRunBuild(AbstractJUnitTest abstractJUnitTestBaseClass,
@@ -39,8 +43,11 @@ public class TestUtils {
     /**
      * Creates a freestyle Job with resources.
      *
-     * @param abstractJUnitTestBaseClass the caller's test class
-     * @param resourcePaths resource paths of test result reports
+     * @param abstractJUnitTestBaseClass
+     *         the caller's test class
+     * @param resourcePaths
+     *         resource paths of test result reports
+     *
      * @return created freestyle job.
      */
     public static Job getCreatedFreeStyleJobWithResources(AbstractJUnitTest abstractJUnitTestBaseClass,
@@ -59,10 +66,12 @@ public class TestUtils {
     }
 
     /**
-     * Creates a freestyle and runs two consecutive builds with different test result report which increases failure count
-     * in the second build.
+     * Creates a freestyle and runs two consecutive builds with different test result report which increases failure
+     * count in the second build.
      *
-     * @param abstractJUnitTestBaseClass the caller's test class
+     * @param abstractJUnitTestBaseClass
+     *         the caller's test class
+     *
      * @return second build
      */
     public static Build createTwoBuildsWithIncreasedTestFailures(AbstractJUnitTest abstractJUnitTestBaseClass) {
@@ -76,7 +85,9 @@ public class TestUtils {
         fixedCopyJob.getJob().startBuild().shouldBeUnstable();
 
         fixedCopyJob.getJob().configure();
-        fixedCopyJob.getJob().editPublisher(JUnitPublisher.class, publisher -> publisher.testResults.set("four_failed_one_succeeded.xml"));
+        fixedCopyJob.getJob()
+                .editPublisher(JUnitPublisher.class,
+                        publisher -> publisher.testResults.set("four_failed_one_succeeded.xml"));
 
         fixedCopyJob.getJob().startBuild().shouldBeUnstable().openStatusPage();
         return fixedCopyJob.getJob().getLastBuild();
@@ -85,12 +96,19 @@ public class TestUtils {
     /**
      * Asserts given predicates within the given collection.
      *
-     * @param collection collection to be asserted
-     * @param predicates assertion criteria
-     * @param <E> the type of elements in this collection
+     * @param collection
+     *         collection to be asserted
+     * @param predicates
+     *         assertion criteria
+     * @param <E>
+     *         the type of elements in this collection
      */
     public static <E> void assertElementInCollection(Collection<E> collection,
             Predicate<E>... predicates) {
+        // TODO: assert length of collection and predicates
+        if (collection.size() != predicates.length) {
+            throw new AssertionError();
+        }
         assertThat(Stream.of(predicates).allMatch(predicate -> collection.stream()
                 .filter(predicate)
                 .findAny()

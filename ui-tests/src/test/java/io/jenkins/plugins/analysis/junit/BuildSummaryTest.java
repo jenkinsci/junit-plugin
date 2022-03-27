@@ -10,8 +10,7 @@ import org.jenkinsci.test.acceptance.po.Build;
 
 import io.jenkins.plugins.analysis.junit.util.TestUtils;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
+import static io.jenkins.plugins.analysis.junit.Assertions.*;
 /**
  * Tests the JUnit tests summary on the build summary page of a job.
  *
@@ -32,8 +31,8 @@ public class BuildSummaryTest extends AbstractJUnitTest {
 
         JUnitBuildSummary buildSummary = new JUnitBuildSummary(build);
 
-        assertThat(buildSummary.getTitleNumberOfFailuresText()).containsAnyOf("no failures", "0 failures");
-        assertThat(buildSummary.getFailureNames()).isEmpty();
+        assertThat(buildSummary).hasTitleNumberOfFailuresText("no failures");
+        assertThat(buildSummary).hasNoFailureNames();
     }
 
     /**
@@ -47,8 +46,7 @@ public class BuildSummaryTest extends AbstractJUnitTest {
 
         JUnitBuildSummary buildSummary = new JUnitBuildSummary(build);
 
-        assertThat(buildSummary.getTitleText()).contains("6 failures");
-        assertThat(buildSummary.getFailureNames())
-                .containsExactlyInAnyOrder("JUnit.testScore[0]", "JUnit.testScore[1]", "JUnit.testScore[2]", "TestNG.testScore", "TestNG.testScore", "TestNG.testScore");
+        assertThat(buildSummary).hasTitleNumberOfFailuresText("6 failures");
+        assertThat(buildSummary).hasFailureNames("JUnit.testScore[0]", "JUnit.testScore[1]", "JUnit.testScore[2]", "TestNG.testScore", "TestNG.testScore", "TestNG.testScore");
     }
 }

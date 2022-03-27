@@ -96,7 +96,7 @@ public class JUnitBuildSummary extends PageObject {
      */
     public String getTitleNumberOfFailuresText() {
         String text = summaryContent.getText();
-        return text.substring(text.indexOf('('), text.length() - 1);
+        return text.substring(text.indexOf('(') + 1, text.indexOf(')') - 1);
     }
 
 

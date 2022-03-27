@@ -1,7 +1,9 @@
 package io.jenkins.plugins.analysis.junit;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.Test;
 
@@ -10,10 +12,10 @@ import org.jenkinsci.test.acceptance.junit.WithPlugins;
 import org.jenkinsci.test.acceptance.po.Build;
 
 import io.jenkins.plugins.analysis.junit.testresults.BuildTestResults;
+import io.jenkins.plugins.analysis.junit.testresults.tableentry.PackageTableEntry;
 import io.jenkins.plugins.analysis.junit.util.TestUtils;
 
-import static io.jenkins.plugins.analysis.junit.testresults.BuildTestResultsAssert.*;
-import static org.assertj.core.api.AssertionsForClassTypes.*;
+import static io.jenkins.plugins.analysis.junit.Assertions.*;
 
 /**
  * Tests the detail view of failed unit tests of a build.
@@ -42,15 +44,10 @@ public class BuildTestResultsTest extends AbstractJUnitTest {
                 .hasNumberOfFailures(3)
                 .hasNumberOfTests(5);
 
-        assertThat(buildTestResults.failedTestTableExists()).isTrue();
-        assertThat(buildTestResults.getFailedTestTableEntries()).extracting(List::size).isEqualTo(3);
-
         TestUtils.assertElementInCollection(buildTestResults.getFailedTestTableEntries(),
                 failedTestTableEntry -> failedTestTableEntry.getTestName().equals("com.simple.project.AppTest.testAppFailNoMessage"),
                 failedTestTableEntry -> failedTestTableEntry.getTestName().equals("com.simple.project.AppTest.testAppFailNoStacktrace"),
                 failedTestTableEntry -> failedTestTableEntry.getTestName().equals("com.another.simple.project.ApplicationTest.testAppFail"));
-
-        assertThat(buildTestResults.getPackageTableEntries()).extracting(List::size).isEqualTo(2);
 
         TestUtils.assertElementInCollection(buildTestResults.getPackageTableEntries(),
                 packageTableEntry -> packageTableEntry.getPackageName().equals("com.simple.project"),
@@ -74,10 +71,8 @@ public class BuildTestResultsTest extends AbstractJUnitTest {
                 .hasNumberOfFailures(0)
                 .hasNumberOfTests(1);
 
-        assertThat(buildTestResults.failedTestTableExists()).isFalse();
-        assertThat(buildTestResults.getFailedTestTableEntries()).extracting(List::size).isEqualTo(0);
-
-        assertThat(buildTestResults.getPackageTableEntries()).extracting(List::size).isEqualTo(1);
+        assertThat(buildTestResults).hasFailedTestsTable(Optional.empty());
+        assertThat(buildTestResults).hasFailedTestTableEntries(Collections.emptyList());
 
         TestUtils.assertElementInCollection(buildTestResults.getPackageTableEntries(),
                 packageTableEntry -> packageTableEntry.getPackageName().equals("com.simple.project"));
@@ -92,8 +87,6 @@ public class BuildTestResultsTest extends AbstractJUnitTest {
         Build lastBuild = TestUtils.createTwoBuildsWithIncreasedTestFailures(this);
         JUnitBuildSummary buildSummary = new JUnitBuildSummary(lastBuild);
         BuildTestResults buildTestResults = buildSummary.openBuildTestResults();
-
-        assertThat(buildTestResults.getPackageTableEntries()).extracting(List::size).isEqualTo(2);
 
         TestUtils.assertElementInCollection(buildTestResults.getPackageTableEntries(),
                 packageTableEntry -> packageTableEntry.getFailDiff().get().equals(1)
