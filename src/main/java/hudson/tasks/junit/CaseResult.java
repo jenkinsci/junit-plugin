@@ -532,9 +532,14 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     @Override
     public CaseResult getPreviousResult() {
         if (parent == null) return null;
-        SuiteResult pr = parent.getPreviousResult();
-        if(pr==null)    return null;
-        return pr.getCase(getTransformedFullDisplayName());
+
+        TestResult previousResult = parent.getParent().getPreviousResult();
+        if (previousResult == null) return null;
+        if (previousResult instanceof hudson.tasks.junit.TestResult) {
+            hudson.tasks.junit.TestResult pr = (hudson.tasks.junit.TestResult) previousResult;
+            return pr.getCase(parent.getName(), getTransformedFullDisplayName());
+        }
+        return null;
     }
 
     /**

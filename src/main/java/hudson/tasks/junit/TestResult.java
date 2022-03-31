@@ -24,8 +24,6 @@
 package hudson.tasks.junit;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import hudson.AbortException;
-import hudson.Util;
 import hudson.model.Run;
 import io.jenkins.plugins.junit.storage.TestResultImpl;
 import hudson.tasks.test.AbstractTestResultAction;
@@ -45,9 +43,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.apache.tools.ant.DirectoryScanner;
 import org.dom4j.DocumentException;
 import org.kohsuke.stapler.StaplerRequest;
@@ -73,9 +74,9 @@ public final class TestResult extends MetaTabulatedResult {
     private final List<SuiteResult> suites = new ArrayList<>();
 
     /**
-     * {@link #suites} keyed by their names for faster lookup.
+     * {@link #suites} keyed by their names for faster lookup. Since multiple suites can have the same name, holding a collection.
      */
-    private transient Map<String,SuiteResult> suitesByName;
+    private transient Map<String, Collection<SuiteResult>> suitesByName;
 
     /**
      * {@link #suites} keyed by their node ID for faster lookup. May be empty.
@@ -685,11 +686,31 @@ public final class TestResult extends MetaTabulatedResult {
         return byPackages.get(packageName);
     }
 
+    /**
+     * Returns the first suite with the given name. Prefer using {@link #getSuites(String)} to disambiguate suites with the same name.
+     * @param name the suite name
+     * @return The first test suite with the given name, or null if not found.
+     */
+    @CheckForNull
     public SuiteResult getSuite(String name) {
-        if (impl != null) {
-            return impl.getSuite(name);
+        Collection<SuiteResult> suiteResults = getSuites(name);
+        if (suiteResults.isEmpty()) {
+            return null;
+        } else {
+            return suiteResults.iterator().next();
         }
-        
+    }
+
+    /**
+     * Returns all suites with the given name.
+     * @param name the suite name
+     * @return all suites with the given name
+     */
+    @NonNull
+    public Collection<SuiteResult> getSuites(String name) {
+        if (impl != null) {
+            return Collections.singleton(impl.getSuite(name));
+        }
         return suitesByName.get(name);
     }
 
@@ -750,7 +771,7 @@ public final class TestResult extends MetaTabulatedResult {
         // Ask all of our children to tally themselves
         for (SuiteResult s : suites) {
             s.setParent(this); // kluge to prevent double-counting the results
-            suitesByName.put(s.getName(),s);
+            suitesByName.merge(s.getName(), Collections.singleton(s), (a,b) -> Stream.concat(a.stream(), b.stream()).collect(Collectors.toList()));
             if (s.getNodeId() != null) {
                 addSuiteByNode(s);
             }
@@ -804,7 +825,7 @@ public final class TestResult extends MetaTabulatedResult {
             if(!s.freeze(this))      // this is disturbing: has-a-parent is conflated with has-been-counted
                 continue;
 
-            suitesByName.put(s.getName(),s);
+            suitesByName.merge(s.getName(), Collections.singleton(s), (a,b) -> Stream.concat(a.stream(), b.stream()).collect(Collectors.toList()));
 
             if (s.getNodeId() != null) {
                 addSuiteByNode(s);
@@ -901,6 +922,16 @@ public final class TestResult extends MetaTabulatedResult {
         return result;
     }
 
+
+
     private static final long serialVersionUID = 1L;
 
+    public CaseResult getCase(String suiteName, String transformedFullDisplayName) {
+        return getSuites(suiteName)
+                .stream()
+                .map(suite -> suite.getCase(transformedFullDisplayName))
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null);
+    }
 }
