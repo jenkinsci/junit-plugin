@@ -376,7 +376,7 @@ public class JUnitResultsStepTest {
 
     @Test
     public void ageResetSameTestSuiteName() throws Exception {
-        WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "currentBuildResultUnstable");
+        WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "p");
         j.setDefinition(new CpsFlowDefinition("stage('stage 1') {\n" +
                 "  node {\n" +
                 "    junit(testResults: '*-1.xml')\n" +
@@ -391,6 +391,7 @@ public class JUnitResultsStepTest {
         copyToWorkspace(j, JUnitResultsStepTest.class.getResource("ageReset-2.xml"), "ageReset-2.xml");
         WorkflowRun r = rule.waitForCompletion(j.scheduleBuild2(0).waitForStart());
         rule.assertBuildStatus(Result.UNSTABLE, r);
+        assertEquals(2, r.getAction(TestResultAction.class).getResult().getSuites().size());
         CaseResult caseResult = findCaseResult(r, "aClass.methodName");
         assertNotNull(caseResult);
         assertEquals(1, caseResult.getAge());
