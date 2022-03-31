@@ -1,8 +1,8 @@
 <?xml version="1.0" ?>
 <testsuites disabled="0" errors="0" failures="1" tests="1" time="2">
-<testsuite disabled="0" errors="0" failures="1" name="Test Suite" skipped="0" tests="1" time="2">
-  <testcase classname="aClass" name="methodName" time="2.0000">
-    <failure message="I failed" type="failure">stacktrace</failure>
-  </testcase>
-</testsuite>
+  <testsuite disabled="0" errors="0" failures="1" name="Test Suite" skipped="0" tests="1" time="2">
+    <testcase classname="aClass" name="methodName" time="2.0000">
+      <failure message="I failed" type="failure">stacktrace</failure>
+    </testcase>
+  </testsuite>
 </testsuites>
