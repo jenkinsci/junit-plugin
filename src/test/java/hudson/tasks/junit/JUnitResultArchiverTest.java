@@ -72,20 +72,25 @@ import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.List;
 
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.*;
-
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
-import org.jvnet.hudson.test.RandomlyFails;
 import org.jvnet.hudson.test.SingleFileSCM;
 import org.jvnet.hudson.test.TestExtension;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.HttpResponse;
+
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class JUnitResultArchiverTest {
 
@@ -118,9 +123,9 @@ public class JUnitResultArchiverTest {
 
     }
 
-   @RandomlyFails("TimeoutException from basic")
    @LocalData("All")
    @Test public void slave() throws Exception {
+       Assume.assumeFalse("TODO frequent TimeoutException from basic", Functions.isWindows());
         DumbSlave s = j.createOnlineSlave();
         project.setAssignedLabel(s.getSelfLabel());
 
@@ -133,7 +138,8 @@ public class JUnitResultArchiverTest {
         basic();
     }
 
-    private void assertTestResults(FreeStyleBuild build) {
+    private void assertTestResults(FreeStyleBuild build) throws Exception {
+        j.assertBuildStatus(Result.UNSTABLE, build);
         TestResultAction testResultAction = build.getAction(TestResultAction.class);
         assertNotNull("no TestResultAction", testResultAction);
 
@@ -247,8 +253,7 @@ public class JUnitResultArchiverTest {
         }
         @Override public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
             FilePath ws = build.getWorkspace();
-            OutputStream os = ws.child(name + ".xml").write();
-            try {
+            try (OutputStream os = ws.child(name + ".xml").write()) {
                 PrintWriter pw = new PrintWriter(os);
                 pw.println("<testsuite failures=\"" + fail + "\" errors=\"0\" skipped=\"0\" tests=\"" + (pass + fail) + "\" name=\"" + name + "\">");
                 for (int i = 0; i < pass; i++) {
@@ -259,8 +264,6 @@ public class JUnitResultArchiverTest {
                 }
                 pw.println("</testsuite>");
                 pw.flush();
-            } finally {
-                os.close();
             }
             new JUnitResultArchiver(name + ".xml").perform(build, ws, launcher, listener);
             return true;
@@ -310,20 +313,56 @@ public class JUnitResultArchiverTest {
         }
     }
 
-    @Test public void emptyDirectoryAllowEmptyResult() throws Exception {
+    @Test public void noTestResultFilesAllowEmptyResult() throws Exception {
         JUnitResultArchiver a = new JUnitResultArchiver("TEST-*.xml");
         a.setAllowEmptyResults(true);
         FreeStyleProject freeStyleProject = j.createFreeStyleProject();
         freeStyleProject.getPublishersList().add(a);
-        j.assertBuildStatus(Result.SUCCESS, freeStyleProject.scheduleBuild2(0).get());
+        FreeStyleBuild build = freeStyleProject.scheduleBuild2(0).get();
+        j.assertBuildStatus(Result.SUCCESS, build);
+        j.assertLogContains(Messages.JUnitResultArchiver_NoTestReportFound(), build);
     }
 
-    @Test public void emptyDirectory() throws Exception {
+    @Test public void noTestResultFilesDisallowEmptyResult() throws Exception {
         JUnitResultArchiver a = new JUnitResultArchiver("TEST-*.xml");
         a.setAllowEmptyResults(false);
         FreeStyleProject freeStyleProject = j.createFreeStyleProject();
         freeStyleProject.getPublishersList().add(a);
-        j.assertBuildStatus(Result.FAILURE, freeStyleProject.scheduleBuild2(0).get());
+        FreeStyleBuild build = freeStyleProject.scheduleBuild2(0).get();
+        j.assertBuildStatus(Result.FAILURE, build);
+        j.assertLogContains(Messages.JUnitResultArchiver_NoTestReportFound(), build);
+    }
+
+    @Test public void noResultsInTestResultFilesAllowEmptyResult() throws Exception {
+        JUnitResultArchiver a = new JUnitResultArchiver("TEST-*.xml");
+        a.setAllowEmptyResults(true);
+        FreeStyleProject freeStyleProject = j.createFreeStyleProject();
+        freeStyleProject.getBuildersList().add(new NoResultsInTestResultFileBuilder());
+        freeStyleProject.getPublishersList().add(a);
+        FreeStyleBuild build = freeStyleProject.scheduleBuild2(0).get();
+        j.assertBuildStatus(Result.SUCCESS, build);
+        j.assertLogContains(Messages.JUnitResultArchiver_ResultIsEmpty(), build);
+    }
+
+    @Test public void noResultsInTestResultFilesDisallowEmptyResult() throws Exception {
+        JUnitResultArchiver a = new JUnitResultArchiver("TEST-*.xml");
+        a.setAllowEmptyResults(false);
+        FreeStyleProject freeStyleProject = j.createFreeStyleProject();
+        freeStyleProject.getBuildersList().add(new NoResultsInTestResultFileBuilder());
+        freeStyleProject.getPublishersList().add(a);
+        FreeStyleBuild build = freeStyleProject.scheduleBuild2(0).get();
+        j.assertBuildStatus(Result.FAILURE, build);
+        j.assertLogContains(Messages.JUnitResultArchiver_ResultIsEmpty(), build);
+    }
+
+    public static final class NoResultsInTestResultFileBuilder extends Builder {
+        @Override
+        public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+            String fileName = "TEST-foo.xml";
+            String fileContent = "<testsuite name=\"foo\" failures=\"0\" errors=\"0\" skipped=\"0\" tests=\"0\"/>";
+            build.getWorkspace().child(fileName).write(fileContent, "UTF-8");
+            return true;
+        }
     }
 
     @Test public void specialCharsInRelativePath() throws Exception {
@@ -342,22 +381,22 @@ public class JUnitResultArchiverTest {
         WebClient wc = j.createWebClient();
         HtmlPage page = wc.getPage(b, "testReport");
 
-        assertThat(page.asText(), not(containsString(EXPECTED)));
+        assertThat(page.asNormalizedText(), not(containsString(EXPECTED)));
 
         ((HtmlAnchor) page.getElementById(ID_PREFIX + "-showlink")).click();
         wc.waitForBackgroundJavaScript(10000L);
-        assertThat(page.asText(), containsString(EXPECTED));
+        assertThat(page.asNormalizedText(), containsString(EXPECTED));
 
         ((HtmlAnchor) page.getElementById(ID_PREFIX + "-hidelink")).click();
         wc.waitForBackgroundJavaScript(10000L);
-        assertThat(page.asText(), not(containsString(EXPECTED)));
+        assertThat(page.asNormalizedText(), not(containsString(EXPECTED)));
     }
 
     @Issue("JENKINS-26535")
     @Test
     public void testDescribableRoundTrip() throws Exception {
-        DescribableModel<JUnitResultArchiver> model = new DescribableModel<JUnitResultArchiver>(JUnitResultArchiver.class);
-        Map<String,Object> args = new TreeMap<String,Object>();
+        DescribableModel<JUnitResultArchiver> model = new DescribableModel<>(JUnitResultArchiver.class);
+        Map<String,Object> args = new TreeMap<>();
 
         args.put("testResults", "**/TEST-*.xml");
         JUnitResultArchiver j = model.instantiate(args);
@@ -369,7 +408,7 @@ public class JUnitResultArchiverTest {
         assertEquals(args, model.uninstantiate(model.instantiate(args)));
 
         // Test roundtripping from a Pipeline-style describing of the publisher.
-        Map<String,Object> describedPublisher = new HashMap<String, Object>();
+        Map<String,Object> describedPublisher = new HashMap<>();
         describedPublisher.put("$class", "MockTestDataPublisher");
         describedPublisher.put("name", "test");
         args.put("testDataPublishers", Collections.singletonList(describedPublisher));

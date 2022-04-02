@@ -35,8 +35,8 @@ import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 import org.xml.sax.SAXException;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -102,7 +102,7 @@ public final class SuiteResult implements Serializable {
     /**
      * All test cases.
      */
-    private final List<CaseResult> cases = new ArrayList<CaseResult>();
+    private final List<CaseResult> cases = new ArrayList<>();
     private transient Map<String, CaseResult> casesByName;
     private transient hudson.tasks.junit.TestResult parent;
 
@@ -114,7 +114,7 @@ public final class SuiteResult implements Serializable {
     /**
      * @since 1.22
      */
-    SuiteResult(String name, String stdout, String stderr, @CheckForNull PipelineTestDetails pipelineTestDetails) {
+    public SuiteResult(String name, String stdout, String stderr, @CheckForNull PipelineTestDetails pipelineTestDetails) {
         this.name = name;
         this.stderr = stderr;
         this.stdout = stdout;
@@ -134,7 +134,7 @@ public final class SuiteResult implements Serializable {
         if (casesByName == null) {
             casesByName = new HashMap<>();
             for (CaseResult c : cases) {
-                casesByName.put(c.getTransformedTestName(), c);
+                casesByName.put(c.getTransformedFullDisplayName(), c);
             }
         }
         return casesByName;
@@ -162,7 +162,7 @@ public final class SuiteResult implements Serializable {
      */
     static List<SuiteResult> parse(File xmlReport, boolean keepLongStdio, PipelineTestDetails pipelineTestDetails)
             throws DocumentException, IOException, InterruptedException {
-        List<SuiteResult> r = new ArrayList<SuiteResult>();
+        List<SuiteResult> r = new ArrayList<>();
 
         // parse into DOM
         SAXReader saxReader = new SAXReader();
@@ -176,14 +176,11 @@ public final class SuiteResult implements Serializable {
 
         saxReader.setEntityResolver(new XMLEntityResolver());
 
-        FileInputStream xmlReportStream = new FileInputStream(xmlReport);
-        try {
+        try (FileInputStream xmlReportStream = new FileInputStream(xmlReport)) {
             Document result = saxReader.read(xmlReportStream);
             Element root = result.getRootElement();
 
             parseSuite(xmlReport, keepLongStdio, r, root, pipelineTestDetails);
-        } finally {
-            xmlReportStream.close();
         }
 
         return r;
@@ -201,8 +198,7 @@ public final class SuiteResult implements Serializable {
     private static void parseSuite(File xmlReport, boolean keepLongStdio, List<SuiteResult> r, Element root,
                                    PipelineTestDetails pipelineTestDetails) throws DocumentException, IOException {
         // nested test suites
-        @SuppressWarnings("unchecked")
-        List<Element> testSuites = (List<Element>) root.elements("testsuite");
+        List<Element> testSuites = root.elements("testsuite");
         for (Element suite : testSuites)
             parseSuite(xmlReport, keepLongStdio, r, suite, pipelineTestDetails);
 
@@ -248,8 +244,7 @@ public final class SuiteResult implements Serializable {
             addCase(new CaseResult(this, suite, "<init>", keepLongStdio));
         }
 
-        @SuppressWarnings("unchecked")
-        List<Element> testCases = (List<Element>) suite.elements("testcase");
+        List<Element> testCases = suite.elements("testcase");
         for (Element e : testCases) {
             // https://issues.jenkins-ci.org/browse/JENKINS-1233 indicates that
             // when <testsuites> is present, we are better off using @classname on the
@@ -313,9 +308,9 @@ public final class SuiteResult implements Serializable {
         this.properties = properties;
     }
 
-    /*package*/ void addCase(CaseResult cr) {
+    public void addCase(CaseResult cr) {
         cases.add(cr);
-        casesByName().put(cr.getTransformedTestName(), cr);
+        casesByName().put(cr.getTransformedFullDisplayName(), cr);
 
         //if suite time was not specified use sum of the cases' times
         if( !hasTimeAttr() ){
@@ -357,7 +352,7 @@ public final class SuiteResult implements Serializable {
      * @since 1.22
      */
     @Exported(visibility=9)
-    @Nonnull
+    @NonNull
     public List<String> getEnclosingBlocks() {
         if (enclosingBlocks != null) {
             return Collections.unmodifiableList(enclosingBlocks);
@@ -372,7 +367,7 @@ public final class SuiteResult implements Serializable {
      * @since 1.22
      */
     @Exported(visibility=9)
-    @Nonnull
+    @NonNull
     public List<String> getEnclosingBlockNames() {
         if (enclosingBlockNames != null) {
             return Collections.unmodifiableList(enclosingBlockNames);
@@ -418,13 +413,13 @@ public final class SuiteResult implements Serializable {
     /**
      * The absolute path to the original test report. OS-dependent.
      *
-     * @return the sabsolute path to the original test report.
+     * @return the absolute path to the original test report.
      */
     public String getFile() {
-		return file;
-	}
+        return file;
+    }
 
-	public hudson.tasks.junit.TestResult getParent() {
+    public hudson.tasks.junit.TestResult getParent() {
         return parent;
     }
 
@@ -452,27 +447,24 @@ public final class SuiteResult implements Serializable {
     }
 
     /**
-     * Returns the {@link CaseResult} whose {@link CaseResult#getDisplayName()}
+     * Returns the {@link CaseResult} whose {@link CaseResult#getFullDisplayName()}
      * is the same as the given string.
-     * <p>
-     * Note that test name needs not be unique.
-     * </p>
      *
-     * @param name The case name.
+     * @param caseResultFullDisplayName The case FullDisplayName.
      *
      * @return the {@link CaseResult} with the provided name.
      */
-    public CaseResult getCase(String name) {
-        return casesByName().get(name);
+    public CaseResult getCase(String caseResultFullDisplayName) {
+        return casesByName().get(caseResultFullDisplayName);
     }
 
-	public Set<String> getClassNames() {
-		Set<String> result = new HashSet<String>();
-		for (CaseResult c : cases) {
-			result.add(c.getClassName());
-		}
-		return result;
-	}
+    public Set<String> getClassNames() {
+        Set<String> result = new HashSet<>();
+        for (CaseResult c : cases) {
+            result.add(c.getClassName());
+        }
+        return result;
+    }
 
     /** KLUGE. We have to call this to prevent freeze()
      * from calling c.freeze() on all its children,
@@ -480,7 +472,7 @@ public final class SuiteResult implements Serializable {
      * which requires a non-null parent.
      * @param parent
      */
-    void setParent(hudson.tasks.junit.TestResult parent) {
+    public void setParent(hudson.tasks.junit.TestResult parent) {
         this.parent = parent;
     }
 

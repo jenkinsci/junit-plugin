@@ -23,11 +23,19 @@
  */
 package hudson.tasks.test;
 
+import edu.hm.hafner.echarts.ChartModelConfiguration;
+import edu.hm.hafner.echarts.JacksonFacade;
+import edu.hm.hafner.echarts.LinesChartModel;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.Job;
 import hudson.model.Run;
 import hudson.tasks.junit.JUnitResultArchiver;
+import io.jenkins.plugins.junit.storage.FileJunitTestResultStorage;
+import io.jenkins.plugins.junit.storage.TestResultImpl;
+import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
+import io.jenkins.plugins.echarts.AsyncTrendChart;
 import org.kohsuke.stapler.Ancestor;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
@@ -37,6 +45,7 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
+import org.kohsuke.stapler.bind.JavaScriptMethod;
 
 /**
  * Project action object from test reporter, such as {@link JUnitResultArchiver},
@@ -47,7 +56,7 @@ import java.util.List;
  *
  * @author Kohsuke Kawaguchi
  */
-public class TestResultProjectAction implements Action {
+public class TestResultProjectAction implements Action, AsyncTrendChart {
     /**
      * Project that owns this action.
      * @since 1.2-beta-1
@@ -73,14 +82,17 @@ public class TestResultProjectAction implements Action {
     /**
      * No task list item.
      */
+    @Override
     public String getIconFileName() {
         return null;
     }
 
+    @Override
     public String getDisplayName() {
         return "Test Report";
     }
 
+    @Override
     public String getUrlName() {
         return "test";
     }
@@ -102,9 +114,49 @@ public class TestResultProjectAction implements Action {
         return null;
     }
 
+    protected LinesChartModel createChartModel() {
+        Run<?, ?> lastCompletedBuild = job.getLastCompletedBuild();
+
+        JunitTestResultStorage storage = JunitTestResultStorage.find();
+        if (!(storage instanceof FileJunitTestResultStorage)) {
+            TestResultImpl pluggableStorage = storage.load(lastCompletedBuild.getParent().getFullName(), lastCompletedBuild.getNumber());
+            return new TestResultTrendChart().create(pluggableStorage.getTrendTestResultSummary());
+        }
+
+        TestResultActionIterable buildHistory = createBuildHistory(lastCompletedBuild);
+        if (buildHistory == null) {
+            return new LinesChartModel();
+        }
+        return new TestResultTrendChart().create(buildHistory, new ChartModelConfiguration());
+    }
+
+    @CheckForNull
+    private TestResultActionIterable createBuildHistory(Run<?, ?> lastCompletedBuild) {
+        // some plugins that depend on junit seem to attach the action even though there's no run
+        // e.g. xUnit and cucumber
+        if (lastCompletedBuild == null) {
+            return null;
+        }
+        AbstractTestResultAction<?> action = lastCompletedBuild.getAction(AbstractTestResultAction.class);
+        if (action == null) {
+            Run<?, ?> currentBuild = lastCompletedBuild;
+            while (action == null) {
+                currentBuild = currentBuild.getPreviousBuild();
+                if (currentBuild == null) {
+                    return null;
+                }
+                action = currentBuild.getAction(AbstractTestResultAction.class);
+            }
+        }
+        return new TestResultActionIterable(action);
+    }
+
     /**
      * Display the test result trend.
+     * 
+     * @deprecated Replaced by echarts in TODO
      */
+    @Deprecated
     public void doTrend( StaplerRequest req, StaplerResponse rsp ) throws IOException, ServletException {
         AbstractTestResultAction a = getLastTestResultAction();
         if(a!=null)
@@ -115,7 +167,10 @@ public class TestResultProjectAction implements Action {
 
     /**
      * Generates the clickable map HTML fragment for {@link #doTrend(StaplerRequest, StaplerResponse)}.
+     *
+     * @deprecated Replaced by echarts in TODO
      */
+    @Deprecated
     public void doTrendMap( StaplerRequest req, StaplerResponse rsp ) throws IOException, ServletException {
         AbstractTestResultAction a = getLastTestResultAction();
         if(a!=null)
@@ -144,7 +199,7 @@ public class TestResultProjectAction implements Action {
 
         // set the updated value
         Cookie cookie = new Cookie(FAILURE_ONLY_COOKIE,String.valueOf(failureOnly));
-        List anc = req.getAncestors();
+        List<Ancestor> anc = req.getAncestors();
         Ancestor a = (Ancestor) anc.get(anc.size()-2);
         cookie.setPath(a.getUrl()); // just for this project
         cookie.setMaxAge(60*60*24*365); // 1 year
@@ -155,4 +210,15 @@ public class TestResultProjectAction implements Action {
     }
 
     private static final String FAILURE_ONLY_COOKIE = "TestResultAction_failureOnly";
+
+    @JavaScriptMethod
+    @Override
+    public String getBuildTrendModel() {
+        return new JacksonFacade().toJson(createChartModel());
+    }
+
+    @Override
+    public boolean isTrendVisible() {
+        return true;
+    }
 }

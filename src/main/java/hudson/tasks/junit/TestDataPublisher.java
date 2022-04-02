@@ -33,7 +33,7 @@ import hudson.model.*;
 import jenkins.model.Jenkins;
 
 import java.io.IOException;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Contributes {@link TestAction}s to test results.
@@ -69,7 +69,7 @@ public abstract class TestDataPublisher extends AbstractDescribableImpl<TestData
      * @since 1.2-beta-1
      */
 	public TestResultAction.Data contributeTestData(
-			Run<?,?> run, @Nonnull FilePath workspace, Launcher launcher,
+			Run<?,?> run, @NonNull FilePath workspace, Launcher launcher,
 			TaskListener listener, TestResult testResult) throws IOException, InterruptedException {
         if (run instanceof AbstractBuild && listener instanceof BuildListener) {
             return getTestData((AbstractBuild) run, launcher, (BuildListener) listener, testResult);
@@ -94,7 +94,7 @@ public abstract class TestDataPublisher extends AbstractDescribableImpl<TestData
     }
 
 	public static DescriptorExtensionList<TestDataPublisher, Descriptor<TestDataPublisher>> all() {
-		return Helper.getActiveInstance().<TestDataPublisher, Descriptor<TestDataPublisher>>getDescriptorList(TestDataPublisher.class);
+		return Jenkins.get().getDescriptorList(TestDataPublisher.class);
 	}
 
 }

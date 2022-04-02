@@ -44,7 +44,7 @@ import jenkins.MasterToSlaveFileCallable;
  *
  * <p>
  * The instance of the parser will be serialized to the node that performed the build and the parsing will be done
- * remotely on that slave.
+ * remotely on that agent.
  *
  * @since 1.343
  * @author Kohsuke Kawaguchi
@@ -53,7 +53,7 @@ import jenkins.MasterToSlaveFileCallable;
 @Deprecated
 public abstract class DefaultTestResultParserImpl extends TestResultParser implements Serializable {
     /**
-     * This method is executed on the slave that has the report files to parse test reports and builds {@link TestResult}.
+     * This method is executed on the agent that has the report files to parse test reports and builds {@link TestResult}.
      *
      * @param reportFiles
      *      List of files to be parsed. Never be empty nor null.
@@ -77,10 +77,11 @@ public abstract class DefaultTestResultParserImpl extends TestResultParser imple
     @Override
     public TestResult parseResult(final String testResultLocations, final Run<?,?> build, FilePath workspace, final Launcher launcher, final TaskListener listener) throws InterruptedException, IOException {
         return workspace.act(new MasterToSlaveFileCallable<TestResult>() {
-            final boolean ignoreTimestampCheck = IGNORE_TIMESTAMP_CHECK; // so that the property can be set on the master
+            final boolean ignoreTimestampCheck = IGNORE_TIMESTAMP_CHECK; // so that the property can be set on the controller
             final long buildTime = build.getTimestamp().getTimeInMillis();
             final long nowMaster = System.currentTimeMillis();
 
+            @Override
             public TestResult invoke(File dir, VirtualChannel channel) throws IOException, InterruptedException {
                 final long nowSlave = System.currentTimeMillis();
 
@@ -92,7 +93,7 @@ public abstract class DefaultTestResultParserImpl extends TestResultParser imple
                     throw new AbortException("No test reports that matches "+testResultLocations+" found. Configuration error?");
 
                 // since dir is local, paths all point to the local files
-                List<File> files = new ArrayList<File>(paths.length);
+                List<File> files = new ArrayList<>(paths.length);
                 for (FilePath path : paths) {
                     File report = new File(path.getRemote());
                     if (ignoreTimestampCheck || localBuildTime - 3000 /*error margin*/ < report.lastModified()) {

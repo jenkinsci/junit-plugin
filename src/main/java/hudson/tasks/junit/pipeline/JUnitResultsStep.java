@@ -1,9 +1,9 @@
 package hudson.tasks.junit.pipeline;
 
-import com.google.common.collect.ImmutableSet;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
+import hudson.Util;
 import hudson.model.Descriptor;
 import hudson.model.Saveable;
 import hudson.model.TaskListener;
@@ -22,8 +22,9 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -52,16 +53,24 @@ public class JUnitResultsStep extends Step implements JUnitTask {
      * If true, don't throw exception on missing test results or no files found.
      */
     private boolean allowEmptyResults;
+    private boolean skipPublishingChecks;
+    private String checksName;
+    /**
+     * If true, the run won't be marked as unstable if there are failing tests. Only the stage will be marked as unstable.
+     */
+    private boolean skipMarkingBuildUnstable;
 
     @DataBoundConstructor
     public JUnitResultsStep(String testResults) {
         this.testResults = testResults;
     }
 
+    @Override
     public String getTestResults() {
         return testResults;
     }
 
+    @Override
     public double getHealthScaleFactor() {
         return healthScaleFactor == null ? 1.0 : healthScaleFactor;
     }
@@ -76,9 +85,10 @@ public class JUnitResultsStep extends Step implements JUnitTask {
         this.healthScaleFactor = Math.max(0.0, healthScaleFactor);
     }
 
-    public @Nonnull
-    List<TestDataPublisher> getTestDataPublishers() {
-        return testDataPublishers == null ? Collections.<TestDataPublisher>emptyList() : testDataPublishers;
+    @NonNull
+    @Override
+    public List<TestDataPublisher> getTestDataPublishers() {
+        return testDataPublishers == null ? Collections.emptyList() : testDataPublishers;
     }
 
     /**
@@ -86,14 +96,15 @@ public class JUnitResultsStep extends Step implements JUnitTask {
      *
      * @since 1.2
      */
-    @DataBoundSetter public final void setTestDataPublishers(@Nonnull List<TestDataPublisher> testDataPublishers) {
-        this.testDataPublishers = new DescribableList<TestDataPublisher,Descriptor<TestDataPublisher>>(Saveable.NOOP);
+    @DataBoundSetter public final void setTestDataPublishers(@NonNull List<TestDataPublisher> testDataPublishers) {
+        this.testDataPublishers = new DescribableList<>(Saveable.NOOP);
         this.testDataPublishers.addAll(testDataPublishers);
     }
 
     /**
      * @return the keepLongStdio.
      */
+    @Override
     public boolean isKeepLongStdio() {
         return keepLongStdio;
     }
@@ -111,12 +122,47 @@ public class JUnitResultsStep extends Step implements JUnitTask {
      *
      * @return the allowEmptyResults
      */
+    @Override
     public boolean isAllowEmptyResults() {
         return allowEmptyResults;
     }
 
+    /**
+     * Should we skip publishing checks to the checks API plugin.
+     *
+     * @return if publishing checks should be skipped, {@code false} otherwise 
+     */
+    @Override
+    public boolean isSkipPublishingChecks() {
+        return skipPublishingChecks;
+    }
+
+    @DataBoundSetter
+    public void setSkipPublishingChecks(boolean skipPublishingChecks) {
+        this.skipPublishingChecks = skipPublishingChecks;
+    }
+
+    @Override
+    public String getChecksName() {
+        return Util.fixEmpty(checksName);
+    }
+
+    @DataBoundSetter
+    public void setChecksName(String checksName) {
+        this.checksName = checksName;
+    }
+
     @DataBoundSetter public final void setAllowEmptyResults(boolean allowEmptyResults) {
         this.allowEmptyResults = allowEmptyResults;
+    }
+
+    public boolean isSkipMarkingBuildUnstable() {
+        return skipMarkingBuildUnstable;
+    }
+
+    @DataBoundSetter
+    public void setSkipMarkingBuildUnstable(boolean skipMarkingBuildUnstable) {
+        this.skipMarkingBuildUnstable = skipMarkingBuildUnstable;
     }
 
     @Override
@@ -132,14 +178,16 @@ public class JUnitResultsStep extends Step implements JUnitTask {
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return "Archive JUnit-formatted test results";
         }
 
         @Override
         public Set<? extends Class<?>> getRequiredContext() {
-            return ImmutableSet.of(FilePath.class, FlowNode.class, TaskListener.class, Launcher.class);
+            Set<Class<?>> context = new HashSet<>();
+            Collections.addAll(context, FilePath.class, FlowNode.class, TaskListener.class, Launcher.class);
+            return Collections.unmodifiableSet(context);
         }
 
         public FormValidation doCheckHealthScaleFactor(@QueryParameter double value) {

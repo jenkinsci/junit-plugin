@@ -67,12 +67,14 @@ public abstract class TestObject extends AbstractModelObject implements Serializ
    
     public abstract TestObject getParent();
 
-	public abstract String getId(); 	
-	/**
-	 * Returns url relative to TestResult.
+	public abstract String getId();
+
+    /**
+     * Returns the URL of this {@link TestObject}, relative to the context root.
      *
-     * @return the url relative to {@link TestResult}.
-	 */
+     * @return
+     *      String like "job/foo/32/testReport/junit/com.company/Class" with no trailing or leading slash.
+     */
 	public abstract String getUrl(); 
 
 	public abstract TestResult getTestResult();
@@ -153,6 +155,7 @@ public abstract class TestObject extends AbstractModelObject implements Serializ
 	 */
 	public abstract String getSafeName();
 
+    @Override
     public abstract String getSearchUrl();
 
     /**

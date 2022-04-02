@@ -30,14 +30,11 @@ import hudson.model.AutoCompletionCandidates;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.Util;
-import static hudson.Util.fixNull;
 import hudson.model.Action;
 import hudson.model.BuildListener;
 import hudson.model.Fingerprint.RangeSet;
 import hudson.model.InvisibleAction;
 import hudson.model.ItemGroup;
-import hudson.tasks.junit.Helper;
-import jenkins.model.Jenkins;
 import hudson.model.Item;
 import hudson.model.Job;
 import hudson.model.Result;
@@ -50,6 +47,7 @@ import hudson.tasks.Fingerprinter.FingerprintAction;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
+import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.QueryParameter;
@@ -60,10 +58,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import javax.annotation.CheckForNull;
-import org.acegisecurity.AccessDeniedException;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
+
+import static hudson.Util.fixNull;
 
 /**
  * Aggregates downstream test reports into a single consolidated report,
@@ -93,12 +92,14 @@ public class AggregatedTestResultPublisher extends Recorder {
         this.includeFailedBuilds = includeFailedBuilds;
     }
 
+    @Override
     public boolean perform(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
         // add a TestResult just so that it can show up later.
         build.addAction(new TestResultAction(jobs, includeFailedBuilds, build));
         return true;
     }
 
+    @Override
     public BuildStepMonitor getRequiredMonitorService() {
         return BuildStepMonitor.NONE;
     }
@@ -164,16 +165,20 @@ public class AggregatedTestResultPublisher extends Recorder {
          * Gets the jobs to be monitored.
          */
         public Collection<AbstractProject> getJobs() {
-            List<AbstractProject> r = new ArrayList<AbstractProject>();
+            List<AbstractProject> r = new ArrayList<>();
             if (jobs != null) {
                 for (String job : Util.tokenize(jobs,",")) {
                     try {
-                        AbstractProject j = Helper.getActiveInstance().getItemByFullName(job.trim(), AbstractProject.class);
+                        AbstractProject j = Jenkins.get().getItemByFullName(job.trim(), AbstractProject.class);
                         if (j != null) {
                             r.add(j);
                         }
-                    } catch (AccessDeniedException x) {
-                        // just skip it
+                    } catch (RuntimeException x) {
+                        if (x.getClass().getSimpleName().startsWith("AccessDeniedException")) {
+                            // just skip it
+                        } else {
+                            throw x;
+                        }
                     }
                 }
             }
@@ -188,16 +193,19 @@ public class AggregatedTestResultPublisher extends Recorder {
             return owner.getProject();
         }
 
+        @Override
         public int getFailCount() {
             upToDateCheck();
             return failCount;
         }
 
+        @Override
         public int getTotalCount() {
             upToDateCheck();
             return totalCount;
         }
 
+        @Override
         public Object getResult() {
             upToDateCheck();
             return this;
@@ -262,9 +270,9 @@ public class AggregatedTestResultPublisher extends Recorder {
 
             int failCount = 0;
             int totalCount = 0;
-            List<AbstractTestResultAction> individuals = new ArrayList<AbstractTestResultAction>();
-            List<AbstractProject> didntRun = new ArrayList<AbstractProject>();
-            List<AbstractProject> noFingerprints = new ArrayList<AbstractProject>();
+            List<AbstractTestResultAction> individuals = new ArrayList<>();
+            List<AbstractProject> didntRun = new ArrayList<>();
+            List<AbstractProject> noFingerprints = new ArrayList<>();
             for (AbstractProject job : getJobs()) {
                 RangeSet rs = owner.getDownstreamRelationship(job);
                 if(rs.isEmpty()) {
@@ -338,10 +346,13 @@ public class AggregatedTestResultPublisher extends Recorder {
 
     @Extension
     public static final class DescriptorImpl extends BuildStepDescriptor<Publisher> {
+
+        @Override
         public boolean isApplicable(Class<? extends AbstractProject> jobType) {
             return true;    // for all types
         }
 
+        @Override
         public String getDisplayName() {
             return Messages.AggregatedTestResultPublisher_DisplayName();
         }
@@ -352,7 +363,7 @@ public class AggregatedTestResultPublisher extends Recorder {
 
             for (String name : Util.tokenize(fixNull(value), ",")) {
                 name = name.trim();
-                if (Helper.getActiveInstance().getItem(name,project) == null) {
+                if (Jenkins.get().getItem(name,project) == null) {
                     final AbstractProject<?,?> nearest = AbstractProject.findNearest(name);
                     return FormValidation.error(Messages.BuildTrigger_NoSuchProject(name, nearest != null ? nearest.getName() : null));
                 }
@@ -364,7 +375,7 @@ public class AggregatedTestResultPublisher extends Recorder {
         @Override
         public AggregatedTestResultPublisher newInstance(StaplerRequest req, JSONObject formData) throws FormException {
             // Starting in 1.640, Descriptor#newInstance is
-            // newInstance(@CheckForNull StaplerRequest req, @Nonnull JSONObject formData)
+            // newInstance(@CheckForNull StaplerRequest req, @NonNull JSONObject formData)
             if (formData == null) {
                 // Should not happen. See above
                 throw new AssertionError("Null parameters to Descriptor#newInstance");

@@ -30,7 +30,6 @@ import java.net.URISyntaxException;
 
 import hudson.XmlFile;
 
-import hudson.tasks.test.PipelineTestDetails;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 
@@ -38,7 +37,9 @@ import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.io.Writer;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Test cases for parsing JUnit report XML files.
@@ -149,7 +150,7 @@ public class SuiteResultTest {
             assertEquals(source.getStderr(), result.getStderr());
             assertEquals(source.getStdout(), result.getStdout());
             assertEquals(source.getCases().size(), result.getCases().size());
-            assertNotNull(result.getCase("testGetBundle"));
+            assertNotNull(result.getCase("test.foo.bar.BundleResolverIntegrationTest.testGetBundle"));
         } finally {
             dest.delete();
 }
@@ -160,8 +161,7 @@ public class SuiteResultTest {
     public void testSuiteStdioTrimming() throws Exception {
         File data = File.createTempFile("testSuiteStdioTrimming", ".xml");
         try {
-            Writer w = new FileWriter(data);
-            try {
+            try (Writer w = new FileWriter(data)) {
                 PrintWriter pw = new PrintWriter(w);
                 pw.println("<testsuites name='x'>");
                 pw.println("<testsuite failures='0' errors='0' tests='1' name='x'>");
@@ -177,8 +177,6 @@ public class SuiteResultTest {
                 pw.println("</testsuite>");
                 pw.println("</testsuites>");
                 pw.flush();
-            } finally {
-                w.close();
             }
             SuiteResult sr = parseOne(data);
             assertEquals(sr.getStderr(), 1030, sr.getStderr().length());
@@ -191,8 +189,7 @@ public class SuiteResultTest {
     public void testSuiteStdioTrimmingOnFail() throws Exception {
         File data = File.createTempFile("testSuiteStdioTrimming", ".xml");
         try {
-            Writer w = new FileWriter(data);
-            try {
+            try (Writer w = new FileWriter(data)) {
                 PrintWriter pw = new PrintWriter(w);
                 pw.println("<testsuites name='x'>");
                 pw.println("<testsuite failures='1' errors='0' tests='1' name='x'>");
@@ -208,8 +205,6 @@ public class SuiteResultTest {
                 pw.println("</testsuite>");
                 pw.println("</testsuites>");
                 pw.flush();
-            } finally {
-                w.close();
             }
             SuiteResult sr = parseOne(data);
             assertEquals(sr.getStderr(), 100032, sr.getStderr().length());

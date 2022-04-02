@@ -38,7 +38,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import jenkins.model.RunAction2;
 import jenkins.model.lazy.LazyBuildMixIn;
 import org.jfree.chart.ChartFactory;
@@ -52,6 +52,8 @@ import org.jfree.chart.renderer.category.StackedAreaRenderer;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.ui.RectangleInsets;
 import org.jvnet.localizer.Localizable;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
@@ -78,7 +80,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
     @Deprecated
     public transient AbstractBuild<?,?> owner;
 
-    private Map<String,String> descriptions = new ConcurrentHashMap<String, String>();
+    private Map<String,String> descriptions = new ConcurrentHashMap<>();
 
     /** @since 1.545 */
     protected AbstractTestResultAction() {}
@@ -142,19 +144,23 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
         return " / "+Functions.getDiffString(this.getFailCount()-prev.getFailCount());
     }
 
+    @Override
     public String getDisplayName() {
         return Messages.AbstractTestResultAction_getDisplayName();
     }
 
     @Exported(visibility=2)
+    @Override
     public String getUrlName() {
         return "testReport";
     }
 
+    @Override
     public String getIconFileName() {
         return "clipboard.png";
     }
 
+    @Override
     public HealthReport getBuildHealth() {
         final double scaleFactor = getHealthScaleFactor();
         if (scaleFactor < 1e-7) {
@@ -213,7 +219,8 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
         return (T)getPreviousResult(getClass(), true);
     }
 
-    private <U extends AbstractTestResultAction> U getPreviousResult(Class<U> type, boolean eager) {
+    @Restricted(NoExternalUse.class)
+    public <U extends AbstractTestResultAction> U getPreviousResult(Class<U> type, boolean eager) {
         Run<?,?> b = run;
         Set<Integer> loadedBuilds;
         if (!eager && run.getParent() instanceof LazyBuildMixIn.LazyLoadingJob) {
@@ -271,7 +278,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
      * @return List of passed tests from associated test result.
      * @since 1.10
      */
-    @Nonnull
+    @NonNull
     public List<? extends TestResult> getPassedTests() {
         return Collections.emptyList();
     }
@@ -282,14 +289,17 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
      * @return List of skipped tests from associated test result.
      * @since 1.10
      */
-    @Nonnull
+    @NonNull
     public List<? extends TestResult> getSkippedTests() {
         return Collections.emptyList();
     }
 
     /**
      * Generates a PNG image for the test result trend.
+     * 
+     * @deprecated Replaced by echarts in TODO
      */
+    @Deprecated
     public void doGraph( StaplerRequest req, StaplerResponse rsp) throws IOException {
         if(ChartUtil.awtProblemCause!=null) {
             // not available. send out error message
@@ -334,9 +344,10 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
     }
     
     private CategoryDataset buildDataSet(StaplerRequest req) {
-        boolean failureOnly = Boolean.valueOf(req.getParameter("failureOnly"));
+        boolean failureOnly = Boolean.parseBoolean(req.getParameter("failureOnly"));
 
-        DataSetBuilder<String,NumberOnlyBuildLabel> dsb = new DataSetBuilder<String,NumberOnlyBuildLabel>();
+        // TODO stop using ChartUtil.NumberOnlyBuildLabel as it forces loading of a Run; create a plainer Comparable
+        DataSetBuilder<String,NumberOnlyBuildLabel> dsb = new DataSetBuilder<>();
 
         int cap = Integer.getInteger(AbstractTestResultAction.class.getName() + ".test.trend.max", Integer.MAX_VALUE);
         int count = 0;
@@ -458,7 +469,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
 
     public Object readResolve() {
     	if (descriptions == null) {
-    		descriptions = new ConcurrentHashMap<String, String>();
+    		descriptions = new ConcurrentHashMap<>();
     	}
     	
     	return this;

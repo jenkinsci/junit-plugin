@@ -45,7 +45,11 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
 import com.gargoylesoftware.htmlunit.Page;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * User: Benjamin Shine bshine@yahoo-inc.com
@@ -137,4 +141,30 @@ public class TestResultLinksTest {
         };
         testResult.freeze(new TestResultAction(build, testResult, null));
      }
+
+    @Test
+    public void testFailedSinceAfterSkip() throws IOException, URISyntaxException {
+        TestResult testResult = new TestResult();
+        File dataFile = TestResultTest.getDataFile("SKIPPED_MESSAGE/skippedTestResult.xml");
+        testResult.parse(dataFile, null);
+        FreeStyleBuild build = new FreeStyleBuild(project) {
+            @Override
+            public FreeStyleBuild getPreviousBuild() {
+                return null;
+            }
+        };
+        build.addAction(new TestResultAction(build, testResult, null));
+        TestResult testResult2 = new TestResult();
+        File dataFile2 = TestResultTest.getDataFile("SKIPPED_MESSAGE/afterSkippedResult.xml");
+        testResult2.parse(dataFile2, null);
+        FreeStyleBuild build2 = new FreeStyleBuild(project) {
+            @Override
+            public FreeStyleBuild getPreviousBuild() {
+                return build;
+            }
+        };
+
+        testResult2.freeze(new TestResultAction(build2, testResult, null));
+        assertEquals(2, testResult2.getFailedTests().get(0).getFailedSince());
+    }
 }

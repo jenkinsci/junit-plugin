@@ -1,1 +1,1 @@
-buildPlugin(configurations: buildPlugin.recommendedConfigurations())
+buildPlugin(useContainerAgent: true, platforms: ['linux'])

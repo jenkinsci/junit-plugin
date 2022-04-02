@@ -2,11 +2,6 @@ package hudson.tasks.test;
 
 import hudson.model.AbstractBuild;
 import hudson.model.Run;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 import hudson.model.Result;
 import hudson.model.Run.Summary;
 
@@ -14,6 +9,12 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests {@link Run#getBuildStatusSummary()}.

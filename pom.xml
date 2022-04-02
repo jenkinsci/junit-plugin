@@ -1,9 +1,9 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>3.43</version>
+        <version>4.38</version>
         <relativePath />
     </parent>
     <artifactId>junit</artifactId>
@@ -13,24 +13,23 @@
     <description>Allows JUnit-format test results to be published.</description>
     <url>https://github.com/jenkinsci/junit-plugin</url>
     <properties>
-        <revision>1.29</revision>
+        <revision>1.58</revision>
         <changelist>-SNAPSHOT</changelist>
-        <jenkins.version>2.138.4</jenkins.version>
+        <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
+        <jenkins.version>2.321</jenkins.version>
         <java.level>8</java.level>
         <no-test-jar>false</no-test-jar>
-        <workflow-cps.version>2.66</workflow-cps.version>
-        <workflow-support.version>3.2</workflow-support.version>
     </properties>
     <licenses>
         <license>
             <name>MIT</name>
-            <url>http://opensource.org/licenses/MIT</url>
+            <url>https://opensource.org/licenses/MIT</url>
         </license>
     </licenses>
     <scm>
-        <connection>scm:git:git://github.com/jenkinsci/${project.artifactId}-plugin.git</connection>
-        <developerConnection>scm:git:git@github.com:jenkinsci/${project.artifactId}-plugin.git</developerConnection>
-        <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
+        <connection>scm:git:git://github.com/${gitHubRepo}.git</connection>
+        <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
+        <url>https://github.com/${gitHubRepo}</url>
       <tag>${scmTag}</tag>
     </scm>
     <repositories>
@@ -47,91 +46,162 @@
     </pluginRepositories>
     <dependencies>
         <dependency>
+            <groupId>io.jenkins.plugins</groupId>
+            <artifactId>echarts-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.jenkins.plugins</groupId>
+            <artifactId>checks-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.jenkins.plugins</groupId>
+            <artifactId>checks-api</artifactId>
+            <scope>test</scope>
+            <classifier>tests</classifier>
+        </dependency>
+        <dependency>
+            <groupId>io.jenkins.plugins</groupId>
+            <artifactId>plugin-util-api</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
-            <artifactId>structs</artifactId>
-            <version>1.17</version>
+            <artifactId>display-url-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.jenkins.plugins</groupId>
+            <artifactId>github-checks</artifactId>
+            <version>1.0.18</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jenkins.plugins</groupId>
+            <artifactId>bootstrap4-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins.workflow</groupId>
             <artifactId>workflow-step-api</artifactId>
-            <version>2.19</version>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins.workflow</groupId>
             <artifactId>workflow-api</artifactId>
-            <version>2.34</version>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>script-security</artifactId>
-            <version>1.56</version>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
             <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.hamcrest</groupId>
-                    <artifactId>hamcrest-core</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>matrix-project</artifactId>
-            <version>1.3</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins.workflow</groupId>
             <artifactId>workflow-cps</artifactId>
-            <version>${workflow-cps.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins.workflow</groupId>
             <artifactId>workflow-job</artifactId>
-            <version>2.32</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins.workflow</groupId>
             <artifactId>workflow-cps</artifactId>
-            <version>${workflow-cps.version}</version>
             <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins.workflow</groupId>
             <artifactId>workflow-basic-steps</artifactId>
-            <version>2.15</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins.workflow</groupId>
             <artifactId>workflow-support</artifactId>
-            <version>${workflow-support.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.jenkins-ci.plugins.workflow</groupId>
-            <artifactId>workflow-support</artifactId>
-            <version>${workflow-support.version}</version>
             <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>pipeline-stage-step</artifactId>
-            <version>2.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins.workflow</groupId>
             <artifactId>workflow-durable-task-step</artifactId>
-            <version>2.28</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.jenkinsci.plugins</groupId>
+            <artifactId>pipeline-model-definition</artifactId>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>joda-time</groupId>
+                    <artifactId>joda-time</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.jenkins-ci.plugins</groupId>
+            <artifactId>database</artifactId>
+            <version>128.vaa83e142f7f2</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion> <!-- TODO move to bom in Jenkins core -->
+                    <groupId>antlr</groupId>
+                    <artifactId>antlr</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.jenkins-ci.plugins</groupId>
+            <artifactId>database-h2</artifactId>
+            <version>1.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jenkins</groupId>
+            <artifactId>configuration-as-code</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.jenkins.configuration-as-code</groupId>
+            <artifactId>test-harness</artifactId>
+            <scope>test</scope>
+            <!-- TODO bump version in jcasc -->
+            <exclusions>
+                <exclusion>
+                    <groupId>commons-validator</groupId>
+                    <artifactId>commons-validator</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.jenkins-ci.plugins</groupId>
+            <artifactId>jackson2-api</artifactId>
+        </dependency>
     </dependencies>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>io.jenkins.tools.bom</groupId>
+                <artifactId>bom-2.303.x</artifactId>
+                <version>1210.vcd41f6657f03</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+            <!-- mockito and hibernate are conflicting (both test dependencies) -->
+            <dependency>
+                <groupId>net.bytebuddy</groupId>
+                <artifactId>byte-buddy</artifactId>
+                <version>1.12.8</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 </project>
