@@ -711,7 +711,7 @@ public final class TestResult extends MetaTabulatedResult {
         if (impl != null) {
             return Collections.singleton(impl.getSuite(name));
         }
-        return suitesByName.get(name);
+        return suitesByName.getOrDefault(name, Collections.emptyList());
     }
 
     @NonNull
