@@ -185,6 +185,8 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>jackson2-api</artifactId>
+            <!-- TODO https://github.com/jenkinsci/bom/pull/1011 -->
+            <version>2.13.2.20220328-273.v11d70a_b_a_1a_52</version>
         </dependency>
     </dependencies>
     <dependencyManagement>
