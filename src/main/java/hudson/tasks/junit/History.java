@@ -26,6 +26,9 @@ package hudson.tasks.junit;
 import edu.hm.hafner.echarts.ChartModelConfiguration;
 import edu.hm.hafner.echarts.JacksonFacade;
 import edu.hm.hafner.echarts.LinesChartModel;
+import hudson.model.Job;
+import hudson.model.Run;
+import jenkins.model.Jenkins;
 import hudson.tasks.test.TestObject;
 import hudson.tasks.test.TestObjectIterable;
 import hudson.tasks.test.TestResultDurationChart;
@@ -35,6 +38,8 @@ import io.jenkins.plugins.junit.storage.TestResultImpl;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
+import java.util.List;
+import java.util.ArrayList;
 
 import java.util.List;
 import java.util.Objects;
@@ -54,6 +59,19 @@ public class History {
         this.testObject = testObject;
     }
 
+    public List<TestResult> getList(int start, int end) {
+        List<TestResult> list = new ArrayList<TestResult>();
+        end = Math.min(end, testObject.getRun().getParent().getBuilds().size());
+        for (Run<?,?> b: testObject.getRun().getParent().getBuilds().subList(start, end)) {
+            if (b.isBuilding()) continue;
+            TestResult o = testObject.getResultInRun(b);
+            if (o != null) {
+                list.add(o);
+            }
+        }
+        return list;
+    }
+
     @SuppressWarnings("unused") // Called by jelly view
     public TestObject getTestObject() {
         return testObject;
@@ -61,6 +79,9 @@ public class History {
 
     @SuppressWarnings("unused") // Called by jelly view
     public boolean historyAvailable() {
+        Job<?,?> job  = testObject.getRun().getParent();
+        JobTestResultDisplayProperty settings = job.getProperty(JobTestResultDisplayProperty.class);
+        if (settings != null && settings.getDisableHistoricalResults()) return false
         if (testObject instanceof hudson.tasks.junit.TestResult) {
             TestResultImpl pluggableStorage = ((hudson.tasks.junit.TestResult) testObject).getPluggableStorage();
             if (pluggableStorage != null) {

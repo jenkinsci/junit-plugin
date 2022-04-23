@@ -194,6 +194,15 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
     }
 
     /**
+     * Allows a particular job to disable scanning previous result history.
+     * 
+     * @return if calculation of previous results should be done
+     */
+    public boolean shouldCalculatePreviousResults() {
+        return true;
+    }
+
+    /**
      * Exposes this object to the remote API.
      */
     public Api getApi() {
