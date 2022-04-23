@@ -73,8 +73,8 @@ public class History {
 
     @JavaScriptMethod
     @SuppressWarnings("unused") // Called by jelly view
-    public String getTestResultTrend() {
-        return JACKSON_FACADE.toJson(createTestResultTrend());
+    public LinesChartModel getTestResultTrend() {
+        return createTestResultTrend();
     }
 
     private LinesChartModel createTestResultTrend() {
@@ -88,8 +88,8 @@ public class History {
 
     @JavaScriptMethod
     @SuppressWarnings("unused") // Called by jelly view
-    public String getTestDurationTrend() {
-        return JACKSON_FACADE.toJson(createTestDurationResultTrend());
+    public LinesChartModel getTestDurationTrend() {
+        return createTestDurationResultTrend();
     }
 
     private LinesChartModel createTestDurationResultTrend() {

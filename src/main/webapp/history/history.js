@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function () {
          * Requires that a DOM <div> element exists with the ID '#test-duration-trend-chart'.
          */
         view.getTestDurationTrend(function (lineModel) {
-            echartsJenkinsApi.renderZoomableTrendChart('test-duration-trend-chart', lineModel.responseJSON, redrawTrendCharts);
+            echartsJenkinsApi.renderZoomableTrendChart('test-duration-trend-chart', lineModel.responseText, redrawTrendCharts);
         });
 
         /**
@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function () {
          * Requires that a DOM <div> element exists with the ID '#test-result-trend-chart'.
          */
         view.getTestResultTrend(function (lineModel) {
-            echartsJenkinsApi.renderZoomableTrendChart('test-result-trend-chart', lineModel.responseJSON, redrawTrendCharts);
+            echartsJenkinsApi.renderZoomableTrendChart('test-result-trend-chart', lineModel.responseText, redrawTrendCharts);
         });
     }
 
