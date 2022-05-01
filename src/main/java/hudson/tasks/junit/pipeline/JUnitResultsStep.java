@@ -22,7 +22,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -65,10 +65,12 @@ public class JUnitResultsStep extends Step implements JUnitTask {
         this.testResults = testResults;
     }
 
+    @Override
     public String getTestResults() {
         return testResults;
     }
 
+    @Override
     public double getHealthScaleFactor() {
         return healthScaleFactor == null ? 1.0 : healthScaleFactor;
     }
@@ -83,9 +85,10 @@ public class JUnitResultsStep extends Step implements JUnitTask {
         this.healthScaleFactor = Math.max(0.0, healthScaleFactor);
     }
 
-    public @Nonnull
-    List<TestDataPublisher> getTestDataPublishers() {
-        return testDataPublishers == null ? Collections.<TestDataPublisher>emptyList() : testDataPublishers;
+    @NonNull
+    @Override
+    public List<TestDataPublisher> getTestDataPublishers() {
+        return testDataPublishers == null ? Collections.emptyList() : testDataPublishers;
     }
 
     /**
@@ -93,14 +96,15 @@ public class JUnitResultsStep extends Step implements JUnitTask {
      *
      * @since 1.2
      */
-    @DataBoundSetter public final void setTestDataPublishers(@Nonnull List<TestDataPublisher> testDataPublishers) {
-        this.testDataPublishers = new DescribableList<TestDataPublisher,Descriptor<TestDataPublisher>>(Saveable.NOOP);
+    @DataBoundSetter public final void setTestDataPublishers(@NonNull List<TestDataPublisher> testDataPublishers) {
+        this.testDataPublishers = new DescribableList<>(Saveable.NOOP);
         this.testDataPublishers.addAll(testDataPublishers);
     }
 
     /**
      * @return the keepLongStdio.
      */
+    @Override
     public boolean isKeepLongStdio() {
         return keepLongStdio;
     }
@@ -118,6 +122,7 @@ public class JUnitResultsStep extends Step implements JUnitTask {
      *
      * @return the allowEmptyResults
      */
+    @Override
     public boolean isAllowEmptyResults() {
         return allowEmptyResults;
     }
@@ -173,7 +178,7 @@ public class JUnitResultsStep extends Step implements JUnitTask {
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return "Archive JUnit-formatted test results";
         }

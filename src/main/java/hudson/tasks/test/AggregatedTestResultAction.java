@@ -65,7 +65,7 @@ public abstract class AggregatedTestResultAction extends AbstractTestResultActio
     /**
      * child builds whose test results are used for aggregation.
      */
-    public final List<Child> children = new ArrayList<Child>();
+    public final List<Child> children = new ArrayList<>();
 
     @Deprecated
     public AggregatedTestResultAction(AbstractBuild owner) {
@@ -89,6 +89,7 @@ public abstract class AggregatedTestResultAction extends AbstractTestResultActio
         this.children.add(new Child(getChildName(child),child.run.number));
     }
 
+    @Override
     public int getFailCount() {
         return failCount;
     }
@@ -98,10 +99,12 @@ public abstract class AggregatedTestResultAction extends AbstractTestResultActio
         return skipCount;
     }
 
+    @Override
     public int getTotalCount() {
         return totalCount;
     }
    
+    @Override
     public List<ChildReport> getResult() {
         // I think this is a reasonable default.
         return getChildReports();
@@ -109,7 +112,7 @@ public abstract class AggregatedTestResultAction extends AbstractTestResultActio
 
     @Override
     public List<? extends TestResult> getFailedTests() {
-        List<TestResult> failedTests = new ArrayList<TestResult>(failCount);
+        List<TestResult> failedTests = new ArrayList<>(failCount);
         for (ChildReport childReport : getChildReports()) {
             if (childReport.result instanceof TestResult) {
                 failedTests.addAll(((TestResult) childReport.result).getFailedTests());
@@ -154,12 +157,14 @@ public abstract class AggregatedTestResultAction extends AbstractTestResultActio
     @Exported(inline=true)
     public List<ChildReport> getChildReports() {
         return new AbstractList<ChildReport>() {
+            @Override
             public ChildReport get(int index) {
                 return new ChildReport(
                         resolveRun(children.get(index)),
                         getChildReport(children.get(index)));
             }
 
+            @Override
             public int size() {
                 return children.size();
             }

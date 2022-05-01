@@ -28,10 +28,16 @@ THE SOFTWARE.
   <bs:layout title="${%title(it.testObject.displayName)}">
     <j:set var="start" value="${it.asInt(request.getParameter('start'),0)}"/>
     <j:set var="end" value="${it.asInt(request.getParameter('end'),start+24)}"/>
-    <j:set var="rangeParameters" value="start=${start}&amp;end=${end+1}"/>
-
+    <link rel="stylesheet" href="${resURL}/plugin/junit/history/history.css"/>
     <st:adjunct includes="io.jenkins.plugins.echarts"/>
     <st:adjunct includes="io.jenkins.plugins.bootstrap5"/>
+    <st:once>
+      <c:chart-setup id="test-history"/>
+      <script>var view =
+        <st:bind value="${it}"/>
+      </script>
+      <script type="text/javascript" src="${resURL}/plugin/junit/history/history.js"/>
+    </st:once>
 
     <st:include from="${it.testObject}" it="${it.testObject}" page="sidepanel.jelly"/>
     <l:main-panel>
@@ -63,7 +69,43 @@ THE SOFTWARE.
           ${%More than 1 builds are needed for the chart.}
         </j:otherwise>
       </j:choose>
-      <st:include from="${it.testObject}" it="${it.testObject}" page="list.jelly" optional="true"/>
+
+      <j:set var="historySummary" value="${it.retrieveHistorySummary(start)}"/>
+
+      <br/>
+      <table class="jenkins-table pane sortable" id="testresult">
+        <thead>
+          <tr>
+            <th class="pane-header">${%Build}</th>
+            <j:if test="${historySummary.descriptionAvailable}">
+              <th class="pane-header">${%Description}</th>
+            </j:if>
+            <th class="pane-header" style="width:5em; text-align:right">${%Duration}</th>
+            <th class="pane-header" style="width:5em; text-align:right">${%Fail}</th>
+            <th class="pane-header" style="width:5em; text-align:right">${%Skip}</th>
+            <th class="pane-header" style="width:5em; text-align:right">${%Total}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <j:forEach var="item" items="${historySummary.historySummaries}" begin="${start}" end="${end}">
+            <j:if test="${item != null}">
+              <tr>
+                <td class="pane">
+                  <a href="${app.rootUrl}${item.url}">${item.fullDisplayName}</a>
+                </td>
+                <j:if test="${historySummary.descriptionAvailable}">
+                  <td class="pane" style="text-align:right"><j:out value="${item.description}"/></td>
+                </j:if>
+                <td class="pane no-wrap" style="text-align:right" data="${item.duration}">${item.durationString}</td>
+                <td class="pane" style="text-align:right">${item.failCount}</td>
+                <td class="pane" style="text-align:right">${item.skipCount}</td>
+                <td class="pane" style="text-align:right">${item.totalCount}</td>
+              </tr>
+            </j:if>
+          </j:forEach>
+        </tbody>
+      </table>
+
       <div>
         <j:if test="${it.testObject.run.parent.builds.size() > end}">
           <a href="${app.rootUrl}${it.testObject.url}/history?start=${end+1}"
@@ -76,15 +118,7 @@ THE SOFTWARE.
              style="margin:1px">${%Newer}
           </a>
         </j:if>
-         
       </div>
     </l:main-panel>
-
-    <c:chart-setup id="test-history"/>
-
-    <script>
-      var view =<st:bind value="${it}"/>
-    </script>
-    <script type="text/javascript" src="${resURL}/plugin/junit/history/history.js"/>
   </bs:layout>
 </j:jelly>

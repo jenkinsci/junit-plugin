@@ -31,7 +31,6 @@ import hudson.model.TaskListener;
 import hudson.tasks.junit.JUnitParser;
 import hudson.tasks.junit.TestResult;
 import java.io.IOException;
-import javax.annotation.CheckForNull;
 import org.jenkinsci.remoting.SerializableOnlyOverRemoting;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.Beta;

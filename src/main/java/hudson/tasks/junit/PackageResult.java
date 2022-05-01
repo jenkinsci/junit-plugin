@@ -45,7 +45,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
     /**
      * All {@link ClassResult}s keyed by their short name.
      */
-    private final Map<String,ClassResult> classes = new TreeMap<String,ClassResult>();
+    private final Map<String,ClassResult> classes = new TreeMap<>();
     private int passCount,failCount,skipCount;
     private final hudson.tasks.junit.TestResult parent;
     private float duration; 
@@ -60,11 +60,13 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
         return parent == null ? null : parent.getRun();
     }
 
+    @Override
     public hudson.tasks.junit.TestResult getParent() {
     	return parent;
     }
 
     @Exported(visibility=999)
+    @Override
     public String getName() {
         return packageName;
     }
@@ -158,6 +160,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
 	}
 
     @Exported(name="child")
+    @Override
     public Collection<ClassResult> getChildren() {
         return classes.values();
     }
@@ -175,13 +178,14 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
      * Returns a list of the failed cases, in no particular
      * sort order
      */
+    @Override
     public List<CaseResult> getFailedTests() {
         TestResultImpl pluggableStorage = parent.getPluggableStorage();
         if (pluggableStorage != null) {
            return pluggableStorage.getFailedTestsByPackage(packageName);
        }
         
-        List<CaseResult> r = new ArrayList<CaseResult>();
+        List<CaseResult> r = new ArrayList<>();
         for (ClassResult clr : classes.values()) {
             for (CaseResult cr : clr.getChildren()) {
                 if (cr.isFailed()) {
@@ -199,7 +203,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
      */
     public List<CaseResult> getFailedTestsSortedByAge() {
         List<CaseResult> failedTests = getFailedTests();
-        Collections.sort(failedTests, CaseResult.BY_AGE);
+        failedTests.sort(CaseResult.BY_AGE);
         return failedTests;
     }
 
@@ -215,7 +219,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
             return pluggableStorage.getPassedTestsByPackage(packageName);
         }
 
-        List<CaseResult> r = new ArrayList<CaseResult>();
+        List<CaseResult> r = new ArrayList<>();
         for (ClassResult clr : classes.values()) {
             for (CaseResult cr : clr.getChildren()) {
                 if (cr.isPassed()) {
@@ -223,7 +227,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
                 }
             }
         }
-        Collections.sort(r,CaseResult.BY_AGE);
+        r.sort(CaseResult.BY_AGE);
         return r;
     }
 
@@ -239,7 +243,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
             return pluggableStorage.getSkippedTestsByPackage(packageName);
         } 
         
-        List<CaseResult> r = new ArrayList<CaseResult>();
+        List<CaseResult> r = new ArrayList<>();
         for (ClassResult clr : classes.values()) {
             for (CaseResult cr : clr.getChildren()) {
                 if (cr.isSkipped()) {
@@ -247,7 +251,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
                 }
             }
         }
-        Collections.sort(r, CaseResult.BY_AGE);
+        r.sort(CaseResult.BY_AGE);
         return r;
     }
 
@@ -314,6 +318,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
         }
     }
 
+    @Override
     public int compareTo(PackageResult that) {
         if (this.equals(that)) {
             return 0;
@@ -340,6 +345,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
         return System.identityHashCode(this);
     }
 
+    @Override
     public String getDisplayName() {
         return TestNameTransformer.getTransformedName(packageName);
     }

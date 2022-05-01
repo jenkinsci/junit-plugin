@@ -21,7 +21,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
 package hudson.tasks.junit;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -30,11 +29,10 @@ import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.List;
-import static org.jvnet.hudson.test.MemoryAssert.*;
-import static org.junit.Assert.*;
-
-import hudson.tasks.test.PipelineTestDetails;
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.jvnet.hudson.test.MemoryAssert.assertHeapUsage;
 
 public class SuiteResult2Test {
 

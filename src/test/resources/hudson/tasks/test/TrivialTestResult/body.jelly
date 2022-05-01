@@ -23,16 +23,16 @@ THE SOFTWARE.
 -->
 
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler">
     <h1>TrivialTestResult body.jelly</h1>
 
   <j:if test="${it.failCount!=0}">
     <h2>${%All Failed Tests}</h2>
-    <table class="pane sortable stripped">
+    <table class="pane sortable">
       <tr>
-        <td class="pane-header">${%Test Name}</td>
-        <td class="pane-header" style="width:4em">${%Duration}</td>
-        <td class="pane-header" style="width:3em">${%Age}</td>
+        <th class="pane-header">${%Test Name}</th>
+        <th class="pane-header" style="width:4em">${%Duration}</th>
+        <th class="pane-header" style="width:3em">${%Age}</th>
       </tr>
       <j:forEach var="f" items="${it.failedTests}" varStatus="i">
         <tr>
@@ -65,19 +65,21 @@ THE SOFTWARE.
 
   <j:if test="${it.totalCount!=0}">
     <h2>${%All Tests}</h2>
-    <table class="pane sortable bigtable stripped" id="testresult">
-      <tr>
-        <td class="pane-header">${it.childTitle}</td>
-        <td class="pane-header" style="width:5em">${%Duration}</td>
-        <td class="pane-header" style="width:5em">${%Fail}</td>
-        <td class="pane-header" style="width:1em; font-size:smaller; white-space:nowrap;">(${%diff})</td>
-        <td class="pane-header" style="width:5em">${%Skip}</td>
-        <td class="pane-header" style="width:1em; font-size:smaller; white-space:nowrap;">(${%diff})</td>
-        <td class="pane-header" style="width:5em">${%Pass}</td>
-        <td class="pane-header" style="width:1em; font-size:smaller; white-space:nowrap;">(${%diff})</td>
-        <td class="pane-header" style="width:5em">${%Total}</td>
-        <td class="pane-header" style="width:1em; font-size:smaller; white-space:nowrap;">(${%diff})</td>
-      </tr>
+    <table class="jenkins-table pane sortable" id="testresult">
+        <thead>
+            <tr>
+                <th class="pane-header">${it.childTitle}</th>
+                <th class="pane-header" style="width:5em; text-align:right">${%Duration}</th>
+                <th class="pane-header" style="width:5em; text-align:right">${%Fail}</th>
+                <th class="pane-header" style="width:3em; text-align:right; white-space:nowrap;">(${%diff})</th>
+                <th class="pane-header" style="width:5em; text-align:right">${%Skip}</th>
+                <th class="pane-header" style="width:3em; text-align:right; white-space:nowrap;">(${%diff})</th>
+                <th class="pane-header" style="width:5em; text-align:right">${%Pass}</th>
+                <th class="pane-header" style="width:3em; text-align:right; white-space:nowrap;">(${%diff})</th>
+                <th class="pane-header" style="width:5em; text-align:right">${%Total}</th>
+                <th class="pane-header" style="width:3em; text-align:right; white-space:nowrap;">(${%diff})</th>
+            </tr>
+        </thead>
       <tbody>
         <j:forEach var="p" items="${it.children}">
           <j:set var="prev" value="${p.previousResult}" />

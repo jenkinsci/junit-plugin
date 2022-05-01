@@ -155,6 +155,7 @@ public abstract class TestObject extends AbstractModelObject implements Serializ
 	 */
 	public abstract String getSafeName();
 
+    @Override
     public abstract String getSearchUrl();
 
     /**

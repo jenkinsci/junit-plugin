@@ -23,6 +23,10 @@
  */
 package hudson.tasks.junit;
 
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
 import edu.hm.hafner.echarts.ChartModelConfiguration;
 import edu.hm.hafner.echarts.JacksonFacade;
 import edu.hm.hafner.echarts.LinesChartModel;
@@ -34,6 +38,7 @@ import hudson.tasks.test.TestObject;
 import hudson.tasks.test.TestObjectIterable;
 import hudson.tasks.test.TestResultDurationChart;
 import hudson.tasks.test.TestResultTrendChart;
+import hudson.util.RunList;
 
 import io.jenkins.plugins.junit.storage.TestResultImpl;
 
@@ -48,7 +53,7 @@ public class History {
     private static final String EMPTY_CONFIGURATION = "{}";
     private final TestObject testObject;
 
-    public History(final TestObject testObject) {
+    public History(TestObject testObject) {
         this.testObject = testObject;
     }
 
@@ -71,17 +76,14 @@ public class History {
 
     @JavaScriptMethod
     @SuppressWarnings("unused") // Called by jelly view
-    public String getTestResultTrend(final String configuration) {
+    public String getTestResultTrend(String configuration) {
         return JACKSON_FACADE.toJson(createTestResultTrend(ChartModelConfiguration.fromJson(configuration)));
     }
 
-    private LinesChartModel createTestResultTrend(
-            final ChartModelConfiguration chartModelConfiguration) {
-        if (testObject instanceof hudson.tasks.junit.TestResult) {
-            TestResultImpl pluggableStorage = ((hudson.tasks.junit.TestResult) testObject).getPluggableStorage();
-            if (pluggableStorage != null) {
-                return new TestResultTrendChart().create(pluggableStorage.getTrendTestResultSummary());
-            }
+    private LinesChartModel createTestResultTrend(ChartModelConfiguration chartModelConfiguration) {
+        TestResultImpl pluggableStorage = getPluggableStorage();
+        if (pluggableStorage != null) {
+            return new TestResultTrendChart().create(pluggableStorage.getTrendTestResultSummary());
         }
 
         return new TestResultTrendChart().createFromTestObject(createBuildHistory(testObject), chartModelConfiguration);
@@ -89,17 +91,15 @@ public class History {
 
     @JavaScriptMethod
     @SuppressWarnings("unused") // Called by jelly view
-    public String getTestDurationTrend(final String configuration) {
+    public String getTestDurationTrend(String configuration) {
         return JACKSON_FACADE.toJson(createTestDurationResultTrend(ChartModelConfiguration.fromJson(configuration)));
     }
 
-    private LinesChartModel createTestDurationResultTrend(
-            final ChartModelConfiguration chartModelConfiguration) {
-        if (testObject instanceof hudson.tasks.junit.TestResult) {
-            TestResultImpl pluggableStorage = ((hudson.tasks.junit.TestResult) testObject).getPluggableStorage();
-            if (pluggableStorage != null) {
-                return new TestResultDurationChart().create(pluggableStorage.getTestDurationResultSummary());
-            }
+    private LinesChartModel createTestDurationResultTrend(ChartModelConfiguration chartModelConfiguration) {
+        TestResultImpl pluggableStorage = getPluggableStorage();
+
+        if (pluggableStorage != null) {
+            return new TestResultDurationChart().create(pluggableStorage.getTestDurationResultSummary());
         }
 
         return new TestResultDurationChart().create(createBuildHistory(testObject), chartModelConfiguration);
@@ -109,8 +109,77 @@ public class History {
         return new TestObjectIterable(testObject);
     }
 
+    private TestResultImpl getPluggableStorage() {
+        TestResultImpl pluggableStorage = null;
+        if (testObject instanceof TestResult) {
+            pluggableStorage = ((TestResult) testObject).getPluggableStorage();
+        } else if (testObject instanceof PackageResult) {
+            pluggableStorage = ((PackageResult) testObject).getParent().getPluggableStorage();
+        } else if (testObject instanceof ClassResult) {
+            pluggableStorage = ((ClassResult) testObject).getParent().getParent().getPluggableStorage();
+        } else if (testObject instanceof CaseResult) {
+            pluggableStorage = ((CaseResult) testObject).getParent().getParent().getParent().getPluggableStorage();
+        }
+        return pluggableStorage;
+    }
+
+    public static class HistoryTableResult {
+        private boolean descriptionAvailable;
+        private List<HistoryTestResultSummary> historySummaries;
+
+        public HistoryTableResult(List<HistoryTestResultSummary> historySummaries) {
+            this.descriptionAvailable = historySummaries.stream()
+            .anyMatch(summary -> summary.getDescription() != null);
+            this.historySummaries = historySummaries;
+        }
+
+        public boolean isDescriptionAvailable() {
+            return descriptionAvailable;
+        }
+
+        public List<HistoryTestResultSummary> getHistorySummaries() {
+            return historySummaries;
+        }
+    }
+
+    public HistoryTableResult retrieveHistorySummary(int userOffset) {
+        int offset = userOffset;
+        if (userOffset > 1000 || userOffset < 0) {
+            offset = 0;
+        }
+
+        TestResultImpl pluggableStorage = getPluggableStorage();
+
+        if (pluggableStorage != null) {
+            return new HistoryTableResult(pluggableStorage.getHistorySummary(offset));
+        }
+        return new HistoryTableResult(getHistoryFromFileStorage());
+    }
+
+    private List<HistoryTestResultSummary> getHistoryFromFileStorage() {
+        TestObject testObject = getTestObject();
+        RunList<?> builds = testObject.getRun().getParent().getBuilds();
+        return builds
+                .stream()
+                .map(build -> {
+                    hudson.tasks.test.TestResult resultInRun = testObject.getResultInRun(build);
+                    if (resultInRun == null) {
+                        return null;
+                    }
+
+                    return new HistoryTestResultSummary(build, resultInRun.getDuration(),
+                            resultInRun.getFailCount(),
+                            resultInRun.getSkipCount(),
+                            resultInRun.getPassCount(),
+                            resultInRun.getDescription()
+                    );
+                })
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
     @SuppressWarnings("unused") // Called by jelly view
-    public static int asInt(final String s, final int defaultValue) {
+    public static int asInt(String s, int defaultValue) {
         if (s == null) return defaultValue;
         try {
             return Integer.parseInt(s);

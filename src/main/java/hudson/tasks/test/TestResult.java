@@ -101,6 +101,7 @@ public abstract class TestResult extends TestObject {
     /**
      * Time it took to run this test. In seconds.
      */
+    @Override
     public /* abstract */ float getDuration() {
         return 0.0f;
     }
@@ -108,6 +109,7 @@ public abstract class TestResult extends TestObject {
     /**
      * Gets the total number of passed tests.
      */
+    @Override
     public /* abstract */ int getPassCount() {
         return 0;
     }
@@ -115,6 +117,7 @@ public abstract class TestResult extends TestObject {
     /**
      * Gets the total number of failed tests.
      */
+    @Override
     public /* abstract */ int getFailCount() {
         return 0;
     }
@@ -123,6 +126,7 @@ public abstract class TestResult extends TestObject {
     /**
      * Gets the total number of skipped tests.
      */
+    @Override
     public /* abstract */ int getSkipCount() {
         return 0;
     }
@@ -132,6 +136,7 @@ public abstract class TestResult extends TestObject {
      *
      * @return null if no such counter part exists.
      */
+    @Override
     public TestResult getPreviousResult() {
         Run<?,?> b = getRun();
         if (b == null) {

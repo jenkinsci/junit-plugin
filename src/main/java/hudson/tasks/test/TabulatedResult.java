@@ -23,8 +23,8 @@
  */
 package hudson.tasks.test;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -71,14 +71,14 @@ public abstract class TabulatedResult extends TestResult {
     }
 
     @CheckForNull
-    public PipelineBlockWithTests getPipelineBlockWithTests(@Nonnull String blockId) {
+    public PipelineBlockWithTests getPipelineBlockWithTests(@NonNull String blockId) {
         if (testsByBlock.containsKey(blockId)) {
             return testsByBlock.get(blockId);
         }
         return null;
     }
 
-    protected final void populateBlocks(@Nonnull List<String> innermostFirst, @Nonnull String nodeId,
+    protected final void populateBlocks(@NonNull List<String> innermostFirst, @NonNull String nodeId,
                                         @CheckForNull PipelineBlockWithTests nested) {
         if (innermostFirst.isEmpty()) {
             if (nested != null) {
@@ -100,7 +100,7 @@ public abstract class TabulatedResult extends TestResult {
         }
     }
 
-    private void addOrMergeBlock(@Nonnull PipelineBlockWithTests b) {
+    private void addOrMergeBlock(@NonNull PipelineBlockWithTests b) {
         if (testsByBlock.containsKey(b.getBlockId())) {
             testsByBlock.get(b.getBlockId()).merge(b);
         } else {
@@ -113,8 +113,8 @@ public abstract class TabulatedResult extends TestResult {
      *
      * Default implementation just returns the original.
      */
-    @Nonnull
-    public TabulatedResult blockToTestResult(@Nonnull PipelineBlockWithTests block, @Nonnull TabulatedResult fullResult) {
+    @NonNull
+    public TabulatedResult blockToTestResult(@NonNull PipelineBlockWithTests block, @NonNull TabulatedResult fullResult) {
         return fullResult;
     }
 

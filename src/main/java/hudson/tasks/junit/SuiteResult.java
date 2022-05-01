@@ -35,8 +35,8 @@ import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 import org.xml.sax.SAXException;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -100,7 +100,7 @@ public final class SuiteResult implements Serializable {
     /**
      * All test cases.
      */
-    private final List<CaseResult> cases = new ArrayList<CaseResult>();
+    private final List<CaseResult> cases = new ArrayList<>();
     private transient Map<String, CaseResult> casesByName;
     private transient hudson.tasks.junit.TestResult parent;
 
@@ -159,7 +159,7 @@ public final class SuiteResult implements Serializable {
      */
     static List<SuiteResult> parse(File xmlReport, boolean keepLongStdio, PipelineTestDetails pipelineTestDetails)
             throws DocumentException, IOException, InterruptedException {
-        List<SuiteResult> r = new ArrayList<SuiteResult>();
+        List<SuiteResult> r = new ArrayList<>();
 
         // parse into DOM
         SAXReader saxReader = new SAXReader();
@@ -173,14 +173,11 @@ public final class SuiteResult implements Serializable {
 
         saxReader.setEntityResolver(new XMLEntityResolver());
 
-        FileInputStream xmlReportStream = new FileInputStream(xmlReport);
-        try {
+        try (FileInputStream xmlReportStream = new FileInputStream(xmlReport)) {
             Document result = saxReader.read(xmlReportStream);
             Element root = result.getRootElement();
 
             parseSuite(xmlReport, keepLongStdio, r, root, pipelineTestDetails);
-        } finally {
-            xmlReportStream.close();
         }
 
         return r;
@@ -198,8 +195,7 @@ public final class SuiteResult implements Serializable {
     private static void parseSuite(File xmlReport, boolean keepLongStdio, List<SuiteResult> r, Element root,
                                    PipelineTestDetails pipelineTestDetails) throws DocumentException, IOException {
         // nested test suites
-        @SuppressWarnings("unchecked")
-        List<Element> testSuites = (List<Element>) root.elements("testsuite");
+        List<Element> testSuites = root.elements("testsuite");
         for (Element suite : testSuites)
             parseSuite(xmlReport, keepLongStdio, r, suite, pipelineTestDetails);
 
@@ -245,8 +241,7 @@ public final class SuiteResult implements Serializable {
             addCase(new CaseResult(this, suite, "<init>", keepLongStdio));
         }
 
-        @SuppressWarnings("unchecked")
-        List<Element> testCases = (List<Element>) suite.elements("testcase");
+        List<Element> testCases = suite.elements("testcase");
         for (Element e : testCases) {
             // https://issues.jenkins-ci.org/browse/JENKINS-1233 indicates that
             // when <testsuites> is present, we are better off using @classname on the
@@ -336,7 +331,7 @@ public final class SuiteResult implements Serializable {
      * @since 1.22
      */
     @Exported(visibility=9)
-    @Nonnull
+    @NonNull
     public List<String> getEnclosingBlocks() {
         if (enclosingBlocks != null) {
             return Collections.unmodifiableList(enclosingBlocks);
@@ -351,7 +346,7 @@ public final class SuiteResult implements Serializable {
      * @since 1.22
      */
     @Exported(visibility=9)
-    @Nonnull
+    @NonNull
     public List<String> getEnclosingBlockNames() {
         if (enclosingBlockNames != null) {
             return Collections.unmodifiableList(enclosingBlockNames);
@@ -433,7 +428,7 @@ public final class SuiteResult implements Serializable {
     }
 
     public Set<String> getClassNames() {
-        Set<String> result = new HashSet<String>();
+        Set<String> result = new HashSet<>();
         for (CaseResult c : cases) {
             result.add(c.getClassName());
         }

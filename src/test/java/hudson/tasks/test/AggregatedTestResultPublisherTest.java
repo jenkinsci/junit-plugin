@@ -24,8 +24,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertThat;
 
 public class AggregatedTestResultPublisherTest {
     public static final String TEST_PROJECT_NAME = "junit";

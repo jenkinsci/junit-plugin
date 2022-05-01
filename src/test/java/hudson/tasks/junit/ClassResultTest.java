@@ -1,7 +1,6 @@
 package hudson.tasks.junit;
 
 import hudson.tasks.test.TestResult;
-import junit.framework.TestCase;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

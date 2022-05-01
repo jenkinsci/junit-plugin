@@ -298,12 +298,12 @@ public class TestResultPublishingTest {
             return;
         if (str.equals(""))
             return;
-        fail(msg + "(should be empty or null) : \'" + str + "\'"); 
+        fail(msg + "(should be empty or null) : '" + str + "'");
     }
 
     void assertPaneDiffText(String msg, int expectedValue, Object paneObj) { 
         assertTrue( "paneObj should be an HtmlElement, it was " + paneObj.getClass(), paneObj instanceof HtmlElement );
-        String paneText = ((HtmlElement) paneObj).asText();
+        String paneText = ((HtmlElement) paneObj).asNormalizedText();
         if (expectedValue==0) {
             assertStringEmptyOrNull(msg, paneText);
         } else {

@@ -82,6 +82,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
      *
      * @return the parent {@link TestObject}.
      */
+    @Override
     public abstract TestObject getParent();
 
     @Override
@@ -234,8 +235,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
         } else {
             Run<?, ?> run = Stapler.getCurrentRequest().findAncestorObject(Run.class);
             if (run != null) {
-                AbstractTestResultAction action = run.getAction(AbstractTestResultAction.class);
-                return action;
+                return run.getAction(AbstractTestResultAction.class);
             }
             LOGGER.warning("owner is null when trying to getTestResultAction.");
             return null;
@@ -253,7 +253,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
             TestResultAction tra = (TestResultAction) atra;
             return tra.getActions(this);
         } else {
-            return new ArrayList<TestAction>();
+            return new ArrayList<>();
         }
     }
 
@@ -277,9 +277,11 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
      *
      * @return null if no such counter part exists.
      */
+    @Override
     public abstract TestResult getPreviousResult();
 
     @Deprecated
+    @Override
     public TestResult getResultInBuild(AbstractBuild<?, ?> build) {
         return (TestResult) super.getResultInBuild(build);
     }
@@ -306,6 +308,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
     /**
      * Time took to run this test. In seconds.
      */
+    @Override
     public abstract float getDuration();
 
     /**
@@ -391,10 +394,10 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
             String uniquified = base;
             Map<TestObject,Void> taken = UNIQUIFIED_NAMES.get(base);
             if (taken == null) {
-                taken = new WeakHashMap<TestObject,Void>();
+                taken = new WeakHashMap<>();
                 UNIQUIFIED_NAMES.put(base, taken);
             } else {
-                Set<TestObject> similars = new HashSet<TestObject>(taken.keySet());
+                Set<TestObject> similars = new HashSet<>(taken.keySet());
                 similars.retainAll(new HashSet<TestObject>(siblings));
                 if (!similars.isEmpty()) {
                     uniquified = base + '_' + (similars.size() + 1);
@@ -428,16 +431,19 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
     /**
      * Gets the total number of passed tests.
      */
+    @Override
     public abstract int getPassCount();
 
     /**
      * Gets the total number of failed tests.
      */
+    @Override
     public abstract int getFailCount();
 
     /**
      * Gets the total number of skipped tests.
      */
+    @Override
     public abstract int getSkipCount();
 
     /**
