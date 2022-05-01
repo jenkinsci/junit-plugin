@@ -28,9 +28,11 @@ THE SOFTWARE.
   <bs:layout title="${%title(it.testObject.displayName)}">
     <j:set var="start" value="${it.asInt(request.getParameter('start'),0)}"/>
     <j:set var="end" value="${it.asInt(request.getParameter('end'),start+24)}"/>
-    <link rel="stylesheet" href="${resURL}/plugin/junit/history/history.css"/>
     <st:adjunct includes="io.jenkins.plugins.echarts"/>
     <st:adjunct includes="io.jenkins.plugins.bootstrap5"/>
+    <st:adjunct includes="io.jenkins.plugins.echarts-trend-default-setup"/>
+    <link rel="stylesheet" href="${resURL}/plugin/junit/history/history.css"/>
+
     <st:once>
       <c:chart-setup id="test-history"/>
       <script>var view =
@@ -47,10 +49,10 @@ THE SOFTWARE.
             <div id="trend-carousel" class="carousel slide carousel-dark" data-bs-interval="false">
               <div class="carousel-inner">
                 <div class="carousel-item">
-                  <div id="test-duration-trend-chart" class="graph-cursor-pointer card-chart"/>
+                  <div id="test-duration-trend-chart" class="graph-cursor-pointer card-chart-carousel"/>
                 </div>
                 <div class="carousel-item active">
-                  <div id="test-result-trend-chart" class="graph-cursor-pointer card-chart"/>
+                  <div id="test-result-trend-chart" class="graph-cursor-pointer card-chart-carousel"/>
                 </div>
               </div>
               <button class="carousel-control-prev" type="button" data-bs-target="#trend-carousel" data-bs-slide="prev">
