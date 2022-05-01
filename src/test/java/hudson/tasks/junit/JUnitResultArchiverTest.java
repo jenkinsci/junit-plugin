@@ -112,7 +112,7 @@ public class JUnitResultArchiverTest {
 
         assertTestResults(build);
 
-        WebClient wc = j.new WebClient();
+        WebClient wc = WebClientFactory.createWebClientWithDisabledJavaScript(j);
         wc.getPage(project); // project page
         wc.getPage(build); // build page
         wc.getPage(build, "testReport");  // test report
@@ -423,43 +423,43 @@ public class JUnitResultArchiverTest {
 
         assertEquals(described, model.uninstantiate(model.instantiate(described)));
     }
-    
+
     @Test
     @Issue("SECURITY-521")
     public void testXxe() throws Exception {
         String oobInUserContentLink = j.getURL() + "userContent/oob.xml";
         String triggerLink = j.getURL() + "triggerMe";
-        
+
         String xxeFile = this.getClass().getResource("testXxe-xxe.xml").getFile();
         String xxeFileContent = FileUtils.readFileToString(new File(xxeFile), StandardCharsets.UTF_8);
         String adaptedXxeFileContent = xxeFileContent.replace("$OOB_LINK$", oobInUserContentLink);
-        
+
         String oobFile = this.getClass().getResource("testXxe-oob.xml").getFile();
         String oobFileContent = FileUtils.readFileToString(new File(oobFile), StandardCharsets.UTF_8);
         String adaptedOobFileContent = oobFileContent.replace("$TARGET_URL$", triggerLink);
-        
+
         File userContentDir = new File(j.jenkins.getRootDir(), "userContent");
         FileUtils.writeStringToFile(new File(userContentDir, "oob.xml"), adaptedOobFileContent);
-        
+
         FreeStyleProject project = j.createFreeStyleProject();
         DownloadBuilder builder = new DownloadBuilder();
         builder.fileContent = adaptedXxeFileContent;
         project.getBuildersList().add(builder);
-        
+
         JUnitResultArchiver publisher = new JUnitResultArchiver("xxe.xml");
         project.getPublishersList().add(publisher);
-    
+
         project.scheduleBuild2(0).get();
         // UNSTABLE
         // assertEquals(Result.SUCCESS, project.scheduleBuild2(0).get().getResult());
-        
+
         YouCannotTriggerMe urlHandler = j.jenkins.getExtensionList(UnprotectedRootAction.class).get(YouCannotTriggerMe.class);
         assertEquals(0, urlHandler.triggerCount);
     }
-    
+
     public static class DownloadBuilder extends Builder {
         String fileContent;
-        
+
         @Override
         public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) {
             try {
@@ -467,43 +467,43 @@ public class JUnitResultArchiverTest {
             } catch (IOException e) {
                 return false;
             }
-            
+
             return true;
         }
-        
+
         @Extension
         public static class DescriptorImpl extends BuildStepDescriptor<Builder> {
             @Override
             public boolean isApplicable(Class<? extends AbstractProject> jobType) {
                 return true;
             }
-            
+
             @Override
             public String getDisplayName() {
                 return null;
             }
         }
     }
-    
+
     @TestExtension("testXxe")
     public static class YouCannotTriggerMe implements UnprotectedRootAction {
         private int triggerCount = 0;
-        
+
         @Override
         public String getIconFileName() {
             return null;
         }
-        
+
         @Override
         public String getDisplayName() {
             return null;
         }
-        
+
         @Override
         public String getUrlName() {
             return "triggerMe";
         }
-        
+
         public HttpResponse doIndex() {
             triggerCount++;
             return HttpResponses.plainText("triggered");

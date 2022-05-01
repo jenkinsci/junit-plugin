@@ -48,7 +48,7 @@ public class AggregatedTestResultPublisherTest {
 
     @Before
     public void setup() {
-        wc = j.createWebClient();
+        wc = WebClientFactory.createWebClientWithDisabledJavaScript(j);
     }
 
     @LocalData
