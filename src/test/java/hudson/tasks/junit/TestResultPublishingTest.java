@@ -37,6 +37,8 @@ import hudson.model.Result;
 import hudson.model.Run;
 import hudson.slaves.DumbSlave;
 import hudson.tasks.Builder;
+import hudson.tasks.test.helper.WebClientFactory;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
