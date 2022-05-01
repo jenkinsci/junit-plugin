@@ -83,9 +83,7 @@ public class TestResultPublishingTest {
 
         assertTestResults(build);
 
-        WebClient wc = rule.createWebClient();
-        wc.getPage(project); // project page
-        wc.getPage(build); // build page
+        WebClient wc = WebClientFactory.createWebClientWithDisabledJavaScript(rule);
         wc.getPage(build, "testReport");  // test report
         wc.getPage(build, "testReport/hudson.security"); // package
         wc.getPage(build, "testReport/hudson.security/HudsonPrivateSecurityRealmTest/"); // class
@@ -107,7 +105,7 @@ public class TestResultPublishingTest {
 
         testBasic();
     }
-  
+
 
     /**
      * Verify that we can successfully parse and display test results in the
@@ -124,7 +122,7 @@ public class TestResultPublishingTest {
         assertNotNull("We should have a project named " + TEST_PROJECT_WITH_HISTORY, proj);
 
         // Validate that there are test results where I expect them to be:
-        WebClient wc = rule.createWebClient();
+        WebClient wc = WebClientFactory.createWebClientWithDisabledJavaScript(rule);
 
         // On the project page:
         HtmlPage projectPage = wc.getPage(proj);
@@ -138,12 +136,8 @@ public class TestResultPublishingTest {
         //      there should be a test result trend graph
         HtmlElement trendGraphCaption = (HtmlElement) projectPage.getByXPath( "//div[@class='test-trend-caption']").get(0);
         assertThat(trendGraphCaption.getTextContent(), is("Test Result Trend"));
-        HtmlElement testCanvas = ((HtmlElement) trendGraphCaption.getParentNode()).getElementsByTagName("canvas").get(0);
-        assertNotNull("couldn't find test result trend graph", testCanvas);
-
-        // The trend graph should be clickable and take us to a run details page
-        assertTrue("image node should be an HtmlCanvas object", testCanvas instanceof HtmlCanvas);
-        // TODO: Check that we can click on the graph and get to a particular run. How do I do this with HtmlUnit?
+        HtmlElement testCanvas = (HtmlElement) trendGraphCaption.getNextSibling().getFirstChild();
+        assertTrue("couldn't find test result trend graph", testCanvas.getAttribute("class").contains("echarts-trend"));
 
         XmlPage xmlProjectPage = wc.goToXml(proj.getUrl() + "/lastBuild/testReport/api/xml");
         rule.assertXPath(xmlProjectPage, "/testResult");
@@ -227,7 +221,7 @@ public class TestResultPublishingTest {
         assertNotNull("We should have a project named " + TEST_PROJECT_WITH_HISTORY, proj);
 
         // Validate that there are test results where I expect them to be:
-        WebClient wc = rule.createWebClient();
+        WebClient wc = WebClientFactory.createWebClientWithDisabledJavaScript(rule);
         Run theRun = proj.getBuildByNumber(4);
         assertTestResultsAsExpected(wc, theRun, "/testReport",
                         "org.jvnet.hudson.examples.small", "12 ms", "FAILURE",
@@ -250,7 +244,7 @@ public class TestResultPublishingTest {
         assertNotNull("We should have a project named " + TEST_PROJECT_WITH_HISTORY, proj);
 
         // Validate that there are test results where I expect them to be:
-        WebClient wc = rule.createWebClient();
+        WebClient wc = WebClientFactory.createWebClientWithDisabledJavaScript(rule);
 
         HtmlPage historyPage = wc.getPage(proj.getBuildByNumber(7),"/testReport/history/");
         rule.assertGoodStatus(historyPage);
@@ -292,7 +286,7 @@ public class TestResultPublishingTest {
             return true;
         }
     }
-  
+
     void assertStringEmptyOrNull(String msg, String str) {
         if (str==null)
             return;
@@ -301,7 +295,7 @@ public class TestResultPublishingTest {
         fail(msg + "(should be empty or null) : '" + str + "'");
     }
 
-    void assertPaneDiffText(String msg, int expectedValue, Object paneObj) { 
+    void assertPaneDiffText(String msg, int expectedValue, Object paneObj) {
         assertTrue( "paneObj should be an HtmlElement, it was " + paneObj.getClass(), paneObj instanceof HtmlElement );
         String paneText = ((HtmlElement) paneObj).asNormalizedText();
         if (expectedValue==0) {
