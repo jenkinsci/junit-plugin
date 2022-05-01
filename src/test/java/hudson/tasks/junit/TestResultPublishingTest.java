@@ -250,7 +250,7 @@ public class TestResultPublishingTest {
 
         HtmlPage historyPage = wc.getPage(proj.getBuildByNumber(7),"/testReport/history/");
         rule.assertGoodStatus(historyPage);
-        HtmlElement historyCard = (HtmlElement) historyPage.getByXPath( "//div[@class='card-body']").get(0);
+        HtmlElement historyCard = (HtmlElement) historyPage.getByXPath( "//div[@class='card-body ']").get(0);
         assertThat(historyCard.getTextContent(), containsString("History"));
         DomElement wholeTable = historyPage.getElementById("testresult");
         assertNotNull("table with id 'testresult' exists", wholeTable);
