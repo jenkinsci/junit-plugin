@@ -65,6 +65,7 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
+import hudson.tasks.test.helper.WebClientFactory;
 
 import java.io.IOException;
 import java.io.OutputStream;
