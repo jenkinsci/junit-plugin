@@ -23,7 +23,36 @@ THE SOFTWARE.
 -->
 
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core"
-         xmlns:c="/charts">
-  <c:trend-chart it="${from}" title="${%Test Result Trend}" enableLinks="true" configurationId="default"/>
+<j:jelly xmlns:j="jelly:core" xmlns:c="/charts">
+  <c:trend-setup suffix="junit">
+    <div class="mb-3">
+      <input class="form-check-input" type="checkbox" value="" id="junit-use-blue" />
+      <label class="form-check-label" for="junit-use-blue">
+        Show passed tests in blue (rather than in green)
+      </label>
+    </div>
+    <div class="mb-3">
+      <label class="form-label fw-bold">
+        General configuration
+      </label>
+    </div>
+  </c:trend-setup>
+
+  <c:trend-chart it="${from}" title="${%Test Result Trend}" enableLinks="true" configurationId="junit"/>
+
+  <script>
+    function fillJunit(trendConfiguration, jsonConfiguration) {
+      const useBlue = jsonConfiguration['useBlue'];
+      trendConfiguration.find('#junit-use-blue').prop('checked', !!useBlue);
+    }
+
+    function saveJunit(trendConfiguration) {
+      return {
+        'useBlue': trendConfiguration.find('#junit-use-blue').is(':checked')
+      };
+    }
+
+    echartsJenkinsApi.configureTrend('junit', fillJunit, saveJunit)
+  </script>
+
 </j:jelly>

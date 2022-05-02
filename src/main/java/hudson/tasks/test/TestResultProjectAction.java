@@ -43,6 +43,7 @@ import hudson.model.Action;
 import hudson.model.Job;
 import hudson.model.Run;
 import hudson.tasks.junit.JUnitResultArchiver;
+import hudson.tasks.test.TestResultTrendChart.PassedColor;
 
 import io.jenkins.plugins.echarts.AsyncConfigurableTrendChart;
 import io.jenkins.plugins.echarts.AsyncTrendChart;
@@ -60,6 +61,8 @@ import io.jenkins.plugins.junit.storage.TestResultImpl;
  * @author Kohsuke Kawaguchi
  */
 public class TestResultProjectAction implements Action, AsyncTrendChart, AsyncConfigurableTrendChart {
+    private static final JacksonFacade JACKSON_FACADE = new JacksonFacade();
+
     /**
      * Project that owns this action.
      * @since 1.2-beta-1
@@ -119,23 +122,23 @@ public class TestResultProjectAction implements Action, AsyncTrendChart, AsyncCo
 
     @Deprecated
     protected LinesChartModel createChartModel() {
-        return createChartModel(new ChartModelConfiguration());
+        return createChartModel(new ChartModelConfiguration(), PassedColor.BLUE);
     }
 
-    private LinesChartModel createChartModel(final ChartModelConfiguration configuration) {
+    private LinesChartModel createChartModel(ChartModelConfiguration configuration, PassedColor passedColor) {
         Run<?, ?> lastCompletedBuild = job.getLastCompletedBuild();
 
         JunitTestResultStorage storage = JunitTestResultStorage.find();
         if (!(storage instanceof FileJunitTestResultStorage)) {
             TestResultImpl pluggableStorage = storage.load(lastCompletedBuild.getParent().getFullName(), lastCompletedBuild.getNumber());
-            return new TestResultTrendChart().create(pluggableStorage.getTrendTestResultSummary());
+            return new TestResultTrendChart().create(pluggableStorage.getTrendTestResultSummary(), passedColor);
         }
 
         TestResultActionIterable buildHistory = createBuildHistory(lastCompletedBuild);
         if (buildHistory == null) {
             return new LinesChartModel();
         }
-        return new TestResultTrendChart().create(buildHistory, configuration);
+        return new TestResultTrendChart().create(buildHistory, configuration, passedColor);
     }
 
     @CheckForNull
@@ -227,7 +230,8 @@ public class TestResultProjectAction implements Action, AsyncTrendChart, AsyncCo
     @JavaScriptMethod
     @Override
     public String getConfigurableBuildTrendModel(final String configuration) {
-        return new JacksonFacade().toJson(createChartModel(ChartModelConfiguration.fromJson(configuration)));
+        PassedColor useBlue = JACKSON_FACADE.getBoolean(configuration, "useBlue", false) ? PassedColor.BLUE : PassedColor.GREEN;
+        return new JacksonFacade().toJson(createChartModel(ChartModelConfiguration.fromJson(configuration), useBlue));
     }
 
     @Override
