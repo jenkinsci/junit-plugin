@@ -81,7 +81,7 @@ public class TestObjectTest {
 
     @Test public void uniquifyName() {
         for (int i = 0; i < 2; i++) { // different parents
-            final List<TestObject> ts = new ArrayList<TestObject>();
+            final List<TestObject> ts = new ArrayList<>();
             for (int j = 0; j < 10; j++) {
                 final String name = "t" + (int) Math.sqrt(j); // partly unique names
                 ts.add(new SimpleCaseResult() {
@@ -90,7 +90,7 @@ public class TestObjectTest {
                     }
                 });
             }
-            List<String> names = new ArrayList<String>();
+            List<String> names = new ArrayList<>();
             for (TestObject t : ts) {
                 names.add(t.getSafeName());
             }

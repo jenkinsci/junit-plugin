@@ -12,7 +12,7 @@ import hudson.tasks.test.PipelineTestDetails;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 
 import io.jenkins.plugins.checks.steps.ChecksInfo;
 import org.jenkinsci.plugins.workflow.actions.LabelAction;
@@ -30,7 +30,7 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
 
     private transient final JUnitResultsStep step;
 
-    public JUnitResultsStepExecution(@Nonnull JUnitResultsStep step, StepContext context) {
+    public JUnitResultsStepExecution(@NonNull JUnitResultsStep step, StepContext context) {
         super(context);
         this.step = step;
     }
@@ -66,7 +66,9 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
                 int testFailures = summary.getFailCount();
                 if (testFailures > 0) {
                     node.addOrReplaceAction(new WarningAction(Result.UNSTABLE).withMessage(testFailures + " tests failed"));
-                    run.setResult(Result.UNSTABLE);
+                    if (!step.isSkipMarkingBuildUnstable()) {
+                        run.setResult(Result.UNSTABLE);
+                    }
                 }
             }
             return summary;
@@ -82,7 +84,7 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
      * @param node A flownode.
      * @return A nonnull, possibly empty list of stage/parallel branch start nodes, innermost first.
      */
-    @Nonnull
+    @NonNull
     public static List<FlowNode> getEnclosingStagesAndParallels(FlowNode node) {
         List<FlowNode> enclosingBlocks = new ArrayList<>();
         for (FlowNode enclosing : node.getEnclosingBlocks()) {
@@ -97,7 +99,7 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
         return enclosingBlocks;
     }
 
-    private static boolean isStageNode(@Nonnull FlowNode node) {
+    private static boolean isStageNode(@NonNull FlowNode node) {
         if (node instanceof StepNode) {
             StepDescriptor d = ((StepNode) node).getDescriptor();
             return d != null && d.getFunctionName().equals("stage");
@@ -106,8 +108,8 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
         }
     }
 
-    @Nonnull
-    public static List<String> getEnclosingBlockIds(@Nonnull List<FlowNode> nodes) {
+    @NonNull
+    public static List<String> getEnclosingBlockIds(@NonNull List<FlowNode> nodes) {
         List<String> ids = new ArrayList<>();
         for (FlowNode n : nodes) {
             ids.add(n.getId());
@@ -115,8 +117,8 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
         return ids;
     }
 
-    @Nonnull
-    public static List<String> getEnclosingBlockNames(@Nonnull List<FlowNode> nodes) {
+    @NonNull
+    public static List<String> getEnclosingBlockNames(@NonNull List<FlowNode> nodes) {
         List<String> names = new ArrayList<>();
         for (FlowNode n : nodes) {
             ThreadNameAction threadNameAction = n.getPersistentAction(ThreadNameAction.class);

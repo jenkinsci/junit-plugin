@@ -88,14 +88,17 @@ public class TestResultProjectAction implements Action, AsyncTrendChart, AsyncCo
     /**
      * No task list item.
      */
+    @Override
     public String getIconFileName() {
         return null;
     }
 
+    @Override
     public String getDisplayName() {
         return "Test Report";
     }
 
+    @Override
     public String getUrlName() {
         return "test";
     }
@@ -122,7 +125,7 @@ public class TestResultProjectAction implements Action, AsyncTrendChart, AsyncCo
         return createChartModel(new ChartModelConfiguration(), PassedColor.BLUE);
     }
 
-    private LinesChartModel createChartModel(final ChartModelConfiguration configuration, final PassedColor passedColor) {
+    private LinesChartModel createChartModel(ChartModelConfiguration configuration, PassedColor passedColor) {
         Run<?, ?> lastCompletedBuild = job.getLastCompletedBuild();
 
         JunitTestResultStorage storage = JunitTestResultStorage.find();

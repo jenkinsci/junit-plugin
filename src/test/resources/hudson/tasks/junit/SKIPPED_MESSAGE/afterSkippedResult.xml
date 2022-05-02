@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?><testsuite failures="0" name="cucumber.runtime.formatter.JUnitFormatter" skipped="1" tests="1" time="0.172697">
+    <testcase classname="Test Sample" name="Test Example" time="0.172697">
+        <error message="RuntimeException; nested exception is: &#10;&#9;java.lang.IllegalArgumentException: id to load is required for loading"
+               type="java.rmi.ServerException">java.rmi.ServerException: RuntimeException
+        </error>
+
+    </testcase>
+</testsuite>

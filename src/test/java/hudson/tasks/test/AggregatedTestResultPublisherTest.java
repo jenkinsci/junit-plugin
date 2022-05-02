@@ -10,6 +10,7 @@ import hudson.tasks.BuildTrigger;
 import hudson.tasks.Fingerprinter;
 import hudson.tasks.Shell;
 import hudson.tasks.junit.JUnitResultArchiver;
+import hudson.tasks.test.helper.WebClientFactory;
 import hudson.tasks.test.helper.BuildPage;
 import hudson.tasks.test.helper.ProjectPage;
 import org.junit.Before;
@@ -24,8 +25,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertThat;
 
 public class AggregatedTestResultPublisherTest {
     public static final String TEST_PROJECT_NAME = "junit";
@@ -48,7 +49,7 @@ public class AggregatedTestResultPublisherTest {
 
     @Before
     public void setup() {
-        wc = j.createWebClient();
+        wc = WebClientFactory.createWebClientWithDisabledJavaScript(j);
     }
 
     @LocalData

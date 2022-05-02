@@ -10,11 +10,13 @@ import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.Messages;
+import hudson.tasks.junit.SuiteResult;
 import hudson.tasks.junit.TestDataPublisher;
 import hudson.tasks.junit.TestResult;
 import hudson.tasks.junit.TestResultAction;
 import hudson.tasks.junit.TestResultTest;
 import hudson.tasks.test.PipelineBlockWithTests;
+import java.net.URL;
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.Description;
@@ -41,17 +43,17 @@ import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-import javax.annotation.Nullable;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 public class JUnitResultsStepTest {
@@ -71,8 +73,10 @@ public class JUnitResultsStepTest {
         step.setHealthScaleFactor(2.0);
         st.assertRoundTrip(step, "junit allowEmptyResults: true, healthScaleFactor: 2.0, testResults: '**/target/surefire-reports/TEST-*.xml'");
         MockTestDataPublisher publisher = new MockTestDataPublisher("testing");
-        step.setTestDataPublishers(Collections.<TestDataPublisher>singletonList(publisher));
+        step.setTestDataPublishers(Collections.singletonList(publisher));
         st.assertRoundTrip(step, "junit allowEmptyResults: true, healthScaleFactor: 2.0, testDataPublishers: [[$class: 'MockTestDataPublisher', name: 'testing']], testResults: '**/target/surefire-reports/TEST-*.xml'");
+        step.setSkipMarkingBuildUnstable(true);
+        st.assertRoundTrip(step, "junit allowEmptyResults: true, healthScaleFactor: 2.0, skipMarkingBuildUnstable: true, testDataPublishers: [[$class: 'MockTestDataPublisher', name: 'testing']], testResults: '**/target/surefire-reports/TEST-*.xml'");
     }
 
     @Issue("JENKINS-48250")
@@ -120,9 +124,7 @@ public class JUnitResultsStepTest {
                 "    assert results.totalCount == 6\n" +
                 "  }\n" +
                 "}\n", true));
-        FilePath ws = rule.jenkins.getWorkspaceFor(j);
-        FilePath testFile = ws.child("test-result.xml");
-        testFile.copyFrom(TestResultTest.class.getResource("junit-report-1463.xml"));
+        copyToWorkspace(j, TestResultTest.class.getResource("junit-report-1463.xml"), "test-result.xml");
 
         WorkflowRun r = rule.buildAndAssertSuccess(j);
         TestResultAction action = r.getAction(TestResultAction.class);
@@ -149,11 +151,8 @@ public class JUnitResultsStepTest {
                 "    assert second.totalCount == 1\n" +
                 "  }\n" +
                 "}\n", true));
-        FilePath ws = rule.jenkins.getWorkspaceFor(j);
-        FilePath testFile = ws.child("first-result.xml");
-        testFile.copyFrom(TestResultTest.class.getResource("junit-report-1463.xml"));
-        FilePath secondTestFile = ws.child("second-result.xml");
-        secondTestFile.copyFrom(TestResultTest.class.getResource("junit-report-2874.xml"));
+        copyToWorkspace(j, TestResultTest.class.getResource("junit-report-1463.xml"), "first-result.xml");
+        copyToWorkspace(j, TestResultTest.class.getResource("junit-report-2874.xml"), "second-result.xml");
 
         WorkflowRun r = rule.buildAndAssertSuccess(j);
         TestResultAction action = r.getAction(TestResultAction.class);
@@ -188,13 +187,9 @@ public class JUnitResultsStepTest {
                 "    assert second.totalCount == 1\n" +
                 "  }\n" +
                 "}\n", true));
-        FilePath ws = rule.jenkins.getWorkspaceFor(j);
-        FilePath testFile = ws.child("first-result.xml");
-        testFile.copyFrom(TestResultTest.class.getResource("junit-report-1463.xml"));
-        FilePath secondTestFile = ws.child("second-result.xml");
-        secondTestFile.copyFrom(TestResultTest.class.getResource("junit-report-2874.xml"));
-        FilePath thirdTestFile = ws.child("third-result.xml");
-        thirdTestFile.copyFrom(TestResultTest.class.getResource("junit-report-nested-testsuites.xml"));
+        copyToWorkspace(j, TestResultTest.class.getResource("junit-report-1463.xml"), "first-result.xml");
+        copyToWorkspace(j, TestResultTest.class.getResource("junit-report-2874.xml"), "second-result.xml");
+        copyToWorkspace(j, TestResultTest.class.getResource("junit-report-nested-testsuites.xml"), "third-result.xml");
 
         WorkflowRun r = rule.assertBuildStatus(Result.UNSTABLE,
                 rule.waitForCompletion(j.scheduleBuild2(0).waitForStart()));
@@ -227,13 +222,9 @@ public class JUnitResultsStepTest {
     @Test
     public void parallelInStage() throws Exception {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "parallelInStage");
-        FilePath ws = rule.jenkins.getWorkspaceFor(j);
-        FilePath testFile = ws.child("first-result.xml");
-        testFile.copyFrom(TestResultTest.class.getResource("junit-report-1463.xml"));
-        FilePath secondTestFile = ws.child("second-result.xml");
-        secondTestFile.copyFrom(TestResultTest.class.getResource("junit-report-2874.xml"));
-        FilePath thirdTestFile = ws.child("third-result.xml");
-        thirdTestFile.copyFrom(TestResultTest.class.getResource("junit-report-nested-testsuites.xml"));
+        copyToWorkspace(j, TestResultTest.class.getResource("junit-report-1463.xml"), "first-result.xml");
+        copyToWorkspace(j, TestResultTest.class.getResource("junit-report-2874.xml"), "second-result.xml");
+        copyToWorkspace(j, TestResultTest.class.getResource("junit-report-nested-testsuites.xml"), "third-result.xml");
 
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
                 "  node {\n" +
@@ -260,13 +251,9 @@ public class JUnitResultsStepTest {
     @Test
     public void stageInParallel() throws Exception {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "stageInParallel");
-        FilePath ws = rule.jenkins.getWorkspaceFor(j);
-        FilePath testFile = ws.child("first-result.xml");
-        testFile.copyFrom(TestResultTest.class.getResource("junit-report-1463.xml"));
-        FilePath secondTestFile = ws.child("second-result.xml");
-        secondTestFile.copyFrom(TestResultTest.class.getResource("junit-report-2874.xml"));
-        FilePath thirdTestFile = ws.child("third-result.xml");
-        thirdTestFile.copyFrom(TestResultTest.class.getResource("junit-report-nested-testsuites.xml"));
+        copyToWorkspace(j, TestResultTest.class.getResource("junit-report-1463.xml"), "first-result.xml");
+        copyToWorkspace(j, TestResultTest.class.getResource("junit-report-2874.xml"), "second-result.xml");
+        copyToWorkspace(j, TestResultTest.class.getResource("junit-report-nested-testsuites.xml"), "third-result.xml");
 
         j.setDefinition(new CpsFlowDefinition("stage('outer') {\n" +
                 "  node {\n" +
@@ -366,11 +353,71 @@ public class JUnitResultsStepTest {
                 "    assert currentBuild.result == 'UNSTABLE'\n" +
                 "  }\n" +
                 "}\n", true));
-        FilePath ws = rule.jenkins.getWorkspaceFor(j);
-        FilePath testFile = ws.child("test-result.xml");
-        testFile.copyFrom(JUnitResultsStepTest.class.getResource("junit-report-testTrends-first-2.xml"));
+        copyToWorkspace(j, JUnitResultsStepTest.class.getResource("junit-report-testTrends-first-2.xml"), "test-result.xml");
 
         rule.assertBuildStatus(Result.UNSTABLE, rule.waitForCompletion(j.scheduleBuild2(0).waitForStart()));
+    }
+
+    @Test
+    public void skipBuildUnstable() throws Exception {
+        WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "currentBuildResultUnstable");
+        j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
+                "  node {\n" +
+                "    def results = junit(skipMarkingBuildUnstable: true, testResults: '*.xml')\n" + // node id 7
+                "    assert results.totalCount == 8\n" +
+                "    assert currentBuild.result == null\n" +
+                "  }\n" +
+                "}\n", true));
+        copyToWorkspace(j, JUnitResultsStepTest.class.getResource("junit-report-testTrends-first-2.xml"), "test-result.xml");
+        WorkflowRun r = rule.waitForCompletion(j.scheduleBuild2(0).waitForStart());
+        rule.assertBuildStatus(Result.SUCCESS, r);
+        assertStageResults(r, 1, 8, 3, "first");
+    }
+
+    @Test
+    public void ageResetSameTestSuiteName() throws Exception {
+        WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "p");
+        j.setDefinition(new CpsFlowDefinition("stage('stage 1') {\n" +
+                "  node {\n" +
+                "    junit(testResults: '*-1.xml')\n" +
+                "  }\n" +
+                "}\n" +
+                "stage('stage 2') {\n" +
+                "  node {\n" +
+                "    junit(testResults: '*-2.xml')\n" +
+                "  }\n" +
+                "}\n", true));
+        copyToWorkspace(j, JUnitResultsStepTest.class.getResource("ageReset-1.xml"), "ageReset-1.xml");
+        copyToWorkspace(j, JUnitResultsStepTest.class.getResource("ageReset-2.xml"), "ageReset-2.xml");
+        WorkflowRun r = rule.waitForCompletion(j.scheduleBuild2(0).waitForStart());
+        rule.assertBuildStatus(Result.UNSTABLE, r);
+        assertEquals(2, r.getAction(TestResultAction.class).getResult().getSuites().size());
+        CaseResult caseResult = findCaseResult(r, "aClass.methodName");
+        assertNotNull(caseResult);
+        assertEquals(1, caseResult.getAge());
+
+        // Run a second build, age should increase
+        r = rule.waitForCompletion(j.scheduleBuild2(0).waitForStart());
+        rule.assertBuildStatus(Result.UNSTABLE, r);
+        caseResult = findCaseResult(r, "aClass.methodName");
+        assertNotNull(caseResult);
+        assertEquals(2, caseResult.getAge());
+    }
+
+    private CaseResult findCaseResult(Run r, String name) {
+        for (SuiteResult suite : r.getAction(TestResultAction.class).getResult().getSuites()) {
+            CaseResult caseResult = suite.getCase(name);
+            if (caseResult != null) {
+                return caseResult;
+            }
+        }
+        return null;
+    }
+
+    private void copyToWorkspace(WorkflowJob j, URL source, String destination) throws IOException, InterruptedException {
+        FilePath ws = rule.jenkins.getWorkspaceFor(j);
+        FilePath testFile = ws.child(destination);
+        testFile.copyFrom(source);
     }
 
 

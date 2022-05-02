@@ -1,6 +1,5 @@
 package hudson.tasks.test.helper;
 
-import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import org.xml.sax.SAXException;
 

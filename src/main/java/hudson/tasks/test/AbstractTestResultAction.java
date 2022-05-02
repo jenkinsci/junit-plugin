@@ -38,7 +38,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import jenkins.model.RunAction2;
 import jenkins.model.lazy.LazyBuildMixIn;
 import org.jfree.chart.ChartFactory;
@@ -80,7 +80,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
     @Deprecated
     public transient AbstractBuild<?,?> owner;
 
-    private Map<String,String> descriptions = new ConcurrentHashMap<String, String>();
+    private Map<String,String> descriptions = new ConcurrentHashMap<>();
 
     /** @since 1.545 */
     protected AbstractTestResultAction() {}
@@ -144,19 +144,23 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
         return " / "+Functions.getDiffString(this.getFailCount()-prev.getFailCount());
     }
 
+    @Override
     public String getDisplayName() {
         return Messages.AbstractTestResultAction_getDisplayName();
     }
 
     @Exported(visibility=2)
+    @Override
     public String getUrlName() {
         return "testReport";
     }
 
+    @Override
     public String getIconFileName() {
         return "clipboard.png";
     }
 
+    @Override
     public HealthReport getBuildHealth() {
         final double scaleFactor = getHealthScaleFactor();
         if (scaleFactor < 1e-7) {
@@ -274,7 +278,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
      * @return List of passed tests from associated test result.
      * @since 1.10
      */
-    @Nonnull
+    @NonNull
     public List<? extends TestResult> getPassedTests() {
         return Collections.emptyList();
     }
@@ -285,7 +289,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
      * @return List of skipped tests from associated test result.
      * @since 1.10
      */
-    @Nonnull
+    @NonNull
     public List<? extends TestResult> getSkippedTests() {
         return Collections.emptyList();
     }
@@ -340,10 +344,10 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
     }
     
     private CategoryDataset buildDataSet(StaplerRequest req) {
-        boolean failureOnly = Boolean.valueOf(req.getParameter("failureOnly"));
+        boolean failureOnly = Boolean.parseBoolean(req.getParameter("failureOnly"));
 
         // TODO stop using ChartUtil.NumberOnlyBuildLabel as it forces loading of a Run; create a plainer Comparable
-        DataSetBuilder<String,NumberOnlyBuildLabel> dsb = new DataSetBuilder<String,NumberOnlyBuildLabel>();
+        DataSetBuilder<String,NumberOnlyBuildLabel> dsb = new DataSetBuilder<>();
 
         int cap = Integer.getInteger(AbstractTestResultAction.class.getName() + ".test.trend.max", Integer.MAX_VALUE);
         int count = 0;
@@ -465,7 +469,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
 
     public Object readResolve() {
     	if (descriptions == null) {
-    		descriptions = new ConcurrentHashMap<String, String>();
+    		descriptions = new ConcurrentHashMap<>();
     	}
     	
     	return this;

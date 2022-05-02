@@ -1,9 +1,9 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>4.18</version>
+        <version>4.40</version>
         <relativePath />
     </parent>
     <artifactId>junit</artifactId>
@@ -11,23 +11,22 @@
     <packaging>hpi</packaging>
     <name>JUnit Plugin</name>
     <description>Allows JUnit-format test results to be published.</description>
-    <url>https://github.com/jenkinsci/junit-plugin</url>
+    <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
     <properties>
-        <revision>1.50</revision>
+        <revision>1.62</revision>
         <changelist>-SNAPSHOT</changelist>
         <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
-        <jenkins.version>2.249.1</jenkins.version>
-        <java.level>8</java.level>
+        <jenkins.version>2.332.1</jenkins.version>
         <no-test-jar>false</no-test-jar>
     </properties>
     <licenses>
         <license>
             <name>MIT</name>
-            <url>http://opensource.org/licenses/MIT</url>
+            <url>https://opensource.org/licenses/MIT</url>
         </license>
     </licenses>
     <scm>
-        <connection>scm:git:git://github.com/${gitHubRepo}.git</connection>
+        <connection>scm:git:https://github.com/${gitHubRepo}.git</connection>
         <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
         <url>https://github.com/${gitHubRepo}</url>
       <tag>${scmTag}</tag>
@@ -48,7 +47,7 @@
         <dependency>
             <groupId>io.jenkins.plugins</groupId>
             <artifactId>echarts-api</artifactId>
-            <version>5.1.2-2</version>
+            <version>5.3.2-1</version>
         </dependency>
         <dependency>
             <groupId>io.jenkins.plugins</groupId>
@@ -71,13 +70,13 @@
         <dependency>
             <groupId>io.jenkins.plugins</groupId>
             <artifactId>github-checks</artifactId>
-            <version>1.0.9</version>
+            <version>1.0.18</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.jenkins.plugins</groupId>
             <artifactId>bootstrap5-api</artifactId>
-            <version>5.0.1-2</version>
+            <version>5.1.3-6</version>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins.workflow</groupId>
@@ -100,12 +99,6 @@
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>matrix-project</artifactId>
             <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <artifactId>junit</artifactId>
-                    <groupId>org.jenkins-ci.plugins</groupId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins.workflow</groupId>
@@ -158,7 +151,7 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>database</artifactId>
-            <version>1.7</version>
+            <version>128.vaa83e142f7f2</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion> <!-- TODO move to bom in Jenkins core -->
@@ -199,30 +192,16 @@
         <dependencies>
             <dependency>
                 <groupId>io.jenkins.tools.bom</groupId>
-                <artifactId>bom-2.222.x</artifactId>
-                <version>26</version>
+                <artifactId>bom-2.332.x</artifactId>
+                <version>1289.v5c4b_1c43511b_</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
+            <!-- mockito and hibernate are conflicting (both test dependencies) -->
             <dependency>
-                <groupId>io.jenkins.plugins</groupId>
-                <artifactId>font-awesome-api</artifactId>
-                <version>5.15.3-3</version>
-            </dependency>
-            <dependency>
-                <groupId>io.jenkins.plugins</groupId>
-                <artifactId>jquery3-api</artifactId>
-                <version>3.6.0-1</version>
-            </dependency>
-            <dependency>
-                <groupId>io.jenkins.plugins</groupId>
-                <artifactId>plugin-util-api</artifactId>
-                <version>2.3.0</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jenkins-ci.plugins</groupId>
-                <artifactId>jackson2-api</artifactId>
-                <version>2.12.3</version>
+                <groupId>net.bytebuddy</groupId>
+                <artifactId>byte-buddy</artifactId>
+                <version>1.12.9</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

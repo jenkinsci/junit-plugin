@@ -63,7 +63,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.xml.parsers.DocumentBuilderFactory;
+
+import hudson.tasks.junit.HistoryTestResultSummary;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -74,16 +78,6 @@ import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.remoting.SerializableOnlyOverRemoting;
-
-import static java.util.Objects.requireNonNull;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -97,7 +91,19 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import static java.util.Objects.requireNonNull;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+
 public class TestResultStorageJunitTest {
+
+    private static final Logger LOGGER = Logger.getLogger(TestResultStorageJunitTest.class.getName());
     
     @ClassRule public static BuildWatcher buildWatcher = new BuildWatcher();
     
@@ -422,6 +428,38 @@ public class TestResultStorageJunitTest {
                                     testDurationResultSummaries.add(new TestDurationResultSummary(buildNumber, duration));
                                 }
                                 return testDurationResultSummaries;
+                            }
+                        }
+                    });
+                }
+
+                @Override
+                public List<HistoryTestResultSummary> getHistorySummary(int offset) {
+                    return query(connection -> {
+                        try (PreparedStatement statement = connection.prepareStatement(
+                                "SELECT build, sum(duration) as duration, sum(case when errorDetails is not null then 1 else 0 end) as failCount, sum(case when skipped is not null then 1 else 0 end) as skipCount, sum(case when errorDetails is null and skipped is null then 1 else 0 end) as passCount" +
+                                        " FROM " + Impl.CASE_RESULTS_TABLE +
+                                        " WHERE job = ? GROUP BY build ORDER BY build DESC LIMIT 25 OFFSET ?;"
+                        )) {
+                            statement.setString(1, job);
+                            statement.setInt(2, 0);
+                            try (ResultSet result = statement.executeQuery()) {
+
+                                List<HistoryTestResultSummary> historyTestResultSummaries = new ArrayList<>();
+                                while (result.next()) {
+                                    int buildNumber = result.getInt("build");
+                                    int duration = result.getInt("duration");
+                                    int passed = result.getInt("passCount");
+                                    int failed = result.getInt("failCount");
+                                    int skipped = result.getInt("skipCount");
+
+                                    Job<?, ?> theJob = Jenkins.get().getItemByFullName(getJobName(), Job.class);
+                                    if (theJob != null) {
+                                        Run<?, ?> run = theJob.getBuildByNumber(buildNumber);
+                                        historyTestResultSummaries.add(new HistoryTestResultSummary(run, duration, failed, skipped, passed));
+                                    }
+                                }
+                                return historyTestResultSummaries;
                             }
                         }
                     });
@@ -846,6 +884,10 @@ public class TestResultStorageJunitTest {
             private static final XStream XSTREAM = new XStream();
             private final String databaseXml;
 
+            static {
+                XSTREAM.allowTypes(new Class[] {LocalH2Database.class});
+            }
+
             RemoteConnectionSupplier() {
                 databaseXml = XSTREAM.toXML(GlobalDatabaseConfiguration.get().getDatabase());
             }
@@ -860,24 +902,26 @@ public class TestResultStorageJunitTest {
 
     // https://gist.github.com/mikbuch/299568988fa7997cb28c7c84309232b1
     private static void printResultSet(ResultSet rs) throws SQLException {
+        StringBuilder sb = new StringBuilder();
         ResultSetMetaData rsmd = rs.getMetaData();
         int columnsNumber = rsmd.getColumnCount();
         for (int i = 1; i <= columnsNumber; i++) {
             if (i > 1) {
-                System.out.print("\t|\t");
+                sb.append("\t|\t");
             }
-            System.out.print(rsmd.getColumnName(i));
+            sb.append(rsmd.getColumnName(i));
         }
-        System.out.println();
+        sb.append('\n');
         while (rs.next()) {
             for (int i = 1; i <= columnsNumber; i++) {
                 if (i > 1) {
-                    System.out.print("\t|\t");
+                    sb.append("\t|\t");
                 }
-                System.out.print(rs.getString(i));
+                sb.append(rs.getString(i));
             }
-            System.out.println();
+            sb.append('\n');
         }
+        LOGGER.log(Level.INFO, sb.toString());
     }
 
 }
