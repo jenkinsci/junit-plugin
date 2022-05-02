@@ -35,7 +35,7 @@ THE SOFTWARE.
         <j:otherwise>
           <test:bar/>
           <h2>${%Drill Down}</h2>
-          <table class="jenkins-table pane sortable">
+          <table class="jenkins-table sortable">
             <thead>
               <tr>
                 <th class="pane-header">${%Test}</th>

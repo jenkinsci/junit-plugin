@@ -44,7 +44,7 @@ THE SOFTWARE.
           <a href="../${report.child.project.shortUrl}testReport">${report.child.project.name}</a>
         </h3>
 
-        <table class="jenkins-table pane sortable">
+        <table class="jenkins-table sortable">
           <thead>
             <tr>
               <th class="pane-header">Test Name</th>

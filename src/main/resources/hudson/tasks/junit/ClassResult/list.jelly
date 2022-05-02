@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler">
-    <table class="jenkins-table pane sortable" id="testresult">
+    <table class="jenkins-table sortable" id="testresult">
       <thead>
         <tr>
           <th class="pane-header">${%Build}</th>
