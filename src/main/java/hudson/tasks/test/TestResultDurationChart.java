@@ -11,11 +11,11 @@ import java.util.List;
 import static hudson.tasks.test.TestDurationTrendSeriesBuilder.SECONDS;
 
 public class TestResultDurationChart {
-    
+
     public LinesChartModel create(List<TestDurationResultSummary> results) {
         LinesDataSet dataset = new LinesDataSet();
         results.forEach(result -> dataset.add(result.getDisplayName(), result.toMap(), result.getBuildNumber()));
-        
+
         return getLinesChartModel(dataset);
     }
 
@@ -28,15 +28,13 @@ public class TestResultDurationChart {
     }
 
     private LinesChartModel getLinesChartModel(LinesDataSet dataSet) {
-        LinesChartModel model = new LinesChartModel();
-        model.setDomainAxisLabels(dataSet.getDomainAxisLabels());
-        model.setBuildNumbers(dataSet.getBuildNumbers());
+        LinesChartModel model = new LinesChartModel(dataSet);
 
         LineSeries duration = new LineSeries(SECONDS, Palette.GREEN.getNormal(),
                 LineSeries.StackedMode.STACKED, LineSeries.FilledMode.FILLED);
         duration.addAll(dataSet.getSeries(SECONDS));
         model.addSeries(duration);
-        
+
         return model;
     }
 }

@@ -24,13 +24,17 @@ THE SOFTWARE.
 
 <!-- Displays the chart that show how long builds are taking -->
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:bs="/bootstrap">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:bs="/bootstrap5" xmlns:c="/charts">
   <bs:layout title="${%title(it.testObject.displayName)}">
     <j:set var="start" value="${it.asInt(request.getParameter('start'),0)}"/>
     <j:set var="end" value="${it.asInt(request.getParameter('end'),start+24)}"/>
-    <link rel="stylesheet" href="${resURL}/plugin/junit/history/history.css"/>
     <st:adjunct includes="io.jenkins.plugins.echarts"/>
+    <st:adjunct includes="io.jenkins.plugins.bootstrap5"/>
+    <st:adjunct includes="io.jenkins.plugins.echarts-trend-default-setup"/>
+    <link rel="stylesheet" href="${resURL}/plugin/junit/history/history.css"/>
+
     <st:once>
+      <c:chart-setup id="test-history"/>
       <script>var view =
         <st:bind value="${it}"/>
       </script>
@@ -42,23 +46,23 @@ THE SOFTWARE.
       <j:choose>
         <j:when test="${it.historyAvailable()}">
           <bs:card title="${%History}" fontAwesomeIcon="chart-line">
-            <div id="trend-carousel" class="carousel slide" data-interval="false">
+            <div id="trend-carousel" class="carousel slide carousel-dark" data-bs-interval="false">
               <div class="carousel-inner">
                 <div class="carousel-item">
-                  <div id="test-duration-trend-chart" class="graph-cursor-pointer card-chart"/>
+                  <div id="test-duration-trend-chart" class="graph-cursor-pointer card-chart-carousel"/>
                 </div>
                 <div class="carousel-item active">
-                  <div id="test-result-trend-chart" class="graph-cursor-pointer card-chart"/>
+                  <div id="test-result-trend-chart" class="graph-cursor-pointer card-chart-carousel"/>
                 </div>
               </div>
-              <a class="carousel-control-prev" data-target="#trend-carousel" role="button" data-slide="prev">
+              <button class="carousel-control-prev" type="button" data-bs-target="#trend-carousel" data-bs-slide="prev">
                 <span class="carousel-control-prev-icon" aria-hidden="true"/>
-                <span class="sr-only">Previous</span>
-              </a>
-              <a class="carousel-control-next" data-target="#trend-carousel" role="button" data-slide="next">
+                <span class="visually-hidden">Previous</span>
+              </button>
+              <button class="carousel-control-next" type="button" data-bs-target="#trend-carousel" data-bs-slide="next">
                 <span class="carousel-control-next-icon" aria-hidden="true"/>
-                <span class="sr-only">Next</span>
-              </a>
+                <span class="visually-hidden">Next</span>
+              </button>
             </div>
           </bs:card>
 
