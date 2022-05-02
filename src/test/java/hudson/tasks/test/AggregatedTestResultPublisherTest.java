@@ -10,6 +10,7 @@ import hudson.tasks.BuildTrigger;
 import hudson.tasks.Fingerprinter;
 import hudson.tasks.Shell;
 import hudson.tasks.junit.JUnitResultArchiver;
+import hudson.tasks.test.helper.WebClientFactory;
 import hudson.tasks.test.helper.BuildPage;
 import hudson.tasks.test.helper.ProjectPage;
 import org.junit.Before;
@@ -48,7 +49,7 @@ public class AggregatedTestResultPublisherTest {
 
     @Before
     public void setup() {
-        wc = j.createWebClient();
+        wc = WebClientFactory.createWebClientWithDisabledJavaScript(j);
     }
 
     @LocalData

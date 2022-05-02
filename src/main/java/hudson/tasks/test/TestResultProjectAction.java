@@ -1,18 +1,18 @@
 /*
  * The MIT License
- * 
+ *
  * Copyright (c) 2004-2009, Sun Microsystems, Inc., Kohsuke Kawaguchi
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,29 +23,32 @@
  */
 package hudson.tasks.test;
 
+import java.io.IOException;
+import java.util.List;
+import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
+
 import edu.hm.hafner.echarts.ChartModelConfiguration;
 import edu.hm.hafner.echarts.JacksonFacade;
 import edu.hm.hafner.echarts.LinesChartModel;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
+
+import org.kohsuke.stapler.Ancestor;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.bind.JavaScriptMethod;
 import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.Job;
 import hudson.model.Run;
 import hudson.tasks.junit.JUnitResultArchiver;
-import io.jenkins.plugins.junit.storage.FileJunitTestResultStorage;
-import io.jenkins.plugins.junit.storage.TestResultImpl;
-import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
-import io.jenkins.plugins.echarts.AsyncTrendChart;
-import org.kohsuke.stapler.Ancestor;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.List;
-import org.kohsuke.stapler.bind.JavaScriptMethod;
+import io.jenkins.plugins.echarts.AsyncConfigurableTrendChart;
+import io.jenkins.plugins.echarts.AsyncTrendChart;
+import io.jenkins.plugins.junit.storage.FileJunitTestResultStorage;
+import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
+import io.jenkins.plugins.junit.storage.TestResultImpl;
 
 /**
  * Project action object from test reporter, such as {@link JUnitResultArchiver},
@@ -56,7 +59,7 @@ import org.kohsuke.stapler.bind.JavaScriptMethod;
  *
  * @author Kohsuke Kawaguchi
  */
-public class TestResultProjectAction implements Action, AsyncTrendChart {
+public class TestResultProjectAction implements Action, AsyncTrendChart, AsyncConfigurableTrendChart {
     /**
      * Project that owns this action.
      * @since 1.2-beta-1
@@ -69,13 +72,13 @@ public class TestResultProjectAction implements Action, AsyncTrendChart {
     /**
      * @since 1.2-beta-1
      */
-    public TestResultProjectAction(Job<?,?> job) {
+    public TestResultProjectAction(final Job<?,?> job) {
         this.job = job;
         project = job instanceof AbstractProject ? (AbstractProject) job : null;
     }
 
     @Deprecated
-    public TestResultProjectAction(AbstractProject<?,?> project) {
+    public TestResultProjectAction(final AbstractProject<?,?> project) {
         this((Job) project);
     }
 
@@ -114,7 +117,12 @@ public class TestResultProjectAction implements Action, AsyncTrendChart {
         return null;
     }
 
+    @Deprecated
     protected LinesChartModel createChartModel() {
+        return createChartModel(new ChartModelConfiguration());
+    }
+
+    private LinesChartModel createChartModel(final ChartModelConfiguration configuration) {
         Run<?, ?> lastCompletedBuild = job.getLastCompletedBuild();
 
         JunitTestResultStorage storage = JunitTestResultStorage.find();
@@ -127,11 +135,11 @@ public class TestResultProjectAction implements Action, AsyncTrendChart {
         if (buildHistory == null) {
             return new LinesChartModel();
         }
-        return new TestResultTrendChart().create(buildHistory, new ChartModelConfiguration());
+        return new TestResultTrendChart().create(buildHistory, configuration);
     }
 
     @CheckForNull
-    private TestResultActionIterable createBuildHistory(Run<?, ?> lastCompletedBuild) {
+    private TestResultActionIterable createBuildHistory(final Run<?, ?> lastCompletedBuild) {
         // some plugins that depend on junit seem to attach the action even though there's no run
         // e.g. xUnit and cucumber
         if (lastCompletedBuild == null) {
@@ -153,11 +161,11 @@ public class TestResultProjectAction implements Action, AsyncTrendChart {
 
     /**
      * Display the test result trend.
-     * 
+     *
      * @deprecated Replaced by echarts in TODO
      */
     @Deprecated
-    public void doTrend( StaplerRequest req, StaplerResponse rsp ) throws IOException, ServletException {
+    public void doTrend( final StaplerRequest req, final StaplerResponse rsp ) throws IOException, ServletException {
         AbstractTestResultAction a = getLastTestResultAction();
         if(a!=null)
             a.doGraph(req,rsp);
@@ -171,7 +179,7 @@ public class TestResultProjectAction implements Action, AsyncTrendChart {
      * @deprecated Replaced by echarts in TODO
      */
     @Deprecated
-    public void doTrendMap( StaplerRequest req, StaplerResponse rsp ) throws IOException, ServletException {
+    public void doTrendMap( final StaplerRequest req, final StaplerResponse rsp ) throws IOException, ServletException {
         AbstractTestResultAction a = getLastTestResultAction();
         if(a!=null)
             a.doGraphMap(req,rsp);
@@ -182,7 +190,7 @@ public class TestResultProjectAction implements Action, AsyncTrendChart {
     /**
      * Changes the test result report display mode.
      */
-    public void doFlipTrend( StaplerRequest req, StaplerResponse rsp ) throws IOException, ServletException {
+    public void doFlipTrend( final StaplerRequest req, final StaplerResponse rsp ) throws IOException, ServletException {
         boolean failureOnly = false;
 
         // check the current preference value
@@ -200,7 +208,7 @@ public class TestResultProjectAction implements Action, AsyncTrendChart {
         // set the updated value
         Cookie cookie = new Cookie(FAILURE_ONLY_COOKIE,String.valueOf(failureOnly));
         List<Ancestor> anc = req.getAncestors();
-        Ancestor a = (Ancestor) anc.get(anc.size()-2);
+        Ancestor a = anc.get(anc.size()-2);
         cookie.setPath(a.getUrl()); // just for this project
         cookie.setMaxAge(60*60*24*365); // 1 year
         rsp.addCookie(cookie);
@@ -211,10 +219,15 @@ public class TestResultProjectAction implements Action, AsyncTrendChart {
 
     private static final String FAILURE_ONLY_COOKIE = "TestResultAction_failureOnly";
 
-    @JavaScriptMethod
-    @Override
+    @Override @Deprecated
     public String getBuildTrendModel() {
         return new JacksonFacade().toJson(createChartModel());
+    }
+
+    @JavaScriptMethod
+    @Override
+    public String getConfigurableBuildTrendModel(final String configuration) {
+        return new JacksonFacade().toJson(createChartModel(ChartModelConfiguration.fromJson(configuration)));
     }
 
     @Override
