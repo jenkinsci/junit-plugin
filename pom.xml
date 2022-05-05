@@ -7,7 +7,7 @@
         <relativePath />
     </parent>
     <artifactId>junit</artifactId>
-    <version>${revision}${changelist}</version>
+    <version>1.53.1-SNAPSHOT</version>
     <packaging>hpi</packaging>
     <name>JUnit Plugin</name>
     <description>Allows JUnit-format test results to be published.</description>
