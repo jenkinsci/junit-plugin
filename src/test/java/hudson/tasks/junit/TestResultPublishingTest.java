@@ -40,8 +40,10 @@ import hudson.tasks.Builder;
 import hudson.tasks.test.helper.WebClientFactory;
 
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
@@ -64,6 +66,9 @@ public class TestResultPublishingTest {
     @Rule
     public final JenkinsRule rule = new JenkinsRule();
 
+    @ClassRule
+    public final static BuildWatcher buildWatcher = new BuildWatcher();
+
     private FreeStyleProject project;
     private JUnitResultArchiver archiver;
     private final String BASIC_TEST_PROJECT = "percival";
@@ -73,9 +78,10 @@ public class TestResultPublishingTest {
     @Before
     public void setUp() throws Exception {
         project = rule.createFreeStyleProject(BASIC_TEST_PROJECT);
+        project.getBuildersList().add(new TouchBuilderBuildTime());
         archiver = new JUnitResultArchiver("*.xml");
+        archiver.setParseOldReports(true);
         project.getPublishersList().add(archiver);
-        project.getBuildersList().add(new TouchBuilder());
     }
 
     @LocalData
@@ -279,6 +285,7 @@ public class TestResultPublishingTest {
     public void testBrokenResultFile() throws Exception {
         FreeStyleProject p = rule.createFreeStyleProject();
         p.getBuildersList().add(new TestBuilder());
+        p.getBuildersList().add(new TouchBuilderBuildTime());
         p.getPublishersList().add(new JUnitResultArchiver("TEST-foo.xml", false, null));
         rule.assertBuildStatus(Result.UNSTABLE, p.scheduleBuild2(0).get());
     }

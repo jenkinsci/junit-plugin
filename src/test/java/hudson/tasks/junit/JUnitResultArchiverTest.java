@@ -47,8 +47,9 @@ import hudson.util.HttpResponses;
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
 import org.junit.Assume;
+import org.junit.ClassRule;
+import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.Issue;
-import org.jvnet.hudson.test.TouchBuilder;
 import org.jvnet.hudson.test.recipes.LocalData;
 
 import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
@@ -96,6 +97,10 @@ import static org.junit.Assert.fail;
 public class JUnitResultArchiverTest {
 
     @Rule public JenkinsRule j = new JenkinsRule();
+
+    @ClassRule
+    public final static BuildWatcher buildWatcher = new BuildWatcher();
+
     private FreeStyleProject project;
     private JUnitResultArchiver archiver;
 
@@ -103,13 +108,13 @@ public class JUnitResultArchiverTest {
         project = j.createFreeStyleProject("junit");
         archiver = new JUnitResultArchiver("*.xml");
         project.getPublishersList().add(archiver);
-
-        project.getBuildersList().add(new TouchBuilder());
+        project.getBuildersList().add(new TouchBuilderBuildTime());
     }
 
     @LocalData("All")
     @Test public void basic() throws Exception {
-        FreeStyleBuild build = project.scheduleBuild2(0).get(10, TimeUnit.SECONDS);
+        FreeStyleBuild build =
+                j.assertBuildStatus(Result.UNSTABLE, j.waitForCompletion(project.scheduleBuild2(0).waitForStart()));
 
         assertTestResults(build);
 
@@ -120,22 +125,22 @@ public class JUnitResultArchiverTest {
         wc.getPage(build, "testReport/hudson.security"); // package
         wc.getPage(build, "testReport/hudson.security/HudsonPrivateSecurityRealmTest/"); // class
         wc.getPage(build, "testReport/hudson.security/HudsonPrivateSecurityRealmTest/testDataCompatibilityWith1_282/"); // method
-
-
     }
 
    @LocalData("All")
    @Test public void slave() throws Exception {
-       Assume.assumeFalse("TODO frequent TimeoutException from basic", Functions.isWindows());
-        DumbSlave s = j.createOnlineSlave();
-        project.setAssignedLabel(s.getSelfLabel());
+        Assume.assumeFalse("TODO frequent TimeoutException from basic", Functions.isWindows());
+        DumbSlave node = j.createSlave("label1 label2", null);
+        project.setAssignedLabel(j.jenkins.getLabel("label1"));
 
         FilePath src = new FilePath(j.jenkins.getRootPath(), "jobs/junit/workspace/");
         assertNotNull(src);
-        FilePath dest = s.getWorkspaceFor(project);
+        // the node needs to be online before get the workspace
+        j.waitOnline(node);
+        FilePath dest = node.getWorkspaceFor(project);
         assertNotNull(dest);
         src.copyRecursiveTo("*.xml", dest);
-
+        assertEquals(56, dest.list("*.xml").length);
         basic();
     }
 
@@ -225,8 +230,9 @@ public class JUnitResultArchiverTest {
     }
     private void doRepeatedArchiving(boolean slave) throws Exception {
         if (slave) {
-            DumbSlave s = j.createOnlineSlave();
-            project.setAssignedLabel(s.getSelfLabel());
+            DumbSlave s = j.createSlave("label1 label2", null);
+            project.setAssignedLabel(j.jenkins.getLabel("label1"));
+            j.waitOnline(s);
         }
         project.getPublishersList().removeAll(JUnitResultArchiver.class);
         project.getBuildersList().add(new SimpleArchive("A", 7, 0));
@@ -266,6 +272,7 @@ public class JUnitResultArchiverTest {
                 pw.println("</testsuite>");
                 pw.flush();
             }
+            ws.touch(build.getTimeInMillis()+1);
             new JUnitResultArchiver(name + ".xml").perform(build, ws, launcher, listener);
             return true;
         }
@@ -282,7 +289,7 @@ public class JUnitResultArchiverTest {
     @Test public void configRoundTrip() throws Exception {
         JUnitResultArchiver a = new JUnitResultArchiver("TEST-*.xml");
         a.setKeepLongStdio(true);
-        a.setTestDataPublishers(Collections.<TestDataPublisher>singletonList(new MockTestDataPublisher("testing")));
+        a.setTestDataPublishers(Collections.singletonList(new MockTestDataPublisher("testing")));
         a.setHealthScaleFactor(0.77);
         a = j.configRoundtrip(a);
         assertEquals("TEST-*.xml", a.getTestResults());

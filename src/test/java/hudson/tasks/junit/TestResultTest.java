@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.tools.ant.DirectoryScanner;
 import org.junit.Test;
 
 import com.thoughtworks.xstream.XStream;
@@ -281,6 +282,46 @@ public class TestResultTest {
         assertEquals("test.TestJUnit5FailingInBeforeAll.(?)", case1.getFullName());
         assertEquals("(?)", case1.getDisplayName());
         assertEquals("(?)", case1.getName());
+    }
+
+    @Test
+    public void skipOldReports() throws Exception {
+        long start = System.currentTimeMillis();
+        File testResultFile1 = new File("src/test/resources/hudson/tasks/junit/old-reports/junit-report-1.xml");
+        testResultFile1.setLastModified(start + 10);
+        File testResultFile2 = new File("src/test/resources/hudson/tasks/junit/old-reports/junit-report-2.xml");
+        testResultFile2.setLastModified(start - 10);
+        DirectoryScanner directoryScanner = new DirectoryScanner();
+        directoryScanner.setBasedir(new File("src/test/resources/hudson/tasks/junit/old-reports/"));
+        directoryScanner.setIncludes(new String[]{"*.xml"});
+        directoryScanner.scan();
+        assertEquals( "directory scanner must find 2 files", 2, directoryScanner.getIncludedFiles().length);
+        TestResult testResult = new TestResult(start, directoryScanner, true, new PipelineTestDetails(),false, null);
+        testResult.tally();
+
+        assertEquals("Wrong number of testsuites", 2, testResult.getSuites().size());
+        assertEquals("Wrong number of test cases", 3, testResult.getTotalCount());
+
+    }
+
+    @Test
+    public void parseOldReports() throws Exception {
+        long start = System.currentTimeMillis();
+        File testResultFile1 = new File("src/test/resources/hudson/tasks/junit/old-reports/junit-report-1.xml");
+        testResultFile1.setLastModified(start + 10);
+        File testResultFile2 = new File("src/test/resources/hudson/tasks/junit/old-reports/junit-report-2.xml");
+        testResultFile2.setLastModified(start - 10);
+        DirectoryScanner directoryScanner = new DirectoryScanner();
+        directoryScanner.setBasedir(new File("src/test/resources/hudson/tasks/junit/old-reports/"));
+        directoryScanner.setIncludes(new String[]{"*.xml"});
+        directoryScanner.scan();
+        assertEquals( "directory scanner must find 2 files", 2, directoryScanner.getIncludedFiles().length);
+        TestResult testResult = new TestResult(start, directoryScanner, true, new PipelineTestDetails(),true, null);
+        testResult.tally();
+
+        assertEquals("Wrong number of testsuites", 4, testResult.getSuites().size());
+        assertEquals("Wrong number of test cases", 6, testResult.getTotalCount());
+
     }
 
     private static final XStream XSTREAM = new XStream2();

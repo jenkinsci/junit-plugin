@@ -23,6 +23,7 @@
  */
 package hudson.tasks.junit;
 
+import hudson.FilePath;
 import hudson.model.FreeStyleProject;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
@@ -39,6 +40,7 @@ import org.jvnet.hudson.test.TestBuilder;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.xml.XmlPage;
+
 import java.io.IOException;
 
 import static org.junit.Assert.assertEquals;
@@ -222,42 +224,38 @@ public class CaseResultTest {
         //Create a job:
         FreeStyleProject p = rule.createFreeStyleProject(projectName);
         p.getPublishersList().add(new JUnitResultArchiver("*.xml"));
-
-        //First build execution:
+        // add builder copying test result file
         p.getBuildersList().add(new TestBuilder() {
             public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-                build.getWorkspace().child("junit.xml").copyFrom(
-                    getClass().getResource(testResultResourceFile));
+                FilePath junitFile = build.getWorkspace().child("junit.xml");
+                junitFile.copyFrom(getClass().getResource(testResultResourceFile));
+                // sadly this can be flaky for 1ms.... (but hey changing to nano even in core might complicated :))
+                junitFile.touch(System.currentTimeMillis()+1L);
                 return true;
             }
         });
-        FreeStyleBuild b1 = rule.assertBuildStatus(Result.UNSTABLE, p.scheduleBuild2(0).get());
 
-        //First build result analysis:
-        TestResult tr = b1.getAction(TestResultAction.class).getResult();
-        assertEquals(1,tr.getFailedTests().size());
-        CaseResult cr = tr.getFailedTests().get(0);
-        assertEquals(1,cr.getAge()); //First execution, failing test age is expected to be 1
+        //First build execution
+        {
+            FreeStyleBuild b1 = rule.assertBuildStatus(Result.UNSTABLE, p.scheduleBuild2(0).get());
 
+            //First build result analysis:
+            TestResult tr = b1.getAction(TestResultAction.class).getResult();
+            assertEquals(1, tr.getFailedTests().size());
+            CaseResult cr = tr.getFailedTests().get(0);
+            assertEquals(1, cr.getAge()); //First execution, failing test age is expected to be 1
+        }
 
+        //Second build execution
+        {
+            FreeStyleBuild b2 = rule.assertBuildStatus(Result.UNSTABLE, p.scheduleBuild2(0).get());
 
-
-
-        //Second build execution:
-        p.getBuildersList().add(new TestBuilder() {
-            public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-                build.getWorkspace().child("junit.xml").copyFrom(
-                    getClass().getResource(testResultResourceFile));
-                return true;
-            }
-        });
-        FreeStyleBuild b2 = rule.assertBuildStatus(Result.UNSTABLE, p.scheduleBuild2(0).get());
-
-        //Second build result analysis:
-        TestResult tr2 = b2.getAction(TestResultAction.class).getResult();
-        assertEquals(1,tr2.getFailedTests().size());
-        CaseResult cr2 = tr2.getFailedTests().get(0);
-        assertEquals(2,cr2.getAge()); //At second execution, failing test age should be 2
+            //Second build result analysis:
+            TestResult tr2 = b2.getAction(TestResultAction.class).getResult();
+            assertEquals(1, tr2.getFailedTests().size());
+            CaseResult cr2 = tr2.getFailedTests().get(0);
+            assertEquals(2, cr2.getAge()); //At second execution, failing test age should be 2
+        }
     }
 
     private FreeStyleBuild configureTestBuild(String projectName) throws Exception {
@@ -269,6 +267,7 @@ public class CaseResultTest {
                 return true;
             }
         });
+        p.getBuildersList().add(new TouchBuilderBuildTime());
         p.getPublishersList().add(new JUnitResultArchiver("*.xml"));
         return rule.assertBuildStatus(Result.UNSTABLE, p.scheduleBuild2(0).get());
     }
@@ -277,6 +276,7 @@ public class CaseResultTest {
     public void emptyName() throws Exception {
         FreeStyleProject p = rule.createFreeStyleProject();
         rule.jenkins.getWorkspaceFor(p).child("x.xml").write("<testsuite><testcase classname=''></testcase></testsuite>", null);
+        p.getBuildersList().add(new TouchBuilderBuildTime());
         p.getPublishersList().add(new JUnitResultArchiver("x.xml"));
         rule.buildAndAssertSuccess(p);
     }

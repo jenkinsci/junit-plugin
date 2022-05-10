@@ -65,6 +65,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Generates HTML report from JUnit test result XML files.
@@ -72,6 +74,8 @@ import java.util.List;
  * @author Kohsuke Kawaguchi
  */
 public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JUnitTask {
+
+    private static final Logger LOGGER = Logger.getLogger(JUnitResultArchiver.class.getName());
 
     /**
      * {@link FileSet} "includes" string, like "foo/bar/*.xml"
@@ -103,6 +107,8 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
      * If true, the run won't be marked as unstable if there are failing tests. Only the stage will be marked as unstable.
      */
     private boolean skipMarkingBuildUnstable;
+
+    private boolean parseOldReports;
 
     private static final String DEFAULT_CHECKS_NAME = "Tests";
 
@@ -150,7 +156,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                                     String expandedTestResults, Run<?,?> run, @NonNull FilePath workspace,
                                     Launcher launcher, TaskListener listener)
             throws IOException, InterruptedException {
-        return new JUnitParser(task.isKeepLongStdio(), task.isAllowEmptyResults())
+        return new JUnitParser(task.isKeepLongStdio(), task.isAllowEmptyResults(), task.isParseOldReports())
                 .parseResult(expandedTestResults, run, pipelineTestDetails, workspace, launcher, listener);
     }
 
@@ -249,7 +255,8 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
             summary = null; // see below
         } else {
             result = new TestResult(storage.load(build.getParent().getFullName(), build.getNumber())); // irrelevant
-            summary = new JUnitParser(task.isKeepLongStdio(), task.isAllowEmptyResults()).summarizeResult(testResults, build, pipelineTestDetails, workspace, launcher, listener, storage);
+            summary = new JUnitParser(task.isKeepLongStdio(), task.isAllowEmptyResults(), task.isParseOldReports())
+                    .summarizeResult(testResults, build, pipelineTestDetails, workspace, launcher, listener, storage);
         }
 
         synchronized (build) {
@@ -435,6 +442,16 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     @DataBoundSetter
     public void setSkipMarkingBuildUnstable(boolean skipMarkingBuildUnstable) {
         this.skipMarkingBuildUnstable = skipMarkingBuildUnstable;
+    }
+
+    @Override
+    public boolean isParseOldReports() {
+        return this.parseOldReports;
+    }
+
+    @DataBoundSetter
+    public void setParseOldReports(boolean parseOldReports) {
+        this.parseOldReports = parseOldReports;
     }
 
     private static final long serialVersionUID = 1L;

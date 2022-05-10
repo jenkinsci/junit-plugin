@@ -35,9 +35,12 @@ import hudson.tasks.test.TestObject;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -106,6 +109,8 @@ public final class TestResult extends MetaTabulatedResult {
 
     private float duration;
 
+    private boolean parseOldReports;
+
     /**
      * Number of failed/error leafNodes.
      */
@@ -129,27 +134,39 @@ public final class TestResult extends MetaTabulatedResult {
     }
 
     @Deprecated
-    public TestResult(long buildTime, DirectoryScanner results) throws IOException {
-        this(buildTime, results, false);
+    public TestResult(long filesTimestamp, DirectoryScanner results) throws IOException {
+        this(filesTimestamp, results, false);
     }
 
     @Deprecated
-    public TestResult(long buildTime, DirectoryScanner results, boolean keepLongStdio) throws IOException {
-        this(buildTime, results, keepLongStdio, null);
+    public TestResult(long filesTimestamp, DirectoryScanner results, boolean keepLongStdio) throws IOException {
+        this(filesTimestamp, results, keepLongStdio, null);
     }
 
-    /**
-     * Collect reports from the given {@link DirectoryScanner}, while
-     * filtering out all files that were created before the given time.
-     * @param keepLongStdio if true, retain a suite's complete stdout/stderr even if this is huge and the suite passed
-     * @param pipelineTestDetails A {@link PipelineTestDetails} instance containing Pipeline-related additional arguments.
-     * @since 1.22
-     */
-    public TestResult(long buildTime, DirectoryScanner results, boolean keepLongStdio,
+    @Deprecated
+    public TestResult(long filesTimestamp, DirectoryScanner results, boolean keepLongStdio,
                       PipelineTestDetails pipelineTestDetails) throws IOException {
         this.keepLongStdio = keepLongStdio;
         impl = null;
-        parse(buildTime, results, pipelineTestDetails);
+        parse(filesTimestamp, results, pipelineTestDetails);
+    }
+    /**
+     * Collect reports from the given {@link DirectoryScanner}, while
+     * filtering out all files that were created before the given time.
+     * @param filesTimestamp per default files older than this will be ignored (depending on param parseOldReports)
+     * @param keepLongStdio if true, retain a suite's complete stdout/stderr even if this is huge and the suite passed
+     * @param pipelineTestDetails A {@link PipelineTestDetails} instance containing Pipeline-related additional arguments.
+     * @param parseOldReports to parse test files older than filesTimestamp
+     * @param logger if not <code>null</code> some debug logging will be available in the output
+     * @since 1.22
+     */
+    public TestResult(long filesTimestamp, DirectoryScanner results, boolean keepLongStdio,
+                      PipelineTestDetails pipelineTestDetails, boolean parseOldReports, PrintStream logger) throws IOException {
+        this.keepLongStdio = keepLongStdio;
+        impl = null;
+        this.parseOldReports = parseOldReports;
+        this.logger = logger;
+        parse(filesTimestamp, results, pipelineTestDetails);
     }
 
     public TestResult(TestResultImpl impl) {
@@ -178,36 +195,36 @@ public final class TestResult extends MetaTabulatedResult {
     }
 
     @Deprecated
-    public void parse(long buildTime, DirectoryScanner results) throws IOException {
-        parse(buildTime, results, null);
+    public void parse(long filesTimestamp, DirectoryScanner results) throws IOException {
+        parse(filesTimestamp, results, null);
     }
 
     /**
      * Collect reports from the given {@link DirectoryScanner}, while
      * filtering out all files that were created before the given time.
-     * @param buildTime Build time.
+     * @param filesTimestamp file timestamp to filter files older.
      * @param results Directory scanner.
      * @param pipelineTestDetails A {@link PipelineTestDetails} instance containing Pipeline-related additional arguments.
      *
      * @throws IOException if an error occurs.
      * @since 1.22
      */
-    public void parse(long buildTime, DirectoryScanner results, PipelineTestDetails pipelineTestDetails) throws IOException {
+    public void parse(long filesTimestamp, DirectoryScanner results, PipelineTestDetails pipelineTestDetails) throws IOException {
         String[] includedFiles = results.getIncludedFiles();
         File baseDir = results.getBasedir();
-        parse(buildTime,baseDir, pipelineTestDetails,includedFiles);
+        parse(filesTimestamp,baseDir, pipelineTestDetails,includedFiles);
     }
 
     @Deprecated
-    public void parse(long buildTime, File baseDir, String[] reportFiles)
+    public void parse(long filesTimestamp, File baseDir, String[] reportFiles)
             throws IOException {
-        parse(buildTime, baseDir, null, reportFiles);
+        parse(filesTimestamp, baseDir, null, reportFiles);
     }
 
     /**
      * Collect reports from the given report files, while
      * filtering out all files that were created before the given time.
-     * @param buildTime Build time.
+     * @param filesTimestamp file timestamp to filter files older.
      * @param baseDir Base directory.
      * @param pipelineTestDetails A {@link PipelineTestDetails} instance containing Pipeline-related additional arguments.
      * @param reportFiles Report files.
@@ -215,14 +232,23 @@ public final class TestResult extends MetaTabulatedResult {
      * @throws IOException if an error occurs.
      * @since 1.22
      */
-    public void parse(long buildTime, File baseDir, PipelineTestDetails pipelineTestDetails, String[] reportFiles) throws IOException {
+    public void parse(long filesTimestamp, File baseDir, PipelineTestDetails pipelineTestDetails, String[] reportFiles) throws IOException {
+        List<File> files = Arrays.stream(reportFiles).map(s -> new File(baseDir, s)).collect(Collectors.toList());
+        parse(filesTimestamp, pipelineTestDetails, files);
 
+    }
 
-        for (String value : reportFiles) {
-            File reportFile = new File(baseDir, value);
+    private void parse(long filesTimestamp, PipelineTestDetails pipelineTestDetails, Iterable<File> reportFiles) throws IOException {
+        for (File reportFile : reportFiles) {
+            if(!parseOldReports && Files.getLastModifiedTime(reportFile.toPath()).toMillis() < filesTimestamp) {
+                log("file " + reportFile + " not parsed: parseOldReports-" + parseOldReports
+                        + ",lastModified:" + Files.getLastModifiedTime(reportFile.toPath()).toMillis() + ",filesTimestamp:" + filesTimestamp);
+                continue;
+            }
             // only count files that were actually updated during this build
             parsePossiblyEmpty(reportFile, pipelineTestDetails);
         }
+        log("testSuites size:" + this.getSuites().size());
     }
 
     @Override
@@ -235,24 +261,22 @@ public final class TestResult extends MetaTabulatedResult {
     }
 
     @Deprecated
-    public void parse(long buildTime, Iterable<File> reportFiles) throws IOException {
-        parse(reportFiles, null);
+    public void parse(long filesTimestamp, Iterable<File> reportFiles) throws IOException {
+        parse(filesTimestamp, null, reportFiles);
     }
 
     /**
      * Collect reports from the given report files
      *
-     * @param buildTime Build time.
+     * @param filesTimestamp Build time.
      * @param reportFiles Report files.
      * @param pipelineTestDetails A {@link PipelineTestDetails} instance containing Pipeline-related additional arguments.
      *
      * @throws IOException if an error occurs.
      * @since 1.22
-     * @deprecated use {@link #parse(Iterable, PipelineTestDetails)}
      */
-    @Deprecated
-    public void parse(long buildTime, Iterable<File> reportFiles, PipelineTestDetails pipelineTestDetails) throws IOException {
-        parse(reportFiles, pipelineTestDetails);
+    public void parse(long filesTimestamp, Iterable<File> reportFiles, PipelineTestDetails pipelineTestDetails) throws IOException {
+        parse(filesTimestamp, pipelineTestDetails, reportFiles);
     }
 
     /**
@@ -262,16 +286,19 @@ public final class TestResult extends MetaTabulatedResult {
      * @param pipelineTestDetails A {@link PipelineTestDetails} instance containing Pipeline-related additional arguments.
      *
      * @throws IOException if an error occurs.
+     * @deprecated use {@link #parse(long, Iterable, PipelineTestDetails)}
      */
+    @Deprecated
     public void parse(Iterable<File> reportFiles, PipelineTestDetails pipelineTestDetails) throws IOException {
         for (File reportFile : reportFiles) {
             // only count files that were actually updated during this build
             parsePossiblyEmpty(reportFile, pipelineTestDetails);
         }
     }
-    
+
     private void parsePossiblyEmpty(File reportFile, PipelineTestDetails pipelineTestDetails) throws IOException {
         if(reportFile.length()==0) {
+            log("reportFile:" + reportFile + " is empty");
             // this is a typical problem when JVM quits abnormally, like OutOfMemoryError during a test.
             SuiteResult sr = new SuiteResult(reportFile.getName(), "", "", pipelineTestDetails);
             sr.addCase(new CaseResult(sr,"[empty]","Test report file "+reportFile.getAbsolutePath()+" was length 0"));
@@ -347,8 +374,12 @@ public final class TestResult extends MetaTabulatedResult {
             throw new IllegalStateException("Cannot reparse using a pluggable impl");
         }
         try {
-            for (SuiteResult suiteResult : SuiteResult.parse(reportFile, keepLongStdio, pipelineTestDetails))
+            List<SuiteResult> suiteResults = SuiteResult.parse(reportFile, keepLongStdio, pipelineTestDetails);
+            for (SuiteResult suiteResult : suiteResults)
                 add(suiteResult);
+
+            log("reportFile:" + reportFile + ", lastModified:" + reportFile.lastModified() + " found " + suiteResults.size() + " suite results" );
+
         } catch (InterruptedException | RuntimeException e) {
             throw new IOException("Failed to read "+reportFile,e);
         } catch (DocumentException e) {
@@ -934,4 +965,14 @@ public final class TestResult extends MetaTabulatedResult {
                 .findFirst()
                 .orElse(null);
     }
+
+    private transient PrintStream logger;
+
+    private void log(String message) {
+        if (this.logger==null){
+            return;
+        }
+        this.logger.println(message);
+    }
+
 }

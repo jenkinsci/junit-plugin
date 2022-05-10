@@ -28,6 +28,7 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import hudson.model.Run;
+import hudson.tasks.junit.TouchBuilderBuildTime;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -53,7 +54,7 @@ public class TestResultExtensionTest {
         FreeStyleProject project = j.createFreeStyleProject("trivialtest");
         TrivialTestResultRecorder recorder = new TrivialTestResultRecorder();
         project.getPublishersList().add(recorder);
-        project.getBuildersList().add(new TouchBuilder());
+        project.getBuildersList().add(new TouchBuilderBuildTime());
 
         FreeStyleBuild build = project.scheduleBuild2(0).get(5, TimeUnit.MINUTES); /* leave room for debugging*/
         j.assertBuildStatus(Result.SUCCESS, build);

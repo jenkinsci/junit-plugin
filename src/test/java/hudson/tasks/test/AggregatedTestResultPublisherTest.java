@@ -10,6 +10,7 @@ import hudson.tasks.BuildTrigger;
 import hudson.tasks.Fingerprinter;
 import hudson.tasks.Shell;
 import hudson.tasks.junit.JUnitResultArchiver;
+import hudson.tasks.junit.TouchBuilderBuildTime;
 import hudson.tasks.test.helper.WebClientFactory;
 import hudson.tasks.test.helper.BuildPage;
 import hudson.tasks.test.helper.ProjectPage;
@@ -181,7 +182,7 @@ public class AggregatedTestResultPublisherTest {
     private void addJUnitResultArchiver(FreeStyleProject project) {
         JUnitResultArchiver archiver = new JUnitResultArchiver("*.xml");
         project.getPublishersList().add(archiver);
-        project.getBuildersList().add(new TouchBuilder());
+        project.getBuildersList().add(new TouchBuilderBuildTime());
     }
 
     private void addFingerprinterToProject(FreeStyleProject project, String[] contents, String[] files) throws Exception {

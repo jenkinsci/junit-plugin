@@ -69,7 +69,7 @@ public class TestResultLinksTest {
         project = rule.createFreeStyleProject("taqueria");
         archiver = new JUnitResultArchiver("*.xml");
         project.getPublishersList().add(archiver);
-        project.getBuildersList().add(new TouchBuilder());
+        project.getBuildersList().add(new TouchBuilderBuildTime());
     }
 
     @LocalData
