@@ -75,6 +75,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     private final String testName;
     private transient String safeName;
     private final boolean skipped;
+    private final boolean keepTestNames;
     private final String skippedMessage;
     private final String errorStackTrace;
     private final String errorDetails;
@@ -129,6 +130,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         this.duration = 0.0f;
         this.skipped = false;
         this.skippedMessage = null;
+        this.keepTestNames = false;
     }
 
     @Restricted(Beta.class)
@@ -141,7 +143,8 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
             float duration,
             String stdout,
             String stderr,
-            String stacktrace
+            String stacktrace,
+            boolean keepTestNames
     ) {
         this.className = className;
         this.testName = testName;
@@ -154,9 +157,10 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         
         this.skipped = skippedMessage != null;
         this.skippedMessage = skippedMessage;
+        this.keepTestNames = keepTestNames;
     }
 
-    CaseResult(SuiteResult parent, Element testCase, String testClassName, boolean keepLongStdio) {
+    CaseResult(SuiteResult parent, Element testCase, String testClassName, boolean keepLongStdio, boolean keepTestNames) {
         // schema for JUnit report XML format is not available in Ant,
         // so I don't know for sure what means what.
         // reports in http://www.nabble.com/difference-in-junit-publisher-and-ant-junitreport-tf4308604.html#a12265700
@@ -191,6 +195,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         Collection<CaseResult> _this = Collections.singleton(this);
         stdout = possiblyTrimStdio(_this, keepLongStdio, testCase.elementText("system-out"));
         stderr = possiblyTrimStdio(_this, keepLongStdio, testCase.elementText("system-err"));
+        this.keepTestNames = keepTestNames;
     }
 
     static String possiblyTrimStdio(Collection<CaseResult> results, boolean keepLongStdio, String stdio) { // HUDSON-6516
@@ -311,7 +316,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     private String getNameWithEnclosingBlocks(String rawName) {
         // Only prepend the enclosing flow node names if there are any and the run this is in has multiple blocks directly containing
         // test results.
-        if (!getEnclosingFlowNodeNames().isEmpty()) {
+        if (!keepTestNames && !getEnclosingFlowNodeNames().isEmpty()) {
             Run<?, ?> r = getRun();
             if (r != null) {
                 TestResultAction action = r.getAction(TestResultAction.class);

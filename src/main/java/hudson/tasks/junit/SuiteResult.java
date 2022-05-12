@@ -157,7 +157,7 @@ public final class SuiteResult implements Serializable {
      * This method returns a collection, as a single XML may have multiple &lt;testsuite>
      * elements wrapped into the top-level &lt;testsuites>.
      */
-    static List<SuiteResult> parse(File xmlReport, boolean keepLongStdio, PipelineTestDetails pipelineTestDetails)
+    static List<SuiteResult> parse(File xmlReport, boolean keepLongStdio, boolean keepTestNames, PipelineTestDetails pipelineTestDetails)
             throws DocumentException, IOException, InterruptedException {
         List<SuiteResult> r = new ArrayList<>();
 
@@ -177,7 +177,7 @@ public final class SuiteResult implements Serializable {
             Document result = saxReader.read(xmlReportStream);
             Element root = result.getRootElement();
 
-            parseSuite(xmlReport, keepLongStdio, r, root, pipelineTestDetails);
+            parseSuite(xmlReport, keepLongStdio, keepTestNames, r, root, pipelineTestDetails);
         }
 
         return r;
@@ -192,24 +192,24 @@ public final class SuiteResult implements Serializable {
         }
     }
 
-    private static void parseSuite(File xmlReport, boolean keepLongStdio, List<SuiteResult> r, Element root,
+    private static void parseSuite(File xmlReport, boolean keepLongStdio, boolean keepTestNames, List<SuiteResult> r, Element root,
                                    PipelineTestDetails pipelineTestDetails) throws DocumentException, IOException {
         // nested test suites
         List<Element> testSuites = root.elements("testsuite");
         for (Element suite : testSuites)
-            parseSuite(xmlReport, keepLongStdio, r, suite, pipelineTestDetails);
+            parseSuite(xmlReport, keepLongStdio, keepTestNames, r, suite, pipelineTestDetails);
 
         // child test cases
         // FIXME: do this also if no testcases!
         if (root.element("testcase") != null || root.element("error") != null)
-            r.add(new SuiteResult(xmlReport, root, keepLongStdio, pipelineTestDetails));
+            r.add(new SuiteResult(xmlReport, root, keepLongStdio, keepTestNames, pipelineTestDetails));
     }
 
     /**
      * @param xmlReport A JUnit XML report file whose top level element is 'testsuite'.
      * @param suite     The parsed result of {@code xmlReport}
      */
-    private SuiteResult(File xmlReport, Element suite, boolean keepLongStdio, @CheckForNull PipelineTestDetails pipelineTestDetails)
+    private SuiteResult(File xmlReport, Element suite, boolean keepLongStdio, boolean keepTestNames, @CheckForNull PipelineTestDetails pipelineTestDetails)
             throws DocumentException, IOException {
         this.file = xmlReport.getAbsolutePath();
         String name = suite.attributeValue("name");
@@ -238,7 +238,7 @@ public final class SuiteResult implements Serializable {
         Element ex = suite.element("error");
         if (ex != null) {
             // according to junit-noframes.xsl l.229, this happens when the test class failed to load
-            addCase(new CaseResult(this, suite, "<init>", keepLongStdio));
+            addCase(new CaseResult(this, suite, "<init>", keepLongStdio, keepTestNames));
         }
 
         List<Element> testCases = suite.elements("testcase");
@@ -262,7 +262,7 @@ public final class SuiteResult implements Serializable {
             // one wants to use @name from <testsuite>,
             // the other wants to use @classname from <testcase>.
 
-            addCase(new CaseResult(this, e, classname, keepLongStdio));
+            addCase(new CaseResult(this, e, classname, keepLongStdio, keepTestNames));
         }
 
         String stdout = CaseResult.possiblyTrimStdio(cases, keepLongStdio, suite.elementText("system-out"));

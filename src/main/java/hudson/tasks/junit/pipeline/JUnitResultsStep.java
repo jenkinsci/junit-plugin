@@ -23,6 +23,8 @@ import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import javax.swing.tree.VariableHeightLayoutCache;
+
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -39,6 +41,11 @@ public class JUnitResultsStep extends Step implements JUnitTask {
      * @since 1.358
      */
     private boolean keepLongStdio;
+
+    /**
+     * If true, mangle test names in case running in multiple stages or parallel steps.
+     */
+    private boolean keepTestNames;
 
     /**
      * {@link TestDataPublisher}s configured for this archiver, to process the recorded data.
@@ -118,6 +125,22 @@ public class JUnitResultsStep extends Step implements JUnitTask {
      */
     @DataBoundSetter public final void setKeepLongStdio(boolean keepLongStdio) {
         this.keepLongStdio = keepLongStdio;
+    }
+
+    /**
+     * @return the keepTestNames.
+     */
+    public boolean isKeepTestNames() {
+        return keepTestNames;
+    }
+
+    /**
+     * @param keepTestNames Whether to keep long stdio.
+     *
+     * @since 1.2-beta-1
+     */
+    @DataBoundSetter public final void setKeepTestNames(boolean v) {
+        this.keepTestNames = v;
     }
 
     /**

@@ -86,6 +86,12 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     private boolean keepLongStdio;
 
     /**
+     * If true, retain a suite's complete stdout/stderr even if this is huge and the suite passed.
+     * @since 1.358
+     */
+    private boolean keepTestNames;
+
+    /**
      * {@link TestDataPublisher}s configured for this archiver, to process the recorded data.
      * For compatibility reasons, can be null.
      * @since 1.320
@@ -153,7 +159,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                                     String expandedTestResults, Run<?,?> run, @NonNull FilePath workspace,
                                     Launcher launcher, TaskListener listener)
             throws IOException, InterruptedException {
-        return new JUnitParser(task.isKeepLongStdio(), task.isAllowEmptyResults(), task.isSkipOldReports())
+        return new JUnitParser(task.isKeepLongStdio(), task.isAllowEmptyResults(), task.isKeepTestNames(), task.isSkipOldReports())
                 .parseResult(expandedTestResults, run, pipelineTestDetails, workspace, launcher, listener);
     }
 
@@ -252,7 +258,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
             summary = null; // see below
         } else {
             result = new TestResult(storage.load(build.getParent().getFullName(), build.getNumber())); // irrelevant
-            summary = new JUnitParser(task.isKeepLongStdio(), task.isAllowEmptyResults(), task.isSkipOldReports())
+            summary = new JUnitParser(task.isKeepLongStdio(), task.isAllowEmptyResults(), task.isKeepTestNames(), task.isSkipOldReports())
                     .summarizeResult(testResults, build, pipelineTestDetails, workspace, launcher, listener, storage);
         }
 
@@ -314,10 +320,10 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                     checksName = DEFAULT_CHECKS_NAME;
                 }
                 try {
-                    new JUnitChecksPublisher(build, checksName, result, summary).publishChecks(listener);
+                new JUnitChecksPublisher(build, checksName, result, summary).publishChecks(listener);
                 } catch (Exception x) {
                     Functions.printStackTrace(x, listener.error("Publishing JUnit checks failed:"));
-                }
+            }
             }
 
             return summary;
@@ -393,6 +399,22 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
      */
     @DataBoundSetter public final void setKeepLongStdio(boolean keepLongStdio) {
         this.keepLongStdio = keepLongStdio;
+    }
+
+    /**
+     * @return the keepTestNames.
+     */
+    public boolean isKeepTestNames() {
+        return keepTestNames;
+    }
+
+    /**
+     * @param keepTestNames Whether to keep long stdio.
+     *
+     * @since 1.2-beta-1
+     */
+    @DataBoundSetter public final void setKeepTestNames(boolean v) {
+        this.keepTestNames = v;
     }
 
     /**

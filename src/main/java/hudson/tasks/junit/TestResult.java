@@ -121,6 +121,7 @@ public final class TestResult extends MetaTabulatedResult {
     private transient List<CaseResult> failedTests;
 
     private final boolean keepLongStdio;
+    private final boolean keepTestNames;
 
     // default 3s as it depends on OS some can be good some not really....
     public static final long FILE_TIME_PRECISION_MARGIN = Long.getLong(TestResult.class.getName() + "filetime.precision.margin", 3000);
@@ -137,6 +138,7 @@ public final class TestResult extends MetaTabulatedResult {
      */
     public TestResult(boolean keepLongStdio) {
         this.keepLongStdio = keepLongStdio;
+        this.keepTestNames = false;
         impl = null;
     }
 
@@ -147,7 +149,7 @@ public final class TestResult extends MetaTabulatedResult {
 
     @Deprecated
     public TestResult(long filesTimestamp, DirectoryScanner results, boolean keepLongStdio) throws IOException {
-        this(filesTimestamp, results, keepLongStdio, null);
+        this(filesTimestamp, results, keepLongStdio, false, null);
     }
 
     @Deprecated
@@ -166,9 +168,10 @@ public final class TestResult extends MetaTabulatedResult {
      * @param skipOldReports to parse or not test files older than filesTimestamp
      * @since 1.22
      */
-    public TestResult(long filesTimestamp, DirectoryScanner results, boolean keepLongStdio,
+    public TestResult(long filesTimestamp, DirectoryScanner results, boolean keepLongStdio, boolean keepTestNames,
                       PipelineTestDetails pipelineTestDetails, boolean skipOldReports) throws IOException {
         this.keepLongStdio = keepLongStdio;
+        this.keepTestNames = keepTestNames;
         impl = null;
         this.skipOldReports = skipOldReports;
         parse(filesTimestamp, results, pipelineTestDetails);
@@ -177,6 +180,7 @@ public final class TestResult extends MetaTabulatedResult {
     public TestResult(TestResultImpl impl) {
         this.impl = impl;
         keepLongStdio = false; // irrelevant
+        keepTestNames = false; // irrelevant
     }
 
     @CheckForNull
@@ -253,10 +257,10 @@ public final class TestResult extends MetaTabulatedResult {
                 continue;
             }
             // only count files that were actually updated during this build
-            parsePossiblyEmpty(reportFile, pipelineTestDetails);
-        }
+                parsePossiblyEmpty(reportFile, pipelineTestDetails);
+            }
         if (LOGGER.isLoggable(Level.FINE)) LOGGER.fine("testSuites size:" + this.getSuites().size());
-    }
+        }
 
     @Override
     public hudson.tasks.test.TestResult getPreviousResult() {
@@ -299,9 +303,9 @@ public final class TestResult extends MetaTabulatedResult {
     public void parse(Iterable<File> reportFiles, PipelineTestDetails pipelineTestDetails) throws IOException {
         for (File reportFile : reportFiles) {
             // only count files that were actually updated during this build
-            parsePossiblyEmpty(reportFile, pipelineTestDetails);
+                parsePossiblyEmpty(reportFile, pipelineTestDetails);
+            }
         }
-    }
 
     private void parsePossiblyEmpty(File reportFile, PipelineTestDetails pipelineTestDetails) throws IOException {
         if(reportFile.length()==0) {
@@ -381,7 +385,7 @@ public final class TestResult extends MetaTabulatedResult {
             throw new IllegalStateException("Cannot reparse using a pluggable impl");
         }
         try {
-            List<SuiteResult> suiteResults = SuiteResult.parse(reportFile, keepLongStdio, pipelineTestDetails);
+            List<SuiteResult> suiteResults = SuiteResult.parse(reportFile, keepLongStdio, keepTestNames, pipelineTestDetails);
             for (SuiteResult suiteResult : suiteResults)
                 add(suiteResult);
 
