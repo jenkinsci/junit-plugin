@@ -60,6 +60,7 @@ import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
+import hudson.Functions;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -307,7 +308,11 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                 if (Util.fixEmpty(checksName) == null) {
                     checksName = DEFAULT_CHECKS_NAME;
                 }
-                new JUnitChecksPublisher(build, checksName, result, summary).publishChecks(listener);
+                try {
+                    new JUnitChecksPublisher(build, checksName, result, summary).publishChecks(listener);
+                } catch (Exception x) {
+                    Functions.printStackTrace(x, listener.error("Publishing JUnit checks failed:"));
+                }
             }
 
             return summary;
