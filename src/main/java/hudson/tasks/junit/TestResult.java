@@ -118,7 +118,7 @@ public final class TestResult extends MetaTabulatedResult {
 
     private final boolean keepLongStdio;
 
-    // default 3s as it depends on OS some can good some not really....
+    // default 3s as it depends on OS some can be good some not really....
     public static final long FILE_TIME_PRECISION_MARGIN = Long.getLong(TestResult.class.getName() + "filetime.precision.margin", 3000);
 
     /**
