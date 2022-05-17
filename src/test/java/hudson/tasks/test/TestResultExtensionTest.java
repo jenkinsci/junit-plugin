@@ -28,7 +28,6 @@ import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import hudson.model.Run;
-import hudson.tasks.junit.TouchBuilderBuildTime;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -54,7 +53,7 @@ public class TestResultExtensionTest {
         FreeStyleProject project = j.createFreeStyleProject("trivialtest");
         TrivialTestResultRecorder recorder = new TrivialTestResultRecorder();
         project.getPublishersList().add(recorder);
-        project.getBuildersList().add(new TouchBuilderBuildTime());
+        project.getBuildersList().add(new TouchBuilder());
 
         FreeStyleBuild build = project.scheduleBuild2(0).get(5, TimeUnit.MINUTES); /* leave room for debugging*/
         j.assertBuildStatus(Result.SUCCESS, build);
@@ -63,8 +62,7 @@ public class TestResultExtensionTest {
         assertNotNull("parent action should have an owner", action.run);
         Object resultObject = action.getResult();
         assertNotNull("we should have a result");
-        assertTrue("result should be an TestResult",
-                resultObject instanceof TestResult);
+        assertTrue("result should be an TestResult", resultObject instanceof TestResult);
         TestResult result = (TestResult) resultObject;
         Run<?,?> ownerBuild = result.getRun();
         assertNotNull("we should have an owner", ownerBuild);
@@ -76,7 +74,6 @@ public class TestResultExtensionTest {
         j.assertGoodStatus(projectPage);
         HtmlPage testReportPage = wc.getPage(project, "/lastBuild/testReport/");
         j.assertGoodStatus(testReportPage);
-
 
     }
 }

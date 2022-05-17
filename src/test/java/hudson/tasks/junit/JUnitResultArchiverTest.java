@@ -50,6 +50,7 @@ import org.junit.Assume;
 import org.junit.ClassRule;
 import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.TouchBuilder;
 import org.jvnet.hudson.test.recipes.LocalData;
 
 import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
@@ -108,7 +109,7 @@ public class JUnitResultArchiverTest {
         project = j.createFreeStyleProject("junit");
         archiver = new JUnitResultArchiver("*.xml");
         project.getPublishersList().add(archiver);
-        project.getBuildersList().add(new TouchBuilderBuildTime());
+        project.getBuildersList().add(new TouchBuilder());
     }
 
     @LocalData("All")

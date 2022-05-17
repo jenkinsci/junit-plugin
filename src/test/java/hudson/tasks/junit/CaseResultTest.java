@@ -40,6 +40,7 @@ import org.jvnet.hudson.test.TestBuilder;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.xml.XmlPage;
+import org.jvnet.hudson.test.TouchBuilder;
 
 import java.io.IOException;
 
@@ -267,7 +268,7 @@ public class CaseResultTest {
                 return true;
             }
         });
-        p.getBuildersList().add(new TouchBuilderBuildTime());
+        p.getBuildersList().add(new TouchBuilder());
         p.getPublishersList().add(new JUnitResultArchiver("*.xml"));
         return rule.assertBuildStatus(Result.UNSTABLE, p.scheduleBuild2(0).get());
     }
@@ -276,7 +277,7 @@ public class CaseResultTest {
     public void emptyName() throws Exception {
         FreeStyleProject p = rule.createFreeStyleProject();
         rule.jenkins.getWorkspaceFor(p).child("x.xml").write("<testsuite><testcase classname=''></testcase></testsuite>", null);
-        p.getBuildersList().add(new TouchBuilderBuildTime());
+        p.getBuildersList().add(new TouchBuilder());
         p.getPublishersList().add(new JUnitResultArchiver("x.xml"));
         rule.buildAndAssertSuccess(p);
     }

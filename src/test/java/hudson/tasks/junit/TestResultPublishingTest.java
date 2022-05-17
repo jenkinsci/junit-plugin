@@ -78,7 +78,7 @@ public class TestResultPublishingTest {
     @Before
     public void setUp() throws Exception {
         project = rule.createFreeStyleProject(BASIC_TEST_PROJECT);
-        project.getBuildersList().add(new TouchBuilderBuildTime());
+        project.getBuildersList().add(new TouchBuilder());
         archiver = new JUnitResultArchiver("*.xml");
         archiver.setParseOldReports(true);
         project.getPublishersList().add(archiver);
@@ -285,7 +285,7 @@ public class TestResultPublishingTest {
     public void testBrokenResultFile() throws Exception {
         FreeStyleProject p = rule.createFreeStyleProject();
         p.getBuildersList().add(new TestBuilder());
-        p.getBuildersList().add(new TouchBuilderBuildTime());
+        p.getBuildersList().add(new TouchBuilder());
         p.getPublishersList().add(new JUnitResultArchiver("TEST-foo.xml", false, null));
         rule.assertBuildStatus(Result.UNSTABLE, p.scheduleBuild2(0).get());
     }
