@@ -168,9 +168,11 @@ public class JUnitParser extends TestResultParser {
                 // not sure we can rely seriously on those timestamp so let's take the smaller one...
                 long filesTimestamp = Math.min(buildStartTimeInMillis,buildTimeInMillis);
                 // previous mode buildStartTimeInMillis + (nowSlave - nowMaster);
-                if(debug) listener.getLogger().println("ParseResultCallable#invoke buildStartTimeInMillis:" + buildStartTimeInMillis
+                if (debug) {
+                    listener.getLogger().println("ParseResultCallable#invoke buildStartTimeInMillis:" + buildStartTimeInMillis
                         + ",buildTimeInMillis:" + buildTimeInMillis + ",filesTimestamp:" + filesTimestamp + ",nowSlave:"
                         + nowSlave + ",nowMaster:" + nowMaster);
+                    }
                 result = new TestResult(filesTimestamp, ds, keepLongStdio, pipelineTestDetails,
                         parseOldReports, debug?listener.getLogger():null);
                 result.tally();
