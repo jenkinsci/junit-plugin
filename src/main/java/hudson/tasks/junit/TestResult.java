@@ -118,6 +118,9 @@ public final class TestResult extends MetaTabulatedResult {
 
     private final boolean keepLongStdio;
 
+    // default 3s as it depends on OS some can good some not really....
+    public static final long FILE_TIME_PRECISION_MARGIN = Long.getLong(TestResult.class.getName() + "filetime.precision.margin", 3000);
+
     /**
      * Creates an empty result.
      */
@@ -240,7 +243,7 @@ public final class TestResult extends MetaTabulatedResult {
 
     private void parse(long filesTimestamp, PipelineTestDetails pipelineTestDetails, Iterable<File> reportFiles) throws IOException {
         for (File reportFile : reportFiles) {
-            if(!parseOldReports && Files.getLastModifiedTime(reportFile.toPath()).toMillis() < filesTimestamp) {
+            if(!parseOldReports && Files.getLastModifiedTime(reportFile.toPath()).toMillis() < filesTimestamp - FILE_TIME_PRECISION_MARGIN ) {
                 log("file " + reportFile + " not parsed: parseOldReports-" + parseOldReports
                         + ",lastModified:" + Files.getLastModifiedTime(reportFile.toPath()).toMillis() + ",filesTimestamp:" + filesTimestamp);
                 continue;

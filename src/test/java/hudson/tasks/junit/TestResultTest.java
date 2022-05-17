@@ -31,6 +31,8 @@ import hudson.util.XStream2;
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -288,9 +290,9 @@ public class TestResultTest {
     public void skipOldReports() throws Exception {
         long start = System.currentTimeMillis();
         File testResultFile1 = new File("src/test/resources/hudson/tasks/junit/old-reports/junit-report-1.xml");
-        testResultFile1.setLastModified(start + 10);
+        Files.setLastModifiedTime(testResultFile1.toPath(), FileTime.fromMillis(start + 10));
         File testResultFile2 = new File("src/test/resources/hudson/tasks/junit/old-reports/junit-report-2.xml");
-        testResultFile2.setLastModified(start - 10);
+        Files.setLastModifiedTime(testResultFile2.toPath(), FileTime.fromMillis(start - 4000));
         DirectoryScanner directoryScanner = new DirectoryScanner();
         directoryScanner.setBasedir(new File("src/test/resources/hudson/tasks/junit/old-reports/"));
         directoryScanner.setIncludes(new String[]{"*.xml"});
@@ -308,9 +310,9 @@ public class TestResultTest {
     public void parseOldReports() throws Exception {
         long start = System.currentTimeMillis();
         File testResultFile1 = new File("src/test/resources/hudson/tasks/junit/old-reports/junit-report-1.xml");
-        testResultFile1.setLastModified(start + 10);
+        Files.setLastModifiedTime(testResultFile1.toPath(), FileTime.fromMillis(start + 10));
         File testResultFile2 = new File("src/test/resources/hudson/tasks/junit/old-reports/junit-report-2.xml");
-        testResultFile2.setLastModified(start - 10);
+        Files.setLastModifiedTime(testResultFile2.toPath(), FileTime.fromMillis(start - 4000));
         DirectoryScanner directoryScanner = new DirectoryScanner();
         directoryScanner.setBasedir(new File("src/test/resources/hudson/tasks/junit/old-reports/"));
         directoryScanner.setIncludes(new String[]{"*.xml"});

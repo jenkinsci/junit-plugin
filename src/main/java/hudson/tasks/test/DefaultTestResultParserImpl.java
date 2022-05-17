@@ -96,7 +96,7 @@ public abstract class DefaultTestResultParserImpl extends TestResultParser imple
                 List<File> files = new ArrayList<>(paths.length);
                 for (FilePath path : paths) {
                     File report = new File(path.getRemote());
-                    if (ignoreTimestampCheck || localBuildTime - 3000 /*error margin*/ < report.lastModified()) {
+                    if (ignoreTimestampCheck || localBuildTime - hudson.tasks.junit.TestResult.FILE_TIME_PRECISION_MARGIN < report.lastModified()) {
                         // this file is created during this build
                         files.add(report);
                     }
