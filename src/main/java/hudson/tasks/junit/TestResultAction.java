@@ -195,7 +195,6 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         }
         if(totalCount==null)
             getResult();    // this will compute the result
-
         return totalCount;
     }
 
