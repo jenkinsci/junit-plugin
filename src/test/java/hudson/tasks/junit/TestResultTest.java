@@ -298,7 +298,7 @@ public class TestResultTest {
         directoryScanner.setIncludes(new String[]{"*.xml"});
         directoryScanner.scan();
         assertEquals( "directory scanner must find 2 files", 2, directoryScanner.getIncludedFiles().length);
-        TestResult testResult = new TestResult(start, directoryScanner, true, new PipelineTestDetails(),false, null);
+        TestResult testResult = new TestResult(start, directoryScanner, true, new PipelineTestDetails(),false);
         testResult.tally();
 
         assertEquals("Wrong number of testsuites", 2, testResult.getSuites().size());
@@ -318,7 +318,7 @@ public class TestResultTest {
         directoryScanner.setIncludes(new String[]{"*.xml"});
         directoryScanner.scan();
         assertEquals( "directory scanner must find 2 files", 2, directoryScanner.getIncludedFiles().length);
-        TestResult testResult = new TestResult(start, directoryScanner, true, new PipelineTestDetails(),true, null);
+        TestResult testResult = new TestResult(start, directoryScanner, true, new PipelineTestDetails(),true);
         testResult.tally();
 
         assertEquals("Wrong number of testsuites", 4, testResult.getSuites().size());

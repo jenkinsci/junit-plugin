@@ -50,6 +50,7 @@ import org.junit.Assume;
 import org.junit.ClassRule;
 import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.LoggerRule;
 import org.jvnet.hudson.test.TouchBuilder;
 import org.jvnet.hudson.test.recipes.LocalData;
 
@@ -74,6 +75,7 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Level;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -98,6 +100,9 @@ import static org.junit.Assert.fail;
 public class JUnitResultArchiverTest {
 
     @Rule public JenkinsRule j = new JenkinsRule();
+
+    @Rule
+    public LoggerRule logRule = new LoggerRule();
 
     @ClassRule
     public final static BuildWatcher buildWatcher = new BuildWatcher();
@@ -132,12 +137,13 @@ public class JUnitResultArchiverTest {
    @Test public void slave() throws Exception {
         Assume.assumeFalse("TODO frequent TimeoutException from basic", Functions.isWindows());
         DumbSlave node = j.createSlave("label1 label2", null);
+        // the node needs to be online before showAgentLogs
+        j.waitOnline(node);
+        j.showAgentLogs(node, logRule.record("hudson.tasks.junit", Level.ALL).capture(200));
         project.setAssignedLabel(j.jenkins.getLabel("label1"));
 
         FilePath src = new FilePath(j.jenkins.getRootPath(), "jobs/junit/workspace/");
         assertNotNull(src);
-        // the node needs to be online before get the workspace
-        j.waitOnline(node);
         FilePath dest = node.getWorkspaceFor(project);
         assertNotNull(dest);
         src.copyRecursiveTo("*.xml", dest);

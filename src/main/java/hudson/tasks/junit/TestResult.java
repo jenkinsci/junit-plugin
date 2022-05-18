@@ -35,7 +35,6 @@ import hudson.tasks.test.TestObject;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Files;
@@ -50,6 +49,8 @@ import java.util.Objects;
 import java.util.TreeMap;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.tools.ant.DirectoryScanner;
@@ -66,6 +67,9 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  * @author Kohsuke Kawaguchi
  */
 public final class TestResult extends MetaTabulatedResult {
+
+
+    private static final Logger LOGGER = Logger.getLogger(JUnitResultArchiver.class.getName());
 
     @SuppressFBWarnings(value = "SE_BAD_FIELD", justification = "We do not expect TestResult to be serialized when this field is set.")
     private final @CheckForNull TestResultImpl impl;
@@ -160,15 +164,13 @@ public final class TestResult extends MetaTabulatedResult {
      * @param keepLongStdio if true, retain a suite's complete stdout/stderr even if this is huge and the suite passed
      * @param pipelineTestDetails A {@link PipelineTestDetails} instance containing Pipeline-related additional arguments.
      * @param parseOldReports to parse test files older than filesTimestamp
-     * @param logger if not <code>null</code> some debug logging will be available in the output
      * @since 1.22
      */
     public TestResult(long filesTimestamp, DirectoryScanner results, boolean keepLongStdio,
-                      PipelineTestDetails pipelineTestDetails, boolean parseOldReports, PrintStream logger) throws IOException {
+                      PipelineTestDetails pipelineTestDetails, boolean parseOldReports) throws IOException {
         this.keepLongStdio = keepLongStdio;
         impl = null;
         this.parseOldReports = parseOldReports;
-        this.logger = logger;
         parse(filesTimestamp, results, pipelineTestDetails);
     }
 
@@ -244,14 +246,16 @@ public final class TestResult extends MetaTabulatedResult {
     private void parse(long filesTimestamp, PipelineTestDetails pipelineTestDetails, Iterable<File> reportFiles) throws IOException {
         for (File reportFile : reportFiles) {
             if(!parseOldReports && Files.getLastModifiedTime(reportFile.toPath()).toMillis() < filesTimestamp - FILE_TIME_PRECISION_MARGIN ) {
-                log("file " + reportFile + " not parsed: parseOldReports-" + parseOldReports
-                        + ",lastModified:" + Files.getLastModifiedTime(reportFile.toPath()).toMillis() + ",filesTimestamp:" + filesTimestamp);
+                if (LOGGER.isLoggable(Level.FINE)) {
+                    LOGGER.fine("file " + reportFile + " not parsed: parseOldReports-" + parseOldReports
+                            + ",lastModified:" + Files.getLastModifiedTime(reportFile.toPath()).toMillis() + ",filesTimestamp:" + filesTimestamp);
+                }
                 continue;
             }
             // only count files that were actually updated during this build
             parsePossiblyEmpty(reportFile, pipelineTestDetails);
         }
-        log("testSuites size:" + this.getSuites().size());
+        if (LOGGER.isLoggable(Level.FINE)) LOGGER.fine("testSuites size:" + this.getSuites().size());
     }
 
     @Override
@@ -301,7 +305,7 @@ public final class TestResult extends MetaTabulatedResult {
 
     private void parsePossiblyEmpty(File reportFile, PipelineTestDetails pipelineTestDetails) throws IOException {
         if(reportFile.length()==0) {
-            log("reportFile:" + reportFile + " is empty");
+            if (LOGGER.isLoggable(Level.FINE)) LOGGER.fine("reportFile:" + reportFile + " is empty");
             // this is a typical problem when JVM quits abnormally, like OutOfMemoryError during a test.
             SuiteResult sr = new SuiteResult(reportFile.getName(), "", "", pipelineTestDetails);
             sr.addCase(new CaseResult(sr,"[empty]","Test report file "+reportFile.getAbsolutePath()+" was length 0"));
@@ -381,7 +385,9 @@ public final class TestResult extends MetaTabulatedResult {
             for (SuiteResult suiteResult : suiteResults)
                 add(suiteResult);
 
-            log("reportFile:" + reportFile + ", lastModified:" + reportFile.lastModified() + " found " + suiteResults.size() + " suite results" );
+            if (LOGGER.isLoggable(Level.FINE)) {
+                LOGGER.fine("reportFile:" + reportFile + ", lastModified:" + reportFile.lastModified() + " found " + suiteResults.size() + " suite results" );
+            }
 
         } catch (InterruptedException | RuntimeException e) {
             throw new IOException("Failed to read "+reportFile,e);
@@ -967,15 +973,6 @@ public final class TestResult extends MetaTabulatedResult {
                 .filter(Objects::nonNull)
                 .findFirst()
                 .orElse(null);
-    }
-
-    private transient PrintStream logger;
-
-    private void log(String message) {
-        if (this.logger==null){
-            return;
-        }
-        this.logger.println(message);
     }
 
 }

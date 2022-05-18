@@ -127,6 +127,9 @@ public class JUnitParser extends TestResultParser {
     }
 
     private static abstract class ParseResultCallable<T> extends MasterToSlaveFileCallable<T> {
+
+        private static final Logger LOGGER = Logger.getLogger(ParseResultCallable.class.getName());
+
         private final long buildStartTimeInMillis;
 
         private final long buildTimeInMillis;
@@ -139,12 +142,10 @@ public class JUnitParser extends TestResultParser {
 
         private final boolean parseOldReports;
 
-        private final boolean debug;
-
         private ParseResultCallable(String testResults, Run<?,?> build,
                                     boolean keepLongStdio, boolean allowEmptyResults,
                                     PipelineTestDetails pipelineTestDetails, TaskListener listener,
-                                    boolean parseOldReports, boolean debug) {
+                                    boolean parseOldReports) {
             this.buildStartTimeInMillis = build.getStartTimeInMillis();
             this.buildTimeInMillis = build.getTimeInMillis();
             this.testResults = testResults;
@@ -154,7 +155,6 @@ public class JUnitParser extends TestResultParser {
             this.pipelineTestDetails = pipelineTestDetails;
             this.listener = listener;
             this.parseOldReports = parseOldReports;
-            this.debug = debug;
         }
 
         @Override
@@ -168,13 +168,13 @@ public class JUnitParser extends TestResultParser {
                 // not sure we can rely seriously on those timestamp so let's take the smaller one...
                 long filesTimestamp = Math.min(buildStartTimeInMillis,buildTimeInMillis);
                 // previous mode buildStartTimeInMillis + (nowSlave - nowMaster);
-                if (debug) {
-                    listener.getLogger().println("ParseResultCallable#invoke buildStartTimeInMillis:" + buildStartTimeInMillis
-                        + ",buildTimeInMillis:" + buildTimeInMillis + ",filesTimestamp:" + filesTimestamp + ",nowSlave:"
-                        + nowSlave + ",nowMaster:" + nowMaster);
-                    }
+                if(LOGGER.isLoggable(Level.FINE)) {
+                    LOGGER.fine("buildStartTimeInMillis:" + buildStartTimeInMillis
+                            + ",buildTimeInMillis:" + buildTimeInMillis + ",filesTimestamp:" + filesTimestamp + ",nowSlave:"
+                            + nowSlave + ",nowMaster:" + nowMaster);
+                }
                 result = new TestResult(filesTimestamp, ds, keepLongStdio, pipelineTestDetails,
-                        parseOldReports, debug?listener.getLogger():null);
+                        parseOldReports);
                 result.tally();
             } else {
                 if (this.allowEmptyResults) {
@@ -196,8 +196,7 @@ public class JUnitParser extends TestResultParser {
 
         DirectParseResultCallable(String testResults, Run<?,?> build, boolean keepLongStdio, boolean allowEmptyResults,
                                   PipelineTestDetails pipelineTestDetails, TaskListener listener, boolean parseOldReports) {
-            super(testResults, build, keepLongStdio, allowEmptyResults, pipelineTestDetails, listener,
-                    parseOldReports, LOGGER.isLoggable(Level.FINE));
+            super(testResults, build, keepLongStdio, allowEmptyResults, pipelineTestDetails, listener, parseOldReports);
         }
 
         @Override
@@ -213,7 +212,7 @@ public class JUnitParser extends TestResultParser {
 
         StorageParseResultCallable(String testResults, Run<?,?> build, boolean keepLongStdio, boolean allowEmptyResults,
                                    PipelineTestDetails pipelineTestDetails, TaskListener listener, RemotePublisher publisher, boolean parseOldReports) {
-            super(testResults, build, keepLongStdio, allowEmptyResults, pipelineTestDetails, listener, parseOldReports, LOGGER.isLoggable(Level.FINE));
+            super(testResults, build, keepLongStdio, allowEmptyResults, pipelineTestDetails, listener, parseOldReports);
             this.publisher = publisher;
         }
 
