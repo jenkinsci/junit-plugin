@@ -219,7 +219,6 @@
                     <artifactId>maven-surefire-plugin</artifactId>
                     <configuration>
                         <systemPropertyVariables>
-                            <java.util.logging.config.file>src/test/resources/logging.properties</java.util.logging.config.file>
                             <org.jvnet.hudson.test.HudsonTestCase.slaveDebugPort>${slaveDebugPort}</org.jvnet.hudson.test.HudsonTestCase.slaveDebugPort>
                         </systemPropertyVariables>
                     </configuration>

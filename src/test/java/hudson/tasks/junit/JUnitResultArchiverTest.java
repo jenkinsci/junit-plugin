@@ -102,7 +102,7 @@ public class JUnitResultArchiverTest {
     @Rule public JenkinsRule j = new JenkinsRule();
 
     @Rule
-    public LoggerRule logRule = new LoggerRule();
+    public LoggerRule logRule = new LoggerRule().recordPackage(JUnitResultArchiver.class, Level.FINE);
 
     @ClassRule
     public final static BuildWatcher buildWatcher = new BuildWatcher();
@@ -139,7 +139,7 @@ public class JUnitResultArchiverTest {
         DumbSlave node = j.createSlave("label1 label2", null);
         // the node needs to be online before showAgentLogs
         j.waitOnline(node);
-        j.showAgentLogs(node, logRule.record("hudson.tasks.junit", Level.ALL).capture(200));
+        j.showAgentLogs(node, logRule);
         project.setAssignedLabel(j.jenkins.getLabel("label1"));
 
         FilePath src = new FilePath(j.jenkins.getRootPath(), "jobs/junit/workspace/");
