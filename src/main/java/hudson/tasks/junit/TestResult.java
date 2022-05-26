@@ -113,7 +113,7 @@ public final class TestResult extends MetaTabulatedResult {
 
     private float duration;
 
-    private boolean parseOldReports;
+    private boolean parseOldReports = true;
 
     /**
      * Number of failed/error leafNodes.

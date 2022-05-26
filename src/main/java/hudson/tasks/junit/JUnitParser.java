@@ -140,7 +140,7 @@ public class JUnitParser extends TestResultParser {
         private final PipelineTestDetails pipelineTestDetails;
         private final TaskListener listener;
 
-        private final boolean parseOldReports;
+        private boolean parseOldReports = true;
 
         private ParseResultCallable(String testResults, Run<?,?> build,
                                     boolean keepLongStdio, boolean allowEmptyResults,

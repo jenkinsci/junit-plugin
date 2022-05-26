@@ -60,7 +60,7 @@ public class JUnitResultsStep extends Step implements JUnitTask {
      */
     private boolean skipMarkingBuildUnstable;
 
-    private boolean parseOldReports;
+    private boolean parseOldReports = true;
 
     @DataBoundConstructor
     public JUnitResultsStep(String testResults) {

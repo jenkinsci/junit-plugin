@@ -57,6 +57,6 @@ THE SOFTWARE.
             <f:checkbox default="false" title="${%If checked, the test failures will still be reported but won't mark the build as unstable}"/>
     </f:entry>
     <f:entry title="${%Include report files older than build start}" field="parseOldReports">
-            <f:checkbox default="false" title="${%If checked, the test report files older than build start will be included in the parsing}"/>
+            <f:checkbox default="true" title="${%If checked, the test report files older than build start will be included in the parsing}"/>
     </f:entry>
 </j:jelly>

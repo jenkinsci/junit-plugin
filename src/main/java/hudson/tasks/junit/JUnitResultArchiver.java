@@ -107,7 +107,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
      */
     private boolean skipMarkingBuildUnstable;
 
-    private boolean parseOldReports;
+    private boolean parseOldReports = true;
 
     private static final String DEFAULT_CHECKS_NAME = "Tests";
 
