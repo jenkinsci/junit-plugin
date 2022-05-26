@@ -6,7 +6,6 @@
         <version>4.40</version>
         <relativePath />
     </parent>
-
     <artifactId>junit</artifactId>
     <version>${revision}${changelist}</version>
     <packaging>hpi</packaging>
