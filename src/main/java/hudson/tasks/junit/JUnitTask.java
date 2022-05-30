@@ -17,6 +17,6 @@ public interface JUnitTask {
 
     String getChecksName();
 
-    boolean isParseOldReports();
+    boolean isSkipOldReports();
 
 }

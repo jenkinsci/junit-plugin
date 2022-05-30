@@ -60,7 +60,7 @@ public class JUnitResultsStep extends Step implements JUnitTask {
      */
     private boolean skipMarkingBuildUnstable;
 
-    private boolean parseOldReports = true;
+    private boolean skipOldReports;
 
     @DataBoundConstructor
     public JUnitResultsStep(String testResults) {
@@ -168,13 +168,13 @@ public class JUnitResultsStep extends Step implements JUnitTask {
     }
 
     @Override
-    public boolean isParseOldReports() {
-        return this.parseOldReports;
+    public boolean isSkipOldReports() {
+        return this.skipOldReports;
     }
 
     @DataBoundSetter
-    public void setParseOldReports(boolean parseOldReports) {
-        this.parseOldReports = parseOldReports;
+    public void setSkipOldReports(boolean skipOldReports) {
+        this.skipOldReports = skipOldReports;
     }
 
     @Override

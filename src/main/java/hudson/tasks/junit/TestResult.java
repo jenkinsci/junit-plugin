@@ -113,7 +113,7 @@ public final class TestResult extends MetaTabulatedResult {
 
     private float duration;
 
-    private boolean parseOldReports = true;
+    private boolean skipOldReports;
 
     /**
      * Number of failed/error leafNodes.
@@ -160,17 +160,17 @@ public final class TestResult extends MetaTabulatedResult {
     /**
      * Collect reports from the given {@link DirectoryScanner}, while
      * filtering out all files that were created before the given time.
-     * @param filesTimestamp per default files older than this will be ignored (depending on param parseOldReports)
+     * @param filesTimestamp per default files older than this will be ignored (depending on param skipOldReports)
      * @param keepLongStdio if true, retain a suite's complete stdout/stderr even if this is huge and the suite passed
      * @param pipelineTestDetails A {@link PipelineTestDetails} instance containing Pipeline-related additional arguments.
-     * @param parseOldReports to parse test files older than filesTimestamp
+     * @param skipOldReports to parse or not test files older than filesTimestamp
      * @since 1.22
      */
     public TestResult(long filesTimestamp, DirectoryScanner results, boolean keepLongStdio,
-                      PipelineTestDetails pipelineTestDetails, boolean parseOldReports) throws IOException {
+                      PipelineTestDetails pipelineTestDetails, boolean skipOldReports) throws IOException {
         this.keepLongStdio = keepLongStdio;
         impl = null;
-        this.parseOldReports = parseOldReports;
+        this.skipOldReports = skipOldReports;
         parse(filesTimestamp, results, pipelineTestDetails);
     }
 
@@ -245,9 +245,9 @@ public final class TestResult extends MetaTabulatedResult {
 
     private void parse(long filesTimestamp, PipelineTestDetails pipelineTestDetails, Iterable<File> reportFiles) throws IOException {
         for (File reportFile : reportFiles) {
-            if(!parseOldReports && Files.getLastModifiedTime(reportFile.toPath()).toMillis() < filesTimestamp - FILE_TIME_PRECISION_MARGIN ) {
+            if(skipOldReports && Files.getLastModifiedTime(reportFile.toPath()).toMillis() < filesTimestamp - FILE_TIME_PRECISION_MARGIN ) {
                 if (LOGGER.isLoggable(Level.FINE)) {
-                    LOGGER.fine("file " + reportFile + " not parsed: parseOldReports-" + parseOldReports
+                    LOGGER.fine("file " + reportFile + " not parsed: skipOldReports-" + skipOldReports
                             + ",lastModified:" + Files.getLastModifiedTime(reportFile.toPath()).toMillis() + ",filesTimestamp:" + filesTimestamp);
                 }
                 continue;

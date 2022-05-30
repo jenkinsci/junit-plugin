@@ -80,7 +80,7 @@ public class TestResultPublishingTest {
         project = rule.createFreeStyleProject(BASIC_TEST_PROJECT);
         project.getBuildersList().add(new TouchBuilder());
         archiver = new JUnitResultArchiver("*.xml");
-        archiver.setParseOldReports(true);
+        archiver.setSkipOldReports(true);
         project.getPublishersList().add(archiver);
     }
 

@@ -80,7 +80,7 @@ public class JUnitChecksPublisherTest {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "singleStep");
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
                 "  node {\n" +
-                "    def results = junit(testResults: '*.xml', parseOldReports: true)\n" +
+                "    def results = junit(testResults: '*.xml')\n" +
                 "    assert results.totalCount == 6\n" +
                 "  }\n" +
                 "}\n", true));
@@ -107,7 +107,7 @@ public class JUnitChecksPublisherTest {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "singleStep");
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
                 "  node {\n" +
-                "    def results = junit(testResults: '*.xml', parseOldReports: true)\n" +
+                "    def results = junit(testResults: '*.xml')\n" +
                 "    assert results.totalCount == 6\n" +
                 "  }\n" +
                 "}\n", true));
@@ -179,7 +179,7 @@ public class JUnitChecksPublisherTest {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "singleStep");
         j.setDefinition(new CpsFlowDefinition("stage('first') { stage('second') {\n" +
                 "  node {\n" +
-                "    def results = junit(testResults: '*.xml', parseOldReports: true)\n" +
+                "    def results = junit(testResults: '*.xml')\n" +
                 "    assert results.totalCount == 6\n" +
                 "  }\n" +
                 "}}\n", true));
@@ -261,7 +261,7 @@ public class JUnitChecksPublisherTest {
                 "    stage('first') {\n" +
                 "      steps {\n" +
                 "        withChecks('With Checks') {\n" +
-                "          junit(testResults: '*.xml', parseOldReports: true)\n" +
+                "          junit(testResults: '*.xml')\n" +
                 "        }\n" +
                 "      }\n" +
                 "    }\n" +

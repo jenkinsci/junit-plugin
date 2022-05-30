@@ -107,7 +107,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
      */
     private boolean skipMarkingBuildUnstable;
 
-    private boolean parseOldReports = true;
+    private boolean skipOldReports;
 
     private static final String DEFAULT_CHECKS_NAME = "Tests";
 
@@ -155,7 +155,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                                     String expandedTestResults, Run<?,?> run, @NonNull FilePath workspace,
                                     Launcher launcher, TaskListener listener)
             throws IOException, InterruptedException {
-        return new JUnitParser(task.isKeepLongStdio(), task.isAllowEmptyResults(), task.isParseOldReports())
+        return new JUnitParser(task.isKeepLongStdio(), task.isAllowEmptyResults(), task.isSkipOldReports())
                 .parseResult(expandedTestResults, run, pipelineTestDetails, workspace, launcher, listener);
     }
 
@@ -254,7 +254,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
             summary = null; // see below
         } else {
             result = new TestResult(storage.load(build.getParent().getFullName(), build.getNumber())); // irrelevant
-            summary = new JUnitParser(task.isKeepLongStdio(), task.isAllowEmptyResults(), task.isParseOldReports())
+            summary = new JUnitParser(task.isKeepLongStdio(), task.isAllowEmptyResults(), task.isSkipOldReports())
                     .summarizeResult(testResults, build, pipelineTestDetails, workspace, launcher, listener, storage);
         }
 
@@ -444,13 +444,13 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     }
 
     @Override
-    public boolean isParseOldReports() {
-        return this.parseOldReports;
+    public boolean isSkipOldReports() {
+        return this.skipOldReports;
     }
 
     @DataBoundSetter
-    public void setParseOldReports(boolean parseOldReports) {
-        this.parseOldReports = parseOldReports;
+    public void setSkipOldReports(boolean skipOldReports) {
+        this.skipOldReports = skipOldReports;
     }
 
     private static final long serialVersionUID = 1L;

@@ -4,10 +4,13 @@ import com.google.common.base.Predicate;
 import hudson.FilePath;
 import hudson.Functions;
 import hudson.Launcher;
+import hudson.model.AbstractBuild;
+import hudson.model.BuildListener;
 import hudson.model.Descriptor;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
+import hudson.tasks.Builder;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.Messages;
 import hudson.tasks.junit.SuiteResult;
@@ -16,6 +19,8 @@ import hudson.tasks.junit.TestResult;
 import hudson.tasks.junit.TestResultAction;
 import hudson.tasks.junit.TestResultTest;
 import hudson.tasks.test.PipelineBlockWithTests;
+
+import java.io.Serializable;
 import java.net.URL;
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.BaseMatcher;
@@ -148,8 +153,8 @@ public class JUnitResultsStepTest {
                 "  node {\n" +
                 "    touch 'first-result.xml'\n" +
                 "    touch 'second-result.xml'\n" +
-                "    def first = junit(testResults: 'first-result.xml', parseOldReports: true)\n" +    // node id 7
-                "    def second = junit(testResults: 'second-result.xml', parseOldReports: true)\n" +  // node id 8
+                "    def first = junit(testResults: 'first-result.xml')\n" +    // node id 7
+                "    def second = junit(testResults: 'second-result.xml')\n" +  // node id 8
                 "    assert first.totalCount == 6\n" +
                 "    assert second.totalCount == 1\n" +
                 "  }\n" +
@@ -179,13 +184,15 @@ public class JUnitResultsStepTest {
     }
 
     @Test
-    public void twoStepsParseOldReports() throws Exception {
+    public void twoStepsSkipOldReports() throws Exception {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "twoSteps");
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
                 "  node {\n" +
-                "    def first = junit(testResults: 'first-result.xml', parseOldReports: true)\n" +    // node id 7
-                "    def second = junit(testResults: 'second-result.xml', parseOldReports: true)\n" +  // node id 8
-                "    assert first.totalCount == 6\n" +
+                // yup very old file so we should not have flaky tests
+                "    touch file:'first-result.xml', timestamp: 2\n" +
+                "    def first = junit(testResults: 'first-result.xml', skipOldReports: true, allowEmptyResults: true)\n" +    // node id 8
+                "    def second = junit(testResults: 'second-result.xml')\n" +  // node id 9
+                "    assert first.totalCount == 0\n" +
                 "    assert second.totalCount == 1\n" +
                 "  }\n" +
                 "}\n", true));
@@ -195,23 +202,24 @@ public class JUnitResultsStepTest {
         WorkflowRun r = rule.buildAndAssertSuccess(j);
         TestResultAction action = r.getAction(TestResultAction.class);
         assertNotNull(action);
-        assertEquals(2, action.getResult().getSuites().size());
-        assertEquals(7, action.getTotalCount());
+        assertEquals(1, action.getResult().getSuites().size());
+        assertEquals(1, action.getTotalCount());
 
         // First call
-        assertExpectedResults(r, 1, 6, "7");
+        assertExpectedResults(r, 0, 0, "8");
 
         // Second call
-        assertExpectedResults(r, 1, 1, "8");
+        assertExpectedResults(r, 1, 1, "9");
 
         // Combined calls
-        assertExpectedResults(r, 2, 7, "7", "8");
+        assertExpectedResults(r, 1, 1, "8", "9");
 
         // Case result display names shouldn't include stage, since there's only one stage.
         for (CaseResult c : action.getPassedTests()) {
             assertEquals(c.getTransformedTestName(), c.getDisplayName());
         }
     }
+
 
     @Test
     public void threeSteps() throws Exception {
@@ -398,7 +406,7 @@ public class JUnitResultsStepTest {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "currentBuildResultUnstable");
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
                 "  node {\n" +
-                "    def results = junit(testResults: '*.xml', parseOldReports: true)\n" + // node id 7
+                "    def results = junit(testResults: '*.xml', skipOldReports: true)\n" + // node id 7
                 "    assert results.totalCount == 8\n" +
                 "    assert currentBuild.result == 'UNSTABLE'\n" +
                 "  }\n" +

@@ -55,7 +55,7 @@ public class JUnitParser extends TestResultParser {
     private final boolean keepLongStdio;
     private final boolean allowEmptyResults;
 
-    private final boolean parseOldReports;
+    private final boolean skipOldReports;
 
     /** Generally unused, but present for extension compatibility. */
     @Deprecated
@@ -82,10 +82,10 @@ public class JUnitParser extends TestResultParser {
         this(keepLongStdio , allowEmptyResults, false);
     }
 
-    public JUnitParser(boolean keepLongStdio, boolean allowEmptyResults, boolean parseOldReports) {
+    public JUnitParser(boolean keepLongStdio, boolean allowEmptyResults, boolean skipOldReports) {
         this.keepLongStdio = keepLongStdio;
         this.allowEmptyResults = allowEmptyResults;
-        this.parseOldReports = parseOldReports;
+        this.skipOldReports = skipOldReports;
     }
 
     @Override
@@ -116,14 +116,14 @@ public class JUnitParser extends TestResultParser {
                                   FilePath workspace, Launcher launcher, TaskListener listener)
             throws InterruptedException, IOException {
         return workspace.act(new DirectParseResultCallable(testResultLocations, build, keepLongStdio, allowEmptyResults,
-                pipelineTestDetails, listener, parseOldReports));
+                pipelineTestDetails, listener, skipOldReports));
     }
 
     public TestResultSummary summarizeResult(String testResultLocations, Run<?,?> build, PipelineTestDetails pipelineTestDetails,
                                   FilePath workspace, Launcher launcher, TaskListener listener, JunitTestResultStorage storage)
             throws InterruptedException, IOException {
         return workspace.act(new StorageParseResultCallable(testResultLocations, build, keepLongStdio, allowEmptyResults,
-                pipelineTestDetails, listener, storage.createRemotePublisher(build), parseOldReports));
+                pipelineTestDetails, listener, storage.createRemotePublisher(build), skipOldReports));
     }
 
     private static abstract class ParseResultCallable<T> extends MasterToSlaveFileCallable<T> {
@@ -140,12 +140,12 @@ public class JUnitParser extends TestResultParser {
         private final PipelineTestDetails pipelineTestDetails;
         private final TaskListener listener;
 
-        private boolean parseOldReports = true;
+        private boolean skipOldReports;
 
         private ParseResultCallable(String testResults, Run<?,?> build,
                                     boolean keepLongStdio, boolean allowEmptyResults,
                                     PipelineTestDetails pipelineTestDetails, TaskListener listener,
-                                    boolean parseOldReports) {
+                                    boolean skipOldReports) {
             this.buildStartTimeInMillis = build.getStartTimeInMillis();
             this.buildTimeInMillis = build.getTimeInMillis();
             this.testResults = testResults;
@@ -154,7 +154,7 @@ public class JUnitParser extends TestResultParser {
             this.allowEmptyResults = allowEmptyResults;
             this.pipelineTestDetails = pipelineTestDetails;
             this.listener = listener;
-            this.parseOldReports = parseOldReports;
+            this.skipOldReports = skipOldReports;
         }
 
         @Override
@@ -173,8 +173,7 @@ public class JUnitParser extends TestResultParser {
                             + ",buildTimeInMillis:" + buildTimeInMillis + ",filesTimestamp:" + filesTimestamp + ",nowSlave:"
                             + nowSlave + ",nowMaster:" + nowMaster);
                 }
-                result = new TestResult(filesTimestamp, ds, keepLongStdio, pipelineTestDetails,
-                        parseOldReports);
+                result = new TestResult(filesTimestamp, ds, keepLongStdio, pipelineTestDetails, skipOldReports);
                 result.tally();
             } else {
                 if (this.allowEmptyResults) {
@@ -195,8 +194,8 @@ public class JUnitParser extends TestResultParser {
     private static final class DirectParseResultCallable extends ParseResultCallable<TestResult> {
 
         DirectParseResultCallable(String testResults, Run<?,?> build, boolean keepLongStdio, boolean allowEmptyResults,
-                                  PipelineTestDetails pipelineTestDetails, TaskListener listener, boolean parseOldReports) {
-            super(testResults, build, keepLongStdio, allowEmptyResults, pipelineTestDetails, listener, parseOldReports);
+                                  PipelineTestDetails pipelineTestDetails, TaskListener listener, boolean skipOldReports) {
+            super(testResults, build, keepLongStdio, allowEmptyResults, pipelineTestDetails, listener, skipOldReports);
         }
 
         @Override
@@ -211,8 +210,8 @@ public class JUnitParser extends TestResultParser {
         private final RemotePublisher publisher;
 
         StorageParseResultCallable(String testResults, Run<?,?> build, boolean keepLongStdio, boolean allowEmptyResults,
-                                   PipelineTestDetails pipelineTestDetails, TaskListener listener, RemotePublisher publisher, boolean parseOldReports) {
-            super(testResults, build, keepLongStdio, allowEmptyResults, pipelineTestDetails, listener, parseOldReports);
+                                   PipelineTestDetails pipelineTestDetails, TaskListener listener, RemotePublisher publisher, boolean skipOldReports) {
+            super(testResults, build, keepLongStdio, allowEmptyResults, pipelineTestDetails, listener, skipOldReports);
             this.publisher = publisher;
         }
 
