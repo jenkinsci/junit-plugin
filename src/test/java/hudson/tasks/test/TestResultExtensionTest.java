@@ -62,7 +62,8 @@ public class TestResultExtensionTest {
         assertNotNull("parent action should have an owner", action.run);
         Object resultObject = action.getResult();
         assertNotNull("we should have a result");
-        assertTrue("result should be an TestResult", resultObject instanceof TestResult);
+        assertTrue("result should be an TestResult",
+                resultObject instanceof TestResult);
         TestResult result = (TestResult) resultObject;
         Run<?,?> ownerBuild = result.getRun();
         assertNotNull("we should have an owner", ownerBuild);
