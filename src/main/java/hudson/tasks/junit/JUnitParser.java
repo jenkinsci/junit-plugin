@@ -35,6 +35,8 @@ import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
 import io.jenkins.plugins.junit.storage.JunitTestResultStorage.RemotePublisher;
 import java.io.IOException;
 import java.io.File;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import jenkins.MasterToSlaveFileCallable;
 
@@ -48,8 +50,12 @@ import org.apache.tools.ant.DirectoryScanner;
 @Extension // see TestResultParser.all
 public class JUnitParser extends TestResultParser {
 
+    private static final Logger LOGGER = Logger.getLogger(JUnitParser.class.getName());
+
     private final boolean keepLongStdio;
     private final boolean allowEmptyResults;
+
+    private final boolean skipOldReports;
 
     /** Generally unused, but present for extension compatibility. */
     @Deprecated
@@ -63,8 +69,7 @@ public class JUnitParser extends TestResultParser {
      */
     @Deprecated
     public JUnitParser(boolean keepLongStdio) {
-        this.keepLongStdio = keepLongStdio;
-        this.allowEmptyResults = false;
+        this(keepLongStdio , false, false);
     }
 
     /**
@@ -72,9 +77,15 @@ public class JUnitParser extends TestResultParser {
      * @param allowEmptyResults if true, empty results are allowed
      * @since 1.10
      */
+    @Deprecated
     public JUnitParser(boolean keepLongStdio, boolean allowEmptyResults) {
+        this(keepLongStdio , allowEmptyResults, false);
+    }
+
+    public JUnitParser(boolean keepLongStdio, boolean allowEmptyResults, boolean skipOldReports) {
         this.keepLongStdio = keepLongStdio;
         this.allowEmptyResults = allowEmptyResults;
+        this.skipOldReports = skipOldReports;
     }
 
     @Override
@@ -104,17 +115,24 @@ public class JUnitParser extends TestResultParser {
     public TestResult parseResult(String testResultLocations, Run<?,?> build, PipelineTestDetails pipelineTestDetails,
                                   FilePath workspace, Launcher launcher, TaskListener listener)
             throws InterruptedException, IOException {
-        return workspace.act(new DirectParseResultCallable(testResultLocations, build, keepLongStdio, allowEmptyResults, pipelineTestDetails, listener));
+        return workspace.act(new DirectParseResultCallable(testResultLocations, build, keepLongStdio, allowEmptyResults,
+                pipelineTestDetails, listener, skipOldReports));
     }
 
     public TestResultSummary summarizeResult(String testResultLocations, Run<?,?> build, PipelineTestDetails pipelineTestDetails,
                                   FilePath workspace, Launcher launcher, TaskListener listener, JunitTestResultStorage storage)
             throws InterruptedException, IOException {
-        return workspace.act(new StorageParseResultCallable(testResultLocations, build, keepLongStdio, allowEmptyResults, pipelineTestDetails, listener, storage.createRemotePublisher(build)));
+        return workspace.act(new StorageParseResultCallable(testResultLocations, build, keepLongStdio, allowEmptyResults,
+                pipelineTestDetails, listener, storage.createRemotePublisher(build), skipOldReports));
     }
 
     private static abstract class ParseResultCallable<T> extends MasterToSlaveFileCallable<T> {
-        private final long buildTime;
+
+        private static final Logger LOGGER = Logger.getLogger(ParseResultCallable.class.getName());
+
+        private final long buildStartTimeInMillis;
+
+        private final long buildTimeInMillis;
         private final String testResults;
         private final long nowMaster;
         private final boolean keepLongStdio;
@@ -122,29 +140,40 @@ public class JUnitParser extends TestResultParser {
         private final PipelineTestDetails pipelineTestDetails;
         private final TaskListener listener;
 
+        private boolean skipOldReports;
+
         private ParseResultCallable(String testResults, Run<?,?> build,
                                     boolean keepLongStdio, boolean allowEmptyResults,
-                                    PipelineTestDetails pipelineTestDetails, TaskListener listener) {
-            this.buildTime = build.getTimestamp().getTimeInMillis();
+                                    PipelineTestDetails pipelineTestDetails, TaskListener listener,
+                                    boolean skipOldReports) {
+            this.buildStartTimeInMillis = build.getStartTimeInMillis();
+            this.buildTimeInMillis = build.getTimeInMillis();
             this.testResults = testResults;
             this.nowMaster = System.currentTimeMillis();
             this.keepLongStdio = keepLongStdio;
             this.allowEmptyResults = allowEmptyResults;
             this.pipelineTestDetails = pipelineTestDetails;
             this.listener = listener;
+            this.skipOldReports = skipOldReports;
         }
 
         @Override
         public T invoke(File ws, VirtualChannel channel) throws IOException {
             final long nowSlave = System.currentTimeMillis();
-
             FileSet fs = Util.createFileSet(ws, testResults);
             DirectoryScanner ds = fs.getDirectoryScanner();
-            TestResult result = null;
-
+            TestResult result;
             String[] files = ds.getIncludedFiles();
             if (files.length > 0) {
-                result = new TestResult(buildTime + (nowSlave - nowMaster), ds, keepLongStdio, pipelineTestDetails);
+                // not sure we can rely seriously on those timestamp so let's take the smaller one...
+                long filesTimestamp = Math.min(buildStartTimeInMillis,buildTimeInMillis);
+                // previous mode buildStartTimeInMillis + (nowSlave - nowMaster);
+                if(LOGGER.isLoggable(Level.FINE)) {
+                    LOGGER.fine("buildStartTimeInMillis:" + buildStartTimeInMillis
+                            + ",buildTimeInMillis:" + buildTimeInMillis + ",filesTimestamp:" + filesTimestamp + ",nowSlave:"
+                            + nowSlave + ",nowMaster:" + nowMaster);
+                }
+                result = new TestResult(filesTimestamp, ds, keepLongStdio, pipelineTestDetails, skipOldReports);
                 result.tally();
             } else {
                 if (this.allowEmptyResults) {
@@ -164,8 +193,9 @@ public class JUnitParser extends TestResultParser {
 
     private static final class DirectParseResultCallable extends ParseResultCallable<TestResult> {
 
-        DirectParseResultCallable(String testResults, Run<?,?> build, boolean keepLongStdio, boolean allowEmptyResults, PipelineTestDetails pipelineTestDetails, TaskListener listener) {
-            super(testResults, build, keepLongStdio, allowEmptyResults, pipelineTestDetails, listener);
+        DirectParseResultCallable(String testResults, Run<?,?> build, boolean keepLongStdio, boolean allowEmptyResults,
+                                  PipelineTestDetails pipelineTestDetails, TaskListener listener, boolean skipOldReports) {
+            super(testResults, build, keepLongStdio, allowEmptyResults, pipelineTestDetails, listener, skipOldReports);
         }
 
         @Override
@@ -179,8 +209,9 @@ public class JUnitParser extends TestResultParser {
 
         private final RemotePublisher publisher;
 
-        StorageParseResultCallable(String testResults, Run<?,?> build, boolean keepLongStdio, boolean allowEmptyResults, PipelineTestDetails pipelineTestDetails, TaskListener listener, RemotePublisher publisher) {
-            super(testResults, build, keepLongStdio, allowEmptyResults, pipelineTestDetails, listener);
+        StorageParseResultCallable(String testResults, Run<?,?> build, boolean keepLongStdio, boolean allowEmptyResults,
+                                   PipelineTestDetails pipelineTestDetails, TaskListener listener, RemotePublisher publisher, boolean skipOldReports) {
+            super(testResults, build, keepLongStdio, allowEmptyResults, pipelineTestDetails, listener, skipOldReports);
             this.publisher = publisher;
         }
 

@@ -51,6 +51,7 @@ public class JUnitChecksPublisherTest {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "singleStep");
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
                 "  node {\n" +
+                "    touch 'test-result.xml'\n" +
                 "    def results = junit(testResults: '*.xml')\n" +
                 "    assert results.totalCount == 6\n" +
                 "  }\n" +
@@ -133,6 +134,7 @@ public class JUnitChecksPublisherTest {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "singleStep");
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
                 "  node {\n" +
+                "    touch 'test-result.xml'\n" +
                 "    def results = junit(testResults: '*.xml', checksName: 'Custom Checks Name')\n" +
                 "    assert results.totalCount == 6\n" +
                 "  }\n" +
@@ -156,6 +158,7 @@ public class JUnitChecksPublisherTest {
     public void extractChecksDetailsNoStageContext() throws Exception {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "singleStep");
         j.setDefinition(new CpsFlowDefinition("node {\n" +
+                "  touch 'test-result.xml'\n" +
                 "  def results = junit(testResults: '*.xml')\n" +
                 "  assert results.totalCount == 6\n" +
                 "}\n", true));
@@ -220,6 +223,7 @@ public class JUnitChecksPublisherTest {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "singleStep");
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
                 "  node {\n" +
+                "    touch 'test-result.xml'\n" +
                 "    withChecks('With Checks') {\n"+
                 "      def results = junit '*.xml'\n" +
                 "      assert results.totalCount == 6\n" +
@@ -290,6 +294,7 @@ public class JUnitChecksPublisherTest {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "singleStep");
         j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
                 "  node {\n" +
+                "    touch 'test-result.xml'\n" +
                 "    withChecks('With Checks') {\n"+
                 "      def results = junit(testResults: '*.xml', checksName: 'Custom Checks Name')\n" +
                 "      assert results.totalCount == 6\n" +

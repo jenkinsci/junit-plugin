@@ -16,4 +16,7 @@ public interface JUnitTask {
     boolean isSkipPublishingChecks();
 
     String getChecksName();
+
+    boolean isSkipOldReports();
+
 }
