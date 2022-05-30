@@ -76,6 +76,7 @@ public class TestResultExtensionTest {
         HtmlPage testReportPage = wc.getPage(project, "/lastBuild/testReport/");
         j.assertGoodStatus(testReportPage);
 
+        
     }
 }
 
