@@ -43,7 +43,7 @@ public class JUnitResultsStep extends Step implements JUnitTask {
     private boolean keepLongStdio;
 
     /**
-     * If true, mangle test names in case running in multiple stages or parallel steps.
+     * If true, do not mangle test names in case running in multiple stages or parallel steps.
      */
     private boolean keepTestNames;
 
