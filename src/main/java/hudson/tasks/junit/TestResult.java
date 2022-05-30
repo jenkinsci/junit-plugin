@@ -936,6 +936,14 @@ public final class TestResult extends MetaTabulatedResult {
         }
     }
 
+    public boolean isSkipOldReports() {
+        return skipOldReports;
+    }
+
+    public void setSkipOldReports(boolean skipOldReports) {
+        this.skipOldReports = skipOldReports;
+    }
+
     /**
      * Get an aggregated {@link TestResult} for all test results in a {@link PipelineBlockWithTests} and any children it may have.
      */
