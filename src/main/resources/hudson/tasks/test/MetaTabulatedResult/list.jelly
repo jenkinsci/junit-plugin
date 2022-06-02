@@ -45,7 +45,7 @@ THE SOFTWARE.
                 <st:include it="${badge}" page="badge.jelly" optional="true"/>
               </j:forEach>
             </td>
-            <td class="pane" style="text-align:right"><j:out value="${p.description}"/></td>
+            <td class="pane" style="text-align:right"><j:out value="${app.markupFormatter.translate(p.description)}"/></td>
             <td class="pane no-wrap" style="text-align:right" data="${p.duration}">${p.durationString}</td>
             <td class="pane" style="text-align:right">${p.failCount}</td>
             <td class="pane" style="text-align:right">${p.skipCount}</td>
