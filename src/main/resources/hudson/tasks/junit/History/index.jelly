@@ -96,7 +96,7 @@ THE SOFTWARE.
                   <a href="${app.rootUrl}${item.url}">${item.fullDisplayName}</a>
                 </td>
                 <j:if test="${historySummary.descriptionAvailable}">
-                  <td class="pane" style="text-align:right"><j:out value="${item.description}"/></td>
+                  <td class="pane" style="text-align:right"><j:out value="${app.markupFormatter.translate(item.description)}"/></td>
                 </j:if>
                 <td class="pane no-wrap" style="text-align:right" data="${item.duration}">${item.durationString}</td>
                 <td class="pane" style="text-align:right">${item.failCount}</td>

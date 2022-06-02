@@ -23,6 +23,11 @@
  */
 package hudson.tasks.junit;
 
+import com.gargoylesoftware.htmlunit.AlertHandler;
+import com.gargoylesoftware.htmlunit.Page;
+import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import com.gargoylesoftware.htmlunit.html.HtmlTable;
+import com.gargoylesoftware.htmlunit.html.HtmlTableCell;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Project;
@@ -30,13 +35,16 @@ import hudson.model.Result;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.recipes.LocalData;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class HistoryTest {
@@ -112,5 +120,45 @@ public class HistoryTest {
         CaseResult eleanorCase = miscClass.getCaseResult("testEleanor");
         assertTrue("eleanor failed", !eleanorCase.isPassed());
         assertEquals("eleanor has failed since build 3", 3, eleanorCase.getFailedSince()); 
+    }
+
+    @LocalData
+    @Test @Issue("SECURITY-2760")
+    public void testXSS() throws Exception {
+        assertNotNull("project should exist", project);
+
+        FreeStyleBuild build4 = project.getBuildByNumber(4);
+        TestResult tr = build4.getAction(TestResultAction.class).getResult();
+
+        tr.setDescription("<script>alert(\"<XSS>\")</script>");
+        build4.save(); //Might be unnecessary
+
+        try (final JenkinsRule.WebClient webClient = rule.createWebClient()) {
+            Alerter alerter = new Alerter();
+            webClient.setJavaScriptEnabled(true);
+            webClient.getOptions().setThrowExceptionOnScriptError(false); //HtmlUnit finds a syntax error in bootstrap 5
+            webClient.setAlertHandler(alerter); //This catches any alert dialog popup
+
+            final HtmlPage page = webClient.getPage(build4, "testReport/history/");
+            assertNull(alerter.message); //No alert dialog popped up
+            assertNull(alerter.page);
+            final HtmlTable table = (HtmlTable) page.getElementById("testresult");
+            final Optional<HtmlTableCell> descr = table.getRows().stream().flatMap(row -> row.getCells().stream())
+                    .filter(cell -> cell.getTextContent().equals("<script>alert(\"<XSS>\")</script>")) //cell.getTextContent() seems to translate back from &gt; to < etc.
+                    .findFirst();
+            assertTrue("Should have found the description", descr.isPresent());
+        }
+    }
+
+    static class Alerter implements AlertHandler {
+
+        Page page = null;
+        String message = null;
+
+        @Override
+        public void handleAlert(final Page page, final String message) {
+            this.page = page;
+            this.message = message;
+        }
     }
 }
