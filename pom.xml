@@ -174,11 +174,11 @@
             <groupId>io.jenkins.configuration-as-code</groupId>
             <artifactId>test-harness</artifactId>
             <scope>test</scope>
-            <!-- TODO bump version in jcasc -->
+            <!-- TODO bump parent pom or cherry-pick https://github.com/jenkinsci/junit-plugin/pull/362 -->
             <exclusions>
                 <exclusion>
-                    <groupId>commons-validator</groupId>
-                    <artifactId>commons-validator</artifactId>
+                    <groupId>org.jenkins-ci.main</groupId>
+                    <artifactId>jenkins-test-harness</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
