@@ -174,11 +174,11 @@
             <groupId>io.jenkins.configuration-as-code</groupId>
             <artifactId>test-harness</artifactId>
             <scope>test</scope>
-            <!-- TODO bump version in jcasc -->
+            <!-- TODO bump parent pom or cherry-pick https://github.com/jenkinsci/junit-plugin/pull/362 -->
             <exclusions>
                 <exclusion>
-                    <groupId>commons-validator</groupId>
-                    <artifactId>commons-validator</artifactId>
+                    <groupId>org.jenkins-ci.main</groupId>
+                    <artifactId>jenkins-test-harness</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -192,7 +192,7 @@
             <dependency>
                 <groupId>io.jenkins.tools.bom</groupId>
                 <artifactId>bom-2.303.x</artifactId>
-                <version>1117.v62a_f6a_01de98</version>
+                <version>1500.ve4d05cd32975</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
