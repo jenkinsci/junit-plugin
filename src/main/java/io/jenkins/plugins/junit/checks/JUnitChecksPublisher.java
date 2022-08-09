@@ -12,6 +12,7 @@ import io.jenkins.plugins.checks.api.ChecksOutput;
 import io.jenkins.plugins.checks.api.ChecksPublisher;
 import io.jenkins.plugins.checks.api.ChecksPublisherFactory;
 import io.jenkins.plugins.checks.api.ChecksStatus;
+import io.jenkins.plugins.checks.api.TruncatedString;
 import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
 import org.kohsuke.accmod.Restricted;
@@ -23,8 +24,6 @@ import java.util.List;
 public class JUnitChecksPublisher {
     public static final String SEPARATOR = ", ";
 
-    // cap to avoid hitting check API message limit
-    private static final int MAX_MSG_SIZE_TO_CHECKS_API = 65535;
     private final Run run;
     private final String checksName;
     private final TestResult result;
@@ -60,26 +59,17 @@ public class JUnitChecksPublisher {
                 .build();
     }
 
-    private String extractChecksText(String testsURL) {
-        StringBuilder builder = new StringBuilder();
-        if (summary.getFailCount() > 0) {
-            List<CaseResult> failedTests = result.getFailedTests();
+    private TruncatedString extractChecksText(String testsURL) {
+        TruncatedString.Builder builder = new TruncatedString.Builder()
+                .withTruncationText(String.format("%nmore test results are not shown here, view them on [Jenkins](%s)", testsURL));
 
-            for (CaseResult failedTest: failedTests) {
-                String testReport = mapFailedTestToTestReport(failedTest);
-                int messageSize = testReport.length() + builder.toString().length();
-                // to ensure text size is withing check API message limit
-                if (messageSize > (MAX_MSG_SIZE_TO_CHECKS_API - 1024)){
-                    builder.append("\n")
-                            .append("more test results are not shown here, view them on [Jenkins](")
-                            .append(testsURL).append(")");
-                    break;
-                }
-                builder.append(testReport);
-            }
+        if (summary.getFailCount() > 0) {
+            result.getFailedTests().stream()
+                    .map(this::mapFailedTestToTestReport)
+                    .forEach(builder::addText);
         }
 
-        return builder.toString();
+        return builder.build();
     }
 
     private String mapFailedTestToTestReport(CaseResult failedTest) {
