@@ -28,9 +28,7 @@ import io.jenkins.plugins.junit.storage.FileJunitTestResultStorage;
 import io.jenkins.plugins.junit.storage.TestResultImpl;
 import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
 import hudson.util.TextFile;
-import org.apache.commons.collections.iterators.ReverseListIterator;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang.StringUtils;
 import org.jvnet.localizer.Localizable;
 
 import hudson.model.Run;
@@ -318,7 +316,9 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
             if (r != null) {
                 TestResultAction action = r.getAction(TestResultAction.class);
                 if (action != null && action.getResult().hasMultipleBlocks()) {
-                    return StringUtils.join(new ReverseListIterator(getEnclosingFlowNodeNames()), " / ") + " / " + rawName;
+                    List<String> enclosingFlowNodeNames = getEnclosingFlowNodeNames();
+                    Collections.reverse(enclosingFlowNodeNames);
+                    return String.join(" / ", enclosingFlowNodeNames) + " / " + rawName;
                 }
             }
         }
@@ -333,7 +333,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      */
     @Exported(visibility=999)
     public @Override String getName() {
-        if (StringUtils.isEmpty(testName)) {
+        if (testName == null || testName.isEmpty()) {
             return "(?)";
         }
         return testName;

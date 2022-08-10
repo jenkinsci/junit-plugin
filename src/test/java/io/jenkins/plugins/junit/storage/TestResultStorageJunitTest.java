@@ -68,7 +68,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import hudson.tasks.junit.HistoryTestResultSummary;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.plugins.database.Database;
 import org.jenkinsci.plugins.database.GlobalDatabaseConfiguration;
 import org.jenkinsci.plugins.database.h2.LocalH2Database;
@@ -799,17 +798,17 @@ public class TestResultStorageJunitTest {
                                     statement.setNull(8, Types.VARCHAR);
                                 }
                                 statement.setFloat(9, caseResult.getDuration());
-                                if (StringUtils.isNotEmpty(caseResult.getStdout())) {
+                                if (caseResult.getStdout() != null && !caseResult.getStdout().isEmpty()) {
                                     statement.setString(10, caseResult.getStdout());
                                 } else {
                                     statement.setNull(10, Types.VARCHAR);
                                 }
-                                if (StringUtils.isNotEmpty(caseResult.getStderr())) {
+                                if (caseResult.getStderr() != null && !caseResult.getStderr().isEmpty()) {
                                     statement.setString(11, caseResult.getStderr());
                                 } else {
                                     statement.setNull(11, Types.VARCHAR);
                                 }
-                                if (StringUtils.isNotEmpty(caseResult.getErrorStackTrace())) {
+                                if (caseResult.getErrorStackTrace() != null && !caseResult.getErrorStackTrace().isEmpty()) {
                                     statement.setString(12, caseResult.getErrorStackTrace());
                                 } else {
                                     statement.setNull(12, Types.VARCHAR);

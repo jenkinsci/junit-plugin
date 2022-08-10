@@ -50,8 +50,6 @@ import io.jenkins.plugins.junit.checks.JUnitChecksPublisher;
 import io.jenkins.plugins.junit.storage.FileJunitTestResultStorage;
 import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
 import jenkins.tasks.SimpleBuildStep;
-import org.apache.commons.collections.iterators.ReverseListIterator;
-import org.apache.commons.lang.StringUtils;
 import org.apache.tools.ant.DirectoryScanner;
 import org.apache.tools.ant.types.FileSet;
 import org.kohsuke.stapler.AncestorInPath;
@@ -302,7 +300,8 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                 if (checksName == null && pipelineTestDetails != null) {
                     List<String> checksComponents = new ArrayList<>(pipelineTestDetails.getEnclosingBlockNames());
                     checksComponents.add(DEFAULT_CHECKS_NAME);
-                    checksName = StringUtils.join(new ReverseListIterator(checksComponents), " / ");
+                    Collections.reverse(checksComponents);
+                    checksName = String.join(" / ", checksComponents);
                 }
                 if (Util.fixEmpty(checksName) == null) {
                     checksName = DEFAULT_CHECKS_NAME;
