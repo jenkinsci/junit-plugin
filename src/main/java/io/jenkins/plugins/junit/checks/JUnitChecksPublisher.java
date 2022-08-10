@@ -12,7 +12,6 @@ import io.jenkins.plugins.checks.api.ChecksOutput;
 import io.jenkins.plugins.checks.api.ChecksPublisher;
 import io.jenkins.plugins.checks.api.ChecksPublisherFactory;
 import io.jenkins.plugins.checks.api.ChecksStatus;
-import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
@@ -87,23 +86,23 @@ public class JUnitChecksPublisher {
         builder.append("## `").append(failedTest.getTransformedFullDisplayName().trim()).append("`")
                 .append("\n");
 
-        if (StringUtils.isNotBlank(failedTest.getErrorDetails())) {
+        if (failedTest.getErrorDetails() != null && !failedTest.getErrorDetails().trim().isEmpty()) {
             builder.append(codeTextFencedBlock(failedTest.getErrorDetails()))
                     .append("\n");
         }
-        if (StringUtils.isNotBlank(failedTest.getErrorStackTrace())) {
+        if (failedTest.getErrorStackTrace() != null && !failedTest.getErrorStackTrace().trim().isEmpty()) {
             builder.append("<details><summary>Stack trace</summary>\n")
                     .append(codeTextFencedBlock(failedTest.getErrorStackTrace()))
                     .append("</details>\n");
         }
 
-        if (StringUtils.isNotBlank(failedTest.getStderr())) {
+        if (failedTest.getStderr() != null && !failedTest.getStderr().trim().isEmpty()) {
             builder.append("<details><summary>Standard error</summary>\n")
                     .append(codeTextFencedBlock(failedTest.getStderr()))
                     .append("</details>\n");
         }
 
-        if (StringUtils.isNotBlank(failedTest.getStdout())) {
+        if (failedTest.getStdout() != null && !failedTest.getStdout().trim().isEmpty()) {
             builder.append("<details><summary>Standard out</summary>\n")
                     .append(codeTextFencedBlock(failedTest.getStdout()))
                     .append("</details>\n");
