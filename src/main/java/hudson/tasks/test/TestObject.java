@@ -38,7 +38,6 @@ import java.util.logging.Logger;
 
 import javax.servlet.ServletException;
 
-import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.HttpRedirect;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.QueryParameter;
@@ -418,7 +417,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
      * @return the string with the unsafe characters replaced.
      */
     public static String safe(String s) {
-        if (StringUtils.isEmpty(s)) {
+        if (s == null || s.isEmpty()) {
             return "(empty)";
         } else {
             // this still seems to be a bit faster than a single replace with regexp
