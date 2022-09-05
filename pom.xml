@@ -69,7 +69,7 @@
         <dependency>
             <groupId>io.jenkins.plugins</groupId>
             <artifactId>github-checks</artifactId>
-            <version>1.0.18</version>
+            <version>1.0.19</version>
             <scope>test</scope>
         </dependency>
         <dependency>
