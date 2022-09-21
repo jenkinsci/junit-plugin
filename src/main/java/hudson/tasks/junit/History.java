@@ -26,6 +26,10 @@ package hudson.tasks.junit;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import com.pivovarit.collectors.*;
 
 import edu.hm.hafner.echarts.ChartModelConfiguration;
 import edu.hm.hafner.echarts.JacksonFacade;
@@ -156,28 +160,33 @@ public class History {
         }
         return new HistoryTableResult(getHistoryFromFileStorage());
     }
-
+    ExecutorService executor = Executors.newFixedThreadPool(Math.max(4, (int)(Runtime.getRuntime().availableProcessors() * 0.75 * 0.75)));
     private List<HistoryTestResultSummary> getHistoryFromFileStorage() {
         TestObject testObject = getTestObject();
         RunList<?> builds = testObject.getRun().getParent().getBuilds();
-        return builds
-                .stream()
-                .parallel()
-                .map(build -> {
-                    hudson.tasks.test.TestResult resultInRun = testObject.getResultInRun(build);
-                    if (resultInRun == null) {
-                        return null;
-                    }
+        int parallelism = Math.min(Runtime.getRuntime().availableProcessors(), Math.max(4, (int)(Runtime.getRuntime().availableProcessors() * 0.75 * 0.75)));
+        final AtomicInteger count = new AtomicInteger(0);
+        final long startedMs = java.lang.System.currentTimeMillis();
+        return builds.stream()
+            .collect(ParallelCollectors.parallel(build -> {
+                if (count.incrementAndGet() > 1000 || (java.lang.System.currentTimeMillis() - startedMs) > 15000) { // Do not navigate too far or for too long, we need to finish the request this year
+                    return null;
+                }
+                hudson.tasks.test.TestResult resultInRun = testObject.getResultInRun(build);
+                if (resultInRun == null) {
+                    return null;
+                }
 
-                    return new HistoryTestResultSummary(build, resultInRun.getDuration(),
-                            resultInRun.getFailCount(),
-                            resultInRun.getSkipCount(),
-                            resultInRun.getPassCount(),
-                            resultInRun.getDescription()
-                    );
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
+                return new HistoryTestResultSummary(build, resultInRun.getDuration(),
+                        resultInRun.getFailCount(),
+                        resultInRun.getSkipCount(),
+                        resultInRun.getPassCount(),
+                        resultInRun.getDescription()
+                );
+            }, executor, parallelism))
+            .join()
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
     }
 
     @SuppressWarnings("unused") // Called by jelly view
