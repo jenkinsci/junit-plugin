@@ -64,14 +64,15 @@ public class History {
 
     @SuppressWarnings("unused") // Called by jelly view
     public boolean historyAvailable() {
-        if (testObject instanceof hudson.tasks.junit.TestResult) {
+        return true;
+        /*if (testObject instanceof hudson.tasks.junit.TestResult) {
             TestResultImpl pluggableStorage = ((hudson.tasks.junit.TestResult) testObject).getPluggableStorage();
             if (pluggableStorage != null) {
                 return pluggableStorage.getCountOfBuildsWithTestResults() > 1;
             }
         }
 
-        return testObject.getRun().getParent().getBuilds().size() > 1;
+        return testObject.getRun().getParent().getBuilds().size() > 1;*/
     }
 
     @JavaScriptMethod
@@ -161,6 +162,7 @@ public class History {
         RunList<?> builds = testObject.getRun().getParent().getBuilds();
         return builds
                 .stream()
+                .parallel()
                 .map(build -> {
                     hudson.tasks.test.TestResult resultInRun = testObject.getResultInRun(build);
                     if (resultInRun == null) {

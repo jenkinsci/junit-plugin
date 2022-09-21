@@ -104,16 +104,16 @@ public class TestResultProjectAction implements Action, AsyncTrendChart, AsyncCo
     }
 
     public AbstractTestResultAction getLastTestResultAction() {
-        final Run<?,?> tb = job.getLastSuccessfulBuild();
+        //final Run<?,?> tb = job.getLastSuccessfulBuild();
 
         Run<?,?> b = job.getLastBuild();
         while(b!=null) {
             AbstractTestResultAction a = b.getAction(AbstractTestResultAction.class);
             if(a!=null && (!b.isBuilding())) return a;
-            if(b==tb)
+            //if(b==tb)
                 // if even the last successful build didn't produce the test result,
                 // that means we just don't have any tests configured.
-                return null;
+                //return null;
             b = b.getPreviousBuild();
         }
 

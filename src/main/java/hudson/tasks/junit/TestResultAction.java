@@ -65,6 +65,7 @@ import jenkins.tasks.SimpleBuildStep;
  */
 @SuppressFBWarnings(value = "UG_SYNC_SET_UNSYNC_GET", justification = "False positive")
 public class TestResultAction extends AbstractTestResultAction<TestResultAction> implements StaplerProxy, SimpleBuildStep.LastBuildAction {
+    private static final Logger LOGGER = Logger.getLogger(TestResultAction.class.getName());
     private transient WeakReference<TestResult> result;
 
     /** null only if there is a {@link JunitTestResultStorage} */
@@ -141,6 +142,8 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
 
     @Override
     public synchronized TestResult getResult() {
+        long started = System.currentTimeMillis();
+        //LOGGER.info("TestResultAction.load started");
         JunitTestResultStorage storage = JunitTestResultStorage.find();
         if (!(storage instanceof FileJunitTestResultStorage)) {
             return new TestResult(storage.load(run.getParent().getFullName(), run.getNumber()));
@@ -161,6 +164,10 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
             totalCount = r.getTotalCount();
             failCount = r.getFailCount();
             skipCount = r.getSkipCount();
+        }
+        long d = System.currentTimeMillis() - started;
+        if (d > 100) {
+            LOGGER.info("TestResultAction.load took " + d + " ms.");
         }
         return r;
     }
