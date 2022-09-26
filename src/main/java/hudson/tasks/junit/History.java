@@ -147,9 +147,9 @@ public class History {
         }
     }
 
-    public HistoryTableResult retrieveHistorySummary(int userOffset) {
-        int offset = userOffset;
-        if (userOffset > 1000 || userOffset < 0) {
+    public HistoryTableResult retrieveHistorySummary(int start, int end) {
+        int offset = start;
+        if (start > 1000 || start < 0) {
             offset = 0;
         }
 
@@ -158,18 +158,19 @@ public class History {
         if (pluggableStorage != null) {
             return new HistoryTableResult(pluggableStorage.getHistorySummary(offset));
         }
-        return new HistoryTableResult(getHistoryFromFileStorage());
+        return new HistoryTableResult(getHistoryFromFileStorage(start, end));
     }
     ExecutorService executor = Executors.newFixedThreadPool(Math.max(4, (int)(Runtime.getRuntime().availableProcessors() * 0.75 * 0.75)));
-    private List<HistoryTestResultSummary> getHistoryFromFileStorage() {
+    private List<HistoryTestResultSummary> getHistoryFromFileStorage(int start, int end) {
         TestObject testObject = getTestObject();
         RunList<?> builds = testObject.getRun().getParent().getBuilds();
         int parallelism = Math.min(Runtime.getRuntime().availableProcessors(), Math.max(4, (int)(Runtime.getRuntime().availableProcessors() * 0.75 * 0.75)));
         final AtomicInteger count = new AtomicInteger(0);
         final long startedMs = java.lang.System.currentTimeMillis();
-        return builds.stream()
+        return builds.stream().skip(start)
             .collect(ParallelCollectors.parallel(build -> {
-                if (count.incrementAndGet() > 1000 || (java.lang.System.currentTimeMillis() - startedMs) > 15000) { // Do not navigate too far or for too long, we need to finish the request this year
+                int c = count.incrementAndGet();
+                if (c > end - start || (java.lang.System.currentTimeMillis() - startedMs) > 15000) { // Do not navigate too far or for too long, we need to finish the request this year and have to think about RAM
                     return null;
                 }
                 hudson.tasks.test.TestResult resultInRun = testObject.getResultInRun(build);

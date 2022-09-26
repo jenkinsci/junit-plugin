@@ -27,7 +27,7 @@ THE SOFTWARE.
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:bs="/bootstrap5" xmlns:c="/charts">
   <bs:layout title="${%title(it.testObject.displayName)}">
     <j:set var="start" value="${it.asInt(request.getParameter('start'),0)}"/>
-    <j:set var="end" value="${it.asInt(request.getParameter('end'),start+24)}"/>
+    <j:set var="end" value="${it.asInt(request.getParameter('end'),start+49)}"/>
     <st:adjunct includes="io.jenkins.plugins.echarts"/>
     <st:adjunct includes="io.jenkins.plugins.bootstrap5"/>
     <st:adjunct includes="io.jenkins.plugins.echarts-trend-default-setup"/>
@@ -72,9 +72,22 @@ THE SOFTWARE.
         </j:otherwise>
       </j:choose>
 
-      <j:set var="historySummary" value="${it.retrieveHistorySummary(start)}"/>
+      <j:set var="historySummary" value="${it.retrieveHistorySummary(start, end)}"/>
 
       <br/>
+      <div>
+        <j:if test="${it.testObject.run.parent.builds.size() > end}">
+          <a href="${app.rootUrl}${it.testObject.url}/history?start=${end+1}"
+             style="margin:1px">${%Older}
+          </a>
+        </j:if>
+
+        <j:if test="${start > 0}">
+          <a href="${app.rootUrl}${it.testObject.url}/history${(start-50)>0?'?start='+(start-50):''}"
+             style="margin:1px">${%Newer}
+          </a>
+        </j:if>
+      </div>
       <table class="jenkins-table sortable" id="testresult">
         <thead>
           <tr>
@@ -89,7 +102,7 @@ THE SOFTWARE.
           </tr>
         </thead>
         <tbody>
-          <j:forEach var="item" items="${historySummary.historySummaries}" begin="${start}" end="${end}">
+          <j:forEach var="item" items="${historySummary.historySummaries}" begin="0" end="50">
             <j:if test="${item != null}">
               <tr>
                 <td class="pane">
@@ -116,7 +129,7 @@ THE SOFTWARE.
         </j:if>
 
         <j:if test="${start > 0}">
-          <a href="${app.rootUrl}${it.testObject.url}/history${(start-25)>0?'?start='+(start-25):''}"
+          <a href="${app.rootUrl}${it.testObject.url}/history${(start-50)>0?'?start='+(start-50):''}"
              style="margin:1px">${%Newer}
           </a>
         </j:if>
