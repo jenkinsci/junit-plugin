@@ -54,6 +54,9 @@ import java.util.logging.Logger;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
+import javax.xml.stream.*;
+import javax.xml.stream.events.*;
+
 /**
  * One test result.
  *
@@ -63,22 +66,22 @@ import static java.util.Collections.singletonList;
  */
 public class CaseResult extends TestResult implements Comparable<CaseResult> {
     private static final Logger LOGGER = Logger.getLogger(CaseResult.class.getName());
-    private final float duration;
+    private float duration;
     /**
      * In JUnit, a test is a method of a class. This field holds the fully qualified class name
      * that the test was in.
      */
-    private final String className;
+    private String className;
     /**
      * This field retains the method name.
      */
-    private final String testName;
+    private String testName;
     private transient String safeName;
-    private final boolean skipped;
-    private final boolean keepTestNames;
-    private final String skippedMessage;
-    private final String errorStackTrace;
-    private final String errorDetails;
+    private boolean skipped;
+    private boolean keepTestNames;
+    private String skippedMessage;
+    private String errorStackTrace;
+    private String errorDetails;
     @SuppressFBWarnings(value = "SE_TRANSIENT_FIELD_NOT_RESTORED", justification = "Specific method to restore it")
     private transient SuiteResult parent;
 
@@ -92,14 +95,14 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      * If these information are reported at the test case level, these fields are set,
      * otherwise null, in which case {@link SuiteResult#stdout}.
      */
-    private final String stdout,stderr;
+    private String stdout,stderr;
 
     /**
      * This test has been failing since this build number (not id.)
      *
      * If {@link #isPassed() passing}, this field is left unused to 0.
      */
-    private /*final*/ int failedSince;
+    private int failedSince;
 
     private static float parseTime(Element testCase) {
         String time = testCase.attributeValue("time");
@@ -195,6 +198,56 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         stdout = possiblyTrimStdio(_this, keepLongStdio, testCase.elementText("system-out"));
         stderr = possiblyTrimStdio(_this, keepLongStdio, testCase.elementText("system-err"));
         this.keepTestNames = keepTestNames;
+    }
+
+    public static CaseResult parse(SuiteResult parent, final XMLEventReader reader, String ver) throws XMLStreamException {
+        CaseResult r = new CaseResult(parent, null, null, null);
+        while (reader.hasNext()) {
+            final XMLEvent event = reader.nextEvent();
+            if (event.isEndElement() && event.asEndElement().getName().getLocalPart().equals("case")) {
+                return r;
+            }
+            if (event.isStartElement()) {
+                final StartElement element = event.asStartElement();
+                final String elementName = element.getName().getLocalPart();
+                switch (elementName) {
+                    case "duration":
+                        r.duration = new TimeToFloat(reader.getElementText()).parse();
+                        break;
+                    case "className":
+                        r.className = reader.getElementText();
+                        break;
+                    case "testName":
+                        r.testName = reader.getElementText();
+                        break;
+                    case "skippedMessage":
+                        r.skippedMessage = reader.getElementText();
+                        break;
+                    case "skipped":
+                        r.skipped = Boolean.parseBoolean(reader.getElementText());
+                        break;
+                    case "keepTestNames":
+                        r.keepTestNames = Boolean.parseBoolean(reader.getElementText());
+                        break;
+                    case "errorStackTrace":
+                        r.errorStackTrace = reader.getElementText();
+                        break;
+                    case "errorDetails":
+                        r.errorDetails = reader.getElementText();
+                        break;
+                    case "failedSince":
+                        r.failedSince = Integer.parseInt(reader.getElementText());
+                        break;
+                    case "stdout":
+                        r.stdout = reader.getElementText();
+                        break;
+                    case "stderr":
+                        r.stderr = reader.getElementText();
+                        break;
+                }
+            }
+        }
+        return r;
     }
 
     static String possiblyTrimStdio(Collection<CaseResult> results, boolean keepLongStdio, String stdio) { // HUDSON-6516

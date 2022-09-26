@@ -236,10 +236,12 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
      */
     private TestResult load() {
         TestResult r;
+        XmlFile df = getDataFile();
         try {
-            r = (TestResult)getDataFile().read();
-        } catch (IOException e) {
-            logger.log(Level.WARNING, "Failed to load "+getDataFile(),e);
+            r = new TestResult();
+            r.parse(df);
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Failed to load " + df, e);
             r = new TestResult();   // return a dummy
         }
         r.freeze(this);

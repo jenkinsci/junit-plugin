@@ -40,6 +40,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.Reader;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -51,6 +52,9 @@ import java.util.Set;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.xml.stream.*;
+import javax.xml.stream.events.*;
 
 /**
  * Result of one test suite.
@@ -68,10 +72,10 @@ import java.util.regex.Pattern;
 @ExportedBean
 public final class SuiteResult implements Serializable {
     private static final Logger LOGGER = Logger.getLogger(SuiteResult.class.getName());
-    private final String file;
-    private final String name;
-    private final String stdout;
-    private final String stderr;
+    private String file;
+    private String name;
+    private String stdout;
+    private String stderr;
     private float duration;
     /**
      * The 'timestamp' attribute of  the test suite.
@@ -93,14 +97,14 @@ public final class SuiteResult implements Serializable {
      */
     private String nodeId;
 
-    private final List<String> enclosingBlocks = new ArrayList<>();
+    private List<String> enclosingBlocks = new ArrayList<>();
 
-    private final List<String> enclosingBlockNames = new ArrayList<>();
+    private List<String> enclosingBlockNames = new ArrayList<>();
 
     /**
      * All test cases.
      */
-    private final List<CaseResult> cases = new ArrayList<>();
+    private List<CaseResult> cases = new ArrayList<>();
     private transient Map<String, CaseResult> casesByName;
     private transient hudson.tasks.junit.TestResult parent;
 
@@ -125,6 +129,114 @@ public final class SuiteResult implements Serializable {
             this.nodeId = null;
         }
         this.file = null;
+    }
+
+    public static SuiteResult parse(final XMLEventReader reader, String ver) throws XMLStreamException {
+        SuiteResult r = new SuiteResult("", "", "", null);
+        while (reader.hasNext()) {
+            final XMLEvent event = reader.nextEvent();
+            if (event.isEndElement() && event.asEndElement().getName().getLocalPart().equals("suite")) {
+                return r;
+            }
+            if (event.isStartElement()) {
+                final StartElement element = event.asStartElement();
+                final String elementName = element.getName().getLocalPart();
+                switch (elementName) {
+                    case "cases":
+                        parseCases(r, reader, ver);
+                        break;
+                    case "file":
+                        r.file = reader.getElementText();
+                        break;
+                    case "name":
+                        r.name = reader.getElementText();
+                        break;
+                    case "id":
+                        r.id = reader.getElementText();
+                        break;
+                    case "duration":
+                        r.duration = new TimeToFloat(reader.getElementText()).parse();
+                        break;
+                    case "timestamp":
+                        r.timestamp = reader.getElementText();
+                        break;
+                    case "time":
+                        r.time = reader.getElementText();
+                        break;
+                    case "nodeId":
+                        r.nodeId = reader.getElementText();
+                        break;
+                    case "enclosingBlocks":
+                        parseEnclosingBlocks(r, reader, ver);
+                        break;
+                    case "enclosingBlockNames":
+                        parseEnclosingBlockNames(r, reader, ver);
+                        break;
+                    case "stdout":
+                        r.stdout = reader.getElementText();
+                        break;
+                    case "stderr":
+                        r.stderr = reader.getElementText();
+                        break;
+                }
+            }
+        }
+        return r;
+    }
+
+    public static void parseEnclosingBlocks(SuiteResult r, final XMLEventReader reader, String ver) throws XMLStreamException {
+        while (reader.hasNext()) {
+            final XMLEvent event = reader.nextEvent();
+            if (event.isEndElement() && event.asEndElement().getName().getLocalPart().equals("enclosingBlocks")) {
+                return;
+            }
+            if (event.isStartElement()) {
+                final StartElement element = event.asStartElement();
+                final String elementName = element.getName().getLocalPart();
+                switch (elementName) {
+                    case "string":
+                        r.enclosingBlocks.add(reader.getElementText());
+                        break;
+                }
+            }
+        }
+    }
+
+    public static void parseEnclosingBlockNames(SuiteResult r, final XMLEventReader reader, String ver) throws XMLStreamException {
+        while (reader.hasNext()) {
+            final XMLEvent event = reader.nextEvent();
+            if (event.isEndElement() && event.asEndElement().getName().getLocalPart().equals("enclosingBlockNames")) {
+                return;
+            }
+            if (event.isStartElement()) {
+                final StartElement element = event.asStartElement();
+                final String elementName = element.getName().getLocalPart();
+                switch (elementName) {
+                    case "string":
+                        r.enclosingBlockNames.add(reader.getElementText());
+                        break;
+                }
+            }
+        }
+    }
+    
+    public static void parseCases(SuiteResult r, final XMLEventReader reader, String ver) throws XMLStreamException {
+        while (reader.hasNext()) {
+            final XMLEvent event = reader.nextEvent();
+            if (event.isEndElement() && event.asEndElement().getName().getLocalPart().equals("cases")) {
+                return;
+            }
+            if (event.isStartElement()) {
+                final StartElement element = event.asStartElement();
+                final String elementName = element.getName().getLocalPart();
+                switch (elementName) {
+                    case "case":
+                        r.cases.add(CaseResult.parse(r, reader, ver));
+                        break;
+                }
+            }
+        }
+
     }
 
     private synchronized Map<String, CaseResult> casesByName() {

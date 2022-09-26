@@ -24,6 +24,7 @@
 package hudson.tasks.junit;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import hudson.XmlFile;
 import hudson.model.Run;
 import io.jenkins.plugins.junit.storage.TestResultImpl;
 import hudson.tasks.test.AbstractTestResultAction;
@@ -36,6 +37,7 @@ import hudson.tasks.test.TestObject;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.Reader;
 import java.io.StringWriter;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -53,11 +55,18 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import javax.xml.namespace.QName;
+import javax.xml.stream.*;
+import javax.xml.stream.events.*;
+
 import org.apache.tools.ant.DirectoryScanner;
 import org.dom4j.DocumentException;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
+
+import com.thoughtworks.xstream.XStream;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
@@ -120,8 +129,8 @@ public final class TestResult extends MetaTabulatedResult {
      */
     private transient List<CaseResult> failedTests;
 
-    private final boolean keepLongStdio;
-    private final boolean keepTestNames;
+    private boolean keepLongStdio;
+    private boolean keepTestNames;
 
     // default 3s as it depends on OS some can be good some not really....
     public static final long FILE_TIME_PRECISION_MARGIN = Long.getLong(TestResult.class.getName() + "filetime.precision.margin", 3000);
@@ -201,6 +210,69 @@ public final class TestResult extends MetaTabulatedResult {
     @Override
     public TestResult getTestResult() {
     	return this;
+    }
+    private static final XMLInputFactory factory = XMLInputFactory.newInstance();
+    public void parse(XmlFile f) throws XMLStreamException, IOException {
+        try (Reader r = f.readRaw()){
+            final XMLEventReader reader = factory.createXMLEventReader(r);
+            while (reader.hasNext()) {
+                final XMLEvent event = reader.nextEvent();
+                if (event.isStartElement() && event.asStartElement().getName()
+                        .getLocalPart().equals("result")) {
+                    parseXmlResult(reader, event.asStartElement());
+                }
+            }
+            r.close();
+        } /*catch (Exception e) {
+            e.printStackTrace();
+        }*/
+    }
+
+    private void parseXmlResult(final XMLEventReader reader, StartElement startEvent) throws XMLStreamException {
+        Attribute attr = startEvent.getAttributeByName(QName.valueOf("plugin"));
+        String ver = attr == null ? null : attr.getValue();
+        while (reader.hasNext()) {
+            XMLEvent event = reader.nextEvent();
+            if (event.isEndElement() && event.asEndElement().getName().getLocalPart().equals("result")) {
+                return;
+            }
+            if (event.isStartElement()) {
+                final StartElement element = event.asStartElement();
+                final String elementName = element.getName().getLocalPart();
+                switch (elementName) {
+                    case "suites":
+                        parseXmlSuites(reader, ver);
+                        break;
+                    case "duration":
+                        duration = new TimeToFloat(reader.getElementText()).parse();
+                        break;
+                    case "keepLongStdio":
+                        keepLongStdio = Boolean.parseBoolean(reader.getElementText());
+                        break;
+                    case "keepTestNames":
+                        keepTestNames = Boolean.parseBoolean(reader.getElementText());
+                        break;
+                }
+            }
+        }
+    }
+
+    private void parseXmlSuites(final XMLEventReader reader, String ver) throws XMLStreamException {
+        while (reader.hasNext()) {
+            final XMLEvent event = reader.nextEvent();
+            if (event.isEndElement() && event.asEndElement().getName().getLocalPart().equals("suites")) {
+                return;
+            }
+            if (event.isStartElement()) {
+                final StartElement element = event.asStartElement();
+                final String elementName = element.getName().getLocalPart();
+                switch (elementName) {
+                    case "suite":
+                        suites.add(SuiteResult.parse(reader, ver));
+                        break;
+                }
+            }
+        }
     }
 
     @Deprecated
