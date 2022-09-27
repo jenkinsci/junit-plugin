@@ -25,25 +25,26 @@ package hudson.tasks.junit;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import com.pivovarit.collectors.*;
-
-import edu.hm.hafner.echarts.ChartModelConfiguration;
-import edu.hm.hafner.echarts.JacksonFacade;
-import edu.hm.hafner.echarts.LinesChartModel;
+import java.util.stream.Collectors;
 
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
+
+import com.pivovarit.collectors.ParallelCollectors;
+
+import edu.hm.hafner.echarts.ChartModelConfiguration;
+import edu.hm.hafner.echarts.JacksonFacade;
+import edu.hm.hafner.echarts.LinesChartModel;
+import hudson.model.Run;
 import hudson.tasks.test.TestObject;
 import hudson.tasks.test.TestObjectIterable;
 import hudson.tasks.test.TestResultDurationChart;
 import hudson.tasks.test.TestResultTrendChart;
 import hudson.util.RunList;
-
 import io.jenkins.plugins.junit.storage.TestResultImpl;
 
 /**
@@ -81,37 +82,48 @@ public class History {
 
     @JavaScriptMethod
     @SuppressWarnings("unused") // Called by jelly view
-    public String getTestResultTrend(String configuration) {
-        return JACKSON_FACADE.toJson(createTestResultTrend(ChartModelConfiguration.fromJson(configuration)));
+    public String getTestResultTrend(int start, int end, String configuration) {
+        return JACKSON_FACADE.toJson(createTestResultTrend(start, end, ChartModelConfiguration.fromJson(configuration)));
     }
 
-    private LinesChartModel createTestResultTrend(ChartModelConfiguration chartModelConfiguration) {
+    private LinesChartModel createTestResultTrend(int start, int end, ChartModelConfiguration chartModelConfiguration) {
         TestResultImpl pluggableStorage = getPluggableStorage();
         if (pluggableStorage != null) {
             return new TestResultTrendChart().create(pluggableStorage.getTrendTestResultSummary());
         }
-
-        return new TestResultTrendChart().createFromTestObject(createBuildHistory(testObject), chartModelConfiguration);
+        return new TestResultTrendChart().createFromTestObject(createBuildHistory(testObject, start, end), chartModelConfiguration);
     }
 
     @JavaScriptMethod
     @SuppressWarnings("unused") // Called by jelly view
-    public String getTestDurationTrend(String configuration) {
-        return JACKSON_FACADE.toJson(createTestDurationResultTrend(ChartModelConfiguration.fromJson(configuration)));
+    public String getTestDurationTrend(int start, int end, String configuration) {
+        return JACKSON_FACADE.toJson(createTestDurationResultTrend(start, end, ChartModelConfiguration.fromJson(configuration)));
     }
 
-    private LinesChartModel createTestDurationResultTrend(ChartModelConfiguration chartModelConfiguration) {
+    private LinesChartModel createTestDurationResultTrend(int start, int end, ChartModelConfiguration chartModelConfiguration) {
         TestResultImpl pluggableStorage = getPluggableStorage();
 
         if (pluggableStorage != null) {
             return new TestResultDurationChart().create(pluggableStorage.getTestDurationResultSummary());
         }
 
-        return new TestResultDurationChart().create(createBuildHistory(testObject), chartModelConfiguration);
+        return new TestResultDurationChart().create(createBuildHistory(testObject, start, end), chartModelConfiguration);
     }
 
-    private TestObjectIterable createBuildHistory(final TestObject testObject) {
-        return new TestObjectIterable(testObject);
+    private TestObjectIterable createBuildHistory(final TestObject testObject, int start, int end) {
+        HistoryTableResult r = retrieveHistorySummary(start, start);
+        if (r.getHistorySummaries().size() != 0) { // Fast
+            Run<?,?> build = r.getHistorySummaries().get(0).getRun();
+            return new TestObjectIterable(testObject.getResultInRun(build));
+        }
+        return null;
+        /*TestObject pos = testObject;
+        TestObject prev = testObject;
+        while (start-- > 0 && pos != null) {
+            prev = pos;
+            pos = pos.getPreviousResult();
+        }
+        return new TestObjectIterable(prev);*/
     }
 
     private TestResultImpl getPluggableStorage() {
@@ -148,14 +160,12 @@ public class History {
     }
 
     public HistoryTableResult retrieveHistorySummary(int start, int end) {
-        int offset = start;
-        if (start > 1000 || start < 0) {
-            offset = 0;
-        }
-
         TestResultImpl pluggableStorage = getPluggableStorage();
-
         if (pluggableStorage != null) {
+            int offset = start;
+            if (start > 1000 || start < 0) {
+                offset = 0;
+            }    
             return new HistoryTableResult(pluggableStorage.getHistorySummary(offset));
         }
         return new HistoryTableResult(getHistoryFromFileStorage(start, end));
@@ -170,7 +180,7 @@ public class History {
         return builds.stream().skip(start)
             .collect(ParallelCollectors.parallel(build -> {
                 int c = count.incrementAndGet();
-                if (c > end - start || (java.lang.System.currentTimeMillis() - startedMs) > 15000) { // Do not navigate too far or for too long, we need to finish the request this year and have to think about RAM
+                if (c > end - start + 1 || (java.lang.System.currentTimeMillis() - startedMs) > 15000) { // Do not navigate too far or for too long, we need to finish the request this year and have to think about RAM
                     return null;
                 }
                 hudson.tasks.test.TestResult resultInRun = testObject.getResultInRun(build);

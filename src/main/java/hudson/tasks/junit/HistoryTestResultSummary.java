@@ -29,6 +29,10 @@ public class HistoryTestResultSummary {
         return description;
     }
 
+    public Run<?, ?> getRun() {
+        return run;
+    }
+
     public String getDurationString() {
         return Util.getTimeSpanString((long) (duration * 1000));
     }

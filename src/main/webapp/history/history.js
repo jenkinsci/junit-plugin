@@ -3,7 +3,7 @@
     $(document).ready(function ($) {
         const trendConfigurationDialogId = 'chart-configuration-test-history';
 
-        $('#' + trendConfigurationDialogId).on('hidden.bs.modal', function () {
+        document.getElementById(trendConfigurationDialogId).on('hidden.bs.modal', function () {
             redrawTrendCharts();
         });
 
@@ -25,13 +25,18 @@
          * redraws the trend charts.
          */
         function redrawTrendCharts() {
-            const configuration = JSON.stringify(echartsJenkinsApi.readFromLocalStorage('jenkins-echarts-chart-configuration-test-history'));
-
+            //const configuration = JSON.stringify(echartsJenkinsApi.readFromLocalStorage('jenkins-echarts-chart-configuration-test-history'));
+            let configuration = JSON.stringify({
+                numberOfBuilds: end - start + 1,
+                "numberOfDays":"0",
+                "buildAsDomain":"true"
+            });
+            console.log('configuration=' + configuration + ";" + JSON.stringify(start) + ";" + JSON.stringify(end))
             /**
              * Creates a build trend chart that shows the test duration across a number of builds.
              * Requires that a DOM <div> element exists with the ID '#test-duration-trend-chart'.
              */
-            view.getTestDurationTrend(configuration, function (lineModel) {
+            view.getTestDurationTrend(start, end, configuration, function (lineModel) {
                 echartsJenkinsApi.renderConfigurableZoomableTrendChart('test-duration-trend-chart', lineModel.responseJSON, trendConfigurationDialogId);
             });
 
@@ -39,7 +44,7 @@
              * Creates a build trend chart that shows the test results across a number of builds.
              * Requires that a DOM <div> element exists with the ID '#test-result-trend-chart'.
              */
-            view.getTestResultTrend(configuration, function (lineModel) {
+            view.getTestResultTrend(start, end, configuration, function (lineModel) {
                 echartsJenkinsApi.renderConfigurableZoomableTrendChart('test-result-trend-chart', lineModel.responseJSON, trendConfigurationDialogId);
             });
         }
@@ -52,15 +57,14 @@
         function storeAndRestoreCarousel (carouselId) {
             // jQuery does not work for some reason
             //const carousel = $('#' + carouselId);
-            const carousel = document.getElementById("trend-carousel")
+            const carousel = document.getElementById(carouselId)
             const activeCarousel = localStorage.getItem(carouselId);
             if (activeCarousel) {
-                const carouselControl = new bootstrap5.Carousel(carousel[0]);
+                const carouselControl = new bootstrap5.Carousel(carousel);
                 carouselControl.to(parseInt(activeCarousel));
                 carouselControl.pause();
             }
             carousel.on('slid.bs.carousel', function (e) {
-                //alert("something slid.bs.carousel")
                 localStorage.setItem(carouselId, e.to);
                 const chart = $(e.relatedTarget).find('>:first-child')[0].echart;
                 if (chart) {

@@ -26,8 +26,9 @@ THE SOFTWARE.
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:bs="/bootstrap5" xmlns:c="/charts">
   <bs:layout title="${%title(it.testObject.displayName)}">
+    <j:set var="count" value="${it.asInt(request.getParameter('count'),50)}"/>
     <j:set var="start" value="${it.asInt(request.getParameter('start'),0)}"/>
-    <j:set var="end" value="${it.asInt(request.getParameter('end'),start+49)}"/>
+    <j:set var="end" value="${it.asInt(request.getParameter('end'),start+count-1)}"/>
     <st:adjunct includes="io.jenkins.plugins.echarts"/>
     <st:adjunct includes="io.jenkins.plugins.bootstrap5"/>
     <st:adjunct includes="io.jenkins.plugins.echarts-trend-default-setup"/>
@@ -35,8 +36,10 @@ THE SOFTWARE.
 
     <st:once>
       <c:chart-setup id="test-history"/>
-      <script>var view =
-        <st:bind value="${it}"/>
+      <script>
+      var view = <st:bind value="${it}"/>
+      var start = ${start}
+      var end = ${end}
       </script>
       <script type="text/javascript" src="${resURL}/plugin/junit/history/history.js"/>
     </st:once>
@@ -83,12 +86,12 @@ THE SOFTWARE.
         </j:if>
 
         <j:if test="${start > 0}">
-          <a href="${app.rootUrl}${it.testObject.url}/history${(start-50)>0?'?start='+(start-50):''}"
+          <a href="${app.rootUrl}${it.testObject.url}/history${(start-count)>0?'?start='+(start-count):''}"
              style="margin:1px">${%Newer}
           </a>
         </j:if>
       </div>
-      <table class="jenkins-table sortable" id="testresult">
+      <table class="jenkins-table sortable" style="--table-padding: 5px;" id="testresult">
         <thead>
           <tr>
             <th class="pane-header">${%Build}</th>
@@ -102,9 +105,9 @@ THE SOFTWARE.
           </tr>
         </thead>
         <tbody>
-          <j:forEach var="item" items="${historySummary.historySummaries}" begin="0" end="50">
+          <j:forEach var="item" items="${historySummary.historySummaries}" begin="0" end="${count}">
             <j:if test="${item != null}">
-              <tr>
+              <tr style="height: 0px;">
                 <td class="pane">
                   <a href="${app.rootUrl}${item.url}">${item.fullDisplayName}</a>
                 </td>
@@ -129,7 +132,7 @@ THE SOFTWARE.
         </j:if>
 
         <j:if test="${start > 0}">
-          <a href="${app.rootUrl}${it.testObject.url}/history${(start-50)>0?'?start='+(start-50):''}"
+          <a href="${app.rootUrl}${it.testObject.url}/history${(start-count)>0?'?start='+(start-count):''}"
              style="margin:1px">${%Newer}
           </a>
         </j:if>
