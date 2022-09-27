@@ -50,20 +50,23 @@
          *
          */
         function storeAndRestoreCarousel (carouselId) {
-            const carousel = $('#' + carouselId);
-            carousel.on('slid.bs.carousel', function (e) {
-                localStorage.setItem(carouselId, e.to);
-                const chart = $(e.relatedTarget).find('>:first-child')[0].echart;
-                if (chart) {
-                    chart.resize();
-                }
-            });
+            // jQuery does not work for some reason
+            //const carousel = $('#' + carouselId);
+            const carousel = document.getElementById("trend-carousel")
             const activeCarousel = localStorage.getItem(carouselId);
             if (activeCarousel) {
                 const carouselControl = new bootstrap5.Carousel(carousel[0]);
                 carouselControl.to(parseInt(activeCarousel));
                 carouselControl.pause();
             }
+            carousel.on('slid.bs.carousel', function (e) {
+                //alert("something slid.bs.carousel")
+                localStorage.setItem(carouselId, e.to);
+                const chart = $(e.relatedTarget).find('>:first-child')[0].echart;
+                if (chart) {
+                    chart.resize();
+                }
+            });
         }
     })
 })(jQuery3);
