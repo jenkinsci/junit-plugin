@@ -5,10 +5,15 @@ import edu.hm.hafner.echarts.BuildResult;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Run;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
+
+import hudson.tasks.junit.*;
 
 public class TestObjectIterable implements Iterable<BuildResult<TestObject>> {
     private final TestObject latestAction;
+    private final List<TestObject> items;
     
     /**
      * Creates a new iterator that selects action of the given type {@code actionType}.
@@ -18,15 +23,35 @@ public class TestObjectIterable implements Iterable<BuildResult<TestObject>> {
      */
     public TestObjectIterable(final TestObject baseline) {
         this.latestAction = baseline;
+        this.items = null;
+    }
+    
+    public TestObjectIterable(final TestObject baseline, List<HistoryTestResultSummary> results) {
+        this.latestAction = baseline;
+        this.items = results
+            .stream()
+            .map(r -> (TestObject)baseline.getResultInRun(r.getRun()))
+            .filter(r -> r != null)
+            .collect(Collectors.toList());
     }
     
     @NonNull
     @Override
     public Iterator<BuildResult<TestObject>> iterator() {
-        if (latestAction == null) {
-            return new TestResultActionIterator(null);
+        if (items == null) {
+            return new TestResultActionIterator(latestAction);
         }
-        return new TestResultActionIterator(latestAction);
+        return items
+            .stream()
+            .map(t -> {
+                Run<?, ?> run = t.getRun();
+                int buildTimeInSeconds = (int) (run.getTimeInMillis() / 1000);
+                Build build = new Build(run.getNumber(), run.getDisplayName(), buildTimeInSeconds);
+                return new BuildResult<>(build, t);
+            })
+            .collect(Collectors.toList())
+            .iterator();
+        //return new TestResultActionIterator2(items);
     }
 
     private static class TestResultActionIterator implements Iterator<BuildResult<TestObject>> {
@@ -87,5 +112,4 @@ public class TestObjectIterable implements Iterable<BuildResult<TestObject>> {
             return run;
         }
     }
-
 }

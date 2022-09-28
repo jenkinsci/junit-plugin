@@ -111,19 +111,13 @@ public class History {
     }
 
     private TestObjectIterable createBuildHistory(final TestObject testObject, int start, int end) {
-        HistoryTableResult r = retrieveHistorySummary(start, start);
+        HistoryTableResult r = retrieveHistorySummary(start, end);
         if (r.getHistorySummaries().size() != 0) { // Fast
-            Run<?,?> build = r.getHistorySummaries().get(0).getRun();
-            return new TestObjectIterable(testObject.getResultInRun(build));
+            //Run<?,?> build = r.getHistorySummaries().get(0).getRun();
+            //return new TestObjectIterable(testObject.getResultInRun(build));
+            return new TestObjectIterable(testObject, r.getHistorySummaries());
         }
         return null;
-        /*TestObject pos = testObject;
-        TestObject prev = testObject;
-        while (start-- > 0 && pos != null) {
-            prev = pos;
-            pos = pos.getPreviousResult();
-        }
-        return new TestObjectIterable(prev);*/
     }
 
     private TestResultImpl getPluggableStorage() {
