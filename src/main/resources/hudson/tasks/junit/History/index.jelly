@@ -20,6 +20,10 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
+
+<div class="carousel-item">
+  <div id="test-result-trend-chart" class="graph-cursor-pointer card-chart-carousel"/>
+</div>
 -->
 
 <!-- Displays the chart that show how long builds are taking -->
@@ -51,11 +55,8 @@ THE SOFTWARE.
           <bs:card title="${%History}" fontAwesomeIcon="chart-line">
             <div id="trend-carousel" class="carousel slide carousel-dark" data-bs-interval="false">
               <div class="carousel-inner">
-                <div class="carousel-item">
-                  <div id="test-duration-trend-chart" class="graph-cursor-pointer card-chart-carousel"/>
-                </div>
                 <div class="carousel-item active">
-                  <div id="test-result-trend-chart" class="graph-cursor-pointer card-chart-carousel"/>
+                  <div id="test-duration-trend-chart" class="graph-cursor-pointer card-chart-carousel"/>
                 </div>
               </div>
               <button class="carousel-control-prev" type="button" data-bs-target="#trend-carousel" data-bs-slide="prev">

@@ -44,9 +44,9 @@
              * Creates a build trend chart that shows the test results across a number of builds.
              * Requires that a DOM <div> element exists with the ID '#test-result-trend-chart'.
              */
-            view.getTestResultTrend(start, end, configuration, function (lineModel) {
-                echartsJenkinsApi.renderConfigurableZoomableTrendChart('test-result-trend-chart', lineModel.responseJSON, trendConfigurationDialogId);
-            });
+            //view.getTestResultTrend(start, end, configuration, function (lineModel) {
+            //    echartsJenkinsApi.renderConfigurableZoomableTrendChart('test-result-trend-chart', lineModel.responseJSON, trendConfigurationDialogId);
+            //});
         }
 
         /**

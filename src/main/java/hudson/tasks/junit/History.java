@@ -128,12 +128,6 @@ public class History {
         durationSeries.set("areaStyle", durationAreaStyle);
         durationAreaStyle.put("normal", true);
 
-        /*ArrayNode dataset = mapper.createArrayNode();
-        root.set("dataset", dataset);
-        ObjectNode dataset1 = mapper.createObjectNode();
-        dataset1.put("source", "data")
-        ObjectNode dataset2 = mapper.createObjectNode();*/
-
         //ObjectNode durationMarkArea = mapper.createObjectNode();
         //durationSeries.set("markArea", durationMarkArea);
         //ObjectNode durationMarkStyle = mapper.createObjectNode();
@@ -159,11 +153,13 @@ public class History {
         skippedStyle.put("color", "gray");
         ObjectNode okStyle = mapper.createObjectNode();
         okStyle.put("color", "rgba(100, 255, 100, 0.8)");
+        float tmpMax = 0;
         for (hudson.tasks.test.TestResult to : history) {
             Run<?,?> r = to.getRun();
             String fdn = r.getDisplayName();
             domainAxisLabels.add(fdn);
             buildNumbers.add(r.number);
+            tmpMax = Math.max(to.getDuration(), tmpMax);
             ObjectNode durationColor = mapper.createObjectNode();
             durationColor.put("value", to.getDuration());
             if (to.isPassed()) {
@@ -204,6 +200,9 @@ public class History {
         root.put("domainAxisItemName", "Build");
         //root.put("rangeMax", null);
         root.put("rangeMin", 0);
+        if (tmpMax > 0.5) {
+            root.put("rangeMax", (int)Math.ceil(tmpMax));
+        }
         try {
             //JsonFactory factory = new JsonFactory();
             //StringWriter jsonObjectWriter = new StringWriter();
