@@ -23,8 +23,8 @@
  */
 package hudson.tasks.junit;
 
-import java.util.List;
-import java.util.Objects;
+import java.io.StringWriter;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -46,6 +46,14 @@ import hudson.tasks.test.TestResultDurationChart;
 import hudson.tasks.test.TestResultTrendChart;
 import hudson.util.RunList;
 import io.jenkins.plugins.junit.storage.TestResultImpl;
+
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
  * History of {@link hudson.tasks.test.TestObject} over time.
@@ -93,11 +101,120 @@ public class History {
         }
         return new TestResultTrendChart().createFromTestObject(createBuildHistory(testObject, start, end), chartModelConfiguration);
     }
-
+//"{\"title\":{\"text\":\"Distribution of Electricity\",\"subtext\":\"Fake Data\"},\"tooltip\":{\"trigger\":\"axis\",\"axisPointer\":{\"type\":\"cross\"}},\"toolbox\":{\"show\":true,\"feature\":{\"saveAsImage\":{}}},\"xAxis\":{\"type\":\"category\",\"boundaryGap\":false,\"data\":[\"00:00\",\"01:15\",\"02:30\",\"03:45\",\"05:00\",\"06:15\",\"07:30\",\"08:45\",\"10:00\",\"11:15\",\"12:30\",\"13:45\",\"15:00\",\"16:15\",\"17:30\",\"18:45\",\"20:00\",\"21:15\",\"22:30\",\"23:45\"]},\"yAxis\":{\"type\":\"value\",\"axisLabel\":{\"formatter\":\"{value} W\",\"axisPointer\":{\"snap\":true}},\"visualMap\":{\"show\":false,\"dimension\":0,\"pieces\":[{\"lte\":6,\"color\":\"green\"},{\"gt\":6,\"lte\":8,\"color\":\"red\"},{\"gt\":8,\"lte\":14,\"color\":\"green\"},{\"gt\":14,\"lte\":17,\"color\":\"red\"},{\"gt\":17,\"color\":\"green\"}]},\"series\":[{\"name\":\"Electricity\",\"type\":\"line\",\"smooth\":false,\"data\":[300,280,250,260,270,300,550,500,400,390,380,390,400,500,600,750,800,700,600,400],\"markArea\":{\"itemStyle\":{\"color\":\"rgba(255, 173, 177, 0.4)\"},\"data\":[[{\"name\":\"Morning Peak\",\"xAxis\":\"07:30\"},{\"xAxis\":\"10:00\"}],[{\"name\":\"Evening Peak\",\"xAxis\":\"17:30\"},{\"xAxis\":\"21:15\"}]]}}]}}"
     @JavaScriptMethod
     @SuppressWarnings("unused") // Called by jelly view
     public String getTestDurationTrend(int start, int end, String configuration) {
-        return JACKSON_FACADE.toJson(createTestDurationResultTrend(start, end, ChartModelConfiguration.fromJson(configuration)));
+        ObjectMapper mapper = new ObjectMapper();
+        // create a JSON object
+        ObjectNode root = mapper.createObjectNode();
+        ArrayNode domainAxisLabels = mapper.createArrayNode();
+        ArrayNode buildNumbers = mapper.createArrayNode();
+        //ObjectNode visualMap = mapper.createObjectNode();
+        ArrayNode series = mapper.createArrayNode();
+        ObjectNode durationSeries = mapper.createObjectNode();
+        series.add(durationSeries);
+        durationSeries.put("name", "Seconds");
+        durationSeries.put("type", "line");
+        durationSeries.put("symbol", "circle");
+        durationSeries.put("symbolSize", "10");
+        ArrayNode durationData = mapper.createArrayNode();
+        durationSeries.set("data", durationData);
+        ObjectNode durationStyle = mapper.createObjectNode();
+        durationSeries.set("itemStyle", durationStyle);
+        durationStyle.put("color", "rgba(160, 173, 177, 0.5)");
+        durationSeries.put("stack", "stacked");
+        ObjectNode durationAreaStyle = mapper.createObjectNode();
+        durationSeries.set("areaStyle", durationAreaStyle);
+        durationAreaStyle.put("normal", true);
+
+        /*ArrayNode dataset = mapper.createArrayNode();
+        root.set("dataset", dataset);
+        ObjectNode dataset1 = mapper.createObjectNode();
+        dataset1.put("source", "data")
+        ObjectNode dataset2 = mapper.createObjectNode();*/
+
+        //ObjectNode durationMarkArea = mapper.createObjectNode();
+        //durationSeries.set("markArea", durationMarkArea);
+        //ObjectNode durationMarkStyle = mapper.createObjectNode();
+        //durationMarkArea.set("itemStyle", durationMarkStyle);
+        //durationMarkStyle.put("color", "rgba(255, 173, 177, 0.4)");
+        //ArrayNode durationMarkAreaData = mapper.createArrayNode();
+        //durationMarkArea.set("data", durationMarkAreaData);
+        //visualMap.put("show", false);
+        //visualMap.put("dimension", 0);
+        //ArrayNode pieces = mapper.createArrayNode();
+        //visualMap.set("pieces", pieces);
+        List<hudson.tasks.test.TestResult> history = retrieveHistorySummary(start, end).getHistorySummaries().stream()
+            .map(r -> testObject.getResultInRun(r.getRun()))
+            .filter(r -> r != null)
+            .collect(Collectors.toList());
+        Collections.reverse(history);
+        int index = 0;
+        //ArrayNode markAreaColumnSet = null;
+        //boolean previousPassed = true;
+        ObjectNode failedStyle = mapper.createObjectNode();
+        failedStyle.put("color", "rgba(255, 100, 100, 0.8)");
+        ObjectNode skippedStyle = mapper.createObjectNode();
+        skippedStyle.put("color", "gray");
+        ObjectNode okStyle = mapper.createObjectNode();
+        okStyle.put("color", "rgba(100, 255, 100, 0.8)");
+        for (hudson.tasks.test.TestResult to : history) {
+            Run<?,?> r = to.getRun();
+            String fdn = r.getDisplayName();
+            domainAxisLabels.add(fdn);
+            buildNumbers.add(r.number);
+            ObjectNode durationColor = mapper.createObjectNode();
+            durationColor.put("value", to.getDuration());
+            if (to.isPassed()) {
+                durationColor.set("itemStyle", okStyle);
+                //previousPassed = true;
+            } else {
+                //if (previousPassed) {
+                    //markAreaColumnSet = mapper.createArrayNode();
+                    //durationMarkAreaData.add(markAreaColumnSet);
+               // }
+                //ObjectNode markAreaColumn = mapper.createObjectNode();
+                //markAreaColumnSet.add(markAreaColumn);
+                //markAreaColumn.put("xAxis", fdn);
+                //previousPassed = false;
+                //ObjectNode piece = mapper.createObjectNode();
+                //pieces.add(piece);
+                //piece.put("gte", index);
+                //piece.put("lt", index + 1);
+                //if (to.getSkipCount() > 0) {
+                //    piece.put("color", "gray");
+                //} else {
+                //    piece.put("color", "red");
+                //}
+                if (to.getSkipCount() > 0) {
+                    durationColor.set("itemStyle", skippedStyle);
+                } else {
+                    durationColor.set("itemStyle", failedStyle);
+                }
+            } 
+            durationData.add(durationColor);
+            ++index;
+        }
+        root.set("series", series);
+        root.set("domainAxisLabels", domainAxisLabels);
+        root.set("buildNumbers", buildNumbers);
+        //root.set("visualMap", visualMap);
+        root.put("integerRangeAxis", true);
+        root.put("domainAxisItemName", "Build");
+        //root.put("rangeMax", null);
+        root.put("rangeMin", 0);
+        try {
+            //JsonFactory factory = new JsonFactory();
+            //StringWriter jsonObjectWriter = new StringWriter();
+            //JsonGenerator generator = factory.createGenerator(jsonObjectWriter);
+            return root.toString();
+            //return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(root);
+        } catch (Exception e) {
+            return e.toString();
+        }
+        //return "{\"domainAxisLabels\":[\"#2575\",\"#2576\",\"#2577\",\"#2578\",\"#2582\",\"#2584\",\"#2586\",\"#2587\",\"#2588\",\"#2589\",\"#2590\",\"#2591\",\"#2592\",\"#2593\",\"#2594\",\"#2595\",\"#2596\",\"#2598\",\"#2600\",\"#2602\",\"#2603\",\"#2604\",\"#2605\",\"#2606\",\"#2608\",\"#2609\",\"#2611\",\"#2612\",\"#2614\",\"#2615\",\"#2616\",\"#2618\"],\"buildNumbers\":[2575,2576,2577,2578,2582,2584,2586,2587,2588,2589,2590,2591,2592,2593,2594,2595,2596,2598,2600,2602,2603,2604,2605,2606,2608,2609,2611,2612,2614,2615,2616,2618],\"visualMap\":{\"show\":false,\"dimension\":0,\"pieces\":[{\"lte\":6,\"color\":\"green\"},{\"gt\":6,\"lte\":8,\"color\":\"red\"},{\"gt\":8,\"lte\":14,\"color\":\"green\"},{\"gt\":14,\"lte\":17,\"color\":\"red\"},{\"gt\":17,\"color\":\"green\"}]},\"series\":[{\"name\":\"Passed\",\"type\":\"line\",\"symbol\":\"circle\",\"data\":[1,1,0,1,1,1,0,1,1,0,1,1,0,1,1,0,1,0,1,1,1,0,1,1,1,1,1,1,1,1,0,1],\"itemStyle\":{\"color\":\"#A5D6A7\"},\"stack\":\"stacked\",\"areaStyle\":{\"normal\":true}},{\"name\":\"Skipped\",\"type\":\"line\",\"symbol\":\"circle\",\"data\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"markArea\":{\"itemStyle\":{\"color\":\"rgba(255, 173, 177, 0.4)\"},\"data\":[[{\"name\":\"Morning Peak\",\"xAxis\":\"#2594\"},{\"xAxis\":\"#2591\"}],[{\"name\":\"Evening Peak\",\"xAxis\":\"#2582\"},{\"xAxis\":\"#2575\"}]]},\"itemStyle\":{\"color\":\"#D0D0D0 \"},\"stack\":\"stacked\",\"areaStyle\":{\"normal\":true}},{\"name\":\"Failed\",\"type\":\"line\",\"symbol\":\"circle\",\"data\":[0,0,1,0,0,0,1,0,0,1,0,0,1,0,0,1,0,1,0,0,0,1,0,0,0,0,0,0,0,0,1,0],\"itemStyle\":{\"color\":\"#EF9A9A\"},\"stack\":\"stacked\",\"areaStyle\":{\"normal\":true}}],\"domainAxisItemName\":\"Build\",\"integerRangeAxis\":true,\"rangeMax\":null,\"rangeMin\":null}";
+        //return JACKSON_FACADE.toJson(createTestDurationResultTrend(start, end, ChartModelConfiguration.fromJson(configuration)));
     }
 
     private LinesChartModel createTestDurationResultTrend(int start, int end, ChartModelConfiguration chartModelConfiguration) {

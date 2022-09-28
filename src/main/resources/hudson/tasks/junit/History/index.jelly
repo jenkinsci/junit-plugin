@@ -26,7 +26,7 @@ THE SOFTWARE.
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:bs="/bootstrap5" xmlns:c="/charts">
   <bs:layout title="${%title(it.testObject.displayName)}">
-    <j:set var="count" value="${it.asInt(request.getParameter('count'),50)}"/>
+    <j:set var="count" value="${it.asInt(request.getParameter('count'),100)}"/>
     <j:set var="start" value="${it.asInt(request.getParameter('start'),0)}"/>
     <j:set var="end" value="${it.asInt(request.getParameter('end'),start+count-1)}"/>
     <st:adjunct includes="io.jenkins.plugins.echarts"/>
