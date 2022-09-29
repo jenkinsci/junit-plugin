@@ -33,6 +33,9 @@ THE SOFTWARE.
     <j:set var="count" value="${it.asInt(request.getParameter('count'),100)}"/>
     <j:set var="start" value="${it.asInt(request.getParameter('start'),0)}"/>
     <j:set var="end" value="${it.asInt(request.getParameter('end'),start+count-1)}"/>
+    <j:set var="historySummary" value="${it.retrieveHistorySummary(start, end)}"/>
+    <j:set var="trendChartJson" value="${historySummary.trendChartJson}"/>
+    <j:set var="trendChartJsonStr" value="${historySummary.trendChartJsonStr}"/>
     <st:adjunct includes="io.jenkins.plugins.echarts"/>
     <st:adjunct includes="io.jenkins.plugins.bootstrap5"/>
     <st:adjunct includes="io.jenkins.plugins.echarts-trend-default-setup"/>
@@ -44,6 +47,7 @@ THE SOFTWARE.
       var view = <st:bind value="${it}"/>
       var start = ${start}
       var end = ${end}
+      var trendChartJsonStr = ${trendChartJsonStr}
       </script>
       <script type="text/javascript" src="${resURL}/plugin/junit/history/history.js"/>
     </st:once>
@@ -76,18 +80,16 @@ THE SOFTWARE.
         </j:otherwise>
       </j:choose>
 
-      <j:set var="historySummary" value="${it.retrieveHistorySummary(start, end)}"/>
-
       <br/>
       <div>
         <j:if test="${it.testObject.run.parent.builds.size() > end}">
-          <a href="${app.rootUrl}${it.testObject.url}/history?start=${end+1}"
+          <a href="${app.rootUrl}${it.testObject.url}/history?start=${end+1}&amp;count=${count}"
              style="margin:1px">${%Older}
           </a>
         </j:if>
 
         <j:if test="${start > 0}">
-          <a href="${app.rootUrl}${it.testObject.url}/history${(start-count)>0?'?start='+(start-count):''}"
+          <a href="${app.rootUrl}${it.testObject.url}/history${(start-count)>0?'?start='+(start-count)+'&amp;':'?'}count=${count}"
              style="margin:1px">${%Newer}
           </a>
         </j:if>
@@ -127,13 +129,13 @@ THE SOFTWARE.
 
       <div>
         <j:if test="${it.testObject.run.parent.builds.size() > end}">
-          <a href="${app.rootUrl}${it.testObject.url}/history?start=${end+1}"
+          <a href="${app.rootUrl}${it.testObject.url}/history?start=${end+1}&amp;count=${count}"
              style="margin:1px">${%Older}
           </a>
         </j:if>
 
         <j:if test="${start > 0}">
-          <a href="${app.rootUrl}${it.testObject.url}/history${(start-count)>0?'?start='+(start-count):''}"
+          <a href="${app.rootUrl}${it.testObject.url}/history${(start-count)>0?'?start='+(start-count)+'&amp;':'?'}count=${count}"
              style="margin:1px">${%Newer}
           </a>
         </j:if>

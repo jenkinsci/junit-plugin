@@ -54,6 +54,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.ValueNode;
 
 /**
  * History of {@link hudson.tasks.test.TestObject} over time.
@@ -78,14 +79,6 @@ public class History {
     @SuppressWarnings("unused") // Called by jelly view
     public boolean historyAvailable() {
         return true;
-        /*if (testObject instanceof hudson.tasks.junit.TestResult) {
-            TestResultImpl pluggableStorage = ((hudson.tasks.junit.TestResult) testObject).getPluggableStorage();
-            if (pluggableStorage != null) {
-                return pluggableStorage.getCountOfBuildsWithTestResults() > 1;
-            }
-        }
-
-        return testObject.getRun().getParent().getBuilds().size() > 1;*/
     }
 
     @JavaScriptMethod
@@ -101,10 +94,8 @@ public class History {
         }
         return new TestResultTrendChart().createFromTestObject(createBuildHistory(testObject, start, end), chartModelConfiguration);
     }
-//"{\"title\":{\"text\":\"Distribution of Electricity\",\"subtext\":\"Fake Data\"},\"tooltip\":{\"trigger\":\"axis\",\"axisPointer\":{\"type\":\"cross\"}},\"toolbox\":{\"show\":true,\"feature\":{\"saveAsImage\":{}}},\"xAxis\":{\"type\":\"category\",\"boundaryGap\":false,\"data\":[\"00:00\",\"01:15\",\"02:30\",\"03:45\",\"05:00\",\"06:15\",\"07:30\",\"08:45\",\"10:00\",\"11:15\",\"12:30\",\"13:45\",\"15:00\",\"16:15\",\"17:30\",\"18:45\",\"20:00\",\"21:15\",\"22:30\",\"23:45\"]},\"yAxis\":{\"type\":\"value\",\"axisLabel\":{\"formatter\":\"{value} W\",\"axisPointer\":{\"snap\":true}},\"visualMap\":{\"show\":false,\"dimension\":0,\"pieces\":[{\"lte\":6,\"color\":\"green\"},{\"gt\":6,\"lte\":8,\"color\":\"red\"},{\"gt\":8,\"lte\":14,\"color\":\"green\"},{\"gt\":14,\"lte\":17,\"color\":\"red\"},{\"gt\":17,\"color\":\"green\"}]},\"series\":[{\"name\":\"Electricity\",\"type\":\"line\",\"smooth\":false,\"data\":[300,280,250,260,270,300,550,500,400,390,380,390,400,500,600,750,800,700,600,400],\"markArea\":{\"itemStyle\":{\"color\":\"rgba(255, 173, 177, 0.4)\"},\"data\":[[{\"name\":\"Morning Peak\",\"xAxis\":\"07:30\"},{\"xAxis\":\"10:00\"}],[{\"name\":\"Evening Peak\",\"xAxis\":\"17:30\"},{\"xAxis\":\"21:15\"}]]}}]}}"
-    @JavaScriptMethod
-    @SuppressWarnings("unused") // Called by jelly view
-    public String getTestDurationTrend(int start, int end, String configuration) {
+
+    private String getTestDurationTrendJsonStr(List<HistoryTestResultSummary> htrList) {
         ObjectMapper mapper = new ObjectMapper();
         // create a JSON object
         ObjectNode root = mapper.createObjectNode();
@@ -128,6 +119,8 @@ public class History {
         durationSeries.set("areaStyle", durationAreaStyle);
         durationAreaStyle.put("normal", true);
 
+        ObjectNode buildMap = mapper.createObjectNode();
+        root.set("buildMap", buildMap);
         //ObjectNode durationMarkArea = mapper.createObjectNode();
         //durationSeries.set("markArea", durationMarkArea);
         //ObjectNode durationMarkStyle = mapper.createObjectNode();
@@ -139,7 +132,7 @@ public class History {
         //visualMap.put("dimension", 0);
         //ArrayNode pieces = mapper.createArrayNode();
         //visualMap.set("pieces", pieces);
-        List<hudson.tasks.test.TestResult> history = retrieveHistorySummary(start, end).getHistorySummaries().stream()
+        List<hudson.tasks.test.TestResult> history = htrList.stream()
             .map(r -> testObject.getResultInRun(r.getRun()))
             .filter(r -> r != null)
             .collect(Collectors.toList());
@@ -157,6 +150,9 @@ public class History {
         for (hudson.tasks.test.TestResult to : history) {
             Run<?,?> r = to.getRun();
             String fdn = r.getDisplayName();
+            ObjectNode buildObj = mapper.createObjectNode();
+            buildObj.put("url", r.getUrl());
+            buildMap.set(fdn, buildObj);
             domainAxisLabels.add(fdn);
             buildNumbers.add(r.number);
             tmpMax = Math.max(to.getDuration(), tmpMax);
@@ -204,11 +200,7 @@ public class History {
             root.put("rangeMax", (int)Math.ceil(tmpMax));
         }
         try {
-            //JsonFactory factory = new JsonFactory();
-            //StringWriter jsonObjectWriter = new StringWriter();
-            //JsonGenerator generator = factory.createGenerator(jsonObjectWriter);
             return root.toString();
-            //return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(root);
         } catch (Exception e) {
             return e.toString();
         }
@@ -228,9 +220,7 @@ public class History {
 
     private TestObjectIterable createBuildHistory(final TestObject testObject, int start, int end) {
         HistoryTableResult r = retrieveHistorySummary(start, end);
-        if (r.getHistorySummaries().size() != 0) { // Fast
-            //Run<?,?> build = r.getHistorySummaries().get(0).getRun();
-            //return new TestObjectIterable(testObject.getResultInRun(build));
+        if (r.getHistorySummaries().size() != 0) {
             return new TestObjectIterable(testObject, r.getHistorySummaries());
         }
         return null;
@@ -253,11 +243,20 @@ public class History {
     public static class HistoryTableResult {
         private boolean descriptionAvailable;
         private List<HistoryTestResultSummary> historySummaries;
+        private String trendChartJson;
+        private String trendChartJsonStr; // Something weird happens on Javascript side, preventing the Json from being serialized multiple times, so provide it as JSON escaped string
 
-        public HistoryTableResult(List<HistoryTestResultSummary> historySummaries) {
+        public HistoryTableResult(List<HistoryTestResultSummary> historySummaries, String trendChartJson) {
             this.descriptionAvailable = historySummaries.stream()
             .anyMatch(summary -> summary.getDescription() != null);
             this.historySummaries = historySummaries;
+            this.trendChartJson = trendChartJson;
+            ObjectMapper mapper = new ObjectMapper();
+            try {
+                this.trendChartJsonStr = mapper.writeValueAsString(trendChartJson);
+            } catch (Exception e) {
+                this.trendChartJsonStr = e.toString();
+            }
         }
 
         public boolean isDescriptionAvailable() {
@@ -267,18 +266,29 @@ public class History {
         public List<HistoryTestResultSummary> getHistorySummaries() {
             return historySummaries;
         }
+
+        public String getTrendChartJson() {
+            return trendChartJson;
+        }
+
+        public String getTrendChartJsonStr() {
+            return trendChartJsonStr;
+        }
     }
 
     public HistoryTableResult retrieveHistorySummary(int start, int end) {
         TestResultImpl pluggableStorage = getPluggableStorage();
+        List<HistoryTestResultSummary> trs = null;
         if (pluggableStorage != null) {
             int offset = start;
             if (start > 1000 || start < 0) {
                 offset = 0;
-            }    
-            return new HistoryTableResult(pluggableStorage.getHistorySummary(offset));
+            }
+            trs = pluggableStorage.getHistorySummary(offset);
+        } else {
+            trs = getHistoryFromFileStorage(start, end);
         }
-        return new HistoryTableResult(getHistoryFromFileStorage(start, end));
+        return new HistoryTableResult(trs, getTestDurationTrendJsonStr(trs));
     }
     ExecutorService executor = Executors.newFixedThreadPool(Math.max(4, (int)(Runtime.getRuntime().availableProcessors() * 0.75 * 0.75)));
     private List<HistoryTestResultSummary> getHistoryFromFileStorage(int start, int end) {

@@ -36,17 +36,20 @@
              * Creates a build trend chart that shows the test duration across a number of builds.
              * Requires that a DOM <div> element exists with the ID '#test-duration-trend-chart'.
              */
-            view.getTestDurationTrend(start, end, configuration, function (lineModel) {
-                echartsJenkinsApi.renderConfigurableZoomableTrendChart('test-duration-trend-chart', lineModel.responseJSON, trendConfigurationDialogId);
-            });
-
-            /**
-             * Creates a build trend chart that shows the test results across a number of builds.
-             * Requires that a DOM <div> element exists with the ID '#test-result-trend-chart'.
-             */
-            //view.getTestResultTrend(start, end, configuration, function (lineModel) {
-            //    echartsJenkinsApi.renderConfigurableZoomableTrendChart('test-result-trend-chart', lineModel.responseJSON, trendConfigurationDialogId);
-            //});
+            /*view.getTestDurationTrend(start, end, configuration, function (lineModel) {
+                let response = JSON.parse(responseJSON)
+                echartsJenkinsApi.renderConfigurableZoomableTrendChart('test-duration-trend-chart', lineModel.responseJSON, trendConfigurationDialogId, 
+                    function (buildDisplayName) {
+                        console.log(buildDisplayName + ' clicked on chart')
+                        window.open(response.buildMap[buildDisplayName].url, '_blank');
+                    });
+            });*/
+            // TODO: Improve ECharts plugin to allow more direct interaction with ECharts
+            echartsJenkinsApi.renderConfigurableZoomableTrendChart('test-duration-trend-chart', trendChartJsonStr, trendConfigurationDialogId, 
+                function (buildDisplayName) {
+                    console.log(buildDisplayName + ' clicked on chart')
+                    window.open(response.buildMap[buildDisplayName].url, '_blank');
+                });
         }
 
         /**
