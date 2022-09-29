@@ -56,6 +56,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ValueNode;
 
+import hudson.tasks.junit.util.*;
 /**
  * History of {@link hudson.tasks.test.TestObject} over time.
  *
@@ -108,46 +109,67 @@ public class History {
         durationSeries.put("name", "Seconds");
         durationSeries.put("type", "line");
         durationSeries.put("symbol", "circle");
-        durationSeries.put("symbolSize", "10");
+        durationSeries.put("symbolSize", "8");
         ArrayNode durationData = mapper.createArrayNode();
         durationSeries.set("data", durationData);
         ObjectNode durationStyle = mapper.createObjectNode();
         durationSeries.set("itemStyle", durationStyle);
         durationStyle.put("color", "rgba(160, 173, 177, 0.5)");
-        durationSeries.put("stack", "stacked");
+        //durationSeries.put("stack", "stacked");
         ObjectNode durationAreaStyle = mapper.createObjectNode();
         durationSeries.set("areaStyle", durationAreaStyle);
         durationAreaStyle.put("normal", true);
-
         ObjectNode buildMap = mapper.createObjectNode();
         root.set("buildMap", buildMap);
-        //ObjectNode durationMarkArea = mapper.createObjectNode();
-        //durationSeries.set("markArea", durationMarkArea);
-        //ObjectNode durationMarkStyle = mapper.createObjectNode();
-        //durationMarkArea.set("itemStyle", durationMarkStyle);
-        //durationMarkStyle.put("color", "rgba(255, 173, 177, 0.4)");
-        //ArrayNode durationMarkAreaData = mapper.createArrayNode();
-        //durationMarkArea.set("data", durationMarkAreaData);
-        //visualMap.put("show", false);
-        //visualMap.put("dimension", 0);
-        //ArrayNode pieces = mapper.createArrayNode();
-        //visualMap.set("pieces", pieces);
+        ObjectNode durationMarkLine = mapper.createObjectNode();
+        durationSeries.set("markLine", durationMarkLine);
+        ArrayNode durationMarkData = mapper.createArrayNode();
+        durationMarkLine.set("data", durationMarkData);
+        ObjectNode durationAvgMark = mapper.createObjectNode();
+        ObjectNode hideLabel = mapper.createObjectNode();
+        hideLabel.put("show", false);
+        ObjectNode dashLineStyle = mapper.createObjectNode();
+        dashLineStyle.put("dashOffset", 50);
+        ArrayNode lightDashType = mapper.createArrayNode();
+        lightDashType.add(5);
+        lightDashType.add(10);        
+        dashLineStyle.set("type", lightDashType);
+        durationAvgMark.put("type", "average");
+        durationAvgMark.put("name", "Avg");
+        durationAvgMark.set("label", hideLabel);
+        durationAvgMark.set("lineStyle", dashLineStyle);
+        durationMarkData.add(durationAvgMark);
+
+        /*ObjectNode durationMinMark = mapper.createObjectNode();
+        durationMinMark.put("type", "min");
+        durationMinMark.put("name", "Min");
+        durationMinMark.set("label", hideLabel);
+        durationMinMark.set("lineStyle", dashLineStyle);
+        durationMarkData.add(durationMinMark);
+        ObjectNode durationMaxMark = mapper.createObjectNode();
+        durationMaxMark.put("type", "max");
+        durationMaxMark.put("name", "Max");
+        durationMaxMark.set("label", hideLabel);
+        durationMaxMark.set("lineStyle", dashLineStyle);
+        durationMarkData.add(durationMaxMark);*/
+
         List<hudson.tasks.test.TestResult> history = htrList.stream()
             .map(r -> testObject.getResultInRun(r.getRun()))
             .filter(r -> r != null)
             .collect(Collectors.toList());
         Collections.reverse(history);
         int index = 0;
-        //ArrayNode markAreaColumnSet = null;
-        //boolean previousPassed = true;
         ObjectNode failedStyle = mapper.createObjectNode();
         failedStyle.put("color", "rgba(255, 100, 100, 0.8)");
         ObjectNode skippedStyle = mapper.createObjectNode();
         skippedStyle.put("color", "gray");
         ObjectNode okStyle = mapper.createObjectNode();
-        okStyle.put("color", "rgba(100, 255, 100, 0.8)");
+        okStyle.put("color", "rgba(50, 200, 50, 0.8)");
         float tmpMax = 0;
+        double[] lrX = new double[history.size()];
+        double[] lrY = new double[history.size()];
         for (hudson.tasks.test.TestResult to : history) {
+            lrX[index] = ((double)index);
             Run<?,?> r = to.getRun();
             String fdn = r.getDisplayName();
             ObjectNode buildObj = mapper.createObjectNode();
@@ -157,28 +179,11 @@ public class History {
             buildNumbers.add(r.number);
             tmpMax = Math.max(to.getDuration(), tmpMax);
             ObjectNode durationColor = mapper.createObjectNode();
+            lrY[index] = ((double)to.getDuration());
             durationColor.put("value", to.getDuration());
             if (to.isPassed()) {
                 durationColor.set("itemStyle", okStyle);
-                //previousPassed = true;
             } else {
-                //if (previousPassed) {
-                    //markAreaColumnSet = mapper.createArrayNode();
-                    //durationMarkAreaData.add(markAreaColumnSet);
-               // }
-                //ObjectNode markAreaColumn = mapper.createObjectNode();
-                //markAreaColumnSet.add(markAreaColumn);
-                //markAreaColumn.put("xAxis", fdn);
-                //previousPassed = false;
-                //ObjectNode piece = mapper.createObjectNode();
-                //pieces.add(piece);
-                //piece.put("gte", index);
-                //piece.put("lt", index + 1);
-                //if (to.getSkipCount() > 0) {
-                //    piece.put("color", "gray");
-                //} else {
-                //    piece.put("color", "red");
-                //}
                 if (to.getSkipCount() > 0) {
                     durationColor.set("itemStyle", skippedStyle);
                 } else {
@@ -188,6 +193,26 @@ public class History {
             durationData.add(durationColor);
             ++index;
         }
+        LinearRegression lr = new LinearRegression(lrX, lrY);
+        ObjectNode lrSeries = mapper.createObjectNode();
+        series.add(lrSeries);
+        lrSeries.put("name", "Linear Regression of Seconds");
+        lrSeries.put("type", "line");
+        lrSeries.put("symbolSize", 3);
+        ArrayNode lrData = mapper.createArrayNode();
+        lrSeries.set("data", lrData);
+        ObjectNode lrStyle = mapper.createObjectNode();
+        lrSeries.set("itemStyle", lrStyle);
+        lrStyle.put("color", "rgba(100, 100, 255, 0.4)");
+        //lrSeries.put("stack", "stacked");
+        ObjectNode lrAreaStyle = mapper.createObjectNode();
+        lrSeries.set("areaStyle", lrAreaStyle);
+        lrAreaStyle.put("color", "rgba(0, 0, 255, 0.1)");
+
+        for (index = 0; index < history.size(); ++index) {
+            lrData.add(lr.intercept() + index * lr.slope());
+        }
+
         root.set("series", series);
         root.set("domainAxisLabels", domainAxisLabels);
         root.set("buildNumbers", buildNumbers);
@@ -204,8 +229,6 @@ public class History {
         } catch (Exception e) {
             return e.toString();
         }
-        //return "{\"domainAxisLabels\":[\"#2575\",\"#2576\",\"#2577\",\"#2578\",\"#2582\",\"#2584\",\"#2586\",\"#2587\",\"#2588\",\"#2589\",\"#2590\",\"#2591\",\"#2592\",\"#2593\",\"#2594\",\"#2595\",\"#2596\",\"#2598\",\"#2600\",\"#2602\",\"#2603\",\"#2604\",\"#2605\",\"#2606\",\"#2608\",\"#2609\",\"#2611\",\"#2612\",\"#2614\",\"#2615\",\"#2616\",\"#2618\"],\"buildNumbers\":[2575,2576,2577,2578,2582,2584,2586,2587,2588,2589,2590,2591,2592,2593,2594,2595,2596,2598,2600,2602,2603,2604,2605,2606,2608,2609,2611,2612,2614,2615,2616,2618],\"visualMap\":{\"show\":false,\"dimension\":0,\"pieces\":[{\"lte\":6,\"color\":\"green\"},{\"gt\":6,\"lte\":8,\"color\":\"red\"},{\"gt\":8,\"lte\":14,\"color\":\"green\"},{\"gt\":14,\"lte\":17,\"color\":\"red\"},{\"gt\":17,\"color\":\"green\"}]},\"series\":[{\"name\":\"Passed\",\"type\":\"line\",\"symbol\":\"circle\",\"data\":[1,1,0,1,1,1,0,1,1,0,1,1,0,1,1,0,1,0,1,1,1,0,1,1,1,1,1,1,1,1,0,1],\"itemStyle\":{\"color\":\"#A5D6A7\"},\"stack\":\"stacked\",\"areaStyle\":{\"normal\":true}},{\"name\":\"Skipped\",\"type\":\"line\",\"symbol\":\"circle\",\"data\":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],\"markArea\":{\"itemStyle\":{\"color\":\"rgba(255, 173, 177, 0.4)\"},\"data\":[[{\"name\":\"Morning Peak\",\"xAxis\":\"#2594\"},{\"xAxis\":\"#2591\"}],[{\"name\":\"Evening Peak\",\"xAxis\":\"#2582\"},{\"xAxis\":\"#2575\"}]]},\"itemStyle\":{\"color\":\"#D0D0D0 \"},\"stack\":\"stacked\",\"areaStyle\":{\"normal\":true}},{\"name\":\"Failed\",\"type\":\"line\",\"symbol\":\"circle\",\"data\":[0,0,1,0,0,0,1,0,0,1,0,0,1,0,0,1,0,1,0,0,0,1,0,0,0,0,0,0,0,0,1,0],\"itemStyle\":{\"color\":\"#EF9A9A\"},\"stack\":\"stacked\",\"areaStyle\":{\"normal\":true}}],\"domainAxisItemName\":\"Build\",\"integerRangeAxis\":true,\"rangeMax\":null,\"rangeMin\":null}";
-        //return JACKSON_FACADE.toJson(createTestDurationResultTrend(start, end, ChartModelConfiguration.fromJson(configuration)));
     }
 
     private LinesChartModel createTestDurationResultTrend(int start, int end, ChartModelConfiguration chartModelConfiguration) {

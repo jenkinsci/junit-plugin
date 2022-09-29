@@ -32,6 +32,7 @@
                 "buildAsDomain":"true"
             });
             console.log('configuration=' + configuration + ";" + JSON.stringify(start) + ";" + JSON.stringify(end))
+            console.log('trendChartJsonStr=' + trendChartJsonStr)
             /**
              * Creates a build trend chart that shows the test duration across a number of builds.
              * Requires that a DOM <div> element exists with the ID '#test-duration-trend-chart'.
@@ -48,7 +49,7 @@
             echartsJenkinsApi.renderConfigurableZoomableTrendChart('test-duration-trend-chart', trendChartJsonStr, trendConfigurationDialogId, 
                 function (buildDisplayName) {
                     console.log(buildDisplayName + ' clicked on chart')
-                    window.open(response.buildMap[buildDisplayName].url, '_blank');
+                    window.open(rootUrl + trendChartJson.buildMap[buildDisplayName].url);
                 });
         }
 
