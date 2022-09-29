@@ -97,30 +97,30 @@ THE SOFTWARE.
       <table class="jenkins-table sortable" style="--table-padding: 5px;" id="testresult">
         <thead>
           <tr>
-            <th class="pane-header">${%Build}</th>
+            <th class="pane-header" style="text-align:center">${%Build}</th>
             <j:if test="${historySummary.descriptionAvailable}">
-              <th class="pane-header">${%Description}</th>
+              <th class="pane-header" style="text-align:center">${%Description}</th>
             </j:if>
-            <th class="pane-header" style="width:5em; text-align:right">${%Duration}</th>
-            <th class="pane-header" style="width:5em; text-align:right">${%Fail}</th>
-            <th class="pane-header" style="width:5em; text-align:right">${%Skip}</th>
-            <th class="pane-header" style="width:5em; text-align:right">${%Total}</th>
+            <th class="pane-header" style="text-align:center">${%Duration}</th>
+            <th class="pane-header" style="text-align:center">${%Fail}</th>
+            <th class="pane-header" style="text-align:center">${%Skip}</th>
+            <th class="pane-header" style="text-align:center">${%Total}</th>
           </tr>
         </thead>
         <tbody>
           <j:forEach var="item" items="${historySummary.historySummaries}" begin="0" end="${count}">
             <j:if test="${item != null}">
-              <tr style="height: 0px;">
-                <td class="pane">
+              <tr style="height: 0px; ${item.failCount>0?'background: rgba(255, 0, 0, 0.2);':''}">
+                <td class="pane" style="text-align:center">
                   <a href="${app.rootUrl}${item.url}">${item.fullDisplayName}</a>
                 </td>
                 <j:if test="${historySummary.descriptionAvailable}">
-                  <td class="pane" style="text-align:right"><j:out value="${app.markupFormatter.translate(item.description)}"/></td>
+                  <td class="pane" style="text-align:center"><j:out value="${app.markupFormatter.translate(item.description)}"/></td>
                 </j:if>
-                <td class="pane no-wrap" style="text-align:right" data="${item.duration}">${item.durationString}</td>
-                <td class="pane" style="text-align:right">${item.failCount}</td>
-                <td class="pane" style="text-align:right">${item.skipCount}</td>
-                <td class="pane" style="text-align:right">${item.totalCount}</td>
+                <td class="pane no-wrap" style="text-align:center" data="${item.duration}">${item.durationString}</td>
+                <td class="pane" style="text-align:center">${item.failCount}</td>
+                <td class="pane" style="text-align:center">${item.skipCount}</td>
+                <td class="pane" style="text-align:center">${item.totalCount}</td>
               </tr>
             </j:if>
           </j:forEach>
