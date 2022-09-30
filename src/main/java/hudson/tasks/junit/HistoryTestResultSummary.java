@@ -53,6 +53,10 @@ public class HistoryTestResultSummary {
         return passCount + skipCount + failCount;
     }
 
+    public float getBadness() {
+        return (float)Math.min(1.0, failCount / (getTotalCount() * 0.02));
+    }
+
     public String getFullDisplayName() {
         return run.getFullDisplayName();
     }

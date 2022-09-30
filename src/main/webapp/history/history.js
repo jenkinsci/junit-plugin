@@ -8,7 +8,6 @@
         });
 
         redrawTrendCharts();
-        storeAndRestoreCarousel('trend-carousel');
 
         /**
          * Activate tooltips.
@@ -32,7 +31,8 @@
                 "buildAsDomain":"true"
             });
             console.log('configuration=' + configuration + ";" + JSON.stringify(start) + ";" + JSON.stringify(end))
-            console.log('trendChartJsonStr=' + trendChartJsonStr)
+            console.log('durationTrendChartJsonStr=' + durationTrendChartJsonStr)
+            console.log('resultTrendChartJsonStr=' + resultTrendChartJsonStr)
             /**
              * Creates a build trend chart that shows the test duration across a number of builds.
              * Requires that a DOM <div> element exists with the ID '#test-duration-trend-chart'.
@@ -46,35 +46,16 @@
                     });
             });*/
             // TODO: Improve ECharts plugin to allow more direct interaction with ECharts
-            echartsJenkinsApi.renderConfigurableZoomableTrendChart('test-duration-trend-chart', trendChartJsonStr, trendConfigurationDialogId, 
+            echartsJenkinsApi.renderConfigurableZoomableTrendChart('test-duration-trend-chart', durationTrendChartJsonStr, trendConfigurationDialogId, 
                 function (buildDisplayName) {
                     console.log(buildDisplayName + ' clicked on chart')
-                    window.open(rootUrl + trendChartJson.buildMap[buildDisplayName].url);
+                    window.open(rootUrl + buildMap[buildDisplayName].url);
                 });
-        }
-
-        /**
-         * Store and restore the selected carousel image in browser's local storage.
-         * Additionally, the trend chart is redrawn.
-         *
-         */
-        function storeAndRestoreCarousel (carouselId) {
-            // jQuery does not work for some reason
-            //const carousel = $('#' + carouselId);
-            const carousel = document.getElementById(carouselId)
-            const activeCarousel = localStorage.getItem(carouselId);
-            if (activeCarousel) {
-                const carouselControl = new bootstrap5.Carousel(carousel);
-                carouselControl.to(parseInt(activeCarousel));
-                carouselControl.pause();
-            }
-            carousel.on('slid.bs.carousel', function (e) {
-                localStorage.setItem(carouselId, e.to);
-                const chart = $(e.relatedTarget).find('>:first-child')[0].echart;
-                if (chart) {
-                    chart.resize();
-                }
-            });
+            echartsJenkinsApi.renderConfigurableZoomableTrendChart('test-result-trend-chart', resultTrendChartJsonStr, trendConfigurationDialogId, 
+                function (buildDisplayName) {
+                    console.log(buildDisplayName + ' clicked on chart')
+                    window.open(rootUrl + buildMap[buildDisplayName].url);
+                });
         }
     })
 })(jQuery3);

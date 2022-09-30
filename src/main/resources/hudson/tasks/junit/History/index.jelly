@@ -20,49 +20,13 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-
-<div class="carousel-item">
-  <div id="test-result-trend-chart" class="graph-cursor-pointer card-chart-carousel"/>
-</div>
--->
-
-<!-- Displays the chart that show how long builds are taking -->
-<?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:bs="/bootstrap5" xmlns:c="/charts" xmlns:f="/lib/form">
-  <bs:layout title="${%title(it.testObject.displayName)}">
-    <j:set var="count" value="${it.asInt(request.getParameter('count'),100)}"/>
-    <j:set var="start" value="${it.asInt(request.getParameter('start'),0)}"/>
-    <j:set var="end" value="${it.asInt(request.getParameter('end'),start+count-1)}"/>
-    <j:set var="historySummary" value="${it.retrieveHistorySummary(start, end)}"/>
-    <j:set var="trendChartJson" value="${historySummary.trendChartJson}"/>
-    <j:set var="trendChartJsonStr" value="${historySummary.trendChartJsonStr}"/>
-    <st:adjunct includes="io.jenkins.plugins.echarts"/>
-    <st:adjunct includes="io.jenkins.plugins.bootstrap5"/>
-    <st:adjunct includes="io.jenkins.plugins.echarts-trend-default-setup"/>
-    <link rel="stylesheet" href="${resURL}/plugin/junit/history/history.css"/>
-
-    <st:once>
-      <c:chart-setup id="test-history"/>
-      <script>
-      var view = <st:bind value="${it}"/>
-      var start = ${start}
-      var end = ${end}
-      var trendChartJsonStr = ${trendChartJsonStr}
-      var trendChartJson = ${trendChartJson}
-      var rootUrl = "${app.rootUrl}"
-      </script>
-      <script type="text/javascript" src="${resURL}/plugin/junit/history/history.js"/>
-    </st:once>
-
-    <st:include from="${it.testObject}" it="${it.testObject}" page="sidepanel.jelly"/>
-    <l:main-panel>
-      <j:choose>
-        <j:when test="${it.historyAvailable()}">
-          <bs:card title="${%History}" fontAwesomeIcon="chart-line">
-            <div id="trend-carousel" class="carousel slide carousel-dark" data-bs-interval="false">
-              <div class="carousel-inner">
+<div id="trend-carousel" class="carousel slide carousel-fade carousel-dark" data-bs-interval="false">
+              <div class="carousel-inner" style="overflow: visible;">
                 <div class="carousel-item active">
                   <div id="test-duration-trend-chart" class="graph-cursor-pointer card-chart-carousel"/>
+                </div>
+                <div class="carousel-item">
+                  <div id="test-result-trend-chart" class="graph-cursor-pointer card-chart-carousel"/>
                 </div>
               </div>
               <button class="carousel-control-prev" type="button" data-bs-target="#trend-carousel" data-bs-slide="prev">
@@ -74,8 +38,52 @@ THE SOFTWARE.
                 <span class="visually-hidden">Next</span>
               </button>
             </div>
-          </bs:card>
+-->
 
+<!-- Displays the chart that show how long builds are taking -->
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:bs="/bootstrap5" xmlns:c="/charts" xmlns:f="/lib/form">
+  <bs:layout title="${%title(it.testObject.displayName)}">
+    <j:set var="count" value="${it.asInt(request.getParameter('count'),100)}"/>
+    <j:set var="start" value="${it.asInt(request.getParameter('start'),0)}"/>
+    <j:set var="end" value="${it.asInt(request.getParameter('end'),start+count-1)}"/>
+    <j:set var="historySummary" value="${it.retrieveHistorySummary(start, end)}"/>
+    <j:set var="durationTrendChartJson" value="${historySummary.durationTrendChartJson}"/>
+    <j:set var="durationTrendChartJsonStr" value="${historySummary.durationTrendChartJsonStr}"/>
+    <j:set var="resultTrendChartJson" value="${historySummary.resultTrendChartJson}"/>
+    <j:set var="resultTrendChartJsonStr" value="${historySummary.resultTrendChartJsonStr}"/>
+    <j:set var="buildMap" value="${historySummary.buildMapJson}"/>
+    <st:adjunct includes="io.jenkins.plugins.echarts"/>
+    <st:adjunct includes="io.jenkins.plugins.bootstrap5"/>
+    <st:adjunct includes="io.jenkins.plugins.echarts-trend-default-setup"/>
+    <link rel="stylesheet" href="${resURL}/plugin/junit/history/history.css"/>
+
+    <st:once>
+      <c:chart-setup id="test-history"/>
+      <script>
+      var view = <st:bind value="${it}"/>
+      var start = ${start}
+      var end = ${end}
+      var durationTrendChartJson = ${durationTrendChartJson}
+      var durationTrendChartJsonStr = ${durationTrendChartJsonStr}
+      var resultTrendChartJson = ${resultTrendChartJson}
+      var resultTrendChartJsonStr = ${resultTrendChartJsonStr}
+      var buildMap = ${buildMap}
+      var rootUrl = "${app.rootUrl}"
+      </script>
+      <script type="text/javascript" src="${resURL}/plugin/junit/history/history.js"/>
+    </st:once>
+
+    <st:include from="${it.testObject}" it="${it.testObject}" page="sidepanel.jelly"/>
+    <l:main-panel>
+      <j:choose>
+        <j:when test="${it.historyAvailable()}">
+          <bs:card title="${%History}" fontAwesomeIcon="chart-line">
+            <div class="" style="overflow: visible;">
+              <div id="test-duration-trend-chart" class="graph-cursor-pointer card-chart-carousel"/>
+              <div id="test-result-trend-chart" class="graph-cursor-pointer card-chart-carousel"/>
+            </div>
+          </bs:card>
         </j:when>
         <j:otherwise>
           ${%More than 1 builds are needed for the chart.}
@@ -122,7 +130,7 @@ THE SOFTWARE.
         <tbody>
           <j:forEach var="item" items="${historySummary.historySummaries}" begin="0" end="${count}">
             <j:if test="${item != null}">
-              <tr style="height: 0px; ${item.failCount>0?'background: rgba(255, 0, 0, 0.15);':(item.skipCount==0?'background: rgba(0, 255, 0, 0.075);':'')}">
+              <tr style="height: 0px; ${item.failCount > 0 ? 'background: rgba(255, 0, 0, ' + (0.05+item.badness*0.1) +');' :(item.skipCount == 0 ? 'background: rgba(0, 255, 0, 0.075);' : '')}">
                 <td class="pane" style="text-align:center">
                   <a href="${app.rootUrl}${item.url}">${item.fullDisplayName}</a>
                 </td>
