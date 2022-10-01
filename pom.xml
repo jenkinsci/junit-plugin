@@ -15,7 +15,7 @@
     <properties>
         <changelist>999999-SNAPSHOT</changelist>
         <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
-        <jenkins.version>2.346.1</jenkins.version>
+        <jenkins.version>2.346.3</jenkins.version>
         <no-test-jar>false</no-test-jar>
     </properties>
     <licenses>
@@ -46,7 +46,6 @@
         <dependency>
             <groupId>io.jenkins.plugins</groupId>
             <artifactId>echarts-api</artifactId>
-            <version>5.3.3-1</version>
         </dependency>
         <dependency>
             <groupId>io.jenkins.plugins</groupId>
@@ -80,7 +79,6 @@
         <dependency>
             <groupId>io.jenkins.plugins</groupId>
             <artifactId>bootstrap5-api</artifactId>
-            <version>5.2.0-1</version>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins.workflow</groupId>
