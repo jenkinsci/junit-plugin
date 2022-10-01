@@ -35,10 +35,10 @@ THE SOFTWARE.
         <j:set var="close" value="javascript:hideFailureSummary('${id}')"/>
         <h4>
           <a id="${id}-showlink" href="${open}" title="Show ${title}" style="display: ${idisplay}">
-            <l:icon class="icon-document-add icon-sm"/><st:nbsp/>${title}
+            <l:icon src="symbol-add-outline plugin-ionicons-api" class="icon-sm"/><st:nbsp/>${title}
           </a>
           <a id="${id}-hidelink" href="${close}" title="Hide ${title}" style="display: ${display}">
-            <l:icon class="icon-document-delete icon-sm"/><st:nbsp/>${title}
+            <l:icon src="symbol-remove-outline plugin-ionicons-api" class="icon-sm"/><st:nbsp/>${title}
           </a>
         </h4>
         <pre id="${id}" style="display: ${display}">

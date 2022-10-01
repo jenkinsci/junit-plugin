@@ -85,10 +85,10 @@ THE SOFTWARE.
   <j:set var="open" value="showFailureSummary('test-${id}','${url}/summary')"/>
   <j:set var="close" value="hideFailureSummary('test-${id}')"/>
   <a id="test-${id}-showlink" onclick="${open}" title="${%Show details}">
-    <l:icon class="icon-document-add icon-sm"/>
+    <l:icon src="symbol-add-outline plugin-ionicons-api" class="icon-sm"/>
   </a>
   <a id="test-${id}-hidelink" onclick="${close}" title="${%Hide details}" style="display:none">
-    <l:icon class="icon-document-delete icon-sm"/>
+    <l:icon src="symbol-remove-outline plugin-ionicons-api" class="icon-sm"/>
   </a>
   <st:nbsp/>
   <a href="${url}"><st:out value="${result.fullDisplayName}"/></a>

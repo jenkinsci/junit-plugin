@@ -15,7 +15,7 @@
     <properties>
         <changelist>999999-SNAPSHOT</changelist>
         <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
-        <jenkins.version>2.332.1</jenkins.version>
+        <jenkins.version>2.346.1</jenkins.version>
         <no-test-jar>false</no-test-jar>
     </properties>
     <licenses>
@@ -47,6 +47,11 @@
             <groupId>io.jenkins.plugins</groupId>
             <artifactId>echarts-api</artifactId>
             <version>5.3.2-3</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jenkins.plugins</groupId>
+            <artifactId>ionicons-api</artifactId>
+            <version>28.va_f3a_84439e5f</version>
         </dependency>
         <dependency>
             <groupId>io.jenkins.plugins</groupId>
@@ -196,7 +201,7 @@
         <dependencies>
             <dependency>
                 <groupId>io.jenkins.tools.bom</groupId>
-                <artifactId>bom-2.332.x</artifactId>
+                <artifactId>bom-2.346.x</artifactId>
                 <version>1607.va_c1576527071</version>
                 <scope>import</scope>
                 <type>pom</type>
