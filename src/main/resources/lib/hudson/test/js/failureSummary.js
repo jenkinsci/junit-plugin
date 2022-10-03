@@ -1,4 +1,3 @@
-// TODO make sure load doesn't happen every time 
 
 function showFailureSummary(id,query) {
     var element = document.getElementById(id)
