@@ -78,9 +78,9 @@ THE SOFTWARE.
     <l:main-panel>
       <j:choose>
         <j:when test="${it.historyAvailable()}">
-          <bs:card title="${%History}" fontAwesomeIcon="chart-line">
+          <bs:card title="${%History}">
             <div class="" style="overflow: visible;">
-              <div id="test-duration-trend-chart" class="graph-cursor-pointer card-chart-carousel"/>
+              <div id="test-duration-trend-chart" class="graph-cursor-pointer card-chart-carousel" style="margin-top: -40px;"/>
               <div id="test-result-trend-chart" class="graph-cursor-pointer card-chart-carousel"/>
             </div>
           </bs:card>
@@ -103,6 +103,13 @@ THE SOFTWARE.
              style="margin:1px">${%Newer}
           </a>
         </j:if>
+
+        <a href="${app.rootUrl}${it.testObject.url}/history?start=${start}&amp;count=100" style="margin:1px; margin-left: 40px">100</a>
+        <a href="${app.rootUrl}${it.testObject.url}/history?start=${start}&amp;count=200" style="margin:1px; margin-left: 10px">200</a>
+        <a href="${app.rootUrl}${it.testObject.url}/history?start=${start}&amp;count=500" style="margin:1px; margin-left: 10px">500</a>
+        <a href="${app.rootUrl}${it.testObject.url}/history?start=${start}&amp;count=1000" style="margin:1px; margin-left: 10px">1000</a>
+        <a href="${app.rootUrl}${it.testObject.url}/history?start=${start}&amp;count=2000" style="margin:1px; margin-left: 10px">2000</a>
+        <a href="${app.rootUrl}${it.testObject.url}/history?start=${start}&amp;count=4000" style="margin:1px; margin-left: 10px">4000</a>
 
         <!--f:entry name="pageSize" title="Page Size" field="count">
             <select name="pageSize" style="margin:1px; margin-left: auto">

@@ -110,7 +110,7 @@ public class History {
         }
     }
 
-    private String computeDurationTrendJson(List<hudson.tasks.test.TestResult> history) {
+    private String computeDurationTrendJson(List<HistoryTestResultSummary> history) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode root = mapper.createObjectNode();
         ArrayNode domainAxisLabels = mapper.createArrayNode();
@@ -171,9 +171,10 @@ public class History {
         float tmpMax = 0;
         double[] lrX = new double[history.size()];
         double[] lrY = new double[history.size()];
-        for (hudson.tasks.test.TestResult to : history) {
+        for (HistoryTestResultSummary h : history) {
+            hudson.tasks.test.TestResult to = h.getResultInRun();
             lrX[index] = ((double)index);
-            Run<?,?> r = to.getRun();
+            Run<?,?> r = h.getRun();
             String fdn = r.getDisplayName();
             domainAxisLabels.add(fdn);
             buildNumbers.add(r.number);
@@ -181,16 +182,16 @@ public class History {
             ObjectNode durationColor = mapper.createObjectNode();
             lrY[index] = ((double)to.getDuration());
             durationColor.put("value", to.getDuration());
-            if (to.isPassed()) {
+            if (to.isPassed() || (to.getPassCount() > 0 && to.getFailCount() == 0)) {
                 durationColor.set("itemStyle", okStyle);
             } else {
-                if (to.getSkipCount() > 0) {
-                    durationColor.set("itemStyle", skippedStyle);
-                } else {
+                if (to.getFailCount() > 0) {
                     ObjectNode failedStyle = mapper.createObjectNode();
                     double k = Math.min(1.0, to.getFailCount() / (to.getTotalCount() * 0.02));
                     failedStyle.put("color", "rgba(255, 100, 100, " + (0.5 + 0.5 * k) +")");
                     durationColor.set("itemStyle", failedStyle);
+                } else {
+                    durationColor.set("itemStyle", skippedStyle);
                 }
             }
             durationData.add(durationColor);
@@ -231,7 +232,7 @@ public class History {
         }
     }
 
-    private String computeResultTrendJson(List<hudson.tasks.test.TestResult> history) {
+    private String computeResultTrendJson(List<HistoryTestResultSummary> history) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode root = mapper.createObjectNode();
         ArrayNode domainAxisLabels = mapper.createArrayNode();
@@ -325,9 +326,10 @@ public class History {
         float tmpMax = 0;
         double[] lrX = new double[history.size()];
         double[] lrY = new double[history.size()];
-        for (hudson.tasks.test.TestResult to : history) {
+        for (HistoryTestResultSummary h : history) {
+            hudson.tasks.test.TestResult to = h.getResultInRun();
             lrX[index] = ((double)index);
-            Run<?,?> r = to.getRun();
+            Run<?,?> r = h.getRun();
             String fdn = r.getDisplayName();
             domainAxisLabels.add(fdn);
             buildNumbers.add(r.number);
@@ -371,11 +373,11 @@ public class History {
         }
     }
 
-    private String computeBuildMapJson(List<hudson.tasks.test.TestResult> history) {
+    private String computeBuildMapJson(List<HistoryTestResultSummary> history) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode buildMap = mapper.createObjectNode();
-        for (hudson.tasks.test.TestResult to : history) {
-            Run<?,?> r = to.getRun();
+        for (HistoryTestResultSummary h : history) {
+            Run<?,?> r = h.getRun();
             String fdn = r.getDisplayName();
             ObjectNode buildObj = mapper.createObjectNode();
             buildObj.put("url", r.getUrl());
@@ -387,18 +389,12 @@ public class History {
             return e.toString();
         }
     }
-
-    private TrendJsons computeTrendJsons(List<HistoryTestResultSummary> htrList) {
-        List<hudson.tasks.test.TestResult> history = htrList.stream()
-            .map(r -> testObject.getResultInRun(r.getRun()))
-            .filter(r -> r != null)
-            .collect(Collectors.toList());
+    private TrendJsons computeTrendJsons(List<HistoryTestResultSummary> history) {
         Collections.reverse(history);
-
         return new TrendJsons(computeDurationTrendJson(history), computeResultTrendJson(history), computeBuildMapJson(history));
     }
 
-    private LinesChartModel createTestDurationResultTrend(int start, int end, ChartModelConfiguration chartModelConfiguration) {
+    /*private LinesChartModel createTestDurationResultTrend(int start, int end, ChartModelConfiguration chartModelConfiguration) {
         TestResultImpl pluggableStorage = getPluggableStorage();
 
         if (pluggableStorage != null) {
@@ -406,7 +402,7 @@ public class History {
         }
 
         return new TestResultDurationChart().create(createBuildHistory(testObject, start, end), chartModelConfiguration);
-    }
+    }*/
 
     private TestObjectIterable createBuildHistory(final TestObject testObject, int start, int end) {
         HistoryTableResult r = retrieveHistorySummary(start, end);
@@ -503,11 +499,11 @@ public class History {
         }
         return new HistoryTableResult(trs, computeTrendJsons(trs));
     }
-    ExecutorService executor = Executors.newFixedThreadPool(Math.max(4, (int)(Runtime.getRuntime().availableProcessors() * 0.75 * 0.75)));
+    static int parallelism = Math.min(Runtime.getRuntime().availableProcessors(), Math.max(4, (int)(Runtime.getRuntime().availableProcessors() * 0.75 * 0.75)));
+    static ExecutorService executor = Executors.newFixedThreadPool(Math.max(4, (int)(Runtime.getRuntime().availableProcessors() * 0.75 * 0.75)));
     private List<HistoryTestResultSummary> getHistoryFromFileStorage(int start, int end) {
         TestObject testObject = getTestObject();
         RunList<?> builds = testObject.getRun().getParent().getBuilds();
-        int parallelism = Math.min(Runtime.getRuntime().availableProcessors(), Math.max(4, (int)(Runtime.getRuntime().availableProcessors() * 0.75 * 0.75)));
         final AtomicInteger count = new AtomicInteger(0);
         final long startedMs = java.lang.System.currentTimeMillis();
         return builds.stream().skip(start)
@@ -521,7 +517,7 @@ public class History {
                     return null;
                 }
 
-                return new HistoryTestResultSummary(build, resultInRun.getDuration(),
+                return new HistoryTestResultSummary(build, resultInRun, resultInRun.getDuration(),
                         resultInRun.getFailCount(),
                         resultInRun.getSkipCount(),
                         resultInRun.getPassCount(),
