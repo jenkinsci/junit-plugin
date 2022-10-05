@@ -23,7 +23,6 @@
  */
 package hudson.tasks.junit;
 
-import java.io.StringWriter;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -42,21 +41,19 @@ import edu.hm.hafner.echarts.LinesChartModel;
 import hudson.model.Run;
 import hudson.tasks.test.TestObject;
 import hudson.tasks.test.TestObjectIterable;
-import hudson.tasks.test.TestResultDurationChart;
 import hudson.tasks.test.TestResultTrendChart;
 import hudson.util.RunList;
 import io.jenkins.plugins.junit.storage.TestResultImpl;
 
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.ValueNode;
 
 import hudson.tasks.junit.util.*;
+
+import umontreal.ssj.functionfit.SmoothingCubicSpline;
+
+
 /**
  * History of {@link hudson.tasks.test.TestObject} over time.
  *
@@ -110,7 +107,7 @@ public class History {
         }
     }
 
-    private String computeDurationTrendJson(List<HistoryTestResultSummary> history) {
+    private ObjectNode computeDurationTrendJson(List<HistoryTestResultSummary> history) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode root = mapper.createObjectNode();
         ArrayNode domainAxisLabels = mapper.createArrayNode();
@@ -121,7 +118,8 @@ public class History {
         durationSeries.put("name", "Seconds");
         durationSeries.put("type", "line");
         durationSeries.put("symbol", "circle");
-        durationSeries.put("symbolSize", "8");
+        durationSeries.put("symbolSize", "6");
+        durationSeries.put("sampling", "lttb");
         ArrayNode durationData = mapper.createArrayNode();
         durationSeries.set("data", durationData);
         ObjectNode durationStyle = mapper.createObjectNode();
@@ -171,6 +169,7 @@ public class History {
         float tmpMax = 0;
         double[] lrX = new double[history.size()];
         double[] lrY = new double[history.size()];
+        float maxDuration = (float)0.0;
         for (HistoryTestResultSummary h : history) {
             hudson.tasks.test.TestResult to = h.getResultInRun();
             lrX[index] = ((double)index);
@@ -181,6 +180,9 @@ public class History {
             tmpMax = Math.max(to.getDuration(), tmpMax);
             ObjectNode durationColor = mapper.createObjectNode();
             lrY[index] = ((double)to.getDuration());
+            if (maxDuration < to.getDuration()) {
+                maxDuration = to.getDuration();
+            }
             durationColor.put("value", to.getDuration());
             if (to.isPassed() || (to.getPassCount() > 0 && to.getFailCount() == 0)) {
                 durationColor.set("itemStyle", okStyle);
@@ -197,42 +199,82 @@ public class History {
             durationData.add(durationColor);
             ++index;
         }
-        LinearRegression lr = new LinearRegression(lrX, lrY);
-        ObjectNode lrSeries = mapper.createObjectNode();
-        series.add(lrSeries);
-        lrSeries.put("name", "Linear Trend of Seconds");
-        lrSeries.put("type", "line");
-        lrSeries.put("symbolSize", 3);
-        ArrayNode lrData = mapper.createArrayNode();
-        lrSeries.set("data", lrData);
-        ObjectNode lrStyle = mapper.createObjectNode();
-        lrSeries.set("itemStyle", lrStyle);
-        lrStyle.put("color", "rgba(50, 50, 255, 0.5)");
-        ObjectNode lrAreaStyle = mapper.createObjectNode();
-        lrSeries.set("areaStyle", lrAreaStyle);
-        lrAreaStyle.put("color", "rgba(0, 0, 255, 0)");
 
-        for (index = 0; index < history.size(); ++index) {
-            lrData.add(lr.predict(index));
-        }
+        createLinearTrend(mapper, series, history, lrX, lrY, "Trend of Seconds", "rgba(50, 120, 255, 0.5)", 0.0, Double.MAX_VALUE, 0, 0);
+        createSplineTrend(mapper, series, history, lrX, lrY, "Smooth of Seconds", "rgba(120, 50, 255, 0.5)", 0.0, Double.MAX_VALUE, 0, 0);
 
         root.set("series", series);
         root.set("domainAxisLabels", domainAxisLabels);
         root.set("buildNumbers", buildNumbers);
         root.put("integerRangeAxis", true);
         root.put("domainAxisItemName", "Build");
-        root.put("rangeMin", 0);
-        if (tmpMax > 0.5) {
-            root.put("rangeMax", (int)Math.ceil(tmpMax));
+        if (maxDuration > 0.0) {
+            root.put("rangeMax", maxDuration);
         }
-        try {
-            return root.toString();
-        } catch (Exception e) {
-            return e.toString();
+        root.put("rangeMin", 0);
+        //if (tmpMax > 0.5) {
+        //    root.put("rangeMax", (int)Math.ceil(tmpMax));
+        //}
+        return root;
+    }
+
+    private void createLinearTrend(ObjectMapper mapper, ArrayNode series, List<HistoryTestResultSummary> history, double[] lrX, double[] lrY, String title, String color, double minV, double maxV, int xAxisIndex, int yAxisIndex) {
+        LinearRegression lr = new LinearRegression(lrX, lrY);
+        ObjectNode lrSeries = mapper.createObjectNode();
+        series.add(lrSeries);
+        lrSeries.put("name", title);
+        lrSeries.put("type", "line");
+        lrSeries.put("symbolSize", 0);
+        lrSeries.put("xAxisIndex", xAxisIndex);
+        lrSeries.put("yAxisIndex", yAxisIndex);
+        ArrayNode lrData = mapper.createArrayNode();
+        lrSeries.set("data", lrData);
+        ObjectNode lrStyle = mapper.createObjectNode();
+        lrSeries.set("itemStyle", lrStyle);
+        lrStyle.put("color", color);
+        ObjectNode lrAreaStyle = mapper.createObjectNode();
+        lrSeries.set("areaStyle", lrAreaStyle);
+        lrAreaStyle.put("color", "rgba(0, 0, 0, 0)");
+
+        for (int index = 0; index < history.size(); ++index) {
+            //lrData.add((float)Math.min(maxV, Math.max(minV, lr.predict(index))));
+            lrData.add((float)lr.predict(index));
         }
     }
 
-    private String computeResultTrendJson(List<HistoryTestResultSummary> history) {
+    private void createSplineTrend(ObjectMapper mapper, ArrayNode series, List<HistoryTestResultSummary> history, double[] lrX, double[] lrY, String title, String color, double minV, double maxV, int xAxisIndex, int yAxisIndex) {
+        if (history.size() < 200) {
+            return;
+        }
+        double windowSize = 100.0;
+        double rho = Math.min(1.0, 1.0 / (history.size() / 2));
+        if (rho > 0.75) {
+            return; // Too close to linear
+        }
+        SmoothingCubicSpline scs = new SmoothingCubicSpline(lrX, lrY, 0.001);
+        ObjectNode lrSeries = mapper.createObjectNode();
+        series.add(lrSeries);
+        lrSeries.put("name", title);
+        lrSeries.put("type", "line");
+        lrSeries.put("symbolSize", 0);
+        lrSeries.put("xAxisIndex", xAxisIndex);
+        lrSeries.put("yAxisIndex", yAxisIndex);
+        ArrayNode lrData = mapper.createArrayNode();
+        lrSeries.set("data", lrData);
+        ObjectNode lrStyle = mapper.createObjectNode();
+        lrSeries.set("itemStyle", lrStyle);
+        lrStyle.put("color", color);
+        ObjectNode lrAreaStyle = mapper.createObjectNode();
+        lrSeries.set("areaStyle", lrAreaStyle);
+        lrAreaStyle.put("color", "rgba(0, 0, 0, 0)");
+
+        for (int index = 0; index < history.size(); ++index) {
+            //lrData.add((float)Math.min(maxV, Math.max(minV, scs.evaluate(index))));
+            lrData.add((float)scs.evaluate(index));
+        }
+    }
+
+    private ObjectNode computeResultTrendJson(List<HistoryTestResultSummary> history) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode root = mapper.createObjectNode();
         ArrayNode domainAxisLabels = mapper.createArrayNode();
@@ -240,10 +282,13 @@ public class History {
         ArrayNode series = mapper.createArrayNode();
 
         ObjectNode okSeries = mapper.createObjectNode();
-        okSeries.put("name", "Passed Count");
+        okSeries.put("name", "Passed");
+        okSeries.put("xAxisIndex", 1);
+        okSeries.put("yAxisIndex", 1);
         okSeries.put("type", "line");
         okSeries.put("symbol", "circle");
         okSeries.put("symbolSize", "0");
+        okSeries.put("sampling", "lttb");
         ArrayNode okData = mapper.createArrayNode();
         okSeries.set("data", okData);
         ObjectNode okStyle = mapper.createObjectNode();
@@ -277,10 +322,13 @@ public class History {
         //mapper.readTree();
 
         ObjectNode failSeries = mapper.createObjectNode();
-        failSeries.put("name", "Failed Count");
+        failSeries.put("name", "Failed");
         failSeries.put("type", "line");
         failSeries.put("symbol", "circle");
         failSeries.put("symbolSize", "0");
+        failSeries.put("sampling", "lttb");
+        failSeries.put("xAxisIndex", 1);
+        failSeries.put("yAxisIndex", 1);
         ArrayNode failData = mapper.createArrayNode();
         failSeries.set("data", failData);
         ObjectNode failStyle = mapper.createObjectNode();
@@ -292,10 +340,13 @@ public class History {
         failAreaStyle.put("normal", true);
 
         ObjectNode skipSeries = mapper.createObjectNode();
-        skipSeries.put("name", "Skipped Count");
+        skipSeries.put("name", "Skipped");
         skipSeries.put("type", "line");
         skipSeries.put("symbol", "circle");
         skipSeries.put("symbolSize", "0");
+        skipSeries.put("sampling", "lttb");
+        skipSeries.put("xAxisIndex", 1);
+        skipSeries.put("yAxisIndex", 1);
         ArrayNode skipData = mapper.createArrayNode();
         skipSeries.set("data", skipData);
         ObjectNode skipStyle = mapper.createObjectNode();
@@ -321,7 +372,7 @@ public class History {
         durationMaxMark.set("label", hideLabel);
         durationMaxMark.set("lineStyle", dashLineStyle);
         durationMarkData.add(durationMaxMark);*/
-
+        int maxTotalCount = 0;
         int index = 0;
         float tmpMax = 0;
         double[] lrX = new double[history.size()];
@@ -337,43 +388,28 @@ public class History {
             okData.add(to.getPassCount());
             skipData.add(to.getSkipCount());
             failData.add(to.getFailCount());
+            if (maxTotalCount < to.getTotalCount()) {
+                maxTotalCount = to.getTotalCount();
+            }
             ++index;
         }
-        LinearRegression lr = new LinearRegression(lrX, lrY);
-        ObjectNode lrSeries = mapper.createObjectNode();
-        series.add(lrSeries);
-        lrSeries.put("name", "Linear Trend of Passed Count");
-        lrSeries.put("type", "line");
-        lrSeries.put("symbolSize", 3);
-        ArrayNode lrData = mapper.createArrayNode();
-        lrSeries.set("data", lrData);
-        ObjectNode lrStyle = mapper.createObjectNode();
-        lrSeries.set("itemStyle", lrStyle);
-        lrStyle.put("color", "rgba(50, 50, 255, 0.5)");
-        //lrSeries.put("stack", "stacked");
-        ObjectNode lrAreaStyle = mapper.createObjectNode();
-        lrSeries.set("areaStyle", lrAreaStyle);
-        lrAreaStyle.put("color", "rgba(0, 0, 255, 0)");
 
-        for (index = 0; index < history.size(); ++index) {
-            lrData.add(lr.predict(index));
-        }
+        createLinearTrend(mapper, series, history, lrX, lrY, "Trend of Passed", "rgba(50, 50, 255, 0.5)", 0.0, maxTotalCount, 1, 1);
+        createSplineTrend(mapper, series, history, lrX, lrY, "Smooth of Passed", "rgba(255, 50, 255, 0.5)", 0.0, maxTotalCount, 1, 1);
 
         root.set("series", series);
         root.set("domainAxisLabels", domainAxisLabels);
         root.set("buildNumbers", buildNumbers);
         root.put("integerRangeAxis", true);
         root.put("domainAxisItemName", "Build");
-        //root.put("rangeMax", null);
+        //if (maxTotalCount > 0.0) {
+        //    root.put("rangeMax", maxTotalCount);
+        //}
         root.put("rangeMin", 0);
-        try {
-            return root.toString();
-        } catch (Exception e) {
-            return e.toString();
-        }
+        return root;
     }
 
-    private String computeBuildMapJson(List<HistoryTestResultSummary> history) {
+    private ObjectNode computeBuildMapJson(List<HistoryTestResultSummary> history) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode buildMap = mapper.createObjectNode();
         for (HistoryTestResultSummary h : history) {
@@ -383,15 +419,16 @@ public class History {
             buildObj.put("url", r.getUrl());
             buildMap.set(fdn, buildObj);
         }
-        try {
-            return buildMap.toString();
-        } catch (Exception e) {
-            return e.toString();
-        }
+        return buildMap;
     }
-    private TrendJsons computeTrendJsons(List<HistoryTestResultSummary> history) {
+    private ObjectNode computeTrendJsons(List<HistoryTestResultSummary> history) {
         Collections.reverse(history);
-        return new TrendJsons(computeDurationTrendJson(history), computeResultTrendJson(history), computeBuildMapJson(history));
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode root = mapper.createObjectNode();
+        root.set("duration", computeDurationTrendJson(history));
+        root.set("result", computeResultTrendJson(history));
+        root.set("buildMap", computeBuildMapJson(history));
+        return root;
     }
 
     /*private LinesChartModel createTestDurationResultTrend(int start, int end, ChartModelConfiguration chartModelConfiguration) {
@@ -430,30 +467,20 @@ public class History {
         private boolean descriptionAvailable;
         private List<HistoryTestResultSummary> historySummaries;
         // Something weird happens on Javascript side, preventing the Json from being serialized again there, so provide it as JSON escaped string
-        private String durationTrendChartJson;
-        private String durationTrendChartJsonStr; 
-        private String resultTrendChartJson;
-        private String resultTrendChartJsonStr; 
-        private String buildMapJson; 
+        private String trendChartJson;
+        private String trendChartJsonStr; 
 
-        public HistoryTableResult(List<HistoryTestResultSummary> historySummaries, TrendJsons jsons) {
+        public HistoryTableResult(List<HistoryTestResultSummary> historySummaries, ObjectNode json) {
             this.descriptionAvailable = historySummaries.stream()
             .anyMatch(summary -> summary.getDescription() != null);
             this.historySummaries = historySummaries;
             ObjectMapper mapper = new ObjectMapper();
-            this.durationTrendChartJson = jsons.duration;
+            this.trendChartJson = json.toString();
             try {
-                this.durationTrendChartJsonStr = mapper.writeValueAsString(jsons.duration);
+                this.trendChartJsonStr = mapper.writeValueAsString(trendChartJson);
             } catch (Exception e) {
-                this.durationTrendChartJsonStr = e.toString();
+                this.trendChartJsonStr = e.toString();
             }
-            this.resultTrendChartJson = jsons.result;
-            try {
-                this.resultTrendChartJsonStr = mapper.writeValueAsString(jsons.result);
-            } catch (Exception e) {
-                this.resultTrendChartJsonStr = e.toString();
-            }
-            this.buildMapJson = jsons.buildMap;
         }
 
         public boolean isDescriptionAvailable() {
@@ -464,24 +491,12 @@ public class History {
             return historySummaries;
         }
 
-        public String getResultTrendChartJson() {
-            return resultTrendChartJson;
+        public String getTrendChartJson() {
+            return trendChartJson;
         }
 
-        public String getResultTrendChartJsonStr() {
-            return resultTrendChartJsonStr;
-        }
-
-        public String getDurationTrendChartJson() {
-            return durationTrendChartJson;
-        }
-
-        public String getDurationTrendChartJsonStr() {
-            return durationTrendChartJsonStr;
-        }
-
-        public String getBuildMapJson() {
-            return buildMapJson;
+        public String getTrendChartJsonStr() {
+            return trendChartJsonStr;
         }
     }
 

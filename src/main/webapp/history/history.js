@@ -18,6 +18,152 @@
                 tooltip.enable();
             });
         });
+		
+		function renderConfigurableZoomableTrendChart(chartDivId, model, settingsDialogId, chartClickedEventHandler) {
+			const chartPlaceHolder = document.getElementById(chartDivId);
+			const chart = echarts.init(chartPlaceHolder);
+			chartPlaceHolder.echart = chart;
+
+			const textColor = getComputedStyle(document.body).getPropertyValue('--text-color') || '#333';
+			const showSettings = document.getElementById(settingsDialogId);
+
+			const options = {
+				animation: false,
+				toolbox: {
+					feature: {
+					  dataZoom: {
+						yAxisIndex: 'none'
+					  },
+					  restore: {},
+					  saveAsImage: {}
+					}
+				},
+				tooltip: {
+					trigger: 'axis',
+					axisPointer: {
+						type: 'cross',
+						label: {
+							backgroundColor: '#6a7985'
+						},
+						animation: false
+					},
+					transitionDuration: 0,
+					textStyle: {
+						fontSize: 12
+					},
+					padding: 5
+				},
+				axisPointer: {
+					snap: true,
+					link: [
+					  {
+						xAxisIndex: 'all'
+					  }
+					]
+				  },
+				dataZoom: [
+					{
+						type: 'inside',
+						xAxisIndex: [0, 1]
+					},
+					{
+						type: 'slider',
+						height: 25,
+						bottom: 0,
+						moveHandleSize: 0,
+						xAxisIndex: [0, 1]
+					}
+				],
+				legend: {
+					orient: 'horizontal',
+					type: 'scroll',
+					x: 'center',
+					y: 'top',
+					textStyle: {
+						color: textColor
+					},
+				},
+				/*grid: {
+					left: '20',
+					right: '10',
+					bottom: '30',
+					top: '40',
+					containLabel: true
+				},*/
+				grid: [
+					{
+					  left: 60,
+					  right: 50,
+					  height: '35%',
+					  top: '10%',
+					},
+					{
+					  left: 60,
+					  right: 50,
+					  top: '53%',
+					  height: '35%'
+					}
+				  ],
+				xAxis: [
+					{
+						type: 'category',
+						boundaryGap: false,
+						data: model.duration.domainAxisLabels,
+						axisLabel: {
+							color: textColor,
+							show: false
+						}
+					},
+					{
+						type: 'category',
+						gridIndex: 1,
+						boundaryGap: false,
+						data: model.result.domainAxisLabels,
+						axisLabel: {
+							color: textColor
+						}
+					}
+				],
+				yAxis: [
+					{
+						type: 'value',
+						min: model.duration.rangeMin ?? 'dataMin',
+						max: model.duration.rangeMax ?? 'dataMax',
+						axisLabel: {
+							color: textColor
+						},
+						minInterval: model.duration.integerRangeAxis ? 1 : null
+					},
+					{
+						type: 'value',
+						gridIndex: 1,
+						min: model.result.rangeMin ?? 'dataMin',
+						max: model.result.rangeMax ?? 'dataMax',
+						axisLabel: {
+							color: textColor
+						},
+						minInterval: model.result.integerRangeAxis ? 1 : null
+					}
+				],
+				series: model.duration.series.concat(model.result.series)
+			};
+			chart.setOption(options);
+			chart.resize();
+			if (chartClickedEventHandler !== null) {
+				chart.getZr().on('click', params => {
+					const offset = 30;
+					if (params.offsetY > offset && chart.getHeight() - params.offsetY > offset) { // skip the legend and data zoom
+						const pointInPixel = [params.offsetX, params.offsetY];
+						const pointInGrid = chart.convertFromPixel('grid', pointInPixel);
+						const buildDisplayName = chart.getModel().get('xAxis')[0].data[pointInGrid[0]]
+						chartClickedEventHandler(buildDisplayName);
+					}
+				})
+			}
+			jQuery3(window).resize(function () {
+				chart.resize();
+			});
+		}
 
         /**
          * Redraws the trend charts. Reads the last selected X-Axis type from the browser local storage and
@@ -31,8 +177,7 @@
                 "buildAsDomain":"true"
             });
             console.log('configuration=' + configuration + ";" + JSON.stringify(start) + ";" + JSON.stringify(end))
-            console.log('durationTrendChartJsonStr=' + durationTrendChartJsonStr)
-            console.log('resultTrendChartJsonStr=' + resultTrendChartJsonStr)
+            console.log('trendChartJsonStr=' + trendChartJsonStr)
             /**
              * Creates a build trend chart that shows the test duration across a number of builds.
              * Requires that a DOM <div> element exists with the ID '#test-duration-trend-chart'.
@@ -46,15 +191,10 @@
                     });
             });*/
             // TODO: Improve ECharts plugin to allow more direct interaction with ECharts
-            echartsJenkinsApi.renderConfigurableZoomableTrendChart('test-duration-trend-chart', durationTrendChartJsonStr, trendConfigurationDialogId, 
+            renderConfigurableZoomableTrendChart('test-trend-chart', trendChartJson, trendConfigurationDialogId, 
                 function (buildDisplayName) {
                     console.log(buildDisplayName + ' clicked on chart')
-                    window.open(rootUrl + buildMap[buildDisplayName].url);
-                });
-            echartsJenkinsApi.renderConfigurableZoomableTrendChart('test-result-trend-chart', resultTrendChartJsonStr, trendConfigurationDialogId, 
-                function (buildDisplayName) {
-                    console.log(buildDisplayName + ' clicked on chart')
-                    window.open(rootUrl + buildMap[buildDisplayName].url);
+                    window.open(rootUrl + trendChartJson.buildMap[buildDisplayName].url);
                 });
         }
     })
