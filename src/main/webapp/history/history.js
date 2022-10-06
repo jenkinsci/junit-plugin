@@ -23,12 +23,20 @@
 			const chartPlaceHolder = document.getElementById(chartDivId);
 			const chart = echarts.init(chartPlaceHolder);
 			chartPlaceHolder.echart = chart;
-
-			const textColor = getComputedStyle(document.body).getPropertyValue('--text-color') || '#333';
+			
+			const textColor = getComputedStyle(document.body).getPropertyValue('--darkreader-text--text-color') || getComputedStyle(document.body).getPropertyValue('--text-color') || '#222';
 			const showSettings = document.getElementById(settingsDialogId);
-
+			let darkMode = getComputedStyle(document.body).getPropertyValue('--darkreader-bg--background')
+			darkMode = darkMode !== undefined && darkMode !== null && darkMode !== ''
+			console.log('darkMode: ' + darkMode)
+			let series = model.duration.series.concat(model.result.series)
+			series.forEach(s => s.emphasis = {
+				disabled: true
+			});
 			const options = {
 				animation: false,
+				darkMode: darkMode,
+				//backgroundColor: getComputedStyle(document.body).getPropertyValue('--darkreader-bg--background') || getComputedStyle(document.body).getPropertyValue('--bs-body-bg') || '#fff',
 				toolbox: {
 					feature: {
 					  dataZoom: {
@@ -40,6 +48,7 @@
 				},
 				tooltip: {
 					trigger: 'axis',
+					animation: false,
 					axisPointer: {
 						type: 'cross',
 						label: {
@@ -49,9 +58,11 @@
 					},
 					transitionDuration: 0,
 					textStyle: {
-						fontSize: 12
+						fontSize: 12,
 					},
-					padding: 5
+					padding: 5,
+					order: 'seriesAsc',
+					position: [-260, '7%'],
 				},
 				axisPointer: {
 					snap: true,
@@ -70,7 +81,7 @@
 						type: 'slider',
 						height: 25,
 						bottom: 0,
-						moveHandleSize: 0,
+						moveHandleSize: 2,
 						xAxisIndex: [0, 1]
 					}
 				],
@@ -92,14 +103,14 @@
 				},*/
 				grid: [
 					{
-					  left: 60,
-					  right: 50,
+					  left: 80,
+					  right: 40,
 					  height: '35%',
 					  top: '10%',
 					},
 					{
-					  left: 60,
-					  right: 50,
+					  left: 80,
+					  right: 40,
 					  top: '53%',
 					  height: '35%'
 					}
@@ -132,7 +143,18 @@
 						axisLabel: {
 							color: textColor
 						},
-						minInterval: model.duration.integerRangeAxis ? 1 : null
+						minInterval: model.duration.integerRangeAxis ? 1 : null,
+						name: 'Duration (seconds)',
+						nameLocation: 'middle',
+						nameGap: 60,
+						nameTextStyle: {
+							color: textColor
+						},
+						splitLine: {
+							lineStyle: {
+								color: darkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)'
+							}
+						}
 					},
 					{
 						type: 'value',
@@ -142,10 +164,21 @@
 						axisLabel: {
 							color: textColor
 						},
-						minInterval: model.result.integerRangeAxis ? 1 : null
+						minInterval: model.result.integerRangeAxis ? 1 : null,
+						name: 'Count',
+						nameLocation: 'middle',
+						nameGap: 60,
+						nameTextStyle: {
+							color: textColor
+						},
+						splitLine: {
+							lineStyle: {
+								color: darkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)'
+							}
+						}
 					}
 				],
-				series: model.duration.series.concat(model.result.series)
+				series: series
 			};
 			chart.setOption(options);
 			chart.resize();

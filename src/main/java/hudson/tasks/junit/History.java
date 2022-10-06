@@ -200,7 +200,7 @@ public class History {
             ++index;
         }
 
-        createLinearTrend(mapper, series, history, lrX, lrY, "Trend of Seconds", "rgba(50, 120, 255, 0.5)", 0.0, Double.MAX_VALUE, 0, 0);
+        createLinearTrend(mapper, series, history, lrX, lrY, "Trend of Seconds", "rgba(0, 120, 255, 0.5)", 0.0, Double.MAX_VALUE, 0, 0);
         createSplineTrend(mapper, series, history, lrX, lrY, "Smooth of Seconds", "rgba(120, 50, 255, 0.5)", 0.0, Double.MAX_VALUE, 0, 0);
 
         root.set("series", series);
@@ -212,9 +212,9 @@ public class History {
             root.put("rangeMax", maxDuration);
         }
         root.put("rangeMin", 0);
-        //if (tmpMax > 0.5) {
-        //    root.put("rangeMax", (int)Math.ceil(tmpMax));
-        //}
+        if (tmpMax > 5) {
+            root.put("rangeMax", (int)Math.ceil(tmpMax));
+        }
         return root;
     }
 
@@ -224,6 +224,7 @@ public class History {
         series.add(lrSeries);
         lrSeries.put("name", title);
         lrSeries.put("type", "line");
+        lrSeries.put("symbol", "circle");
         lrSeries.put("symbolSize", 0);
         lrSeries.put("xAxisIndex", xAxisIndex);
         lrSeries.put("yAxisIndex", yAxisIndex);
@@ -256,6 +257,7 @@ public class History {
         series.add(lrSeries);
         lrSeries.put("name", title);
         lrSeries.put("type", "line");
+        lrSeries.put("symbol", "circle");
         lrSeries.put("symbolSize", 0);
         lrSeries.put("xAxisIndex", xAxisIndex);
         lrSeries.put("yAxisIndex", yAxisIndex);
@@ -357,9 +359,32 @@ public class History {
         skipSeries.set("areaStyle", skipAreaStyle);
         skipAreaStyle.put("normal", true);
 
+        ObjectNode totalSeries = mapper.createObjectNode();
+        totalSeries.put("name", "Total");
+        totalSeries.put("type", "line");
+        totalSeries.put("symbol", "circle");
+        totalSeries.put("symbolSize", "0");
+        totalSeries.put("sampling", "lttb");
+        totalSeries.put("xAxisIndex", 1);
+        totalSeries.put("yAxisIndex", 1);
+        ArrayNode totalData = mapper.createArrayNode();
+        totalSeries.set("data", totalData);
+        ObjectNode lineStyle = mapper.createObjectNode();
+        totalSeries.set("lineStyle", lineStyle);
+        lineStyle.put("width", 1);
+        lineStyle.put("type", "dashed");
+        ObjectNode totalStyle = mapper.createObjectNode();
+        totalSeries.set("itemStyle", totalStyle);
+        totalStyle.put("color", "rgba(0, 255, 255, 0.6)");
+        //totalSeries.put("stack", "stacked");
+        ObjectNode totalAreaStyle = mapper.createObjectNode();
+        totalSeries.set("areaStyle", totalAreaStyle);
+        totalAreaStyle.put("color", "rgba(0, 0, 0, 0)");
+
         series.add(skipSeries);
         series.add(failSeries);
         series.add(okSeries);
+        series.add(totalSeries);
         /*ObjectNode durationMinMark = mapper.createObjectNode();
         durationMinMark.put("type", "min");
         durationMinMark.put("name", "Min");
@@ -388,6 +413,7 @@ public class History {
             okData.add(to.getPassCount());
             skipData.add(to.getSkipCount());
             failData.add(to.getFailCount());
+            totalData.add(to.getTotalCount());
             if (maxTotalCount < to.getTotalCount()) {
                 maxTotalCount = to.getTotalCount();
             }
