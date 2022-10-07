@@ -19,7 +19,7 @@
             });
         });
 		
-		function renderConfigurableZoomableTrendChart(chartDivId, model, settingsDialogId, chartClickedEventHandler) {
+		function renderTrendChart(chartDivId, model, settingsDialogId, chartClickedEventHandler) {
 			const chartPlaceHolder = document.getElementById(chartDivId);
 			const chart = echarts.init(chartPlaceHolder);
 			chartPlaceHolder.echart = chart;
@@ -193,10 +193,118 @@
 					}
 				})
 			}
-			jQuery3(window).resize(function () {
-				chart.resize();
-			});
 		}
+
+		function renderDistributionChart(chartDivId, model, settingsDialogId, chartClickedEventHandler) {
+			const chartPlaceHolder = document.getElementById(chartDivId);
+			const chart = echarts.init(chartPlaceHolder);
+			chartPlaceHolder.echart = chart;
+			
+			const textColor = getComputedStyle(document.body).getPropertyValue('--darkreader-text--text-color') || getComputedStyle(document.body).getPropertyValue('--text-color') || '#222';
+			const showSettings = document.getElementById(settingsDialogId);
+			let darkMode = getComputedStyle(document.body).getPropertyValue('--darkreader-bg--background')
+			darkMode = darkMode !== undefined && darkMode !== null && darkMode !== ''
+
+			console.log('darkMode: ' + darkMode)
+			let series = model.distribution.series
+			series.forEach(s => s.emphasis = {
+				disabled: true
+			});
+			const options = {
+				animation: false,
+				darkMode: darkMode,
+				toolbox: {
+					feature: {
+					  restore: {},
+					  saveAsImage: {}
+					}
+				},
+				tooltip: {
+					trigger: 'axis',
+					animation: false,
+					axisPointer: {
+						type: 'cross',
+						label: {
+							backgroundColor: '#6a7985'
+						},
+						animation: false
+					},
+					transitionDuration: 0,
+					textStyle: {
+						fontSize: 12,
+					},
+					padding: 5,
+					order: 'seriesAsc',
+					position: [-260, '7%'],
+				},
+				axisPointer: {
+					snap: true
+				  },
+				legend: {
+					orient: 'horizontal',
+					type: 'scroll',
+					x: 'center',
+					y: 'top',
+					textStyle: {
+						color: textColor
+					},
+				},
+				grid: {
+					left: 80,
+					right: 40,
+					height: '70%',
+					top: '20%',
+				},
+				xAxis: {
+					type: 'category',
+					boundaryGap: false,
+					axisLabel: {
+						color: textColor
+					},
+					data: model.distribution.domainAxisLabels,
+					name: 'Duration (seconds)',
+					nameLocation: 'middle',
+					nameGap: 60,
+					nameTextStyle: {
+						color: textColor
+					},
+				},
+				yAxis: {
+					type: 'value',
+					min: 'dataMin',
+					max: 'dataMax',
+					axisLabel: {
+						color: textColor
+					},
+					name: 'Build Count',
+					nameLocation: 'middle',
+					nameGap: 60,
+					nameTextStyle: {
+						color: textColor
+					},
+					splitLine: {
+						lineStyle: {
+							color: darkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.2)'
+						}
+					}
+				},
+				series: series
+			};
+			chart.setOption(options);
+			chart.resize();
+			if (chartClickedEventHandler !== null) {
+				chart.getZr().on('click', params => {
+					const offset = 30;
+					if (params.offsetY > offset && chart.getHeight() - params.offsetY > offset) { // skip the legend and data zoom
+						const pointInPixel = [params.offsetX, params.offsetY];
+						const pointInGrid = chart.convertFromPixel('grid', pointInPixel);
+						const buildDisplayName = chart.getModel().get('xAxis')[0].data[pointInGrid[0]]
+						chartClickedEventHandler(buildDisplayName);
+					}
+				})
+			}
+		}
+
 
         /**
          * Redraws the trend charts. Reads the last selected X-Axis type from the browser local storage and
@@ -224,11 +332,20 @@
                     });
             });*/
             // TODO: Improve ECharts plugin to allow more direct interaction with ECharts
-            renderConfigurableZoomableTrendChart('test-trend-chart', trendChartJson, trendConfigurationDialogId, 
+            renderTrendChart('test-trend-chart', trendChartJson, trendConfigurationDialogId, 
                 function (buildDisplayName) {
                     console.log(buildDisplayName + ' clicked on chart')
                     window.open(rootUrl + trendChartJson.buildMap[buildDisplayName].url);
                 });
+			renderDistributionChart('test-distribution-chart', trendChartJson, trendConfigurationDialogId, 
+                function (buildDisplayName) {
+                    console.log(buildDisplayName + ' clicked on chart')
+                    //window.open(rootUrl + trendChartJson.buildMap[buildDisplayName].url);
+                });
         }
+		jQuery3(window).resize(function () {
+			document.getElementById('test-trend-chart').echart.resize();
+			document.getElementById('test-distribution-chart').echart.resize();
+		});
     })
 })(jQuery3);

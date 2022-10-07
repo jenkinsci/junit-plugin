@@ -52,6 +52,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import hudson.tasks.junit.util.*;
 
 import umontreal.ssj.functionfit.SmoothingCubicSpline;
+import umontreal.ssj.probdist.*;
 
 
 /**
@@ -111,7 +112,6 @@ public class History {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode root = mapper.createObjectNode();
         ArrayNode domainAxisLabels = mapper.createArrayNode();
-        ArrayNode buildNumbers = mapper.createArrayNode();
         ArrayNode series = mapper.createArrayNode();
         ObjectNode durationSeries = mapper.createObjectNode();
         series.add(durationSeries);
@@ -176,7 +176,6 @@ public class History {
             Run<?,?> r = h.getRun();
             String fdn = r.getDisplayName();
             domainAxisLabels.add(fdn);
-            buildNumbers.add(r.number);
             tmpMax = Math.max(to.getDuration(), tmpMax);
             ObjectNode durationColor = mapper.createObjectNode();
             lrY[index] = ((double)to.getDuration());
@@ -205,7 +204,6 @@ public class History {
 
         root.set("series", series);
         root.set("domainAxisLabels", domainAxisLabels);
-        root.set("buildNumbers", buildNumbers);
         root.put("integerRangeAxis", true);
         root.put("domainAxisItemName", "Build");
         if (maxDuration > 0.0) {
@@ -280,7 +278,6 @@ public class History {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode root = mapper.createObjectNode();
         ArrayNode domainAxisLabels = mapper.createArrayNode();
-        ArrayNode buildNumbers = mapper.createArrayNode();
         ArrayNode series = mapper.createArrayNode();
 
         ObjectNode okSeries = mapper.createObjectNode();
@@ -376,7 +373,7 @@ public class History {
         ObjectNode totalStyle = mapper.createObjectNode();
         totalSeries.set("itemStyle", totalStyle);
         totalStyle.put("color", "rgba(0, 255, 255, 0.6)");
-        //totalSeries.put("stack", "stacked");
+
         ObjectNode totalAreaStyle = mapper.createObjectNode();
         totalSeries.set("areaStyle", totalAreaStyle);
         totalAreaStyle.put("color", "rgba(0, 0, 0, 0)");
@@ -385,21 +382,9 @@ public class History {
         series.add(failSeries);
         series.add(okSeries);
         series.add(totalSeries);
-        /*ObjectNode durationMinMark = mapper.createObjectNode();
-        durationMinMark.put("type", "min");
-        durationMinMark.put("name", "Min");
-        durationMinMark.set("label", hideLabel);
-        durationMinMark.set("lineStyle", dashLineStyle);
-        durationMarkData.add(durationMinMark);
-        ObjectNode durationMaxMark = mapper.createObjectNode();
-        durationMaxMark.put("type", "max");
-        durationMaxMark.put("name", "Max");
-        durationMaxMark.set("label", hideLabel);
-        durationMaxMark.set("lineStyle", dashLineStyle);
-        durationMarkData.add(durationMaxMark);*/
+        
         int maxTotalCount = 0;
         int index = 0;
-        float tmpMax = 0;
         double[] lrX = new double[history.size()];
         double[] lrY = new double[history.size()];
         for (HistoryTestResultSummary h : history) {
@@ -408,7 +393,6 @@ public class History {
             Run<?,?> r = h.getRun();
             String fdn = r.getDisplayName();
             domainAxisLabels.add(fdn);
-            buildNumbers.add(r.number);
             lrY[index] = ((double)to.getPassCount());
             okData.add(to.getPassCount());
             skipData.add(to.getSkipCount());
@@ -425,13 +409,78 @@ public class History {
 
         root.set("series", series);
         root.set("domainAxisLabels", domainAxisLabels);
-        root.set("buildNumbers", buildNumbers);
         root.put("integerRangeAxis", true);
         root.put("domainAxisItemName", "Build");
         //if (maxTotalCount > 0.0) {
         //    root.put("rangeMax", maxTotalCount);
         //}
         root.put("rangeMin", 0);
+        return root;
+    }
+
+    private ObjectNode computeDistributionJson(List<HistoryTestResultSummary> history) {
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode root = mapper.createObjectNode();
+        ArrayNode series = mapper.createArrayNode();
+        ArrayNode domainAxisLabels = mapper.createArrayNode();
+
+        ObjectNode durationSeries = mapper.createObjectNode();
+        durationSeries.put("name", "Seconds");
+        durationSeries.put("type", "line");
+        durationSeries.put("symbol", "circle");
+        durationSeries.put("symbolSize", "0");
+        durationSeries.put("sampling", "lttb");
+        ArrayNode durationData = mapper.createArrayNode();
+        durationSeries.set("data", durationData);
+        ObjectNode durationStyle = mapper.createObjectNode();
+        durationSeries.set("itemStyle", durationStyle);
+        durationStyle.put("color", "rgba(50, 200, 50, 0.8)");
+        durationSeries.put("stack", "stacked");
+        ObjectNode durAreaStyle = mapper.createObjectNode();
+        durationSeries.set("areaStyle", durAreaStyle);
+        durAreaStyle.put("color", "rgba(0,0,0,0)");
+        durationSeries.put("smooth", true);
+        series.add(durationSeries);
+        
+        double maxDuration = 0, minDuration = Double.MAX_VALUE;
+        for (HistoryTestResultSummary h : history) {
+            hudson.tasks.test.TestResult to = h.getResultInRun();
+            if (maxDuration < to.getDuration()) {
+                maxDuration = to.getDuration();
+            }
+            if (minDuration > to.getDuration()) {
+                minDuration = to.getDuration();
+            }
+        }
+        double extraDuration = Math.max(0.001, (maxDuration - minDuration) * 0.05);
+        minDuration = Math.max(0.0, minDuration - extraDuration);
+        maxDuration = maxDuration + extraDuration;
+        int[] counts = new int[300];
+        double[] lrX = new double[counts.length + 1];
+        double[] lrY = new double[counts.length + 1];
+        double step = (maxDuration - minDuration) / counts.length;
+        for (HistoryTestResultSummary h : history) {
+            hudson.tasks.test.TestResult to = h.getResultInRun();
+            lrY[(int)Math.round((to.getDuration() - minDuration) / step)]++;
+        }
+        for (int i = 0; i < lrY.length; ++i) {
+            lrX[i] = minDuration + step * i;
+        }
+        SmoothingCubicSpline scs = new SmoothingCubicSpline(lrX, lrY, 0.0001);
+        int smoothPts = counts.length;
+        double k = counts.length / smoothPts;
+        for (int i = 0; i < smoothPts; ++i) {
+            int j = (int)Math.round(i * k);
+            durationData.add((float)Math.max(0.0, scs.evaluate(lrX[j])));
+            domainAxisLabels.add((float)lrX[j]);
+        }
+
+        root.set("series", series);
+        root.put("integerRangeAxis", true);
+        root.put("domainAxisItemName", "Number of Builds");
+        root.set("domainAxisLabels", domainAxisLabels);
+        //root.put("rangeMax", 0);
+        //root.put("rangeMin", 0);
         return root;
     }
 
@@ -453,6 +502,7 @@ public class History {
         ObjectNode root = mapper.createObjectNode();
         root.set("duration", computeDurationTrendJson(history));
         root.set("result", computeResultTrendJson(history));
+        root.set("distribution", computeDistributionJson(history));
         root.set("buildMap", computeBuildMapJson(history));
         return root;
     }

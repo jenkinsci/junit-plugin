@@ -71,18 +71,28 @@ THE SOFTWARE.
 
     <st:include from="${it.testObject}" it="${it.testObject}" page="sidepanel.jelly"/>
     <l:main-panel>
-      <j:choose>
-        <j:when test="${it.historyAvailable()}">
-          <bs:card title="${%History}">
+
+      <bs:card title="">
+        <details open="true" style="margin-top: -37px;">
+          <summary>
+            <div class="card-title">History</div>
+          </summary>
             <div class="" style="overflow: visible;">
-              <div id="test-trend-chart" class="graph-cursor-pointer card-chart-carousel-2" style="margin-top: -40px;"/>
+              <div id="test-trend-chart" class="graph-cursor-pointer card-chart-carousel-2"/>
             </div>
-          </bs:card>
-        </j:when>
-        <j:otherwise>
-          ${%More than 1 builds are needed for the chart.}
-        </j:otherwise>
-      </j:choose>
+        </details>
+      </bs:card>
+      <br/>
+      <bs:card title="">
+        <details open="true" style="margin-top: -37px;">
+          <summary>
+            <div class="card-title">Distribution</div>
+          </summary>
+            <div class="" style="overflow: visible;">
+              <div id="test-distribution-chart" class="graph-cursor-pointer card-chart-carousel"/>
+            </div>
+        </details>
+      </bs:card>
 
       <br/>
       <div>
@@ -98,21 +108,14 @@ THE SOFTWARE.
           </a>
         </j:if>
 
-        <a href="${app.rootUrl}${it.testObject.url}/history?start=${start}&amp;count=100" style="margin:1px; margin-left: 40px;${count==100?'font-weight: bold;':''}">100</a>
-        <a href="${app.rootUrl}${it.testObject.url}/history?start=${start}&amp;count=200" style="margin:1px; margin-left: 10px;${count==200?'font-weight: bold;':''}">200</a>
-        <a href="${app.rootUrl}${it.testObject.url}/history?start=${start}&amp;count=500" style="margin:1px; margin-left: 10px;${count==500?'font-weight: bold;':''}">500</a>
-        <a href="${app.rootUrl}${it.testObject.url}/history?start=${start}&amp;count=1000" style="margin:1px; margin-left: 10px;${count==1000?'font-weight: bold;':''}">1000</a>
-        <a href="${app.rootUrl}${it.testObject.url}/history?start=${start}&amp;count=2000" style="margin:1px; margin-left: 10px;${count==2000?'font-weight: bold;':''}">2000</a>
-        <a href="${app.rootUrl}${it.testObject.url}/history?start=${start}&amp;count=4000" style="margin:1px; margin-left: 10px;${count==4000?'font-weight: bold;':''}">4000</a>
-
-        <!--f:entry name="pageSize" title="Page Size" field="count">
-            <select name="pageSize" style="margin:1px; margin-left: auto">
-                <option value="50">50</option>
-                <option value="100">100</option>
-                <option value="250">250</option>
-                <option value="1000">1000</option>
-            </select>
-        </f:entry-->
+        <div style="float: right; margin-left: auto; margin-bottom: 7px;">
+          <a href="${app.rootUrl}${it.testObject.url}/history?start=${start}&amp;count=100" style="margin:1px; margin-left: 40px;${count==100?'font-weight: bold;':''}">100</a>
+          <a href="${app.rootUrl}${it.testObject.url}/history?start=${start}&amp;count=200" style="margin:1px; margin-left: 10px;${count==200?'font-weight: bold;':''}">200</a>
+          <a href="${app.rootUrl}${it.testObject.url}/history?start=${start}&amp;count=500" style="margin:1px; margin-left: 10px;${count==500?'font-weight: bold;':''}">500</a>
+          <a href="${app.rootUrl}${it.testObject.url}/history?start=${start}&amp;count=1000" style="margin:1px; margin-left: 10px;${count==1000?'font-weight: bold;':''}">1000</a>
+          <a href="${app.rootUrl}${it.testObject.url}/history?start=${start}&amp;count=2000" style="margin:1px; margin-left: 10px;${count==2000?'font-weight: bold;':''}">2000</a>
+          <a href="${app.rootUrl}${it.testObject.url}/history?start=${start}&amp;count=4000" style="margin:1px; margin-left: 10px;${count==4000?'font-weight: bold;':''}">4000</a>
+        </div>
 
       </div>
       <table class="jenkins-table sortable" style="--table-padding: 5px;" id="testresult">

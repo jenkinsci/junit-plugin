@@ -1,9 +1,9 @@
 .card-chart-carousel {
     width: 100%;
-    min-height: 256px;
+    min-height: 180px;
     min-width: 256px;
     display: block;
-    margin-top: 20px;
+    margin-top: 0px;
 }
 
 .card-chart-carousel-2 {
@@ -19,4 +19,8 @@
     padding: var(--table-padding) 0 var(--table-padding) var(--table-padding);
     font-weight: 500;
     height: 10px;
+}
+
+details > summary > * {
+    display: inline;
 }
