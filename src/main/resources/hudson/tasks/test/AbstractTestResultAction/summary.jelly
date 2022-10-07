@@ -26,17 +26,7 @@ THE SOFTWARE.
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:test="/lib/hudson/test" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
 
-  <script type="text/javascript">
-    function showFailures() {
-
-    var elms = document.getElementsByClassName("hidden");
-    for(var i = 0; i &lt; elms.length; i++) {
-    elms[i].style.display = "";
-    }
-    elm = document.getElementById("showLink");
-    elm.style.display = "none";
-    }
-  </script>
+  <st:adjunct includes="hudson.tasks.test.AbstractTestResultAction.show-failures" />
 
   <!-- summary -->
   <t:summary icon="clipboard.png">
@@ -75,8 +65,7 @@ THE SOFTWARE.
       <!-- Show failures link -->
       <j:if test="${displayedCount &lt; failedTests.size() }">
         <a id="showLink" name="editFailuresLink"
-           href="#showFailuresLink"
-           onclick="javascript:showFailures()">${%Show all failed tests} ${">>>"}</a>
+           href="#showFailuresLink">${%Show all failed tests} ${">>>"}</a>
       </j:if>
     </j:if>
 
