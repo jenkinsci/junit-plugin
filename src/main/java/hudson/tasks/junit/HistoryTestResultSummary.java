@@ -65,8 +65,7 @@ public class HistoryTestResultSummary {
     }
 
     public String getUrl() {
-        // TODO may want to try get the test object here
-        return run.getUrl() + "testReport/junit";
+        return resultInRun.getUrl();
     }
 
     public hudson.tasks.test.TestResult getResultInRun() {

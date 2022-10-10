@@ -492,7 +492,7 @@ public class History {
             Run<?,?> r = h.getRun();
             String fdn = r.getDisplayName();
             ObjectNode buildObj = mapper.createObjectNode();
-            buildObj.put("url", r.getUrl());
+            buildObj.put("url", h.getUrl());
             buildMap.set(fdn, buildObj);
         }
         return buildMap;
