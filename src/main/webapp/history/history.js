@@ -62,7 +62,7 @@
 					},
 					padding: 5,
 					order: 'seriesAsc',
-					position: [-260, '7%'],
+					position: [-400, '7%'],
 				},
 				axisPointer: {
 					snap: true,
@@ -79,20 +79,22 @@
 					},
 					{
 						type: 'slider',
-						height: 25,
-						bottom: 0,
-						moveHandleSize: 2,
+						height: 20,
+						bottom: 5,
+						moveHandleSize: 4,
 						xAxisIndex: [0, 1]
 					}
 				],
 				legend: {
 					orient: 'horizontal',
-					type: 'scroll',
+					type: 'plain',
 					x: 'center',
 					y: 'top',
+					width: '80%',
 					textStyle: {
 						color: textColor
 					},
+					selector: ['all', 'inverse']
 				},
 				/*grid: {
 					left: '20',
@@ -105,14 +107,14 @@
 					{
 					  left: 80,
 					  right: 40,
-					  height: '35%',
-					  top: '10%',
+					  height: '33%',
+					  top: '12%',
 					},
 					{
 					  left: 80,
 					  right: 40,
 					  top: '53%',
-					  height: '35%'
+					  height: '33%'
 					}
 				  ],
 				xAxis: [
@@ -238,13 +240,14 @@
 					position: [-260, '7%'],
 				},
 				axisPointer: {
-					snap: true
-				  },
+					snap: false
+				},
 				legend: {
 					orient: 'horizontal',
 					type: 'scroll',
 					x: 'center',
 					y: 'top',
+					width: '70%',
 					textStyle: {
 						color: textColor
 					},

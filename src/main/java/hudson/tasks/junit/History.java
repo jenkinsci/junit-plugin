@@ -425,7 +425,7 @@ public class History {
         ArrayNode domainAxisLabels = mapper.createArrayNode();
 
         ObjectNode durationSeries = mapper.createObjectNode();
-        durationSeries.put("name", "Seconds");
+        durationSeries.put("name", "Build Count");
         durationSeries.put("type", "line");
         durationSeries.put("symbol", "circle");
         durationSeries.put("symbolSize", "0");
@@ -455,24 +455,25 @@ public class History {
         double extraDuration = Math.max(0.001, (maxDuration - minDuration) * 0.05);
         minDuration = Math.max(0.0, minDuration - extraDuration);
         maxDuration = maxDuration + extraDuration;
-        int[] counts = new int[300];
-        double[] lrX = new double[counts.length + 1];
-        double[] lrY = new double[counts.length + 1];
-        double step = (maxDuration - minDuration) / counts.length;
+        int[] counts = new int[100];
+        int smoothBuffer = 2;
+        double[] lrX = new double[counts.length + smoothBuffer * 2 + 1];
+        double[] lrY = new double[counts.length + smoothBuffer * 2 + 1];
+        double scale = maxDuration - minDuration;
+        double step = scale / counts.length;
         for (HistoryTestResultSummary h : history) {
             hudson.tasks.test.TestResult to = h.getResultInRun();
-            lrY[(int)Math.round((to.getDuration() - minDuration) / step)]++;
+            lrY[smoothBuffer + (int)Math.round((to.getDuration() - minDuration) / step)]++;
         }
         for (int i = 0; i < lrY.length; ++i) {
-            lrX[i] = minDuration + step * i;
+            lrX[i] = ((minDuration + (maxDuration - minDuration) / lrY.length * i) / scale * 100.0);
         }
-        SmoothingCubicSpline scs = new SmoothingCubicSpline(lrX, lrY, 0.0001);
-        int smoothPts = counts.length;
-        double k = counts.length / smoothPts;
-        for (int i = 0; i < smoothPts; ++i) {
-            int j = (int)Math.round(i * k);
-            durationData.add((float)Math.max(0.0, scs.evaluate(lrX[j])));
-            domainAxisLabels.add((float)lrX[j]);
+        SmoothingCubicSpline scs = new SmoothingCubicSpline(lrX, lrY, 0.1);
+        int smoothPts = counts.length * 4;
+        double k = (double)counts.length / smoothPts;
+        for (double z = minDuration; z < maxDuration; z += step * k) {
+            durationData.add((float)Math.max(0.0, scs.evaluate(z / scale * 100.0)));
+            domainAxisLabels.add((float)z);
         }
 
         root.set("series", series);
