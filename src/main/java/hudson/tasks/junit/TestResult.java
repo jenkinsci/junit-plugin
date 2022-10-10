@@ -87,7 +87,7 @@ public final class TestResult extends MetaTabulatedResult {
      * List of all {@link SuiteResult}s in this test.
      * This is the core data structure to be persisted in the disk.
      */
-    private final List<SuiteResult> suites = new ArrayList<>();
+    private List<SuiteResult> suites = new ArrayList<>();
 
     /**
      * {@link #suites} keyed by their names for faster lookup. Since multiple suites can have the same name, holding a collection.
@@ -219,6 +219,22 @@ public final class TestResult extends MetaTabulatedResult {
     public TestResult getTestResult() {
     	return this;
     }
+
+    public TestResult(TestResult src) {
+        this.keepLongStdio = src.keepLongStdio;
+        this.keepTestNames = src.keepTestNames;
+        this.duration = src.duration;
+        if (src.suites != null) {
+            this.suites = new ArrayList<SuiteResult>();
+            for (SuiteResult sr : src.suites) {
+                suites.add(new SuiteResult(sr));
+            }
+        } else {
+            this.suites = null;
+        }
+        this.impl = null;
+    }
+
     private static final XMLInputFactory factory = XMLInputFactory.newInstance();
     public void parse(XmlFile f) throws XMLStreamException, IOException {
         try (Reader r = f.readRaw()){

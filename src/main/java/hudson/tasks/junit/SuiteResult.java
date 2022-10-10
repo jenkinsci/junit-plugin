@@ -131,6 +131,28 @@ public final class SuiteResult implements Serializable {
         this.file = null;
     }
 
+    public SuiteResult(SuiteResult src) {
+        this.file = src.file;
+        this.name = src.name;
+        this.id = src.id;
+        this.duration = src.duration;
+        this.timestamp = src.timestamp;
+        this.time = src.time;
+        this.nodeId = src.nodeId;
+        this.enclosingBlocks = new ArrayList<String>(src.enclosingBlocks);
+        this.enclosingBlockNames = new ArrayList<String>(src.enclosingBlockNames);
+        this.stdout = src.stdout;
+        this.stderr = src.stderr;
+        if (src.cases == null) {
+            this.cases = null;
+        } else {
+            this.cases = new ArrayList<>();
+            for (CaseResult cr : src.cases) {
+                cases.add(new CaseResult(cr));
+            }
+        }
+    }
+
     public static SuiteResult parse(final XMLEventReader reader, String ver) throws XMLStreamException {
         SuiteResult r = new SuiteResult("", "", "", null);
         while (reader.hasNext()) {

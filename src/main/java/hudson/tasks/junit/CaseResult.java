@@ -200,6 +200,20 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         this.keepTestNames = keepTestNames;
     }
 
+    public CaseResult(CaseResult src) {
+        this.duration = src.duration;
+        this.className = src.className;
+        this.testName = src.testName;
+        this.skippedMessage = src.skippedMessage;
+        this.skipped = src.skipped;
+        this.keepTestNames = src.keepTestNames;
+        this.errorStackTrace = src.errorStackTrace;
+        this.errorDetails = src.errorDetails;
+        this.failedSince = src.failedSince;
+        this.stdout = src.stdout;
+        this.stderr = src.stderr;
+    }
+
     public static CaseResult parse(SuiteResult parent, final XMLEventReader reader, String ver) throws XMLStreamException {
         CaseResult r = new CaseResult(parent, null, null, null);
         while (reader.hasNext()) {
@@ -590,11 +604,20 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     public CaseResult getPreviousResult() {
         if (parent == null) return null;
 
-        TestResult previousResult = parent.getParent().getPreviousResult();
-        if (previousResult == null) return null;
-        if (previousResult instanceof hudson.tasks.junit.TestResult) {
-            hudson.tasks.junit.TestResult pr = (hudson.tasks.junit.TestResult) previousResult;
-            return pr.getCase(parent.getName(), getTransformedFullDisplayName());
+        TestResult previousResult = parent.getParent();
+        int n = 0;
+        while (previousResult != null && n < 25) {
+            previousResult = previousResult.getPreviousResult();
+            if (previousResult == null) 
+                return null;
+            if (previousResult instanceof hudson.tasks.junit.TestResult) {
+                hudson.tasks.junit.TestResult pr = (hudson.tasks.junit.TestResult) previousResult;
+                CaseResult cr = pr.getCase(parent.getName(), getTransformedFullDisplayName());
+                if (cr != null) {
+                    return cr;
+                }
+            }
+            ++n;
         }
         return null;
     }

@@ -44,11 +44,15 @@ import org.kohsuke.stapler.StaplerProxy;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -138,6 +142,10 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
 
     private XmlFile getDataFile() {
         return new XmlFile(XSTREAM, new File(run.getRootDir(), "junitResult.xml"));
+    }
+
+    private String getDataFilePath() {
+        return Paths.get(run.getRootDir().getAbsolutePath(), "junitResult.xml").toString();
     }
 
     @Override
@@ -230,13 +238,9 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         return getResult().getSkippedTests();
     }
 
-
-    /**
-     * Loads a {@link TestResult} from disk.
-     */
-    private TestResult load() {
-        TestResult r;
+    private TestResult parseOnly() {
         XmlFile df = getDataFile();
+        TestResult r;
         try {
             r = new TestResult();
             r.parse(df);
@@ -244,6 +248,44 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
             logger.log(Level.WARNING, "Failed to load " + df, e);
             r = new TestResult();   // return a dummy
         }
+        return r;
+    }
+
+    static ConcurrentHashMap<String, SoftReference<TestResult>> resultCache = new ConcurrentHashMap<>();
+    static long lastCleanupMs = 0;
+
+    /**
+     * Loads a {@link TestResult} from disk.
+     */
+    private TestResult load() {
+        if (resultCache.size() > 1000) {
+            synchronized (resultCache)
+            {
+                if (resultCache.size() > 1000 && (System.currentTimeMillis() - lastCleanupMs) > 500) {
+                    lastCleanupMs = System.currentTimeMillis();
+                    resultCache.forEach((String k, SoftReference<TestResult> v) -> {
+                        if (v.get() == null) {
+                            resultCache.remove(k);
+                        }
+                    });
+                }
+            }
+        }
+        TestResult r;
+        String k = getDataFilePath();
+        r = resultCache.computeIfAbsent(k, path -> {
+            return new SoftReference<TestResult>(parseOnly());
+            /*CacheEntry nce = new CacheEntry();
+            nce.tr = r2;
+            nce.addedMs = System.currentTimeMillis();
+            nce.usedCount = 1;
+            return nce;*/
+        }).get();
+        if (r == null) {
+            r = parseOnly();
+            resultCache.replace(k, new SoftReference<TestResult>(r));
+        }
+        r = new TestResult(r);
         r.freeze(this);
         return r;
     }
