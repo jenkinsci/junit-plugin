@@ -255,7 +255,7 @@
 				grid: {
 					left: 80,
 					right: 40,
-					height: '70%',
+					height: '57%',
 					top: '20%',
 				},
 				xAxis: {
@@ -267,7 +267,7 @@
 					data: model.distribution.domainAxisLabels,
 					name: 'Duration (seconds)',
 					nameLocation: 'middle',
-					nameGap: 60,
+					nameGap: 26,
 					nameTextStyle: {
 						color: textColor
 					},
