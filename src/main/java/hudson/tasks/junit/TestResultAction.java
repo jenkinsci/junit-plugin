@@ -126,6 +126,7 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         if (run != null) {
         // persist the data
         try {
+            resultCache.put(getDataFilePath(), new SoftReference<TestResult>(result));
             getDataFile().write(result);
         } catch (IOException e) {
             e.printStackTrace(listener.fatalError("Failed to save the JUnit test result"));
@@ -151,7 +152,6 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
     @Override
     public synchronized TestResult getResult() {
         long started = System.currentTimeMillis();
-        //LOGGER.info("TestResultAction.load started");
         JunitTestResultStorage storage = JunitTestResultStorage.find();
         if (!(storage instanceof FileJunitTestResultStorage)) {
             return new TestResult(storage.load(run.getParent().getFullName(), run.getNumber()));

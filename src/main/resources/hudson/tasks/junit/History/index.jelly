@@ -71,7 +71,7 @@ THE SOFTWARE.
 
     <st:include from="${it.testObject}" it="${it.testObject}" page="sidepanel.jelly"/>
     <l:main-panel>
-      <div style="margin-bottom: 0.5em; margin-top: -1.75em">
+      <div style="margin-bottom: 0.5em; margin-top: -1.75em; height: 1.5em;">
         <j:if test="${it.testObject.run.parent.builds.size() > end}">
           <a href="${app.rootUrl}${it.testObject.url}/history?start=${end+1}&amp;count=${count}"
               style="margin:1px; margin-right: 10px;">${%Older}
