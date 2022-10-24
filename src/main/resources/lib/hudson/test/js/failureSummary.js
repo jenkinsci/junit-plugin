@@ -18,3 +18,24 @@ function hideFailureSummary(id) {
     document.getElementById(id + "-showlink").style.display = "";
     document.getElementById(id + "-hidelink").style.display = "none";
 }
+
+
+document.addEventListener('DOMContentLoaded', (event) => {
+
+    const testShowlinks = document.querySelectorAll("a[id*=-showlink]");
+    testShowlinks.forEach((element) => {
+        element.onclick = (_) => {
+            const testId = element.id.replace('-showlink', '');
+            showFailureSummary(testId, document.URL + "/summary");
+        }
+    });
+
+    const testHidelinks = document.querySelectorAll("a[id*=-hidelink]");
+    testHidelinks.forEach((element) => {
+        element.onclick = (_) => {
+            const testId = element.id.replace('-hidelink', '');
+            hideFailureSummary(testId);
+        }
+    });
+
+});
