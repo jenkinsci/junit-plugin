@@ -695,6 +695,9 @@ public final class TestResult extends MetaTabulatedResult {
 
     @Exported(inline=true,visibility=9)
     public Collection<SuiteResult> getSuites() {
+        if (impl != null) {
+            return impl.getSuites();
+        }
         return suites;
     }
 
