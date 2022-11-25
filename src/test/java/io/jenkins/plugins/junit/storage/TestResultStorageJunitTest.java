@@ -55,7 +55,15 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -87,6 +95,7 @@ import static java.util.Objects.requireNonNull;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
@@ -221,7 +230,21 @@ public class TestResultStorageJunitTest {
 
             final List<TestDurationResultSummary> testDurationResultSummary = pluggableStorage.getTestDurationResultSummary();
             assertThat(testDurationResultSummary.get(0).getDuration(), is(200));
-            
+
+            //check storage getSuites method
+            Collection<SuiteResult> suiteResults = pluggableStorage.getSuites();
+            assertThat(suiteResults, hasSize(2));
+            //check the two suites name
+            assertThat(suiteResults, containsInAnyOrder(hasProperty("name", equalTo("supersweet")), hasProperty("name", equalTo("sweet"))));
+
+            //check one suite detail
+            SuiteResult supersweetSuite = suiteResults.stream()
+                    .filter(suite -> suite.getName().equals("supersweet"))
+                    .findFirst()
+                    .get();
+            assertThat(supersweetSuite.getCases(), hasSize(1));
+            assertThat(supersweetSuite.getCases().get(0).getName(), equalTo("test1"));
+            assertThat(supersweetSuite.getCases().get(0).getClassName(), equalTo("another.Klazz"));
             // TODO test result summary i.e. failure content
             // TODO getFailedSinceRun, TestResult#getChildren, TestObject#getTestResultAction
             // TODO more detailed Java queries incl. ClassResult
