@@ -34,6 +34,9 @@ import hudson.tasks.junit.SuiteResult;
 import hudson.tasks.junit.TestDurationResultSummary;
 import hudson.tasks.junit.TestResult;
 import hudson.tasks.junit.TrendTestResultSummary;
+
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import hudson.tasks.junit.HistoryTestResultSummary;
@@ -108,6 +111,12 @@ public interface TestResultImpl {
     @CheckForNull
     TestResult getPreviousResult();
     SuiteResult getSuite(String name);
+
+
+    default Collection<SuiteResult> getSuites() {
+        return Collections.emptyList();
+    };
+
 
     float getTotalTestDuration();
 }

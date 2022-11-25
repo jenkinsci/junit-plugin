@@ -56,6 +56,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -94,6 +95,7 @@ import static java.util.Objects.requireNonNull;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertEquals;
@@ -175,6 +177,7 @@ public class TestResultStorageJunitTest {
             assertEquals(1, a.getResult().getSkipCount());
             assertEquals(4, a.getResult().getTotalCount());
             assertEquals(1, a.getResult().getPassCount());
+            assertEquals(2, a.getResult().getSuites().size());
             List<CaseResult> failedTests = a.getFailedTests();
             assertEquals(2, failedTests.size());
             final CaseResult klazzTest1 = failedTests.get(0);
@@ -227,7 +230,21 @@ public class TestResultStorageJunitTest {
 
             final List<TestDurationResultSummary> testDurationResultSummary = pluggableStorage.getTestDurationResultSummary();
             assertThat(testDurationResultSummary.get(0).getDuration(), is(200));
-            
+
+            //check storage getSuites method
+            Collection<SuiteResult> suiteResults = pluggableStorage.getSuites();
+            assertThat(suiteResults, hasSize(2));
+            //check the two suites name
+            assertThat(suiteResults, containsInAnyOrder(hasProperty("name", equalTo("supersweet")), hasProperty("name", equalTo("sweet"))));
+
+            //check one suite detail
+            SuiteResult supersweetSuite = suiteResults.stream()
+                    .filter(suite -> suite.getName().equals("supersweet"))
+                    .findFirst()
+                    .get();
+            assertThat(supersweetSuite.getCases(), hasSize(1));
+            assertThat(supersweetSuite.getCases().get(0).getName(), equalTo("test1"));
+            assertThat(supersweetSuite.getCases().get(0).getClassName(), equalTo("another.Klazz"));
             // TODO test result summary i.e. failure content
             // TODO getFailedSinceRun, TestResult#getChildren, TestObject#getTestResultAction
             // TODO more detailed Java queries incl. ClassResult
@@ -674,6 +691,50 @@ public class TestResultStorageJunitTest {
                     });
 
                 }
+
+                public Collection<SuiteResult> getSuites() {
+                    return query(connection -> {
+                        try (PreparedStatement statement = connection.prepareStatement("SELECT suite, testname, package, classname, errordetails, skipped, duration, stdout, stderr, stacktrace FROM " + Impl.CASE_RESULTS_TABLE + " WHERE job = ? AND build = ? ORDER BY suite")) {
+                            statement.setString(1, job);
+                            statement.setInt(2, build);
+                            try (ResultSet result = statement.executeQuery()) {
+                                SuiteResult suiteResult = null;
+                                TestResult parent = new TestResult(this);
+                                boolean isFirst = true;
+                                List <SuiteResult> suites = new ArrayList<SuiteResult>();
+                                while (result.next()) {
+                                    String suiteName = result.getString("suite");
+                                    if (isFirst || !suiteResult.getName().equals(suiteName)) {
+                                        suiteResult = new SuiteResult(suiteName, null, null, null);
+                                        suites.add(suiteResult);
+                                        isFirst = false;
+                                    }
+                                    String resultTestName = result.getString("testname");
+                                    String errorDetails = result.getString("errordetails");
+                                    String packageName = result.getString("package");
+                                    String className = result.getString("classname");
+                                    String skipped = result.getString("skipped");
+                                    String stdout = result.getString("stdout");
+                                    String stderr = result.getString("stderr");
+                                    String stacktrace = result.getString("stacktrace");
+                                    float duration = result.getFloat("duration");
+
+                                    suiteResult.setParent(parent);
+                                    CaseResult caseResult = new CaseResult(suiteResult, className, resultTestName, errorDetails, skipped, duration, stdout, stderr, stacktrace);
+                                    final PackageResult packageResult = new PackageResult(parent, packageName);
+                                    packageResult.add(caseResult);
+                                    ClassResult classResult = new ClassResult(packageResult, className);
+                                    classResult.add(caseResult);
+                                    caseResult.setClass(classResult);
+                                    suiteResult.addCase(caseResult);
+                                }
+                                return suites;
+                            }
+                        }
+                    });
+                };
+
+
 
                 @Override
                 public float getTotalTestDuration() {
