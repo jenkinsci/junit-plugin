@@ -60,9 +60,10 @@ THE SOFTWARE.
       }
     </style>
   </st:once>
-  <j:set var="id" value="${h.jsStringEscape(url)}"/>
-  <j:set var="open" value="showFailureSummary('test-${id}','${url}/summary')"/>
-  <j:set var="close" value="hideFailureSummary('test-${id}')"/>
+  <j:set var="id" value="${h.htmlAttributeEscape(url)}"/>
+  <j:set var="idjs" value="${h.jsStringEscape(url)}"/>
+  <j:set var="open" value="showFailureSummary('test-${h.jsStringEscape(id)}','${idjs}/summary')"/>
+  <j:set var="close" value="hideFailureSummary('test-${h.jsStringEscape(id)}')"/>
   <a id="test-${id}-showlink" onclick="${open}" title="${%Show details}">
     <l:icon src="symbol-add-outline plugin-ionicons-api" class="icon-sm"/>
   </a>

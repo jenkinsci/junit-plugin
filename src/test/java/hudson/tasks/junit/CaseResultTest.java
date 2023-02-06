@@ -23,6 +23,9 @@
  */
 package hudson.tasks.junit;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.collection.IsEmptyCollection.empty;
+
 import hudson.FilePath;
 import hudson.model.FreeStyleProject;
 import hudson.model.AbstractBuild;
@@ -30,6 +33,7 @@ import hudson.model.BuildListener;
 import hudson.model.Result;
 import hudson.model.FreeStyleBuild;
 import hudson.Launcher;
+import hudson.tasks.Shell;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Email;
@@ -37,12 +41,18 @@ import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
 import org.jvnet.hudson.test.TestBuilder;
+import com.gargoylesoftware.htmlunit.AlertHandler;
+import com.gargoylesoftware.htmlunit.html.HtmlImage;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.gargoylesoftware.htmlunit.html.HtmlElement;
+import com.gargoylesoftware.htmlunit.Page;
 import com.gargoylesoftware.htmlunit.xml.XmlPage;
 import org.jvnet.hudson.test.TouchBuilder;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -105,6 +115,50 @@ public class CaseResultTest {
                      "http://localhost:8080/stuff/");
     }
 
+    /**
+     * Verifies that malicious code is escaped when expanding a failed test on the summary page
+     */
+    @Test
+    public void noPopUpsWhenExpandingATest() throws Exception {
+        FreeStyleProject project = rule.createFreeStyleProject("escape_test");
+
+        //Shell command which includes a vulnerability
+        Shell shell = new Shell("echo \"<?xml version=\\\"1.0\\\" encoding=\\\"UTF-8\\\" ?><testsuite "
+                                + "errors=\\\"1\\\" failures=\\\"0\\\" hostname=\\\"whocares\\\" "
+                                + "name=\\\"nobody\\\" tests=\\\"1\\\" time=\\\"0.016\\\" "
+                                + "timestamp=\\\"2023-01-01T15:42:30\\\"><testcase classname=\\\"'+alert(1)+'\\\""
+                                + " name=\\\"testHudsonReporting\\\" time=\\\"0.016\\\"><error type=\\\"java"
+                                + ".lang.NullPointerException\\\">java.lang.NullPointerException&#13;"
+                                + "</error></testcase></testsuite>\" > junit.xml");
+
+        // Schedule a build of the project, passing in the shell command
+        project.getBuildersList().add(shell);
+        project.getPublishersList().add(new JUnitResultArchiver("*.xml"));
+        FreeStyleBuild build = project.scheduleBuild2(1).get();
+        rule.assertBuildStatus(Result.UNSTABLE, build);
+        TestResult testResult = build.getAction(TestResultAction.class).getResult();
+
+        //  Mock an HTML page and create a new alerter to track if there are any popups
+        JenkinsRule.WebClient webClient = rule.createWebClient();
+        Alerter alerter = new Alerter();
+        webClient.setAlertHandler(alerter);
+        HtmlPage page = webClient.goTo("job/escape_test/1/testReport/");
+
+        //The Xpath here is for the '+' on the page, which when clicked expands the test
+        //the element we want to test is the first icon-sm in the list from the page
+        List<HtmlElement> elements = page.getByXPath("//*[@class='icon-sm']");
+        elements.get(0).click();
+        webClient.waitForBackgroundJavaScript(2000);
+        assertThat(alerter.messages, empty());
+    }
+
+    static class Alerter implements AlertHandler {
+        List<String> messages = Collections.synchronizedList(new ArrayList<>());
+        @Override
+        public void handleAlert(final Page page, final String message) {
+            messages.add(message);
+        }
+    }
 
     /**
      * Verifies that the error message and stacktrace from a failed junit test actually render properly.
