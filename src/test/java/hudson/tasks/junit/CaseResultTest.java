@@ -146,7 +146,7 @@ public class CaseResultTest {
 
         //The Xpath here is for the '+' on the page, which when clicked expands the test
         //the element we want to test is the first icon-sm in the list from the page
-        List<HtmlElement> elements = page.getByXPath("//*[@class='icon-sm']");
+        List<HtmlElement> elements = page.getByXPath("//*[@class='icon-document-add icon-sm']");
         elements.get(0).click();
         webClient.waitForBackgroundJavaScript(2000);
         assertThat(alerter.messages, empty());
