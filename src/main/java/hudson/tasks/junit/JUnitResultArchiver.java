@@ -159,7 +159,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                                     String expandedTestResults, Run<?,?> run, @NonNull FilePath workspace,
                                     Launcher launcher, TaskListener listener)
             throws IOException, InterruptedException {
-        return new JUnitParser(task.isKeepLongStdio(), task.isAllowEmptyResults(), task.isKeepTestNames(), task.isSkipOldReports())
+        return new JUnitParser(task.isKeepLongStdio(), task.isAllowEmptyResults(), task.isSkipOldReports(), task.isKeepTestNames())
                 .parseResult(expandedTestResults, run, pipelineTestDetails, workspace, launcher, listener);
     }
 
@@ -258,7 +258,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
             summary = null; // see below
         } else {
             result = new TestResult(storage.load(build.getParent().getFullName(), build.getNumber())); // irrelevant
-            summary = new JUnitParser(task.isKeepLongStdio(), task.isAllowEmptyResults(), task.isKeepTestNames(), task.isSkipOldReports())
+            summary = new JUnitParser(task.isKeepLongStdio(), task.isAllowEmptyResults(), task.isSkipOldReports(), task.isKeepTestNames())
                     .summarizeResult(testResults, build, pipelineTestDetails, workspace, launcher, listener, storage);
         }
 
