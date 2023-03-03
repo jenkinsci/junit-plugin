@@ -166,7 +166,7 @@ public final class TestResult extends MetaTabulatedResult {
 
     @Deprecated
     public TestResult(long filesTimestamp, DirectoryScanner results, boolean keepLongStdio) throws IOException {
-        this(filesTimestamp, results, keepLongStdio, false, null);
+        this(filesTimestamp, results, keepLongStdio, false, null, false);
     }
 
     @Deprecated

@@ -70,8 +70,7 @@ public class JUnitParser extends TestResultParser {
      */
     @Deprecated
     public JUnitParser(boolean keepLongStdio) {
-        this(keepLongStdio , false, false);
-        this.keepTestNames = false;
+        this(keepLongStdio , false, false, false);
     }
 
     /**
@@ -96,10 +95,11 @@ public class JUnitParser extends TestResultParser {
      * @param allowEmptyResults if true, empty results are allowed
      * @since 1.10
      */
-    public JUnitParser(boolean keepLongStdio, boolean allowEmptyResults, boolean keepTestNames) {
+    public JUnitParser(boolean keepLongStdio, boolean allowEmptyResults, boolean skipOldReports, boolean keepTestNames) {
         this.keepLongStdio = keepLongStdio;
         this.allowEmptyResults = allowEmptyResults;
         this.keepTestNames = keepTestNames;
+        this.skipOldReports = skipOldReports;
     }
 
     @Override
@@ -208,7 +208,7 @@ public class JUnitParser extends TestResultParser {
     private static final class DirectParseResultCallable extends ParseResultCallable<TestResult> {
 
         DirectParseResultCallable(String testResults, Run<?,?> build, boolean keepLongStdio, boolean allowEmptyResults, boolean keepTestNames, PipelineTestDetails pipelineTestDetails, TaskListener listener, boolean skipOldReports) {
-            super(testResults, build, keepLongStdio, allowEmptyResults, pipelineTestDetails, listener, skipOldReports);
+            super(testResults, build, keepLongStdio, allowEmptyResults, keepTestNames, pipelineTestDetails, listener, skipOldReports);
         }
 
         @Override
@@ -223,7 +223,7 @@ public class JUnitParser extends TestResultParser {
         private final RemotePublisher publisher;
 
         StorageParseResultCallable(String testResults, Run<?,?> build, boolean keepLongStdio, boolean allowEmptyResults, boolean keepTestNames, PipelineTestDetails pipelineTestDetails, TaskListener listener, RemotePublisher publisher, boolean skipOldReports) {
-            super(testResults, build, keepLongStdio, allowEmptyResults, pipelineTestDetails, listener, skipOldReports);
+            super(testResults, build, keepLongStdio, allowEmptyResults, keepTestNames, pipelineTestDetails, listener, skipOldReports);
             this.publisher = publisher;
         }
 
