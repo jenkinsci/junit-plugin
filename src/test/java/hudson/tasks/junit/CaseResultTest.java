@@ -27,6 +27,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 
 import hudson.FilePath;
+import hudson.Functions;
 import hudson.model.FreeStyleProject;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
