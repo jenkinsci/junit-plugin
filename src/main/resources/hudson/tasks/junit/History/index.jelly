@@ -95,7 +95,7 @@ THE SOFTWARE.
         </div>
       </div>
       <bs:card title="">
-        <details open="true" style="margin-top: -37px;">
+        <details open="true" style="margin-top: -67px;">
           <summary>
             <div class="card-title">History</div>
           </summary>
@@ -106,7 +106,7 @@ THE SOFTWARE.
       </bs:card>
       <br/>
       <bs:card title="">
-        <details open="true" style="margin-top: -37px;">
+        <details open="true" style="margin-top: -67px;">
           <summary>
             <div class="card-title">Distribution</div>
           </summary>
