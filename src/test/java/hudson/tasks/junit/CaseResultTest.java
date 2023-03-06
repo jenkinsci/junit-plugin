@@ -122,7 +122,7 @@ public class CaseResultTest {
      */
     @Test
     public void noPopUpsWhenExpandingATest() throws Exception {
-    	Assume.assumeFalse(Functions.isWindows())
+    	Assume.assumeFalse(Functions.isWindows());
     
         FreeStyleProject project = rule.createFreeStyleProject("escape_test");
 
