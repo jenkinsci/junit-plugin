@@ -48,6 +48,7 @@ import com.gargoylesoftware.htmlunit.html.HtmlElement;
 import com.gargoylesoftware.htmlunit.Page;
 import com.gargoylesoftware.htmlunit.xml.XmlPage;
 import org.jvnet.hudson.test.TouchBuilder;
+import org.junit.Assume;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -120,6 +121,8 @@ public class CaseResultTest {
      */
     @Test
     public void noPopUpsWhenExpandingATest() throws Exception {
+    	Assume.assumeFalse(Functions.isWindows())
+    
         FreeStyleProject project = rule.createFreeStyleProject("escape_test");
 
         //Shell command which includes a vulnerability
