@@ -121,6 +121,11 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
         return Messages.PackageResult_getChildTitle();
     }
 
+    @Override
+    public String getChildType() {
+        return "class";
+    }
+
     // TODO: wait until stapler 1.60 to do this @Exported
     @Override
     public float getDuration() {
