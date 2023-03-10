@@ -209,6 +209,14 @@
                 <artifactId>byte-buddy</artifactId>
                 <version>1.14.0</version>
             </dependency>
+            <!-- Workaround until https://github.com/jenkinsci/plugin-pom/issues/705 is fixed -->
+            <dependency>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-bom</artifactId>
+                <version>1.8.10</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 </project>
