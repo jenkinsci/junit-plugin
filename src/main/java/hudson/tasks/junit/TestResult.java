@@ -479,6 +479,11 @@ public final class TestResult extends MetaTabulatedResult {
         return Messages.TestResult_getChildTitle();
     }
 
+    @Override
+    public String getChildType() {
+        return "package";
+    }
+
     @Exported(visibility=999)
     @Override
     public float getDuration() {

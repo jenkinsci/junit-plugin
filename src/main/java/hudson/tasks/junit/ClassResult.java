@@ -102,6 +102,11 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
         return "Class Results";
     }
 
+    @Override
+    public String getChildType() {
+        return "case";
+    }
+
     @Exported(visibility=999)
     @Override
     public String getName() {

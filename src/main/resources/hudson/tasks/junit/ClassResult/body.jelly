@@ -32,6 +32,9 @@ THE SOFTWARE.
           <th class="pane-header">${%Test name}</th>
           <th class="pane-header" style="width:6em">${%Duration}</th>
           <th class="pane-header" style="width:6em">${%Status}</th>
+          <j:forEach var="tableheader" items="${it.testActions}">
+            <st:include it="${tableheader}" page="${it.childType}tableheader.jelly" optional="true"/>
+          </j:forEach>
         </tr>
       </thead>
       <tbody>
@@ -50,6 +53,9 @@ THE SOFTWARE.
                 ${pst.message}
               </span>
             </td>
+            <j:forEach var="tablerow" items="${p.testActions}">
+              <st:include it="${tablerow}" page="tablerow.jelly" optional="true"/>
+            </j:forEach>
           </tr>
         </j:forEach>
       </tbody>

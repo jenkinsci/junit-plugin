@@ -27,12 +27,15 @@ THE SOFTWARE.
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:t="/lib/hudson/test">
   <j:if test="${it.failCount!=0}">
     <h2>${%All Failed Tests}</h2>
-    <table class="jenkins-table sortable">
+    <table class="jenkins-table sortable" id="failedtestresult">
       <thead>
         <tr>
           <th class="pane-header">${%Test Name}</th>
           <th class="pane-header" style="width:4em">${%Duration}</th>
           <th class="pane-header" style="width:3em">${%Age}</th>
+          <j:forEach var="tableheader" items="${it.testActions}">
+            <st:include it="${tableheader}" page="casetableheader.jelly" optional="true"/>
+          </j:forEach>
         </tr>
       </thead>
       <j:forEach var="f" items="${it.failedTests}" varStatus="i">
@@ -44,6 +47,9 @@ THE SOFTWARE.
           <td class="pane" style="text-align:right;">
             <a href="${rootURL}/${f.failedSinceRun.url}">${f.age}</a>
           </td>
+          <j:forEach var="tablerow" items="${f.testActions}">
+            <st:include it="${tablerow}" page="tablerow.jelly" optional="true"/>
+          </j:forEach>
         </tr>
       </j:forEach>
     </table>
@@ -64,6 +70,9 @@ THE SOFTWARE.
           <th class="pane-header" style="width:3em; text-align:right; white-space:nowrap;">(${%diff})</th>
           <th class="pane-header" style="width:5em; text-align:right">${%Total}</th>
           <th class="pane-header" style="width:3em; text-align:right; white-space:nowrap;">(${%diff})</th>
+          <j:forEach var="tableheader" items="${it.testActions}">
+            <st:include it="${tableheader}" page="${it.childType}tableheader.jelly" optional="true"/>
+          </j:forEach>
         </tr>
       </thead>
       <tbody>
@@ -94,6 +103,9 @@ THE SOFTWARE.
             <td class="pane" style="text-align:right" data="${p.totalCount-prev.totalCount}">
               ${h.getDiffString2(p.totalCount-prev.totalCount)}
             </td>
+            <j:forEach var="tablerow" items="${p.testActions}">
+              <st:include it="${tablerow}" page="tablerow.jelly" optional="true"/>
+            </j:forEach>
           </tr>
         </j:forEach>
       </tbody>
