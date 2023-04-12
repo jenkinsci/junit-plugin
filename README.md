@@ -67,14 +67,18 @@ The following snippet would publish three checks with the names `Tests / Integra
 
 ```groovy
 stage('Integration') {
-  junit 'test-results.xml'
+  steps {
+    junit 'test-results.xml'
+  }
 }
 
 junit 'more-test-results.xml'
 
 stage('Ignored') {
-  withChecks('Integration Tests') {
-    junit 'yet-more-test-results.xml'
+  steps {
+    withChecks('Integration Tests') {
+      junit 'yet-more-test-results.xml'
+    }
   }
 }
 ```
