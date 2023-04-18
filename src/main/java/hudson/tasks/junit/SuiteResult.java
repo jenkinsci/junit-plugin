@@ -40,6 +40,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.Reader;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -51,6 +52,9 @@ import java.util.Set;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import javax.xml.stream.*;
+import javax.xml.stream.events.*;
 
 /**
  * Result of one test suite.
@@ -68,10 +72,10 @@ import java.util.regex.Pattern;
 @ExportedBean
 public final class SuiteResult implements Serializable {
     private static final Logger LOGGER = Logger.getLogger(SuiteResult.class.getName());
-    private final String file;
-    private final String name;
-    private final String stdout;
-    private final String stderr;
+    private String file;
+    private String name;
+    private String stdout;
+    private String stderr;
     private float duration;
     /**
      * The 'timestamp' attribute of  the test suite.
@@ -93,14 +97,14 @@ public final class SuiteResult implements Serializable {
      */
     private String nodeId;
 
-    private final List<String> enclosingBlocks = new ArrayList<>();
+    private List<String> enclosingBlocks = new ArrayList<>();
 
-    private final List<String> enclosingBlockNames = new ArrayList<>();
+    private List<String> enclosingBlockNames = new ArrayList<>();
 
     /**
      * All test cases.
      */
-    private final List<CaseResult> cases = new ArrayList<>();
+    private List<CaseResult> cases = new ArrayList<>();
     private transient Map<String, CaseResult> casesByName;
     private transient hudson.tasks.junit.TestResult parent;
 
@@ -125,6 +129,136 @@ public final class SuiteResult implements Serializable {
             this.nodeId = null;
         }
         this.file = null;
+    }
+
+    public SuiteResult(SuiteResult src) {
+        this.file = src.file;
+        this.name = src.name;
+        this.id = src.id;
+        this.duration = src.duration;
+        this.timestamp = src.timestamp;
+        this.time = src.time;
+        this.nodeId = src.nodeId;
+        this.enclosingBlocks = new ArrayList<String>(src.enclosingBlocks);
+        this.enclosingBlockNames = new ArrayList<String>(src.enclosingBlockNames);
+        this.stdout = src.stdout;
+        this.stderr = src.stderr;
+        if (src.cases == null) {
+            this.cases = null;
+        } else {
+            this.cases = new ArrayList<>();
+            for (CaseResult cr : src.cases) {
+                cases.add(new CaseResult(cr));
+            }
+        }
+    }
+
+    public static SuiteResult parse(final XMLEventReader reader, String ver) throws XMLStreamException {
+        SuiteResult r = new SuiteResult("", "", "", null);
+        while (reader.hasNext()) {
+            final XMLEvent event = reader.nextEvent();
+            if (event.isEndElement() && event.asEndElement().getName().getLocalPart().equals("suite")) {
+                return r;
+            }
+            if (event.isStartElement()) {
+                final StartElement element = event.asStartElement();
+                final String elementName = element.getName().getLocalPart();
+                switch (elementName) {
+                    case "cases":
+                        parseCases(r, reader, ver);
+                        break;
+                    case "file":
+                        r.file = reader.getElementText();
+                        break;
+                    case "name":
+                        r.name = reader.getElementText();
+                        break;
+                    case "id":
+                        r.id = reader.getElementText();
+                        break;
+                    case "duration":
+                        r.duration = new TimeToFloat(reader.getElementText()).parse();
+                        break;
+                    case "timestamp":
+                        r.timestamp = reader.getElementText();
+                        break;
+                    case "time":
+                        r.time = reader.getElementText();
+                        break;
+                    case "nodeId":
+                        r.nodeId = reader.getElementText();
+                        break;
+                    case "enclosingBlocks":
+                        parseEnclosingBlocks(r, reader, ver);
+                        break;
+                    case "enclosingBlockNames":
+                        parseEnclosingBlockNames(r, reader, ver);
+                        break;
+                    case "stdout":
+                        r.stdout = reader.getElementText();
+                        break;
+                    case "stderr":
+                        r.stderr = reader.getElementText();
+                        break;
+                }
+            }
+        }
+        return r;
+    }
+
+    public static void parseEnclosingBlocks(SuiteResult r, final XMLEventReader reader, String ver) throws XMLStreamException {
+        while (reader.hasNext()) {
+            final XMLEvent event = reader.nextEvent();
+            if (event.isEndElement() && event.asEndElement().getName().getLocalPart().equals("enclosingBlocks")) {
+                return;
+            }
+            if (event.isStartElement()) {
+                final StartElement element = event.asStartElement();
+                final String elementName = element.getName().getLocalPart();
+                switch (elementName) {
+                    case "string":
+                        r.enclosingBlocks.add(reader.getElementText());
+                        break;
+                }
+            }
+        }
+    }
+
+    public static void parseEnclosingBlockNames(SuiteResult r, final XMLEventReader reader, String ver) throws XMLStreamException {
+        while (reader.hasNext()) {
+            final XMLEvent event = reader.nextEvent();
+            if (event.isEndElement() && event.asEndElement().getName().getLocalPart().equals("enclosingBlockNames")) {
+                return;
+            }
+            if (event.isStartElement()) {
+                final StartElement element = event.asStartElement();
+                final String elementName = element.getName().getLocalPart();
+                switch (elementName) {
+                    case "string":
+                        r.enclosingBlockNames.add(reader.getElementText());
+                        break;
+                }
+            }
+        }
+    }
+    
+    public static void parseCases(SuiteResult r, final XMLEventReader reader, String ver) throws XMLStreamException {
+        while (reader.hasNext()) {
+            final XMLEvent event = reader.nextEvent();
+            if (event.isEndElement() && event.asEndElement().getName().getLocalPart().equals("cases")) {
+                return;
+            }
+            if (event.isStartElement()) {
+                final StartElement element = event.asStartElement();
+                final String elementName = element.getName().getLocalPart();
+                switch (elementName) {
+                    case "case":
+                        r.cases.add(CaseResult.parse(r, reader, ver));
+                        break;
+                }
+            }
+        }
+
     }
 
     private synchronized Map<String, CaseResult> casesByName() {
@@ -157,7 +291,7 @@ public final class SuiteResult implements Serializable {
      * This method returns a collection, as a single XML may have multiple &lt;testsuite>
      * elements wrapped into the top-level &lt;testsuites>.
      */
-    static List<SuiteResult> parse(File xmlReport, boolean keepLongStdio, PipelineTestDetails pipelineTestDetails)
+    static List<SuiteResult> parse(File xmlReport, boolean keepLongStdio, boolean keepTestNames, PipelineTestDetails pipelineTestDetails)
             throws DocumentException, IOException, InterruptedException {
         List<SuiteResult> r = new ArrayList<>();
 
@@ -177,7 +311,7 @@ public final class SuiteResult implements Serializable {
             Document result = saxReader.read(xmlReportStream);
             Element root = result.getRootElement();
 
-            parseSuite(xmlReport, keepLongStdio, r, root, pipelineTestDetails);
+            parseSuite(xmlReport, keepLongStdio, keepTestNames, r, root, pipelineTestDetails);
         }
 
         return r;
@@ -192,24 +326,24 @@ public final class SuiteResult implements Serializable {
         }
     }
 
-    private static void parseSuite(File xmlReport, boolean keepLongStdio, List<SuiteResult> r, Element root,
+    private static void parseSuite(File xmlReport, boolean keepLongStdio, boolean keepTestNames, List<SuiteResult> r, Element root,
                                    PipelineTestDetails pipelineTestDetails) throws DocumentException, IOException {
         // nested test suites
         List<Element> testSuites = root.elements("testsuite");
         for (Element suite : testSuites)
-            parseSuite(xmlReport, keepLongStdio, r, suite, pipelineTestDetails);
+            parseSuite(xmlReport, keepLongStdio, keepTestNames, r, suite, pipelineTestDetails);
 
         // child test cases
         // FIXME: do this also if no testcases!
         if (root.element("testcase") != null || root.element("error") != null)
-            r.add(new SuiteResult(xmlReport, root, keepLongStdio, pipelineTestDetails));
+            r.add(new SuiteResult(xmlReport, root, keepLongStdio, keepTestNames, pipelineTestDetails));
     }
 
     /**
      * @param xmlReport A JUnit XML report file whose top level element is 'testsuite'.
      * @param suite     The parsed result of {@code xmlReport}
      */
-    private SuiteResult(File xmlReport, Element suite, boolean keepLongStdio, @CheckForNull PipelineTestDetails pipelineTestDetails)
+    private SuiteResult(File xmlReport, Element suite, boolean keepLongStdio, boolean keepTestNames, @CheckForNull PipelineTestDetails pipelineTestDetails)
             throws DocumentException, IOException {
         this.file = xmlReport.getAbsolutePath();
         String name = suite.attributeValue("name");
@@ -238,7 +372,7 @@ public final class SuiteResult implements Serializable {
         Element ex = suite.element("error");
         if (ex != null) {
             // according to junit-noframes.xsl l.229, this happens when the test class failed to load
-            addCase(new CaseResult(this, suite, "<init>", keepLongStdio));
+            addCase(new CaseResult(this, suite, "<init>", keepLongStdio, keepTestNames));
         }
 
         List<Element> testCases = suite.elements("testcase");
@@ -262,7 +396,7 @@ public final class SuiteResult implements Serializable {
             // one wants to use @name from <testsuite>,
             // the other wants to use @classname from <testcase>.
 
-            addCase(new CaseResult(this, e, classname, keepLongStdio));
+            addCase(new CaseResult(this, e, classname, keepLongStdio, keepTestNames));
         }
 
         String stdout = CaseResult.possiblyTrimStdio(cases, keepLongStdio, suite.elementText("system-out"));

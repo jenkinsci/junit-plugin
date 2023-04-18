@@ -44,11 +44,15 @@ import org.kohsuke.stapler.StaplerProxy;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -65,6 +69,7 @@ import jenkins.tasks.SimpleBuildStep;
  */
 @SuppressFBWarnings(value = "UG_SYNC_SET_UNSYNC_GET", justification = "False positive")
 public class TestResultAction extends AbstractTestResultAction<TestResultAction> implements StaplerProxy, SimpleBuildStep.LastBuildAction {
+    private static final Logger LOGGER = Logger.getLogger(TestResultAction.class.getName());
     private transient WeakReference<TestResult> result;
 
     /** null only if there is a {@link JunitTestResultStorage} */
@@ -121,6 +126,7 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         if (run != null) {
         // persist the data
         try {
+            resultCache.put(getDataFilePath(), new SoftReference<TestResult>(result));
             getDataFile().write(result);
         } catch (IOException e) {
             e.printStackTrace(listener.fatalError("Failed to save the JUnit test result"));
@@ -139,8 +145,13 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         return new XmlFile(XSTREAM, new File(run.getRootDir(), "junitResult.xml"));
     }
 
+    private String getDataFilePath() {
+        return Paths.get(run.getRootDir().getAbsolutePath(), "junitResult.xml").toString();
+    }
+
     @Override
     public synchronized TestResult getResult() {
+        long started = System.currentTimeMillis();
         JunitTestResultStorage storage = JunitTestResultStorage.find();
         if (!(storage instanceof FileJunitTestResultStorage)) {
             return new TestResult(storage.load(run.getParent().getFullName(), run.getNumber()));
@@ -161,6 +172,10 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
             totalCount = r.getTotalCount();
             failCount = r.getFailCount();
             skipCount = r.getSkipCount();
+        }
+        long d = System.currentTimeMillis() - started;
+        if (d > 100) {
+            LOGGER.info("TestResultAction.load took " + d + " ms.");
         }
         return r;
     }
@@ -223,18 +238,54 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         return getResult().getSkippedTests();
     }
 
+    private TestResult parseOnly() {
+        XmlFile df = getDataFile();
+        TestResult r;
+        try {
+            r = new TestResult();
+            r.parse(df);
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Failed to load " + df, e);
+            r = new TestResult();   // return a dummy
+        }
+        return r;
+    }
+
+    static ConcurrentHashMap<String, SoftReference<TestResult>> resultCache = new ConcurrentHashMap<>();
+    static long lastCleanupMs = 0;
 
     /**
      * Loads a {@link TestResult} from disk.
      */
     private TestResult load() {
-        TestResult r;
-        try {
-            r = (TestResult)getDataFile().read();
-        } catch (IOException e) {
-            logger.log(Level.WARNING, "Failed to load "+getDataFile(),e);
-            r = new TestResult();   // return a dummy
+        if (resultCache.size() > 1000) {
+            synchronized (resultCache)
+            {
+                if (resultCache.size() > 1000 && (System.currentTimeMillis() - lastCleanupMs) > 500) {
+                    lastCleanupMs = System.currentTimeMillis();
+                    resultCache.forEach((String k, SoftReference<TestResult> v) -> {
+                        if (v.get() == null) {
+                            resultCache.remove(k);
+                        }
+                    });
+                }
+            }
         }
+        TestResult r;
+        String k = getDataFilePath();
+        r = resultCache.computeIfAbsent(k, path -> {
+            return new SoftReference<TestResult>(parseOnly());
+            /*CacheEntry nce = new CacheEntry();
+            nce.tr = r2;
+            nce.addedMs = System.currentTimeMillis();
+            nce.usedCount = 1;
+            return nce;*/
+        }).get();
+        if (r == null) {
+            r = parseOnly();
+            resultCache.replace(k, new SoftReference<TestResult>(r));
+        }
+        r = new TestResult(r);
         r.freeze(this);
         return r;
     }

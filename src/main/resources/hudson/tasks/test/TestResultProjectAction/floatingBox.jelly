@@ -40,6 +40,7 @@ THE SOFTWARE.
 
   <c:trend-chart it="${from}" title="${%Test Result Trend}" enableLinks="true" configurationId="junit"/>
 
+
   <st:adjunct includes="hudson.tasks.test.TestResultProjectAction.junit-trend-color-switcher" />
 
 </j:jelly>
