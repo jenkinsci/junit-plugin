@@ -148,8 +148,8 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         this.errorStackTrace = stacktrace;
         this.errorDetails = errorDetails;
         this.parent = parent;
-        this.stdout = stdout;
-        this.stderr = stderr;
+        this.stdout = fixNULs(stdout);
+        this.stderr = fixNULs(stderr);
         this.duration = duration;
         
         this.skipped = skippedMessage != null;
@@ -189,8 +189,8 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         skippedMessage = getSkippedMessage(testCase);
         @SuppressWarnings("LeakingThisInConstructor")
         Collection<CaseResult> _this = Collections.singleton(this);
-        stdout = possiblyTrimStdio(_this, keepLongStdio, testCase.elementText("system-out"));
-        stderr = possiblyTrimStdio(_this, keepLongStdio, testCase.elementText("system-err"));
+        stdout = fixNULs(possiblyTrimStdio(_this, keepLongStdio, testCase.elementText("system-out")));
+        stderr = fixNULs(possiblyTrimStdio(_this, keepLongStdio, testCase.elementText("system-err")));
     }
 
     static String possiblyTrimStdio(Collection<CaseResult> results, boolean keepLongStdio, String stdio) { // HUDSON-6516
@@ -207,6 +207,10 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
             return stdio;
         }
         return stdio.subSequence(0, halfMaxSize) + "\n...[truncated " + middle + " chars]...\n" + stdio.subSequence(len - halfMaxSize, len);
+    }
+
+    static String fixNULs(String stdio) { // JENKINS-71139
+        return stdio == null ? null : stdio.replace("\u0000", "^@");
     }
 
     /**
