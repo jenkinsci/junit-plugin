@@ -311,7 +311,7 @@ public class SuiteResultTest {
         System.out.println();
         sr = (SuiteResult) f.read();
         System.out.println(TestResultAction.XSTREAM.toXML(sr));
-        assertEquals("foo\u0000bar", sr.getStdout());
+        assertEquals("foo^@bar", sr.getStdout());
     }
 
     /**

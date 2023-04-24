@@ -114,8 +114,8 @@ public final class SuiteResult implements Serializable {
      */
     public SuiteResult(String name, String stdout, String stderr, @CheckForNull PipelineTestDetails pipelineTestDetails) {
         this.name = name;
-        this.stderr = stderr;
-        this.stdout = stdout;
+        this.stderr = CaseResult.fixNULs(stderr);
+        this.stdout = CaseResult.fixNULs(stdout);
         // runId is generally going to be not null, but we only care about it if both it and nodeId are not null.
         if (pipelineTestDetails != null && pipelineTestDetails.getNodeId() != null) {
             this.nodeId = pipelineTestDetails.getNodeId();
@@ -283,8 +283,8 @@ public final class SuiteResult implements Serializable {
             }
         }
 
-        this.stdout = stdout;
-        this.stderr = stderr;
+        this.stdout = CaseResult.fixNULs(stdout);
+        this.stderr = CaseResult.fixNULs(stderr);
     }
 
     public void addCase(CaseResult cr) {
