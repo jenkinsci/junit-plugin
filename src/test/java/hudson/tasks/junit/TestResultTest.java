@@ -25,8 +25,6 @@ package hudson.tasks.junit;
 
 import hudson.XmlFile;
 import hudson.tasks.test.PipelineTestDetails;
-import hudson.util.HeapSpaceStringConverter;
-import hudson.util.XStream2;
 
 import java.io.File;
 import java.io.IOException;
@@ -40,7 +38,6 @@ import java.util.List;
 import org.apache.tools.ant.DirectoryScanner;
 import org.junit.Test;
 
-import com.thoughtworks.xstream.XStream;
 import org.jvnet.hudson.test.Issue;
 
 import static org.junit.Assert.assertEquals;
@@ -83,7 +80,7 @@ public class TestResultTest {
      */
     @Test
     public void testXmlCompatibility() throws Exception {
-        XmlFile xmlFile = new XmlFile(XSTREAM, getDataFile("junitResult.xml"));
+        XmlFile xmlFile = new XmlFile(TestResultAction.XSTREAM, getDataFile("junitResult.xml"));
         TestResult result = (TestResult)xmlFile.read();
 
         // Regenerate the transient data
@@ -326,12 +323,4 @@ public class TestResultTest {
 
     }
 
-    private static final XStream XSTREAM = new XStream2();
-
-    static {
-        XSTREAM.alias("result",TestResult.class);
-        XSTREAM.alias("suite",SuiteResult.class);
-        XSTREAM.alias("case",CaseResult.class);
-        XSTREAM.registerConverter(new HeapSpaceStringConverter(),100);
-    }
 }
