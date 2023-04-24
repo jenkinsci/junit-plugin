@@ -326,7 +326,7 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
 
     private static final Logger logger = Logger.getLogger(TestResultAction.class.getName());
 
-    private static final XStream XSTREAM = new XStream2();
+    static final XStream XSTREAM = new XStream2();
 
     static {
         XSTREAM.alias("result",TestResult.class);
