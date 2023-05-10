@@ -28,6 +28,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
   // in the showFailures method above.
   const showFailuresLink = document.getElementById("showLink");
 
-  showFailuresLink.onclick = (_) => showFailures();
+  if (showFailuresLink) {
+      showFailuresLink.onclick = (_) => showFailures();
+  }
 
 });
