@@ -4,8 +4,9 @@ import edu.hm.hafner.echarts.ChartModelConfiguration;
 import edu.hm.hafner.echarts.LineSeries;
 import edu.hm.hafner.echarts.LinesChartModel;
 import edu.hm.hafner.echarts.LinesDataSet;
-import edu.hm.hafner.echarts.Palette;
 import hudson.tasks.junit.TestDurationResultSummary;
+import io.jenkins.plugins.echarts.JenkinsPalette;
+
 import java.util.List;
 
 import static hudson.tasks.test.TestDurationTrendSeriesBuilder.SECONDS;
@@ -30,7 +31,7 @@ public class TestResultDurationChart {
     private LinesChartModel getLinesChartModel(LinesDataSet dataSet) {
         LinesChartModel model = new LinesChartModel(dataSet);
 
-        LineSeries duration = new LineSeries(SECONDS, Palette.GREEN.getNormal(),
+        LineSeries duration = new LineSeries(SECONDS, JenkinsPalette.GREEN.normal(),
                 LineSeries.StackedMode.STACKED, LineSeries.FilledMode.FILLED);
         duration.addAll(dataSet.getSeries(SECONDS));
         model.addSeries(duration);
