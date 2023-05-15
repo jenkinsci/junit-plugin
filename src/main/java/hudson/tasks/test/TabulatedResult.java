@@ -121,4 +121,14 @@ public abstract class TabulatedResult extends TestResult {
     public String getChildTitle() {
         return "";
     }
+
+    /**
+     * Get a simple name for the type of children the {@link #getChildren()} method returns, for example "case", "class"
+     * or "package".
+     *
+     * @return the type of children this result has, all lowercase.
+     */
+    public String getChildType() {
+        return "";
+    }
 }

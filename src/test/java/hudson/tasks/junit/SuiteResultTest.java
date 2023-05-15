@@ -27,10 +27,13 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.File;
 import java.util.List;
 import java.net.URISyntaxException;
+import org.apache.commons.io.FileUtils;
 
 import hudson.XmlFile;
 
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.Issue;
 
 import java.io.FileWriter;
@@ -50,6 +53,9 @@ import static org.junit.Assert.assertTrue;
  * @author Christoph Kutzinski
  */
 public class SuiteResultTest {
+
+    @Rule
+    public TemporaryFolder tmp = new TemporaryFolder();
 
     private File getDataFile(String name) throws URISyntaxException {
         return new File(SuiteResultTest.class.getResource(name).toURI());
@@ -293,6 +299,19 @@ public class SuiteResultTest {
         } finally {
             data.delete();
         }
+    }
+
+    @Issue("JENKINS-71139")
+    @Test
+    public void stdioNull() throws Exception {
+        SuiteResult sr = parseOne(getDataFile("TEST-null.xml"));
+        XmlFile f = new XmlFile(TestResultAction.XSTREAM, tmp.newFile("junitResult.xml"));
+        f.write(sr);
+        FileUtils.copyFile(f.getFile(), System.out);
+        System.out.println();
+        sr = (SuiteResult) f.read();
+        System.out.println(TestResultAction.XSTREAM.toXML(sr));
+        assertEquals("foo^@bar", sr.getStdout());
     }
 
     /**

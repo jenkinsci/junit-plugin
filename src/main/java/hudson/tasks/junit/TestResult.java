@@ -479,6 +479,11 @@ public final class TestResult extends MetaTabulatedResult {
         return Messages.TestResult_getChildTitle();
     }
 
+    @Override
+    public String getChildType() {
+        return "package";
+    }
+
     @Exported(visibility=999)
     @Override
     public float getDuration() {
@@ -695,6 +700,9 @@ public final class TestResult extends MetaTabulatedResult {
 
     @Exported(inline=true,visibility=9)
     public Collection<SuiteResult> getSuites() {
+        if (impl != null) {
+            return impl.getSuites();
+        }
         return suites;
     }
 

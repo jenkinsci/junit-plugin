@@ -60,6 +60,9 @@ THE SOFTWARE.
       }
     </style>
   </st:once>
+
+  <j:set var="id" value="${h.htmlAttributeEscape(url)}"/>
+
   <a id="test-${id}-showlink" title="${%Show details}">
     <l:icon src="symbol-add-outline plugin-ionicons-api" class="icon-sm"/>
   </a>
