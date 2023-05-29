@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>4.63</version>
+        <version>4.64</version>
         <relativePath />
     </parent>
     <artifactId>junit</artifactId>
@@ -72,7 +72,7 @@
         <dependency>
             <groupId>io.jenkins.plugins</groupId>
             <artifactId>github-checks</artifactId>
-            <version>1.0.19</version>
+            <version>545.v79a_a_68b_ca_682</version>
             <scope>test</scope>
         </dependency>
         <dependency>
