@@ -23,9 +23,9 @@
  */
 package hudson.tasks.test;
 
-import com.gargoylesoftware.htmlunit.AlertHandler;
-import com.gargoylesoftware.htmlunit.Page;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import org.htmlunit.AlertHandler;
+import org.htmlunit.Page;
+import org.htmlunit.html.HtmlPage;
 import hudson.Launcher;
 import hudson.Util;
 import hudson.model.AbstractBuild;

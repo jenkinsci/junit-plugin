@@ -1,6 +1,6 @@
 package hudson.tasks.test.helper;
 
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import org.htmlunit.html.HtmlPage;
 
 public class TestResultsPage {
     protected HtmlPage htmlPage;
