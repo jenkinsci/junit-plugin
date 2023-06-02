@@ -1,8 +1,8 @@
 package hudson.tasks.junit;
 
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import com.gargoylesoftware.htmlunit.html.HtmlTable;
-import com.gargoylesoftware.htmlunit.html.HtmlTableCell;
+import org.htmlunit.html.HtmlPage;
+import org.htmlunit.html.HtmlTable;
+import org.htmlunit.html.HtmlTableCell;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;

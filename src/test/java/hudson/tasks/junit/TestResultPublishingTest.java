@@ -23,9 +23,9 @@
  */
 package hudson.tasks.junit;
 
-import com.gargoylesoftware.htmlunit.Page;
-import com.gargoylesoftware.htmlunit.html.*;
-import com.gargoylesoftware.htmlunit.xml.XmlPage;
+import org.htmlunit.Page;
+import org.htmlunit.html.*;
+import org.htmlunit.xml.XmlPage;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;

@@ -3,7 +3,7 @@ package hudson.tasks.test.helper;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
 
-import com.gargoylesoftware.htmlunit.NicelyResynchronizingAjaxController;
+import org.htmlunit.NicelyResynchronizingAjaxController;
 
 /**
  * Creates a {@link WebClient} with deactivated JS.
