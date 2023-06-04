@@ -42,12 +42,12 @@ import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.JenkinsRule.WebClient;
 import org.jvnet.hudson.test.TestBuilder;
-import com.gargoylesoftware.htmlunit.AlertHandler;
-import com.gargoylesoftware.htmlunit.html.HtmlImage;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import com.gargoylesoftware.htmlunit.html.HtmlElement;
-import com.gargoylesoftware.htmlunit.Page;
-import com.gargoylesoftware.htmlunit.xml.XmlPage;
+import org.htmlunit.AlertHandler;
+import org.htmlunit.html.HtmlImage;
+import org.htmlunit.html.HtmlPage;
+import org.htmlunit.html.HtmlElement;
+import org.htmlunit.Page;
+import org.htmlunit.xml.XmlPage;
 import org.jvnet.hudson.test.TouchBuilder;
 import org.junit.Assume;
 
