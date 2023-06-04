@@ -1,6 +1,6 @@
 package hudson.tasks.test.helper;
 
-import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
+import org.htmlunit.html.HtmlAnchor;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
