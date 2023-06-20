@@ -55,6 +55,9 @@ THE SOFTWARE.
   <j:set var="id" value="${h.generateId()}"/>
 
   <local:item id="${id}" name="error" title="${%Error Details}" value="${it.errorDetails}" opened="true"/>
+  <j:forEach var="p" items="${it.properties}">
+    <local:item id="${id}" name="${p.key}" title="${p.key}" value="${p.value}"/>
+  </j:forEach>
   <local:item id="${id}" name="stacktrace" title="${%Stack Trace}" value="${it.errorStackTrace}"/>
   <local:item id="${id}" name="stdout" title="${%Standard Output}" value="${it.stdout}"/>
   <local:item id="${id}" name="stderr" title="${%Standard Error}" value="${it.stderr}"/>

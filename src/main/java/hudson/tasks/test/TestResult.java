@@ -28,6 +28,8 @@ import hudson.model.Run;
 import hudson.model.Result;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
 
 import static java.util.Collections.emptyList;
 
@@ -247,6 +249,10 @@ public abstract class TestResult extends TestObject {
      */
     public String getErrorDetails() {
         return ""; 
+    }
+
+    public Map<String, String> getProperties() {
+        return Collections.emptyMap();
     }
 
     /**
