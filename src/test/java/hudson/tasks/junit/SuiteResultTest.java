@@ -26,6 +26,7 @@ package hudson.tasks.junit;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 import java.net.URISyntaxException;
 import org.apache.commons.io.FileUtils;
 
@@ -351,5 +352,24 @@ public class SuiteResultTest {
         assertEquals(22.0f, results.get(1).getDuration(),2); //sum of test cases time
         assertEquals(40.0f, results.get(2).getDuration(), 2); //testsuit time
         assertEquals(20.0f, results.get(3).getDuration(), 2); //sum of test cases time
+    }
+
+    @Test
+    public void testProperties() throws Exception {
+        SuiteResult sr = parseOne(getDataFile("junit-report-with-properties.xml"));
+        Map<String,String> props = sr.getProperties();
+        assertEquals(props.get("prop1"), "value1");
+        String[] lines = props.get("multiline").split("\n");
+        assertEquals("", lines[0]);
+        assertEquals("          Config line 1", lines[1]);
+        assertEquals("          Config line 2", lines[2]);
+        assertEquals("          Config line 3", lines[3]);
+
+        assertEquals(2, sr.getCases().size());
+        CaseResult cr;
+        cr = sr.getCase("io.jenkins.example.with.properties.testCaseA");
+        assertEquals("description of test testCaseA", cr.getProperties().get("description"));
+        cr = sr.getCase("io.jenkins.example.with.properties.testCaseZ");
+        assertEquals(0, cr.getProperties().size());
     }
 }

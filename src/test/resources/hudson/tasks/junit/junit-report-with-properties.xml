@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<testsuites>
+  <testsuite name="io.jenkins.example.with.properties" time="2.000" tests="2" errors="0" skipped="0" failures="1">
+    <properties>
+      <property name="prop1" value="value1" />
+      <property name="multiline">
+          Config line 1
+          Config line 2
+          Config line 3
+      </property>
+    </properties>
+    <testcase name="testCaseA" classname="io.jenkins.example.with.properties" time="1.000">
+      <failure message="expected: [a] but was: [b]" type="org.junit.ComparisonFailure">
+        org.junit.ComparisonFailure: expected: [a] but was: [b]
+      </failure>
+      <properties>
+        <property name="description">description of test testCaseA</property>
+      </properties>
+    </testcase>
+    <testcase name="testCaseZ" classname="io.jenkins.example.with.properties" time="1.000" />
+  </testsuite>
+</testsuites>
