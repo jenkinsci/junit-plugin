@@ -657,6 +657,11 @@ public final class TestResult extends MetaTabulatedResult {
         return sb.toString();
     }
 
+    @Override
+    public Map<String, String> getProperties() {
+        return Collections.emptyMap();
+    }
+
     /**
      * If there was an error or a failure, this is the stack trace, or otherwise null.
      */

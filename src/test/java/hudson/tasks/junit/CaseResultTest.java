@@ -55,6 +55,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -338,6 +339,45 @@ public class CaseResultTest {
         p.getBuildersList().add(new TouchBuilder());
         p.getPublishersList().add(new JUnitResultArchiver("x.xml"));
         rule.buildAndAssertSuccess(p);
+    }
+
+    @Test
+    public void testProperties() throws Exception {
+        String projectName = "properties-test";
+        String testResultResourceFile = "junit-report-with-properties.xml";
+
+        FreeStyleProject p = rule.createFreeStyleProject(projectName);
+        p.getPublishersList().add(new JUnitResultArchiver("*.xml"));
+        p.getBuildersList().add(new TestBuilder() {
+            public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+                FilePath junitFile = build.getWorkspace().child("junit.xml");
+                junitFile.copyFrom(getClass().getResource(testResultResourceFile));
+                // sadly this can be flaky for 1ms.... (but hey changing to nano even in core might complicated :))
+                junitFile.touch(System.currentTimeMillis()+1L);
+                return true;
+            }
+        });
+        FreeStyleBuild b =  rule.assertBuildStatus(Result.UNSTABLE, p.scheduleBuild2(0).get());
+
+        TestResult tr = b.getAction(TestResultAction.class).getResult();
+
+        assertEquals(1, tr.getSuites().size());
+
+        SuiteResult sr = tr.getSuite("io.jenkins.example.with.properties");
+        Map<String,String> props = sr.getProperties();
+        assertEquals(props.get("prop1"), "value1");
+        String[] lines = props.get("multiline").split("\n");
+        assertEquals("", lines[0]);
+        assertEquals("          Config line 1", lines[1]);
+        assertEquals("          Config line 2", lines[2]);
+        assertEquals("          Config line 3", lines[3]);
+
+        assertEquals(2, sr.getCases().size());
+        CaseResult cr;
+        cr = sr.getCase("io.jenkins.example.with.properties.testCaseA");
+        assertEquals("description of test testCaseA", cr.getProperties().get("description"));
+        cr = sr.getCase("io.jenkins.example.with.properties.testCaseZ");
+        assertEquals(0, cr.getProperties().size());
     }
 
     private String composeXPath(String[] fields) throws Exception {

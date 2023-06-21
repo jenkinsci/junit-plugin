@@ -46,6 +46,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -78,6 +80,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     private final String skippedMessage;
     private final String errorStackTrace;
     private final String errorDetails;
+    private final Map<String, String> properties;
     @SuppressFBWarnings(value = "SE_TRANSIENT_FIELD_NOT_RESTORED", justification = "Specific method to restore it")
     private transient SuiteResult parent;
 
@@ -129,6 +132,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         this.duration = 0.0f;
         this.skipped = false;
         this.skippedMessage = null;
+        this.properties = Collections.emptyMap();
     }
 
     @Restricted(Beta.class)
@@ -154,6 +158,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         
         this.skipped = skippedMessage != null;
         this.skippedMessage = skippedMessage;
+        this.properties = Collections.emptyMap();
     }
 
     CaseResult(SuiteResult parent, Element testCase, String testClassName, boolean keepLongStdio) {
@@ -191,6 +196,22 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         Collection<CaseResult> _this = Collections.singleton(this);
         stdout = fixNULs(possiblyTrimStdio(_this, keepLongStdio, testCase.elementText("system-out")));
         stderr = fixNULs(possiblyTrimStdio(_this, keepLongStdio, testCase.elementText("system-err")));
+
+        // parse properties
+        Map<String, String> properties = new HashMap<String, String>();
+        Element properties_element = testCase.element("properties");
+        if (properties_element != null) {
+            List<Element> property_elements = properties_element.elements("property");
+            for (Element prop : property_elements){
+                if (prop.attributeValue("name") != null) {
+                    if (prop.attributeValue("value") != null)
+                        properties.put(prop.attributeValue("name"), prop.attributeValue("value"));
+                    else
+                        properties.put(prop.attributeValue("name"), prop.getText());
+                }
+            }
+        }
+        this.properties = properties;
     }
 
     static String possiblyTrimStdio(Collection<CaseResult> results, boolean keepLongStdio, String stdio) { // HUDSON-6516
@@ -611,6 +632,12 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     @Override
     public String getErrorDetails() {
         return errorDetails;
+    }
+
+    @Exported
+    @Override
+    public Map<String, String> getProperties() {
+        return properties;
     }
 
     /**
