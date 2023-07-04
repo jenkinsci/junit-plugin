@@ -155,18 +155,24 @@ public final class SuiteResult implements Serializable {
         }
     }
 
+    @Deprecated
+    static List<SuiteResult> parse(File xmlReport, boolean keepLongStdio, PipelineTestDetails pipelineTestDetails)
+            throws DocumentException, IOException, InterruptedException {
+            return parse(xmlReport, keepLongStdio, false, pipelineTestDetails);
+    }
+
     /**
      * Parses the JUnit XML file into {@link SuiteResult}s.
      * This method returns a collection, as a single XML may have multiple &lt;testsuite>
      * elements wrapped into the top-level &lt;testsuites>.
      */
-    static List<SuiteResult> parse(File xmlReport, boolean keepLongStdio, PipelineTestDetails pipelineTestDetails)
+    static List<SuiteResult> parse(File xmlReport, boolean keepLongStdio, boolean keepProperties, PipelineTestDetails pipelineTestDetails)
             throws DocumentException, IOException, InterruptedException {
         List<SuiteResult> r = new ArrayList<>();
 
         // parse into DOM
         SAXReader saxReader = new SAXReader();
-        
+
         //source: https://www.owasp.org/index.php/XML_External_Entity_(XXE)_Prevention_Cheat_Sheet => SAXReader
         // setFeatureQuietly(saxReader, "http://apache.org/xml/features/disallow-doctype-decl", true);
         // setFeatureQuietly(saxReader, "http://xml.org/sax/features/external-parameter-entities", false);
@@ -180,7 +186,7 @@ public final class SuiteResult implements Serializable {
             Document result = saxReader.read(xmlReportStream);
             Element root = result.getRootElement();
 
-            parseSuite(xmlReport, keepLongStdio, r, root, pipelineTestDetails);
+            parseSuite(xmlReport, keepLongStdio, keepProperties, r, root, pipelineTestDetails);
         }
 
         return r;
@@ -195,24 +201,28 @@ public final class SuiteResult implements Serializable {
         }
     }
 
-    private static void parseSuite(File xmlReport, boolean keepLongStdio, List<SuiteResult> r, Element root,
+    private static void parseSuite(File xmlReport, boolean keepLongStdio, boolean keepProperties, List<SuiteResult> r, Element root,
                                    PipelineTestDetails pipelineTestDetails) throws DocumentException, IOException {
         // nested test suites
         List<Element> testSuites = root.elements("testsuite");
         for (Element suite : testSuites)
-            parseSuite(xmlReport, keepLongStdio, r, suite, pipelineTestDetails);
+            parseSuite(xmlReport, keepLongStdio, keepProperties, r, suite, pipelineTestDetails);
 
         // child test cases
         // FIXME: do this also if no testcases!
         if (root.element("testcase") != null || root.element("error") != null)
-            r.add(new SuiteResult(xmlReport, root, keepLongStdio, pipelineTestDetails));
+            r.add(new SuiteResult(xmlReport, root, keepLongStdio, keepProperties, pipelineTestDetails));
     }
 
+    private SuiteResult(File xmlReport, Element suite, boolean keepLongStdio, @CheckForNull PipelineTestDetails pipelineTestDetails)
+            throws DocumentException, IOException {
+            this(xmlReport, suite, keepLongStdio, false, pipelineTestDetails);
+    }
     /**
      * @param xmlReport A JUnit XML report file whose top level element is 'testsuite'.
      * @param suite     The parsed result of {@code xmlReport}
      */
-    private SuiteResult(File xmlReport, Element suite, boolean keepLongStdio, @CheckForNull PipelineTestDetails pipelineTestDetails)
+    private SuiteResult(File xmlReport, Element suite, boolean keepLongStdio, boolean keepProperties, @CheckForNull PipelineTestDetails pipelineTestDetails)
             throws DocumentException, IOException {
         this.file = xmlReport.getAbsolutePath();
         String name = suite.attributeValue("name");
@@ -241,7 +251,7 @@ public final class SuiteResult implements Serializable {
         Element ex = suite.element("error");
         if (ex != null) {
             // according to junit-noframes.xsl l.229, this happens when the test class failed to load
-            addCase(new CaseResult(this, suite, "<init>", keepLongStdio));
+            addCase(new CaseResult(this, suite, "<init>", keepLongStdio, keepProperties));
         }
 
         List<Element> testCases = suite.elements("testcase");
@@ -265,7 +275,7 @@ public final class SuiteResult implements Serializable {
             // one wants to use @name from <testsuite>,
             // the other wants to use @classname from <testcase>.
 
-            addCase(new CaseResult(this, e, classname, keepLongStdio));
+            addCase(new CaseResult(this, e, classname, keepLongStdio, keepProperties));
         }
 
         String stdout = CaseResult.possiblyTrimStdio(cases, keepLongStdio, suite.elementText("system-out"));
@@ -291,19 +301,20 @@ public final class SuiteResult implements Serializable {
 
         // parse properties
         Map<String, String> properties = new HashMap<String, String>();
-        Element properties_element = suite.element("properties");
-        if (properties_element != null) {
-            List<Element> property_elements = properties_element.elements("property");
-            for (Element prop : property_elements){
-                if (prop.attributeValue("name") != null) {
-                    if (prop.attributeValue("value") != null)
-                        properties.put(prop.attributeValue("name"), prop.attributeValue("value"));
-                    else
-                        properties.put(prop.attributeValue("name"), prop.getText());
+        if (keepProperties) {
+            Element properties_element = suite.element("properties");
+            if (properties_element != null) {
+                List<Element> property_elements = properties_element.elements("property");
+                for (Element prop : property_elements){
+                    if (prop.attributeValue("name") != null) {
+                        if (prop.attributeValue("value") != null)
+                            properties.put(prop.attributeValue("name"), prop.attributeValue("value"));
+                        else
+                            properties.put(prop.attributeValue("name"), prop.getText());
+                    }
                 }
             }
         }
-
         this.properties = properties;
     }
 

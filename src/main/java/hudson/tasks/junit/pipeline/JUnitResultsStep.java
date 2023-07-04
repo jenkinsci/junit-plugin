@@ -40,6 +40,8 @@ public class JUnitResultsStep extends Step implements JUnitTask {
      */
     private boolean keepLongStdio;
 
+    private boolean keepProperties;
+
     /**
      * {@link TestDataPublisher}s configured for this archiver, to process the recorded data.
      * For compatibility reasons, can be null.
@@ -118,6 +120,21 @@ public class JUnitResultsStep extends Step implements JUnitTask {
      */
     @DataBoundSetter public final void setKeepLongStdio(boolean keepLongStdio) {
         this.keepLongStdio = keepLongStdio;
+    }
+
+    /**
+     * @return the keepProperties.
+     */
+    @Override
+    public boolean isKeepProperties() {
+        return keepProperties;
+    }
+
+    /**
+     * @param keepProperties Whether to keep the properties
+     */
+    @DataBoundSetter public final void setKeepProperties(boolean keepProperties) {
+        this.keepProperties = keepProperties;
     }
 
     /**

@@ -11,6 +11,8 @@ public interface JUnitTask {
 
     boolean isKeepLongStdio();
 
+    boolean isKeepProperties();
+
     boolean isAllowEmptyResults();
     
     boolean isSkipPublishingChecks();
