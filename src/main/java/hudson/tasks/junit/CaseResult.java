@@ -161,7 +161,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         this.properties = Collections.emptyMap();
     }
 
-    CaseResult(SuiteResult parent, Element testCase, String testClassName, boolean keepLongStdio) {
+    CaseResult(SuiteResult parent, Element testCase, String testClassName, boolean keepLongStdio, boolean keepProperties) {
         // schema for JUnit report XML format is not available in Ant,
         // so I don't know for sure what means what.
         // reports in http://www.nabble.com/difference-in-junit-publisher-and-ant-junitreport-tf4308604.html#a12265700
@@ -199,15 +199,17 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
 
         // parse properties
         Map<String, String> properties = new HashMap<String, String>();
-        Element properties_element = testCase.element("properties");
-        if (properties_element != null) {
-            List<Element> property_elements = properties_element.elements("property");
-            for (Element prop : property_elements){
-                if (prop.attributeValue("name") != null) {
-                    if (prop.attributeValue("value") != null)
-                        properties.put(prop.attributeValue("name"), prop.attributeValue("value"));
-                    else
-                        properties.put(prop.attributeValue("name"), prop.getText());
+        if (keepProperties) {
+            Element properties_element = testCase.element("properties");
+            if (properties_element != null) {
+                List<Element> property_elements = properties_element.elements("property");
+                for (Element prop : property_elements){
+                    if (prop.attributeValue("name") != null) {
+                        if (prop.attributeValue("value") != null)
+                            properties.put(prop.attributeValue("name"), prop.attributeValue("value"));
+                        else
+                            properties.put(prop.attributeValue("name"), prop.getText());
+                    }
                 }
             }
         }

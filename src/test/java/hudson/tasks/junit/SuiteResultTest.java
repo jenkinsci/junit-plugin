@@ -63,11 +63,17 @@ public class SuiteResultTest {
     }
 
     private SuiteResult parseOne(File file) throws Exception {
-        List<SuiteResult> results = SuiteResult.parse(file, false, null);
+        List<SuiteResult> results = SuiteResult.parse(file, false, false, null);
         assertEquals(1,results.size());
         return results.get(0);
     }
     
+    private SuiteResult parseOneWithProperties(File file) throws Exception {
+        List<SuiteResult> results = SuiteResult.parse(file, false, true, null);
+        assertEquals(1,results.size());
+        return results.get(0);
+    }
+
     private List<SuiteResult> parseSuites(File file) throws Exception {
         return SuiteResult.parse(file, false, null);
     }
@@ -356,9 +362,9 @@ public class SuiteResultTest {
 
     @Test
     public void testProperties() throws Exception {
-        SuiteResult sr = parseOne(getDataFile("junit-report-with-properties.xml"));
+        SuiteResult sr = parseOneWithProperties(getDataFile("junit-report-with-properties.xml"));
         Map<String,String> props = sr.getProperties();
-        assertEquals(props.get("prop1"), "value1");
+        assertEquals("value1", props.get("prop1"));
         String[] lines = props.get("multiline").split("\n");
         assertEquals("", lines[0]);
         assertEquals("          Config line 1", lines[1]);

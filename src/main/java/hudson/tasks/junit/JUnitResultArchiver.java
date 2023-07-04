@@ -85,6 +85,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
      */
     private boolean keepLongStdio;
 
+    private boolean keepProperties;
     /**
      * {@link TestDataPublisher}s configured for this archiver, to process the recorded data.
      * For compatibility reasons, can be null.
@@ -125,17 +126,19 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
             String testResults,
             boolean keepLongStdio,
             DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> testDataPublishers) {
-        this(testResults, keepLongStdio, testDataPublishers, 1.0);
+        this(testResults, keepLongStdio, false, testDataPublishers, 1.0);
     }
 
     @Deprecated
     public JUnitResultArchiver(
             String testResults,
             boolean keepLongStdio,
+            boolean keepProperties,
             DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> testDataPublishers,
             double healthScaleFactor) {
         this.testResults = testResults;
         setKeepLongStdio(keepLongStdio);
+        setKeepProperties(keepProperties);
         setTestDataPublishers(testDataPublishers == null ? Collections.emptyList() : testDataPublishers);
         setHealthScaleFactor(healthScaleFactor);
         setAllowEmptyResults(false);
@@ -153,7 +156,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                                     String expandedTestResults, Run<?,?> run, @NonNull FilePath workspace,
                                     Launcher launcher, TaskListener listener)
             throws IOException, InterruptedException {
-        return new JUnitParser(task.isKeepLongStdio(), task.isAllowEmptyResults(), task.isSkipOldReports())
+        return new JUnitParser(task.isKeepLongStdio(), task.isKeepProperties(), task.isAllowEmptyResults(), task.isSkipOldReports())
                 .parseResult(expandedTestResults, run, pipelineTestDetails, workspace, launcher, listener);
     }
 
@@ -252,7 +255,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
             summary = null; // see below
         } else {
             result = new TestResult(storage.load(build.getParent().getFullName(), build.getNumber())); // irrelevant
-            summary = new JUnitParser(task.isKeepLongStdio(), task.isAllowEmptyResults(), task.isSkipOldReports())
+            summary = new JUnitParser(task.isKeepLongStdio(), task.isKeepProperties(), task.isAllowEmptyResults(), task.isSkipOldReports())
                     .summarizeResult(testResults, build, pipelineTestDetails, workspace, launcher, listener, storage);
         }
 
@@ -396,6 +399,18 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     }
 
     /**
+     * @return the keepProperties.
+     */
+    @Override
+    public boolean isKeepProperties() {
+        return keepProperties;
+    }
+
+    @DataBoundSetter public final void setKeepProperties(boolean keepProperties) {
+        this.keepProperties = keepProperties;
+    }
+
+    /**
      *
      * @return the allowEmptyResults
      */
@@ -406,8 +421,8 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
 
     /**
      * Should we skip publishing checks to the checks API plugin.
-     * 
-     * @return if publishing checks should be skipped, {@code false} otherwise 
+     *
+     * @return if publishing checks should be skipped, {@code false} otherwise
      */
     @Override
     public boolean isSkipPublishingChecks() {
