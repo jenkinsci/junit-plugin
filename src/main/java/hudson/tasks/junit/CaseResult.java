@@ -190,7 +190,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         errorStackTrace = getError(testCase);
         errorDetails = getErrorMessage(testCase);
         this.parent = parent;
-        duration = parseTime(testCase);
+        duration = clampDuration(parseTime(testCase));
         skipped = isMarkedAsSkipped(testCase);
         skippedMessage = getSkippedMessage(testCase);
         @SuppressWarnings("LeakingThisInConstructor")
@@ -214,6 +214,10 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         this.stderr = src.stderr;
     }
 
+    public static float clampDuration(float d) {
+        return Math.min(7 * 24 * 60 * 60, Math.max(0.0f, d));
+    }
+
     public static CaseResult parse(SuiteResult parent, final XMLEventReader reader, String ver) throws XMLStreamException {
         CaseResult r = new CaseResult(parent, null, null, null);
         while (reader.hasNext()) {
@@ -226,7 +230,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
                 final String elementName = element.getName().getLocalPart();
                 switch (elementName) {
                     case "duration":
-                        r.duration = new TimeToFloat(reader.getElementText()).parse();
+                        r.duration = clampDuration(new TimeToFloat(reader.getElementText()).parse());
                         break;
                     case "className":
                         r.className = reader.getElementText();
@@ -424,7 +428,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     @Exported(visibility=9)
     @Override
     public float getDuration() {
-        return Math.min(1 * 7 * 24 * 60 * 60, Math.max(0.0f, duration));
+        return duration;
     }
 
     /**

@@ -268,7 +268,7 @@ public final class TestResult extends MetaTabulatedResult {
                         parseXmlSuites(reader, ver);
                         break;
                     case "duration":
-                        duration = new TimeToFloat(reader.getElementText()).parse();
+                        duration = CaseResult.clampDuration(new TimeToFloat(reader.getElementText()).parse());
                         break;
                     case "keepLongStdio":
                         keepLongStdio = Boolean.parseBoolean(reader.getElementText());

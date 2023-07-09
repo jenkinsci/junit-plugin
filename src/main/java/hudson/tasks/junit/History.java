@@ -461,7 +461,8 @@ public class History {
         double step = scale / counts.length;
         for (HistoryTestResultSummary h : history) {
             hudson.tasks.test.TestResult to = h.getResultInRun();
-            lrY[smoothBuffer + (int)Math.round((to.getDuration() - minDuration) / step)]++;
+            int idx = smoothBuffer + (int)Math.round((to.getDuration() - minDuration) / step);
+            lrY[Math.max(0, Math.min(idx, lrY.length - 1))]++;
         }
         for (int i = 0; i < lrY.length; ++i) {
             lrX[i] = ((minDuration + (maxDuration - minDuration) / lrY.length * i) / scale * 100.0);

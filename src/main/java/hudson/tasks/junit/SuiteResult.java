@@ -177,7 +177,7 @@ public final class SuiteResult implements Serializable {
                         r.id = reader.getElementText();
                         break;
                     case "duration":
-                        r.duration = new TimeToFloat(reader.getElementText()).parse();
+                        r.duration = Math.max(0.0f, Math.min(365 * 24 * 60 * 60, new TimeToFloat(reader.getElementText()).parse()));
                         break;
                     case "timestamp":
                         r.timestamp = reader.getElementText();
@@ -366,7 +366,7 @@ public final class SuiteResult implements Serializable {
 
         // check for test suite time attribute
         if ((this.time = suite.attributeValue("time")) != null) {
-            duration = new TimeToFloat(this.time).parse();
+            duration = Math.max(0.0f, Math.min(365 * 24 * 60 * 60, new TimeToFloat(this.time).parse()));
         }
 
         Element ex = suite.element("error");
