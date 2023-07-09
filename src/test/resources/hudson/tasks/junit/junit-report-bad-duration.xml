@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+  <testsuite errors="0" failures="0" hostname="molene" id="0" name="DummyTest" package="" tests="1" timestamp="2009-01-16T22:57:13">
+      <testcase classname="DummyTest" name="testDummyMethod" time="-345345" />
+      <testcase classname="DummyTest" name="testDummyMethod" time="100" />
+  </testsuite>
+</testsuites>

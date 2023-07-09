@@ -43,9 +43,7 @@ import org.junit.Test;
 import com.thoughtworks.xstream.XStream;
 import org.jvnet.hudson.test.Issue;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.*;
 
 /**
  * Tests the JUnit result XML file parsing in {@link TestResult}.
@@ -324,6 +322,22 @@ public class TestResultTest {
         assertEquals("Wrong number of testsuites", 4, testResult.getSuites().size());
         assertEquals("Wrong number of test cases", 6, testResult.getTotalCount());
 
+    }
+
+    @Test
+    public void clampDuration() throws Exception {
+        long start = System.currentTimeMillis();
+        File testResultFile1 = new File("src/test/resources/hudson/tasks/junit/junit-report-bad-duration.xml");
+        DirectoryScanner directoryScanner = new DirectoryScanner();
+        directoryScanner.setBasedir(new File("src/test/resources/hudson/tasks/junit/"));
+        directoryScanner.setIncludes(new String[]{"*-bad-duration.xml"});
+        directoryScanner.scan();
+        assertEquals( "directory scanner must find 1 files", 1, directoryScanner.getIncludedFiles().length);
+        TestResult testResult = new TestResult(start, directoryScanner, true, false, new PipelineTestDetails(), false);
+        testResult.tally();
+        assertEquals("Negative duration is invalid", 100, testResult.getDuration(), 0.00001);
+        assertEquals("Wrong number of testsuites", 1, testResult.getSuites().size());
+        assertEquals("Wrong number of test cases", 2, testResult.getTotalCount());
     }
 
     private static final XStream XSTREAM = new XStream2();

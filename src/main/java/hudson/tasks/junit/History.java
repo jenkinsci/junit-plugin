@@ -52,8 +52,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import hudson.tasks.junit.util.*;
 
 import umontreal.ssj.functionfit.SmoothingCubicSpline;
-import umontreal.ssj.probdist.*;
-
 
 /**
  * History of {@link hudson.tasks.test.TestObject} over time.

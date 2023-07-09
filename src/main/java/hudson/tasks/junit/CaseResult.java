@@ -424,7 +424,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     @Exported(visibility=9)
     @Override
     public float getDuration() {
-        return duration;
+        return Math.min(1 * 7 * 24 * 60 * 60, Math.max(0.0f, duration));
     }
 
     /**
