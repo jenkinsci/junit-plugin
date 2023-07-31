@@ -1,0 +1,7 @@
+Started
+Running as SYSTEM
+Building in workspace …/workspace/p
+Recording test results
+[Checks API] No suitable checks publisher found.
+Build step 'Publish JUnit test result report' changed build result to UNSTABLE
+Finished: UNSTABLE

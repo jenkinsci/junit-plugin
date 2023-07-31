@@ -52,6 +52,8 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import jenkins.tasks.SimpleBuildStep;
 
 /**
@@ -229,11 +231,24 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
      */
     private TestResult load() {
         TestResult r;
+        XmlFile f = getDataFile();
         try {
-            r = (TestResult)getDataFile().read();
+            r = (TestResult) f.read();
+        } catch (NoSuchFileException x) {
+            logger.fine(() -> x.toString());
+            r = new TestResult(); // empty result
         } catch (IOException e) {
-            logger.log(Level.WARNING, "Failed to load "+getDataFile(),e);
-            r = new TestResult();   // return a dummy
+            try {
+                if (f.asString().contains("&#x0;")) {
+                    Files.delete(f.getFile().toPath());
+                    logger.info(() -> "Deleted corrupt " + f);
+                } else {
+                    logger.log(Level.WARNING, "Failed to load " + f, e);
+                }
+            } catch (IOException e2) {
+                logger.log(Level.WARNING, "Rechecking content of " + f, e2);
+            }
+            r = new TestResult();
         }
         r.freeze(this);
         return r;
