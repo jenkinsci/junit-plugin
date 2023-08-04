@@ -23,13 +23,15 @@
  */
 package hudson.tasks.test;
 
-import hudson.tasks.junit.TestAction;
 import hudson.model.Run;
 import hudson.model.Result;
 
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+
+import org.owasp.html.HtmlPolicyBuilder;
+import org.owasp.html.PolicyFactory;
 
 import static java.util.Collections.emptyList;
 
@@ -276,7 +278,8 @@ public abstract class TestResult extends TestObject {
     }
 
     /**
-     * Annotate some text -- what does this do? 
+     * Annotate text by turning it into a clickable link and then sanitizing it using owasp-java-html-sanitizer
+     * @see <a href="https://www.javadoc.io/doc/com.googlecode.owasp-java-html-sanitizer/owasp-java-html-sanitizer/20160628.1/org/owasp/html/HtmlPolicyBuilder.html">owasp HtmlPolicyBuilder javadoc</a>
      * @param text Text to use to annotate the actions.
      *
      * @return the provided text HTML-escaped.
@@ -284,11 +287,16 @@ public abstract class TestResult extends TestObject {
     public String annotate(String text) {
         if (text == null)
                 return null;
-        text = text.replace("&", "&amp;").replace("<", "&lt;");
 
-        for (TestAction action: getTestActions()) {
-                text = action.annotate(text);
-        }
-        return text;
+        text = text.replace("&", "&amp;").replace("<", "&lt;").replaceAll("\\b(https?://[^\\s)>]+)", "<a href=\"$1\">$1</a>");
+
+        PolicyFactory policy = new HtmlPolicyBuilder()
+                .allowElements("a")
+                .allowUrlProtocols("https")
+                .allowUrlProtocols("http")
+                .allowAttributes("href").onElements("a")
+                .toFactory();
+
+        return policy.sanitize(text);
     }
 }
