@@ -45,6 +45,13 @@ import static java.util.Collections.emptyList;
  */
 public abstract class TestResult extends TestObject {
 
+    private static final PolicyFactory POLICY_DEFINITION= new HtmlPolicyBuilder()
+            .allowElements("a")
+            .allowUrlProtocols("https")
+            .allowUrlProtocols("http")
+            .allowAttributes("href").onElements("a")
+            .toFactory();;
+
     /**
      * If the concept of a parent action is important to a subclass, then it should
      * provide a non-noop implementation of this method. 
@@ -290,13 +297,6 @@ public abstract class TestResult extends TestObject {
 
         text = text.replace("&", "&amp;").replace("<", "&lt;").replaceAll("\\b(https?://[^\\s)>]+)", "<a href=\"$1\">$1</a>");
 
-        PolicyFactory policy = new HtmlPolicyBuilder()
-                .allowElements("a")
-                .allowUrlProtocols("https")
-                .allowUrlProtocols("http")
-                .allowAttributes("href").onElements("a")
-                .toFactory();
-
-        return policy.sanitize(text);
+        return POLICY_DEFINITION.sanitize(text);
     }
 }
