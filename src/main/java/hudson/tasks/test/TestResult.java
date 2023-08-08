@@ -296,7 +296,7 @@ public abstract class TestResult extends TestObject {
         if (text == null)
                 return null;
 
-        text = text.replace("&", "&amp;").replace("<", "&lt;").replaceAll("\\b(https?://[^\\s)>]+)", "<a href=\"$1\">$1</a>");
+        text = text.replaceAll("\\b(https?://[^\\s)>]+)", "<a href=\"$1\">$1</a>");
 
         for (TestAction action: getTestActions()) {
             text = action.annotate(text);
