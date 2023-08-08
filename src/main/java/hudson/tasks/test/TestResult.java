@@ -23,6 +23,7 @@
  */
 package hudson.tasks.test;
 
+import hudson.tasks.junit.TestAction;
 import hudson.model.Run;
 import hudson.model.Result;
 
@@ -296,6 +297,10 @@ public abstract class TestResult extends TestObject {
                 return null;
 
         text = text.replace("&", "&amp;").replace("<", "&lt;").replaceAll("\\b(https?://[^\\s)>]+)", "<a href=\"$1\">$1</a>");
+
+        for (TestAction action: getTestActions()) {
+            text = action.annotate(text);
+        }
 
         return POLICY_DEFINITION.sanitize(text);
     }
