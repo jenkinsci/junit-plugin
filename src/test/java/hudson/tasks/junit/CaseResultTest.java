@@ -119,7 +119,6 @@ public class CaseResultTest {
                      "<a href=\"https://google.com\">https://google.com&#34;onclick&#61;alert(1</a>)&#34;");
         assertOutput(cr,"unsafe characters are = \" ' < > &",
                      "unsafe characters are &#61; &#34; &#39; &lt; &gt; &amp;");
-
     }
 
     /**
