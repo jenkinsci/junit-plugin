@@ -191,7 +191,7 @@ public class CaseResultTest {
 
 	assertEquals(cr.annotate(cr.getErrorDetails()).replaceAll("&lt;", "<"), errorMsg.getTextContent());
 	HtmlElement errorStackTrace = (HtmlElement) page.getByXPath("//h3[text()='Stacktrace']/following-sibling::*").get(0);
-    // Have to do some annoying replacing here to get the same text Jelly produces in the end.
+        // Have to do some annoying replacing here to get the same text Jelly produces in the end.
 	assertEquals(cr.annotate(cr.getErrorStackTrace()).replaceAll("&lt;", "<").replaceAll("&gt;", ">").replace("\r\n", "\n"),
 		     errorStackTrace.getTextContent());
     }
