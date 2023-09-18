@@ -43,6 +43,7 @@ import hudson.model.Action;
 import hudson.model.Job;
 import hudson.model.Run;
 import hudson.tasks.junit.JUnitResultArchiver;
+import hudson.tasks.junit.TrendTestResultSummary;
 import hudson.tasks.test.TestResultTrendChart.PassedColor;
 
 import io.jenkins.plugins.echarts.AsyncConfigurableTrendChart;
@@ -131,7 +132,11 @@ public class TestResultProjectAction implements Action, AsyncTrendChart, AsyncCo
         JunitTestResultStorage storage = JunitTestResultStorage.find();
         if (!(storage instanceof FileJunitTestResultStorage)) {
             TestResultImpl pluggableStorage = storage.load(lastCompletedBuild.getParent().getFullName(), lastCompletedBuild.getNumber());
-            return new TestResultTrendChart().create(pluggableStorage.getTrendTestResultSummary(), passedColor);
+            List<TrendTestResultSummary> summary = pluggableStorage.getTrendTestResultSummary();
+            if (summary.isEmpty()) {
+                return new LinesChartModel();
+            }
+            return new TestResultTrendChart().create(summary, passedColor);
         }
 
         TestResultActionIterable buildHistory = createBuildHistory(lastCompletedBuild);
