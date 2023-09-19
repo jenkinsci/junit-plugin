@@ -44,6 +44,7 @@ import hudson.tasks.junit.TestResult;
 import hudson.tasks.junit.TestResultAction;
 import hudson.tasks.junit.TestResultSummary;
 import hudson.tasks.junit.TrendTestResultSummary;
+import hudson.util.XStream2;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -941,7 +942,7 @@ public class TestResultStorageJunitTest {
          */
         static class RemoteConnectionSupplier extends ConnectionSupplier implements SerializableOnlyOverRemoting {
 
-            private static final XStream XSTREAM = new XStream();
+            private static final XStream XSTREAM = new XStream2();
             private final String databaseXml;
 
             static {
