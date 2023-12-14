@@ -14,6 +14,6 @@ public class TestResultsPage {
     }
 
     public void hasLinkToTestResultOfBuild(String projectName, int buildNumber) {
-        htmlPage.getAnchorByText(projectName + " #" + buildNumber);
+        htmlPage.getAnchorByHref("/jenkins/job/" + projectName + "/" + buildNumber + "/testReport/");
     }
 }
