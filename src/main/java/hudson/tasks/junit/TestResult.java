@@ -114,6 +114,8 @@ public final class TestResult extends MetaTabulatedResult {
     private float duration;
 
     private boolean skipOldReports;
+    
+    private long startTime = -1;
 
     /**
      * Number of failed/error leafNodes.
@@ -322,6 +324,7 @@ public final class TestResult extends MetaTabulatedResult {
     }
     
     private void add(SuiteResult sr) {
+    	long suiteStart = sr.getStartTime();
         for (SuiteResult s : suites) {
             // JENKINS-12457: If a testsuite is distributed over multiple files, merge it into a single SuiteResult:
             if(s.getName().equals(sr.getName()) &&
@@ -330,12 +333,26 @@ public final class TestResult extends MetaTabulatedResult {
                     nullSafeEq(s.getEnclosingBlocks(),sr.getEnclosingBlocks()) &&
                     nullSafeEq(s.getEnclosingBlockNames(),sr.getEnclosingBlockNames())) {
 
+                // Set start time to earliest set start of a suite
+                if(startTime == -1) {
+                    startTime = suiteStart;
+                } else if(suiteStart != -1){
+                    startTime = Math.min(startTime, suiteStart);
+                }
+                
                 duration += sr.getDuration();
                 s.merge(sr);
                 return;
             }
         }
 
+        // Set start time to earliest set start of a suite
+        if(startTime == -1) {
+            startTime = suiteStart;
+        } else if(suiteStart != -1){
+            startTime = Math.min(startTime, suiteStart);
+        }
+        
         suites.add(sr);
         duration += sr.getDuration();
     }
@@ -498,6 +515,14 @@ public final class TestResult extends MetaTabulatedResult {
         }
         
         return duration;
+    }
+    
+    public void setStartTime(long start) {
+    	startTime = start;
+    }
+
+    public long getStartTime() {
+    	return startTime;
     }
 
     @Exported(visibility=999)
@@ -845,6 +870,7 @@ public final class TestResult extends MetaTabulatedResult {
                 PackageResult pr = byPackage(spkg);
                 if(pr==null)
                     byPackages.put(spkg,pr=new PackageResult(this,pkg));
+                pr.setStartTime(s.getStartTime());
                 pr.add(cr);
             }
         }
@@ -909,6 +935,7 @@ public final class TestResult extends MetaTabulatedResult {
                 PackageResult pr = byPackage(spkg);
                 if(pr==null)
                     byPackages.put(spkg,pr=new PackageResult(this,pkg));
+                pr.setStartTime(s.getStartTime());
                 pr.add(cr);
             }
         }

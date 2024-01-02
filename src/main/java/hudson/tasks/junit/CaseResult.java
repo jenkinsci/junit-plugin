@@ -67,6 +67,10 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     private static final Logger LOGGER = Logger.getLogger(CaseResult.class.getName());
     private final float duration;
     /**
+     * Start time in epoch milliseconds - default is -1 for unset
+     */
+    private long startTime;
+    /**
      * In JUnit, a test is a method of a class. This field holds the fully qualified class name
      * that the test was in.
      */
@@ -130,6 +134,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         this.stdout = null;
         this.stderr = null;
         this.duration = 0.0f;
+        this.startTime = -1;
         this.skipped = false;
         this.skippedMessage = null;
         this.properties = Collections.emptyMap();
@@ -155,6 +160,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         this.stdout = fixNULs(stdout);
         this.stderr = fixNULs(stderr);
         this.duration = duration;
+        this.startTime = -1;
         
         this.skipped = skippedMessage != null;
         this.skippedMessage = skippedMessage;
@@ -190,6 +196,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         errorDetails = getErrorMessage(testCase);
         this.parent = parent;
         duration = parseTime(testCase);
+        this.startTime = -1;
         skipped = isMarkedAsSkipped(testCase);
         skippedMessage = getSkippedMessage(testCase);
         @SuppressWarnings("LeakingThisInConstructor")
@@ -381,6 +388,13 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     @Override
     public float getDuration() {
         return duration;
+    }
+    
+    /**
+     * Gets the start time of the test, in epoch milliseconds
+     */
+    public long getStartTime() {
+        return startTime;
     }
 
     /**
@@ -783,6 +797,10 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
 
     public void setClass(ClassResult classResult) {
         this.classResult = classResult;
+    }
+    
+    public void setStartTime(long start) {
+    	startTime = start;
     }
 
     void replaceParent(SuiteResult parent) {

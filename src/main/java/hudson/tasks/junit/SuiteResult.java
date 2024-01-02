@@ -41,6 +41,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.Serializable;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -73,6 +74,7 @@ public final class SuiteResult implements Serializable {
     private final String stdout;
     private final String stderr;
     private float duration;
+    private long startTime;
     private final Map<String, String> properties;
 
     /**
@@ -242,6 +244,12 @@ public final class SuiteResult implements Serializable {
             this.enclosingBlocks.addAll(pipelineTestDetails.getEnclosingBlocks());
             this.enclosingBlockNames.addAll(pipelineTestDetails.getEnclosingBlockNames());
         }
+        
+        // check for timestamp attribute and set start time if present
+        if(timestamp != null && !timestamp.equals("")) 
+            this.startTime = parseTime(timestamp);
+        else
+        	this.startTime = -1;
 
         // check for test suite time attribute
         if ((this.time = suite.attributeValue("time")) != null) {
@@ -254,6 +262,8 @@ public final class SuiteResult implements Serializable {
             addCase(new CaseResult(this, suite, "<init>", keepLongStdio, keepProperties));
         }
 
+        // offset for start time of cases if none is case timestamp is not specified
+        double caseStartOffset = 0;
         List<Element> testCases = suite.elements("testcase");
         for (Element e : testCases) {
             // https://issues.jenkins-ci.org/browse/JENKINS-1233 indicates that
@@ -274,8 +284,19 @@ public final class SuiteResult implements Serializable {
             // are at odds with each other --- when both are present,
             // one wants to use @name from <testsuite>,
             // the other wants to use @classname from <testcase>.
-
-            addCase(new CaseResult(this, e, classname, keepLongStdio, keepProperties));
+            
+            CaseResult caze;
+            addCase(caze = new CaseResult(this, e, classname, keepLongStdio, keepProperties));
+            
+            // If timestamp is present for <testcase> set startTime of new CaseResult.
+            String caseStart = e.attributeValue("timestamp");
+            if(caseStart != null && !caseStart.equals(""))
+            		caze.setStartTime(parseTime(caseStart));
+            // Else estimate start time using sum of previous case durations in suite
+            else if(startTime != -1) {
+            	caze.setStartTime((long)(startTime + caseStartOffset));
+            	caseStartOffset += caze.getDuration();
+            }
         }
 
         String stdout = CaseResult.possiblyTrimStdio(cases, keepLongStdio, suite.elementText("system-out"));
@@ -437,6 +458,14 @@ public final class SuiteResult implements Serializable {
     public String getTimestamp() {
         return timestamp;
     }
+    
+    public long getStartTime() {
+    	return startTime;
+    }
+    
+    public void setStartTime(long start) {
+    	this.startTime = start;
+    }
 
     @Exported(visibility=9)
     public String getId() {
@@ -494,6 +523,25 @@ public final class SuiteResult implements Serializable {
         for (CaseResult c : cases)
             c.freeze(this);
         return true;
+    }
+    
+    /**
+     * Parses time as epoch milli from time string
+     * @param time
+     * @return time in epoch milli
+     */
+    public long parseTime(String time) {
+    	try {
+    		// if time is not in supported format due to missing zulu and offset
+    		if(time.charAt(time.length() - 1) != 'Z' && !time.contains("+") && time.lastIndexOf("-") <= 7)
+    			time += 'Z';
+    		OffsetDateTime odt = OffsetDateTime.parse(time.replace(" ", "")); 
+	    	return odt.toInstant().toEpochMilli();
+    	} catch(Exception e) {
+    		// If time format causes error in parsing print message and return -1
+    		LOGGER.warning("Could not parse start time from timestamp.");
+    		return -1;
+    	}
     }
 
     private static final long serialVersionUID = 1L;

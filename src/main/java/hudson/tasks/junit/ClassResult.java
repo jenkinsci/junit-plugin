@@ -49,12 +49,15 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
     private int passCount,failCount,skipCount;
     
     private float duration; 
+    
+    private long startTime;
 
     private final PackageResult parent;
 
     public ClassResult(PackageResult parent, String className) {
         this.parent = parent;
         this.className = className;
+        this.startTime = -1;
     }
 
     @Override
@@ -156,6 +159,10 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
     @Override
     public float getDuration() {
         return duration; 
+    }
+    
+    public long getStartTime() {
+        return startTime;
     }
     
     @Exported
@@ -266,6 +273,10 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
         } else {
             return super.getRelativePathFrom(it);
         }
+    }
+    
+    public void setStartTime(long start) { 
+        this.startTime = start;
     }
 
     private static final long serialVersionUID = 1L;
