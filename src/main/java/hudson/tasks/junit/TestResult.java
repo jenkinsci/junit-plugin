@@ -870,7 +870,12 @@ public final class TestResult extends MetaTabulatedResult {
                 PackageResult pr = byPackage(spkg);
                 if(pr==null)
                     byPackages.put(spkg,pr=new PackageResult(this,pkg));
-                pr.setStartTime(s.getStartTime());
+                
+                if (pr.getStartTime() == -1) {
+                    pr.setStartTime(s.getStartTime());
+                } else if (s.getStartTime() != -1){
+                    pr.setStartTime(Math.min(pr.getStartTime(), s.getStartTime()));
+                }
                 pr.add(cr);
             }
         }
@@ -935,7 +940,12 @@ public final class TestResult extends MetaTabulatedResult {
                 PackageResult pr = byPackage(spkg);
                 if(pr==null)
                     byPackages.put(spkg,pr=new PackageResult(this,pkg));
-                pr.setStartTime(s.getStartTime());
+                
+                if (pr.getStartTime() == -1) {
+                    pr.setStartTime(s.getStartTime());
+                } else if (s.getStartTime() != -1){
+                    pr.setStartTime(Math.min(pr.getStartTime(), s.getStartTime()));
+                }
                 pr.add(cr);
             }
         }

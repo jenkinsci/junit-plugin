@@ -362,7 +362,7 @@ public class SuiteResultTest {
 
     @Test
     public void testTestParseTimeMethod() throws Exception {
-        // A report with blocks of testsuites some with and some without time attrs  
+    	// Tests parseTime() with various valid and invalid datetimes   
         SuiteResult emptyResult = new SuiteResult("Test parseTime", "", "", null);
         assertEquals(0, emptyResult.parseTime("1970-01-01T00:00:00.00")); 
         assertEquals(1704280980000L, emptyResult.parseTime("2024-01-03T11:23:00.00"));

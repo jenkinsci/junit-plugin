@@ -265,7 +265,7 @@ public final class SuiteResult implements Serializable {
         }
 
         // offset for start time of cases if none is case timestamp is not specified
-        double caseStartOffset = 0;
+        long caseStartOffset = 0;
         List<Element> testCases = suite.elements("testcase");
         for (Element e : testCases) {
             // https://issues.jenkins-ci.org/browse/JENKINS-1233 indicates that
@@ -297,8 +297,8 @@ public final class SuiteResult implements Serializable {
             }
             // Else estimate start time using sum of previous case durations in suite
             else if (startTime != -1) {
-                caze.setStartTime((long)(startTime + caseStartOffset));
-                caseStartOffset += caze.getDuration();
+                caze.setStartTime(startTime + caseStartOffset);
+                caseStartOffset += (long)(caze.getDuration() * 1000);
             }
         }
 

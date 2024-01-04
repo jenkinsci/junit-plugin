@@ -322,5 +322,84 @@ public class TestResultTest {
         assertEquals("Wrong number of test cases", 6, testResult.getTotalCount());
 
     }
+    
+    @Test
+    public void testTestStartTimes() throws Exception {
+    	// Tests that start times are as expected for file with a mix of valid,
+    	// invalid, and unspecified timestamps.
+        TestResult testResult = new TestResult();
+        testResult.parse(getDataFile("junit-report-testsuite-various-timestamps.xml"));
+        testResult.tally();
+
+        // Test that TestResult startTime is the startTime of the earliest suite.
+        assertEquals(1704281235000L, testResult.getStartTime());
+        
+        // Test that suites have correct start times
+        List<SuiteResult> suites = (List<SuiteResult>)testResult.getSuites();
+        assertEquals(-1, suites.get(0).getStartTime());
+        assertEquals(1704284831000L, suites.get(1).getStartTime());
+        assertEquals(1704285613000L, suites.get(2).getStartTime());
+        assertEquals(1704284864000L, suites.get(3).getStartTime());
+        assertEquals(-1, suites.get(4).getStartTime());
+        assertEquals(-1, suites.get(5).getStartTime());
+        assertEquals(1704288431210L, suites.get(6).getStartTime());
+        assertEquals(1704281235000L, suites.get(7).getStartTime());
+        
+        // Test each package and its descendants for correct start times.
+        PackageResult pkg =  testResult.byPackage("(root)");
+        assertEquals(1704281235000L, pkg.getStartTime());
+        
+        ClassResult class1 = pkg.getClassResult("contents adjust properly when resizing test");
+        CaseResult case1 = class1.getCaseResult("testResize");
+        assertEquals(1704288431210L, class1.getStartTime());
+        assertEquals(1704288431210L, case1.getStartTime());
+        
+        ClassResult class2 = pkg.getClassResult("date reflects offset test");
+        CaseResult case2 = class2.getCaseResult("testDate");
+        assertEquals(-1, class2.getStartTime());
+        assertEquals(-1, case2.getStartTime());
+        
+        ClassResult class3 = pkg.getClassResult("get test");
+        CaseResult case3 = class3.getCaseResult("testGet");
+        assertEquals(-1, class3.getStartTime());
+        assertEquals(-1, case3.getStartTime());
+        
+        ClassResult class4 = pkg.getClassResult("testButtons");
+        CaseResult case4 = class4.getCaseResult("home_button_redirects_to_home_test");
+        CaseResult case5 = class4.getCaseResult("sign_out_button_ends_session_test");
+        CaseResult case6 = class4.getCaseResult("sign_out_button_redirects_to_sign_in_test");
+        assertEquals(1704285613000L, class4.getStartTime());
+        assertEquals(1704285613000L, case4.getStartTime());
+        assertEquals(1704285617000L, case5.getStartTime());
+        assertEquals(1704285628000L, case6.getStartTime());
+        
+        ClassResult class5 = pkg.getClassResult("testPassword");
+        CaseResult case7 = class5.getCaseResult("invalid_if_password_does_not_match_test");
+        CaseResult case8 = class5.getCaseResult("invalid_if_password_is_weak_test");
+        assertEquals(1704284831000L, class5.getStartTime());
+        assertEquals(1704284831000L, case7.getStartTime());
+        assertEquals(1704284838000L, case8.getStartTime());
+        
+        ClassResult class6 = pkg.getClassResult("pages load in under ten seconds under ideal conditions test");
+        CaseResult case9 = class6.getCaseResult("testExperience");
+        assertEquals(1704284864000L, class6.getStartTime());
+        assertEquals(1704284864000L, case9.getStartTime());
+        
+        ClassResult class7 = pkg.getClassResult("popups triggered when hovering test");
+        CaseResult case10 = class7.getCaseResult("testPopup");
+        assertEquals(-1, class7.getStartTime());
+        assertEquals(-1, case10.getStartTime());
+        
+        ClassResult class8 = pkg.getClassResult("proper images displayed when items added");
+        CaseResult case11 = class8.getCaseResult("testShop");
+        assertEquals(1704281235000L, class8.getStartTime());
+        assertEquals(1704281235000L, case11.getStartTime());
+       
+        ClassResult class9 = pkg.getClassResult("time offset is correct test");
+        CaseResult case12 = class9.getCaseResult("testOffset");
+        assertEquals(-1, class9.getStartTime());
+        assertEquals(-1, case12.getStartTime());
+        
+    }
 
 }
