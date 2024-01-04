@@ -334,9 +334,9 @@ public final class TestResult extends MetaTabulatedResult {
                     nullSafeEq(s.getEnclosingBlockNames(),sr.getEnclosingBlockNames())) {
 
                 // Set start time to earliest set start of a suite
-                if(startTime == -1) {
+                if (startTime == -1) {
                     startTime = suiteStart;
-                } else if(suiteStart != -1){
+                } else if (suiteStart != -1){
                     startTime = Math.min(startTime, suiteStart);
                 }
                 
@@ -347,9 +347,9 @@ public final class TestResult extends MetaTabulatedResult {
         }
 
         // Set start time to earliest set start of a suite
-        if(startTime == -1) {
+        if (startTime == -1) {
             startTime = suiteStart;
-        } else if(suiteStart != -1){
+        } else if (suiteStart != -1){
             startTime = Math.min(startTime, suiteStart);
         }
         
@@ -518,11 +518,11 @@ public final class TestResult extends MetaTabulatedResult {
     }
     
     public void setStartTime(long start) {
-    	startTime = start;
+        startTime = start;
     }
 
     public long getStartTime() {
-    	return startTime;
+        return startTime;
     }
 
     @Exported(visibility=999)

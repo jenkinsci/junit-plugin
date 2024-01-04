@@ -800,7 +800,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     }
     
     public void setStartTime(long start) {
-    	startTime = start;
+        startTime = start;
     }
 
     void replaceParent(SuiteResult parent) {

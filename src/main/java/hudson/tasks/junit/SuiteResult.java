@@ -246,10 +246,12 @@ public final class SuiteResult implements Serializable {
         }
         
         // check for timestamp attribute and set start time if present
-        if(timestamp != null && !timestamp.equals("")) 
+        if (timestamp != null && !timestamp.equals("")) {
             this.startTime = parseTime(timestamp);
-        else
-        	this.startTime = -1;
+        }
+        else {
+            this.startTime = -1;
+        }
 
         // check for test suite time attribute
         if ((this.time = suite.attributeValue("time")) != null) {
@@ -290,12 +292,13 @@ public final class SuiteResult implements Serializable {
             
             // If timestamp is present for <testcase> set startTime of new CaseResult.
             String caseStart = e.attributeValue("timestamp");
-            if(caseStart != null && !caseStart.equals(""))
-            		caze.setStartTime(parseTime(caseStart));
+            if (caseStart != null && !caseStart.equals("")) {
+                caze.setStartTime(parseTime(caseStart));
+            }
             // Else estimate start time using sum of previous case durations in suite
-            else if(startTime != -1) {
-            	caze.setStartTime((long)(startTime + caseStartOffset));
-            	caseStartOffset += caze.getDuration();
+            else if (startTime != -1) {
+                caze.setStartTime((long)(startTime + caseStartOffset));
+                caseStartOffset += caze.getDuration();
             }
         }
 
@@ -531,17 +534,17 @@ public final class SuiteResult implements Serializable {
      * @return time in epoch milli
      */
     public long parseTime(String time) {
-    	try {
-    		// if time is not in supported format due to missing zulu and offset
-    		if(time.charAt(time.length() - 1) != 'Z' && !time.contains("+") && time.lastIndexOf("-") <= 7)
-    			time += 'Z';
-    		OffsetDateTime odt = OffsetDateTime.parse(time.replace(" ", "")); 
-	    	return odt.toInstant().toEpochMilli();
-    	} catch(Exception e) {
-    		// If time format causes error in parsing print message and return -1
-    		LOGGER.warning("Could not parse start time from timestamp.");
-    		return -1;
-    	}
+        try {
+            // if time is not in supported format due to missing zulu and offset
+            if (time.charAt(time.length() - 1) != 'Z' && !time.contains("+") && time.lastIndexOf("-") <= 7)
+                time += 'Z';
+            OffsetDateTime odt = OffsetDateTime.parse(time.replace(" ", "")); 
+            return odt.toInstant().toEpochMilli();
+        } catch (Exception e) {
+            // If time format causes error in parsing print message and return -1
+            LOGGER.warning("Could not parse start time from timestamp.");
+            return -1;
+        }
     }
 
     private static final long serialVersionUID = 1L;

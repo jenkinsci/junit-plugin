@@ -362,7 +362,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
     }
     
     public void setStartTime(long time) {
-    	startTime = time;
+        startTime = time;
     }
 
     private static final long serialVersionUID = 1L;
