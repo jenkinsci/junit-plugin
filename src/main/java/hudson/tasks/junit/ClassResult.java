@@ -184,6 +184,11 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
     }
 
     public void add(CaseResult r) {
+        if (startTime == -1) {
+            startTime = r.getStartTime();
+        } else if (r.getStartTime() != -1) {
+            startTime = Math.min(startTime, r.getStartTime());
+        }
         cases.add(r);
     }
 
