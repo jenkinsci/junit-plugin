@@ -287,9 +287,8 @@ public final class SuiteResult implements Serializable {
             // one wants to use @name from <testsuite>,
             // the other wants to use @classname from <testcase>.
             
-            CaseResult caze;
-            addCase(caze = new CaseResult(this, e, classname, keepLongStdio, keepProperties));
-            
+            CaseResult caze = new CaseResult(this, e, classname, keepLongStdio, keepProperties);
+
             // If timestamp is present for <testcase> set startTime of new CaseResult.
             String caseStart = e.attributeValue("timestamp");
             if (caseStart != null && !caseStart.equals("")) {
@@ -300,6 +299,7 @@ public final class SuiteResult implements Serializable {
                 caze.setStartTime(startTime + caseStartOffset);
                 caseStartOffset += (long)(caze.getDuration() * 1000);
             }
+            addCase(caze);
         }
 
         String stdout = CaseResult.possiblyTrimStdio(cases, keepLongStdio, suite.elementText("system-out"));

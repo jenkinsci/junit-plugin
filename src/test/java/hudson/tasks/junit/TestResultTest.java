@@ -324,7 +324,7 @@ public class TestResultTest {
     }
     
     @Test
-    public void testTestStartTimes() throws Exception {
+    public void testStartTimes() throws Exception {
     	// Tests that start times are as expected for file with a mix of valid,
     	// invalid, and unspecified timestamps.
         TestResult testResult = new TestResult();
