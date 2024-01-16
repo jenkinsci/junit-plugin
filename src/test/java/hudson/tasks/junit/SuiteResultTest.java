@@ -361,6 +361,23 @@ public class SuiteResultTest {
     }
 
     @Test
+    public void testTestParseTimeMethod() throws Exception {
+    	// Tests parseTime() with various valid and invalid datetimes   
+        SuiteResult emptyResult = new SuiteResult("Test parseTime", "", "", null);
+        assertEquals(0, emptyResult.parseTime("1970-01-01T00:00:00.00")); 
+        assertEquals(1704280980000L, emptyResult.parseTime("2024-01-03T11:23:00.00"));
+        assertEquals(1704284831000L, emptyResult.parseTime("2024-01-03T12:27:11"));
+        assertEquals(1704285613000L, emptyResult.parseTime("2024-01-03T 12:40:13"));
+        assertEquals(1704284864000L, emptyResult.parseTime("2024-01-03T12:27:44Z"));
+        assertEquals(1704281235000L, emptyResult.parseTime("2024-01-03T12:27:15+01:00"));
+        assertEquals(1704288431210L, emptyResult.parseTime("2024-01-03T12:27:11.21-01:00"));
+        assertEquals(-1, emptyResult.parseTime("2024-01-03T12:27:11.21+1:00"));
+        assertEquals(-1, emptyResult.parseTime("2024-01-03 12:27:54Z"));
+        assertEquals(-1, emptyResult.parseTime("2024-01-03"));
+        assertEquals(-1, emptyResult.parseTime(""));
+    }
+
+    @Test
     public void testProperties() throws Exception {
         SuiteResult sr = parseOneWithProperties(getDataFile("junit-report-with-properties.xml"));
         Map<String,String> props = sr.getProperties();

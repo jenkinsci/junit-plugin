@@ -49,10 +49,12 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
     private int passCount,failCount,skipCount;
     private final hudson.tasks.junit.TestResult parent;
     private float duration; 
+    private long startTime; 
 
     public PackageResult(hudson.tasks.junit.TestResult parent, String packageName) {
         this.packageName = packageName;
         this.parent = parent;
+        this.startTime = -1;
     }
     
     @Override
@@ -130,6 +132,10 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
     @Override
     public float getDuration() {
         return duration; 
+    }
+    
+    public long getStartTime() {
+        return startTime;
     }
     
     @Exported
@@ -353,6 +359,10 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
     @Override
     public String getDisplayName() {
         return TestNameTransformer.getTransformedName(packageName);
+    }
+    
+    public void setStartTime(long time) {
+        startTime = time;
     }
 
     private static final long serialVersionUID = 1L;
