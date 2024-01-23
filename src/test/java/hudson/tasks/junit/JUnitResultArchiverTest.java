@@ -295,12 +295,13 @@ public class JUnitResultArchiverTest {
 
     @Test public void configRoundTrip() throws Exception {
         JUnitResultArchiver a = new JUnitResultArchiver("TEST-*.xml");
+        a.setStdioRetention(StdioRetention.all);
         a.setKeepLongStdio(true);
         a.setTestDataPublishers(Collections.singletonList(new MockTestDataPublisher("testing")));
         a.setHealthScaleFactor(0.77);
         a = j.configRoundtrip(a);
         assertEquals("TEST-*.xml", a.getTestResults());
-        assertTrue(a.isKeepLongStdio());
+        assertEquals(StdioRetention.all, a.getStdioRetention());
         List<? extends TestDataPublisher> testDataPublishers = a.getTestDataPublishers();
         assertEquals(1, testDataPublishers.size());
         assertEquals(MockTestDataPublisher.class, testDataPublishers.get(0).getClass());
@@ -417,7 +418,7 @@ public class JUnitResultArchiverTest {
         JUnitResultArchiver j = model.instantiate(args);
         assertEquals("**/TEST-*.xml", j.getTestResults());
         assertFalse(j.isAllowEmptyResults());
-        assertFalse(j.isKeepLongStdio());
+        assertEquals(StdioRetention.none, j.getStdioRetention());
         assertEquals(1.0, j.getHealthScaleFactor(), 0);
         assertTrue(j.getTestDataPublishers().isEmpty());
         assertEquals(args, model.uninstantiate(model.instantiate(args)));

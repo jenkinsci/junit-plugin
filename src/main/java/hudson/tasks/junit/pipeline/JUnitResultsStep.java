@@ -8,6 +8,7 @@ import hudson.model.Descriptor;
 import hudson.model.Saveable;
 import hudson.model.TaskListener;
 import hudson.tasks.junit.JUnitTask;
+import hudson.tasks.junit.StdioRetention;
 import hudson.tasks.junit.Messages;
 import hudson.tasks.junit.TestDataPublisher;
 import hudson.util.DescribableList;
@@ -35,10 +36,9 @@ public class JUnitResultsStep extends Step implements JUnitTask {
     private final String testResults;
 
     /**
-     * If true, retain a suite's complete stdout/stderr even if this is huge and the suite passed.
-     * @since 1.358
+     * Whether to complete test stdout/stderr even if this is huge.
      */
-    private boolean keepLongStdio;
+    private StdioRetention stdioRetention;
 
     private boolean keepProperties;
 
@@ -106,11 +106,11 @@ public class JUnitResultsStep extends Step implements JUnitTask {
     }
 
     /**
-     * @return the keepLongStdio.
+     * @return the stdioRetention
      */
     @Override
-    public boolean isKeepLongStdio() {
-        return keepLongStdio;
+    public StdioRetention getStdioRetention() {
+        return stdioRetention == null ? StdioRetention.DEFAULT : stdioRetention;
     }
 
     /**
@@ -119,7 +119,14 @@ public class JUnitResultsStep extends Step implements JUnitTask {
      * @since 1.2-beta-1
      */
     @DataBoundSetter public final void setKeepLongStdio(boolean keepLongStdio) {
-        this.keepLongStdio = keepLongStdio;
+        this.stdioRetention = StdioRetention.fromKeepLongStdio(keepLongStdio);
+    }
+
+    /**
+     * @param stdioRetention How to keep long stdio.
+     */
+    @DataBoundSetter public final void setStdioRetention(StdioRetention stdioRetention) {
+        this.stdioRetention = stdioRetention;
     }
 
     /**

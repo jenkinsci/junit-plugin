@@ -9,7 +9,12 @@ public interface JUnitTask {
 
     List<TestDataPublisher> getTestDataPublishers();
 
-    boolean isKeepLongStdio();
+    StdioRetention getStdioRetention();
+
+    @Deprecated
+    default boolean isKeepLongStdio() {
+        return StdioRetention.all == getStdioRetention();
+    }
 
     boolean isKeepProperties();
 

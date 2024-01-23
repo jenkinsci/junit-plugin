@@ -80,10 +80,9 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     private final String testResults;
 
     /**
-     * If true, retain a suite's complete stdout/stderr even if this is huge and the suite passed.
-     * @since 1.358
+     * Whether to complete test stdout/stderr even if this is huge.
      */
-    private boolean keepLongStdio;
+    private StdioRetention stdioRetention;
 
     private boolean keepProperties;
     /**
@@ -156,7 +155,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                                     String expandedTestResults, Run<?,?> run, @NonNull FilePath workspace,
                                     Launcher launcher, TaskListener listener)
             throws IOException, InterruptedException {
-        return new JUnitParser(task.isKeepLongStdio(), task.isKeepProperties(), task.isAllowEmptyResults(), task.isSkipOldReports())
+        return new JUnitParser(task.getStdioRetention(), task.isKeepProperties(), task.isAllowEmptyResults(), task.isSkipOldReports())
                 .parseResult(expandedTestResults, run, pipelineTestDetails, workspace, launcher, listener);
     }
 
@@ -255,7 +254,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
             summary = null; // see below
         } else {
             result = new TestResult(storage.load(build.getParent().getFullName(), build.getNumber())); // irrelevant
-            summary = new JUnitParser(task.isKeepLongStdio(), task.isKeepProperties(), task.isAllowEmptyResults(), task.isSkipOldReports())
+            summary = new JUnitParser(task.getStdioRetention(), task.isKeepProperties(), task.isAllowEmptyResults(), task.isSkipOldReports())
                     .summarizeResult(testResults, build, pipelineTestDetails, workspace, launcher, listener, storage);
         }
 
@@ -382,11 +381,11 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     }
 
     /**
-     * @return the keepLongStdio.
+     * @return the stdioRetention
      */
     @Override
-    public boolean isKeepLongStdio() {
-        return keepLongStdio;
+    public StdioRetention getStdioRetention() {
+        return stdioRetention == null ? StdioRetention.DEFAULT : stdioRetention;
     }
 
     /**
@@ -395,7 +394,14 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
      * @since 1.2-beta-1
      */
     @DataBoundSetter public final void setKeepLongStdio(boolean keepLongStdio) {
-        this.keepLongStdio = keepLongStdio;
+        this.stdioRetention = StdioRetention.fromKeepLongStdio(keepLongStdio);
+    }
+
+    /**
+     * @param stdioRetention How to keep long stdio.
+     */
+    @DataBoundSetter public final void setStdioRetention(StdioRetention stdioRetention) {
+        this.stdioRetention = stdioRetention;
     }
 
     /**
