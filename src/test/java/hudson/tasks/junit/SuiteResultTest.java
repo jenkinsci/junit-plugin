@@ -264,6 +264,15 @@ public class SuiteResultTest {
     public void testSuiteStdioTrimmingOnFailRetailOnlyFailed() throws Exception {
         File data = File.createTempFile("testSuiteStdioTrimming", ".xml");
         try {
+            StringBuilder stderr = new StringBuilder("First line is intact.")
+                    .append(System.lineSeparator());
+            for (int i = 0; i < 10000; i++) {
+                stderr.append("Line #").append(i).append(" should be retained.")
+                        .append(System.lineSeparator());
+            }
+            stderr.append("Last line is intact.")
+                    .append(System.lineSeparator());
+
             try (Writer w = new FileWriter(data)) {
                 PrintWriter pw = new PrintWriter(w);
                 pw.println("<testsuites name='x'>");
@@ -271,18 +280,14 @@ public class SuiteResultTest {
                 pw.println("<testcase name='x' classname='x'><error>oops</error></testcase>");
                 pw.println("<system-out/>");
                 pw.print("<system-err><![CDATA[");
-                pw.println("First line is intact.");
-                for (int i = 0; i < 10000; i++) {
-                    pw.println("Line #" + i + " should be retained.");
-                }
-                pw.println("Last line is intact.");
+                pw.print(stderr);
                 pw.println("]]></system-err>");
                 pw.println("</testsuite>");
                 pw.println("</testsuites>");
                 pw.flush();
             }
             SuiteResult sr = parseOne(data, StdioRetention.failed);
-            assertEquals(sr.getStderr(), 308933, sr.getStderr().length());
+            assertEquals(sr.getStderr(), stderr.length(), sr.getStderr().length());
         } finally {
             data.delete();
         }
@@ -293,6 +298,15 @@ public class SuiteResultTest {
     public void testSuiteStdioTrimmingOnFailRetailAll() throws Exception {
         File data = File.createTempFile("testSuiteStdioTrimming", ".xml");
         try {
+            StringBuilder stderr = new StringBuilder("First line is intact.")
+                    .append(System.lineSeparator());
+            for (int i = 0; i < 10000; i++) {
+                stderr.append("Line #").append(i).append(" should be retained.")
+                        .append(System.lineSeparator());
+            }
+            stderr.append("Last line is intact.")
+                    .append(System.lineSeparator());
+
             try (Writer w = new FileWriter(data)) {
                 PrintWriter pw = new PrintWriter(w);
                 pw.println("<testsuites name='x'>");
@@ -300,18 +314,14 @@ public class SuiteResultTest {
                 pw.println("<testcase name='x' classname='x'><error>oops</error></testcase>");
                 pw.println("<system-out/>");
                 pw.print("<system-err><![CDATA[");
-                pw.println("First line is intact.");
-                for (int i = 0; i < 10000; i++) {
-                    pw.println("Line #" + i + " should be retained.");
-                }
-                pw.println("Last line is intact.");
+                pw.print(stderr);
                 pw.println("]]></system-err>");
                 pw.println("</testsuite>");
                 pw.println("</testsuites>");
                 pw.flush();
             }
             SuiteResult sr = parseOne(data, StdioRetention.all);
-            assertEquals(sr.getStderr(), 308933, sr.getStderr().length());
+            assertEquals(sr.getStderr(), stderr.length(), sr.getStderr().length());
         } finally {
             data.delete();
         }
@@ -432,7 +442,7 @@ public class SuiteResultTest {
                     w.close();
                 }
                 SuiteResult sr = parseOne(data, StdioRetention.all);
-                assertEquals(sr.getStdout(), 308933, sr.getStdout().length());
+                assertEquals(sr.getStdout(), data2.length(), sr.getStdout().length());
             } finally {
                 data2.delete();
             }
