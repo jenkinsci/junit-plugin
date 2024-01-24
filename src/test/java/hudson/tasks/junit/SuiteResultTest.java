@@ -261,7 +261,7 @@ public class SuiteResultTest {
 
     @Issue("JENKINS-27931")
     @Test
-    public void testSuiteStdioTrimmingOnFailRetailOnlyFailed() throws Exception {
+    public void testSuiteStdioTrimmingOnFailRetainOnlyFailed() throws Exception {
         File data = File.createTempFile("testSuiteStdioTrimming", ".xml");
         try {
             try (Writer w = new FileWriter(data)) {
@@ -290,7 +290,7 @@ public class SuiteResultTest {
 
     @Issue("JENKINS-27931")
     @Test
-    public void testSuiteStdioTrimmingOnFailRetailAll() throws Exception {
+    public void testSuiteStdioTrimmingOnFailRetainAll() throws Exception {
         File data = File.createTempFile("testSuiteStdioTrimming", ".xml");
         try {
             try (Writer w = new FileWriter(data)) {
