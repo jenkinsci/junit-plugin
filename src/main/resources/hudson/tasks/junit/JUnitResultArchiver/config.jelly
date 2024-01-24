@@ -31,11 +31,7 @@ THE SOFTWARE.
         <f:textbox />
     </f:entry>
     <f:entry field="stdioRetention" title="">
-        <select name="stdioRetention">
-            <option value="none">None</option>
-            <option value="failed">Failed tests only</option>
-            <option value="all">All</option>
-        </select>
+        <f:select />
     </f:entry>
     <f:entry field="keepProperties" title="">
         <f:checkbox name="keepProperties" title="${%keep all the properties}"/>

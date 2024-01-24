@@ -46,6 +46,7 @@ import hudson.tasks.junit.TestResultAction.Data;
 import hudson.tasks.test.PipelineTestDetails;
 import hudson.util.DescribableList;
 import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
 import io.jenkins.plugins.junit.checks.JUnitChecksPublisher;
 import io.jenkins.plugins.junit.storage.FileJunitTestResultStorage;
 import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
@@ -518,6 +519,16 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                     5,
                     (int) (100.0 - Math.max(0.0, Math.min(100.0, 5 * value)))
             ));
+        }
+
+        public ListBoxModel doFillStdioRetentionItems() {
+            ListBoxModel result = new ListBoxModel();
+
+            for (StdioRetention option : StdioRetention.values()) {
+                result.add(option.getDisplayName(), option.name());
+            }
+
+            return result;
         }
     }
 }
