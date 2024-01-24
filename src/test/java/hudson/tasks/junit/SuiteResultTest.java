@@ -432,7 +432,7 @@ public class SuiteResultTest {
                     w.close();
                 }
                 SuiteResult sr = parseOne(data, StdioRetention.all);
-                assertEquals(sr.getStdout(), 308933, sr.getStdout().length());
+                assertEquals(sr.getStdout(), data2.length(), sr.getStdout().length());
             } finally {
                 data2.delete();
             }
