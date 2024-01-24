@@ -12,9 +12,7 @@ public interface JUnitTask {
     StdioRetention getStdioRetention();
 
     @Deprecated
-    default boolean isKeepLongStdio() {
-        return StdioRetention.all == getStdioRetention();
-    }
+    boolean isKeepLongStdio();
 
     boolean isKeepProperties();
 

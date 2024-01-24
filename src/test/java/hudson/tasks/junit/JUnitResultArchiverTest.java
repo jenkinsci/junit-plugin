@@ -296,7 +296,6 @@ public class JUnitResultArchiverTest {
     @Test public void configRoundTrip() throws Exception {
         JUnitResultArchiver a = new JUnitResultArchiver("TEST-*.xml");
         a.setStdioRetention(StdioRetention.all);
-        a.setKeepLongStdio(true);
         a.setTestDataPublishers(Collections.singletonList(new MockTestDataPublisher("testing")));
         a.setHealthScaleFactor(0.77);
         a = j.configRoundtrip(a);

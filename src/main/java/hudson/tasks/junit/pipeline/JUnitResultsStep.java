@@ -106,20 +106,26 @@ public class JUnitResultsStep extends Step implements JUnitTask {
     }
 
     /**
+     * @param keepLongStdio Whether to keep long stdio.
+     *
+     * @since 1.2-beta-1
+     */
+    @Deprecated
+    @DataBoundSetter public final void setKeepLongStdio(boolean keepLongStdio) {
+        this.stdioRetention = StdioRetention.fromKeepLongStdio(keepLongStdio);
+    }
+
+    @Deprecated
+    public boolean isKeepLongStdio() {
+        return StdioRetention.all == getStdioRetention();
+    }
+
+    /**
      * @return the stdioRetention
      */
     @Override
     public StdioRetention getStdioRetention() {
         return stdioRetention == null ? StdioRetention.DEFAULT : stdioRetention;
-    }
-
-    /**
-     * @param keepLongStdio Whether to keep long stdio.
-     *
-     * @since 1.2-beta-1
-     */
-    @DataBoundSetter public final void setKeepLongStdio(boolean keepLongStdio) {
-        this.stdioRetention = StdioRetention.fromKeepLongStdio(keepLongStdio);
     }
 
     /**

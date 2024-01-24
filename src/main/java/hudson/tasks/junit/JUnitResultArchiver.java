@@ -136,7 +136,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
             DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> testDataPublishers,
             double healthScaleFactor) {
         this.testResults = testResults;
-        setKeepLongStdio(keepLongStdio);
+        setStdioRetention(StdioRetention.fromKeepLongStdio(keepLongStdio));
         setKeepProperties(keepProperties);
         setTestDataPublishers(testDataPublishers == null ? Collections.emptyList() : testDataPublishers);
         setHealthScaleFactor(healthScaleFactor);
@@ -381,20 +381,26 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     }
 
     /**
+     * @param keepLongStdio Whether to keep long stdio.
+     *
+     * @since 1.2-beta-1
+     */
+    @Deprecated
+    @DataBoundSetter public final void setKeepLongStdio(boolean keepLongStdio) {
+        this.stdioRetention = StdioRetention.fromKeepLongStdio(keepLongStdio);
+    }
+
+    @Deprecated
+    public boolean isKeepLongStdio() {
+        return StdioRetention.all == getStdioRetention();
+    }
+
+    /**
      * @return the stdioRetention
      */
     @Override
     public StdioRetention getStdioRetention() {
         return stdioRetention == null ? StdioRetention.DEFAULT : stdioRetention;
-    }
-
-    /**
-     * @param keepLongStdio Whether to keep long stdio.
-     *
-     * @since 1.2-beta-1
-     */
-    @DataBoundSetter public final void setKeepLongStdio(boolean keepLongStdio) {
-        this.stdioRetention = StdioRetention.fromKeepLongStdio(keepLongStdio);
     }
 
     /**
