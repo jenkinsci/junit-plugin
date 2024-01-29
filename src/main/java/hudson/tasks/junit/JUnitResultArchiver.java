@@ -83,7 +83,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     /**
      * Whether to complete test stdout/stderr even if this is huge.
      */
-    private StdioRetention stdioRetention;
+    private String stdioRetention;
 
     private boolean keepProperties;
     /**
@@ -137,7 +137,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
             DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> testDataPublishers,
             double healthScaleFactor) {
         this.testResults = testResults;
-        setStdioRetention(StdioRetention.fromKeepLongStdio(keepLongStdio));
+        setKeepLongStdio(keepLongStdio);
         setKeepProperties(keepProperties);
         setTestDataPublishers(testDataPublishers == null ? Collections.emptyList() : testDataPublishers);
         setHealthScaleFactor(healthScaleFactor);
@@ -156,7 +156,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                                     String expandedTestResults, Run<?,?> run, @NonNull FilePath workspace,
                                     Launcher launcher, TaskListener listener)
             throws IOException, InterruptedException {
-        return new JUnitParser(task.getStdioRetention(), task.isKeepProperties(), task.isAllowEmptyResults(), task.isSkipOldReports())
+        return new JUnitParser(task.getParsedStdioRetention(), task.isKeepProperties(), task.isAllowEmptyResults(), task.isSkipOldReports())
                 .parseResult(expandedTestResults, run, pipelineTestDetails, workspace, launcher, listener);
     }
 
@@ -255,7 +255,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
             summary = null; // see below
         } else {
             result = new TestResult(storage.load(build.getParent().getFullName(), build.getNumber())); // irrelevant
-            summary = new JUnitParser(task.getStdioRetention(), task.isKeepProperties(), task.isAllowEmptyResults(), task.isSkipOldReports())
+            summary = new JUnitParser(task.getParsedStdioRetention(), task.isKeepProperties(), task.isAllowEmptyResults(), task.isSkipOldReports())
                     .summarizeResult(testResults, build, pipelineTestDetails, workspace, launcher, listener, storage);
         }
 
@@ -388,26 +388,26 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
      */
     @Deprecated
     @DataBoundSetter public final void setKeepLongStdio(boolean keepLongStdio) {
-        this.stdioRetention = StdioRetention.fromKeepLongStdio(keepLongStdio);
+        this.stdioRetention = StdioRetention.fromKeepLongStdio(keepLongStdio).name();
     }
 
     @Deprecated
     public boolean isKeepLongStdio() {
-        return StdioRetention.all == getStdioRetention();
+        return StdioRetention.ALL == getParsedStdioRetention();
     }
 
     /**
      * @return the stdioRetention
      */
     @Override
-    public StdioRetention getStdioRetention() {
-        return stdioRetention == null ? StdioRetention.DEFAULT : stdioRetention;
+    public String getStdioRetention() {
+        return stdioRetention == null ? StdioRetention.DEFAULT.name() : stdioRetention;
     }
 
     /**
      * @param stdioRetention How to keep long stdio.
      */
-    @DataBoundSetter public final void setStdioRetention(StdioRetention stdioRetention) {
+    @DataBoundSetter public final void setStdioRetention(String stdioRetention) {
         this.stdioRetention = stdioRetention;
     }
 

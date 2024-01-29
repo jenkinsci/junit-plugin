@@ -38,7 +38,7 @@ public class JUnitResultsStep extends Step implements JUnitTask {
     /**
      * Whether to complete test stdout/stderr even if this is huge.
      */
-    private StdioRetention stdioRetention;
+    private String stdioRetention;
 
     private boolean keepProperties;
 
@@ -112,26 +112,26 @@ public class JUnitResultsStep extends Step implements JUnitTask {
      */
     @Deprecated
     @DataBoundSetter public final void setKeepLongStdio(boolean keepLongStdio) {
-        this.stdioRetention = StdioRetention.fromKeepLongStdio(keepLongStdio);
+        this.stdioRetention = StdioRetention.fromKeepLongStdio(keepLongStdio).name();
     }
 
     @Deprecated
     public boolean isKeepLongStdio() {
-        return StdioRetention.all == getStdioRetention();
+        return StdioRetention.ALL == getParsedStdioRetention();
     }
 
     /**
      * @return the stdioRetention
      */
     @Override
-    public StdioRetention getStdioRetention() {
-        return stdioRetention == null ? StdioRetention.DEFAULT : stdioRetention;
+    public String getStdioRetention() {
+        return stdioRetention == null ? StdioRetention.DEFAULT.name() : stdioRetention;
     }
 
     /**
      * @param stdioRetention How to keep long stdio.
      */
-    @DataBoundSetter public final void setStdioRetention(StdioRetention stdioRetention) {
+    @DataBoundSetter public final void setStdioRetention(String stdioRetention) {
         this.stdioRetention = stdioRetention;
     }
 

@@ -232,8 +232,8 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         if (stdio == null) {
             return null;
         }
-        boolean keepAll = stdioRetention == StdioRetention.all
-                || (stdioRetention == StdioRetention.failed && hasFailures(results));
+        boolean keepAll = stdioRetention == StdioRetention.ALL
+                || (stdioRetention == StdioRetention.FAILED && hasFailures(results));
         if (keepAll) {
             return stdio;
         }
@@ -256,8 +256,8 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     @SuppressFBWarnings(value = "DM_DEFAULT_ENCODING", justification = "Expected behavior")
     static String possiblyTrimStdio(Collection<CaseResult> results, StdioRetention stdioRetention, File stdio) throws IOException {
         long len = stdio.length();
-        boolean keepAll = stdioRetention == StdioRetention.all
-                || (stdioRetention == StdioRetention.failed && hasFailures(results));
+        boolean keepAll = stdioRetention == StdioRetention.ALL
+                || (stdioRetention == StdioRetention.FAILED && hasFailures(results));
         if (keepAll && len < 1024 * 1024) {
             return FileUtils.readFileToString(stdio);
         }

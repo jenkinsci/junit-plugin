@@ -224,7 +224,7 @@ public class SuiteResultTest {
                 pw.println("</testsuites>");
                 pw.flush();
             }
-            SuiteResult sr = parseOne(data, StdioRetention.failed);
+            SuiteResult sr = parseOne(data, StdioRetention.FAILED);
             assertEquals(sr.getStderr(), 1030, sr.getStderr().length());
         } finally {
             data.delete();
@@ -281,7 +281,7 @@ public class SuiteResultTest {
                 pw.println("</testsuites>");
                 pw.flush();
             }
-            SuiteResult sr = parseOne(data, StdioRetention.failed);
+            SuiteResult sr = parseOne(data, StdioRetention.FAILED);
             assertEquals(sr.getStderr(), 308933, sr.getStderr().length());
         } finally {
             data.delete();
@@ -310,7 +310,7 @@ public class SuiteResultTest {
                 pw.println("</testsuites>");
                 pw.flush();
             }
-            SuiteResult sr = parseOne(data, StdioRetention.all);
+            SuiteResult sr = parseOne(data, StdioRetention.ALL);
             assertEquals(sr.getStderr(), 308933, sr.getStderr().length());
         } finally {
             data.delete();
@@ -431,7 +431,7 @@ public class SuiteResultTest {
                 } finally {
                     w.close();
                 }
-                SuiteResult sr = parseOne(data, StdioRetention.all);
+                SuiteResult sr = parseOne(data, StdioRetention.ALL);
                 assertEquals(sr.getStdout(), data2.length(), sr.getStdout().length());
             } finally {
                 data2.delete();
