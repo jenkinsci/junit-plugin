@@ -30,7 +30,7 @@ THE SOFTWARE.
         description="${%description('http://ant.apache.org/manual/Types/fileset.html')}">
         <f:textbox />
     </f:entry>
-    <f:entry field="stdioRetention" title="">
+    <f:entry field="stdioRetention" title="${%Test output retention}">
         <f:select />
     </f:entry>
     <f:entry field="keepProperties" title="">
