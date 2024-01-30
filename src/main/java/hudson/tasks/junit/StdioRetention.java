@@ -6,9 +6,9 @@ import java.util.stream.Stream;
 
 public enum StdioRetention {
 
-    ALL("All"),
-    FAILED("Failed tests only"),
-    NONE("None");
+    ALL(Messages.StdioRetention_All_DisplayName()),
+    FAILED(Messages.StdioRetention_Failed_DisplayName()),
+    NONE(Messages.StdioRetention_None_DisplayName());
 
     private final String displayName;
 
