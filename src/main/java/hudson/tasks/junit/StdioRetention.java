@@ -27,7 +27,7 @@ public enum StdioRetention {
     }
 
     public static StdioRetention parse(String value) {
-        if (value == null) {
+        if (value == null || value.isEmpty()) {
             return DEFAULT;
         }
         try {

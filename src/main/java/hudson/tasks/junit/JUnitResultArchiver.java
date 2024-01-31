@@ -521,11 +521,22 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
             ));
         }
 
-        public ListBoxModel doFillStdioRetentionItems() {
+        public ListBoxModel doFillStdioRetentionItems(@QueryParameter("stdioRetention") String value) {
             ListBoxModel result = new ListBoxModel();
 
+            StdioRetention selectedOption;
+            try {
+                selectedOption = StdioRetention.parse(value);
+            } catch (IllegalArgumentException e) {
+                selectedOption  = StdioRetention.DEFAULT;
+            }
+
             for (StdioRetention option : StdioRetention.values()) {
-                result.add(option.getDisplayName(), option.name());
+                result.add(new ListBoxModel.Option(
+                        option.getDisplayName(),
+                        option.name(),
+                        option == selectedOption
+                ));
             }
 
             return result;
