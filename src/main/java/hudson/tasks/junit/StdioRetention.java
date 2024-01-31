@@ -27,8 +27,9 @@ public enum StdioRetention {
     }
 
     public static StdioRetention parse(String value) {
-        if (value == null)
+        if (value == null) {
             return DEFAULT;
+        }
         try {
             return valueOf(value.toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException e) {
