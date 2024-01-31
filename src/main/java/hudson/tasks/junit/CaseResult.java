@@ -167,7 +167,12 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         this.properties = Collections.emptyMap();
     }
 
+    @Deprecated
     CaseResult(SuiteResult parent, Element testCase, String testClassName, boolean keepLongStdio, boolean keepProperties) {
+        this(parent, testCase, testClassName, StdioRetention.fromKeepLongStdio(keepLongStdio), keepProperties);
+    }
+
+    CaseResult(SuiteResult parent, Element testCase, String testClassName, StdioRetention stdioRetention, boolean keepProperties) {
         // schema for JUnit report XML format is not available in Ant,
         // so I don't know for sure what means what.
         // reports in http://www.nabble.com/difference-in-junit-publisher-and-ant-junitreport-tf4308604.html#a12265700
@@ -201,8 +206,8 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         skippedMessage = getSkippedMessage(testCase);
         @SuppressWarnings("LeakingThisInConstructor")
         Collection<CaseResult> _this = Collections.singleton(this);
-        stdout = fixNULs(possiblyTrimStdio(_this, keepLongStdio, testCase.elementText("system-out")));
-        stderr = fixNULs(possiblyTrimStdio(_this, keepLongStdio, testCase.elementText("system-err")));
+        stdout = fixNULs(possiblyTrimStdio(_this, stdioRetention, testCase.elementText("system-out")));
+        stderr = fixNULs(possiblyTrimStdio(_this, stdioRetention, testCase.elementText("system-err")));
 
         // parse properties
         Map<String, String> properties = new HashMap<String, String>();
@@ -223,11 +228,13 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         this.properties = properties;
     }
 
-    static String possiblyTrimStdio(Collection<CaseResult> results, boolean keepLongStdio, String stdio) { // HUDSON-6516
+    static String possiblyTrimStdio(Collection<CaseResult> results, StdioRetention stdioRetention, String stdio) { // HUDSON-6516
         if (stdio == null) {
             return null;
         }
-        if (keepLongStdio) {
+        boolean keepAll = stdioRetention == StdioRetention.ALL
+                || (stdioRetention == StdioRetention.FAILED && hasFailures(results));
+        if (keepAll) {
             return stdio;
         }
         int len = stdio.length();
@@ -244,14 +251,17 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     }
 
     /**
-     * Flavor of {@link #possiblyTrimStdio(Collection, boolean, String)} that doesn't try to read the whole thing into memory.
+     * Flavor of {@link #possiblyTrimStdio(Collection, StdioRetention, String)} that doesn't try to read the whole thing into memory.
      */
     @SuppressFBWarnings(value = "DM_DEFAULT_ENCODING", justification = "Expected behavior")
-    static String possiblyTrimStdio(Collection<CaseResult> results, boolean keepLongStdio, File stdio) throws IOException {
+    static String possiblyTrimStdio(Collection<CaseResult> results, StdioRetention stdioRetention, File stdio) throws IOException {
         long len = stdio.length();
-        if (keepLongStdio && len < 1024 * 1024) {
+        boolean keepAll = stdioRetention == StdioRetention.ALL
+                || (stdioRetention == StdioRetention.FAILED && hasFailures(results));
+        if (keepAll && len < 1024 * 1024) {
             return FileUtils.readFileToString(stdio);
         }
+
         int halfMaxSize = halfMaxSize(results);
 
         long middle = len - halfMaxSize * 2;
@@ -278,12 +288,11 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     private static final int HALF_MAX_SIZE = 500;
     private static final int HALF_MAX_FAILING_SIZE = 50000;
     private static int halfMaxSize(Collection<CaseResult> results) {
-        for (CaseResult result : results) {
-            if (result.errorStackTrace != null) {
-                return HALF_MAX_FAILING_SIZE;
-            }
-        }
-        return HALF_MAX_SIZE;
+        return hasFailures(results) ? HALF_MAX_FAILING_SIZE : HALF_MAX_SIZE;
+    }
+
+    private static boolean hasFailures(Collection<CaseResult> results) {
+        return results.stream().anyMatch(r -> r.errorStackTrace != null);
     }
 
     @Override

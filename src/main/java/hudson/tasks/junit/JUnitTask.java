@@ -9,6 +9,13 @@ public interface JUnitTask {
 
     List<TestDataPublisher> getTestDataPublishers();
 
+    String getStdioRetention();
+
+    default StdioRetention getParsedStdioRetention() {
+        return StdioRetention.parse(getStdioRetention());
+    }
+
+    @Deprecated
     boolean isKeepLongStdio();
 
     boolean isKeepProperties();

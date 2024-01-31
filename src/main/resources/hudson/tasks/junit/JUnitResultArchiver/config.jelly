@@ -30,8 +30,8 @@ THE SOFTWARE.
         description="${%description('http://ant.apache.org/manual/Types/fileset.html')}">
         <f:textbox />
     </f:entry>
-    <f:entry field="keepLongStdio" title="">
-        <f:checkbox name="keepLongStdio" title="${%Retain long standard output/error}"/>
+    <f:entry field="stdioRetention" title="${%Test output retention}">
+        <f:select />
     </f:entry>
     <f:entry field="keepProperties" title="">
         <f:checkbox name="keepProperties" title="${%keep all the properties}"/>

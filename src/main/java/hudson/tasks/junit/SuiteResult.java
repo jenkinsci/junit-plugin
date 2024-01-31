@@ -160,7 +160,13 @@ public final class SuiteResult implements Serializable {
     @Deprecated
     static List<SuiteResult> parse(File xmlReport, boolean keepLongStdio, PipelineTestDetails pipelineTestDetails)
             throws DocumentException, IOException, InterruptedException {
-            return parse(xmlReport, keepLongStdio, false, pipelineTestDetails);
+        return parse(xmlReport, keepLongStdio, false, pipelineTestDetails);
+    }
+
+    @Deprecated
+    static List<SuiteResult> parse(File xmlReport, boolean keepLongStdio, boolean keepProperties, PipelineTestDetails pipelineTestDetails)
+            throws DocumentException, IOException, InterruptedException {
+        return parse(xmlReport, StdioRetention.fromKeepLongStdio(keepLongStdio), keepProperties, pipelineTestDetails);
     }
 
     /**
@@ -168,7 +174,7 @@ public final class SuiteResult implements Serializable {
      * This method returns a collection, as a single XML may have multiple &lt;testsuite>
      * elements wrapped into the top-level &lt;testsuites>.
      */
-    static List<SuiteResult> parse(File xmlReport, boolean keepLongStdio, boolean keepProperties, PipelineTestDetails pipelineTestDetails)
+    static List<SuiteResult> parse(File xmlReport, StdioRetention stdioRetention, boolean keepProperties, PipelineTestDetails pipelineTestDetails)
             throws DocumentException, IOException, InterruptedException {
         List<SuiteResult> r = new ArrayList<>();
 
@@ -188,7 +194,7 @@ public final class SuiteResult implements Serializable {
             Document result = saxReader.read(xmlReportStream);
             Element root = result.getRootElement();
 
-            parseSuite(xmlReport, keepLongStdio, keepProperties, r, root, pipelineTestDetails);
+            parseSuite(xmlReport, stdioRetention, keepProperties, r, root, pipelineTestDetails);
         }
 
         return r;
@@ -203,28 +209,28 @@ public final class SuiteResult implements Serializable {
         }
     }
 
-    private static void parseSuite(File xmlReport, boolean keepLongStdio, boolean keepProperties, List<SuiteResult> r, Element root,
+    private static void parseSuite(File xmlReport, StdioRetention stdioRetention, boolean keepProperties, List<SuiteResult> r, Element root,
                                    PipelineTestDetails pipelineTestDetails) throws DocumentException, IOException {
         // nested test suites
         List<Element> testSuites = root.elements("testsuite");
         for (Element suite : testSuites)
-            parseSuite(xmlReport, keepLongStdio, keepProperties, r, suite, pipelineTestDetails);
+            parseSuite(xmlReport, stdioRetention, keepProperties, r, suite, pipelineTestDetails);
 
         // child test cases
         // FIXME: do this also if no testcases!
         if (root.element("testcase") != null || root.element("error") != null)
-            r.add(new SuiteResult(xmlReport, root, keepLongStdio, keepProperties, pipelineTestDetails));
+            r.add(new SuiteResult(xmlReport, root, stdioRetention, keepProperties, pipelineTestDetails));
     }
 
-    private SuiteResult(File xmlReport, Element suite, boolean keepLongStdio, @CheckForNull PipelineTestDetails pipelineTestDetails)
+    private SuiteResult(File xmlReport, Element suite, StdioRetention stdioRetention, @CheckForNull PipelineTestDetails pipelineTestDetails)
             throws DocumentException, IOException {
-            this(xmlReport, suite, keepLongStdio, false, pipelineTestDetails);
+            this(xmlReport, suite, stdioRetention, false, pipelineTestDetails);
     }
     /**
      * @param xmlReport A JUnit XML report file whose top level element is 'testsuite'.
      * @param suite     The parsed result of {@code xmlReport}
      */
-    private SuiteResult(File xmlReport, Element suite, boolean keepLongStdio, boolean keepProperties, @CheckForNull PipelineTestDetails pipelineTestDetails)
+    private SuiteResult(File xmlReport, Element suite, StdioRetention stdioRetention, boolean keepProperties, @CheckForNull PipelineTestDetails pipelineTestDetails)
             throws DocumentException, IOException {
         this.file = xmlReport.getAbsolutePath();
         String name = suite.attributeValue("name");
@@ -261,7 +267,7 @@ public final class SuiteResult implements Serializable {
         Element ex = suite.element("error");
         if (ex != null) {
             // according to junit-noframes.xsl l.229, this happens when the test class failed to load
-            addCase(new CaseResult(this, suite, "<init>", keepLongStdio, keepProperties));
+            addCase(new CaseResult(this, suite, "<init>", stdioRetention, keepProperties));
         }
 
         // offset for start time of cases if none is case timestamp is not specified
@@ -287,7 +293,7 @@ public final class SuiteResult implements Serializable {
             // one wants to use @name from <testsuite>,
             // the other wants to use @classname from <testcase>.
             
-            CaseResult caze = new CaseResult(this, e, classname, keepLongStdio, keepProperties);
+            CaseResult caze = new CaseResult(this, e, classname, stdioRetention, keepProperties);
 
             // If timestamp is present for <testcase> set startTime of new CaseResult.
             String caseStart = e.attributeValue("timestamp");
@@ -302,8 +308,8 @@ public final class SuiteResult implements Serializable {
             addCase(caze);
         }
 
-        String stdout = CaseResult.possiblyTrimStdio(cases, keepLongStdio, suite.elementText("system-out"));
-        String stderr = CaseResult.possiblyTrimStdio(cases, keepLongStdio, suite.elementText("system-err"));
+        String stdout = CaseResult.possiblyTrimStdio(cases, stdioRetention, suite.elementText("system-out"));
+        String stderr = CaseResult.possiblyTrimStdio(cases, stdioRetention, suite.elementText("system-err"));
         if (stdout == null && stderr == null) {
             // Surefire never puts stdout/stderr in the XML. Instead, it goes to a separate file (when ${maven.test.redirectTestOutputToFile}).
             Matcher m = SUREFIRE_FILENAME.matcher(xmlReport.getName());
@@ -312,7 +318,7 @@ public final class SuiteResult implements Serializable {
                 File mavenOutputFile = new File(xmlReport.getParentFile(), m.group(1) + "-output.txt");
                 if (mavenOutputFile.exists()) {
                     try {
-                        stdout = CaseResult.possiblyTrimStdio(cases, keepLongStdio, mavenOutputFile);
+                        stdout = CaseResult.possiblyTrimStdio(cases, stdioRetention, mavenOutputFile);
                     } catch (IOException e) {
                         throw new IOException("Failed to read " + mavenOutputFile, e);
                     }

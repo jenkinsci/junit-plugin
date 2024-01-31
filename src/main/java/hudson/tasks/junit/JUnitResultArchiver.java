@@ -46,6 +46,7 @@ import hudson.tasks.junit.TestResultAction.Data;
 import hudson.tasks.test.PipelineTestDetails;
 import hudson.util.DescribableList;
 import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
 import io.jenkins.plugins.junit.checks.JUnitChecksPublisher;
 import io.jenkins.plugins.junit.storage.FileJunitTestResultStorage;
 import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
@@ -80,10 +81,9 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     private final String testResults;
 
     /**
-     * If true, retain a suite's complete stdout/stderr even if this is huge and the suite passed.
-     * @since 1.358
+     * Whether to complete test stdout/stderr even if this is huge.
      */
-    private boolean keepLongStdio;
+    private String stdioRetention;
 
     private boolean keepProperties;
     /**
@@ -156,7 +156,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                                     String expandedTestResults, Run<?,?> run, @NonNull FilePath workspace,
                                     Launcher launcher, TaskListener listener)
             throws IOException, InterruptedException {
-        return new JUnitParser(task.isKeepLongStdio(), task.isKeepProperties(), task.isAllowEmptyResults(), task.isSkipOldReports())
+        return new JUnitParser(task.getParsedStdioRetention(), task.isKeepProperties(), task.isAllowEmptyResults(), task.isSkipOldReports())
                 .parseResult(expandedTestResults, run, pipelineTestDetails, workspace, launcher, listener);
     }
 
@@ -255,7 +255,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
             summary = null; // see below
         } else {
             result = new TestResult(storage.load(build.getParent().getFullName(), build.getNumber())); // irrelevant
-            summary = new JUnitParser(task.isKeepLongStdio(), task.isKeepProperties(), task.isAllowEmptyResults(), task.isSkipOldReports())
+            summary = new JUnitParser(task.getParsedStdioRetention(), task.isKeepProperties(), task.isAllowEmptyResults(), task.isSkipOldReports())
                     .summarizeResult(testResults, build, pipelineTestDetails, workspace, launcher, listener, storage);
         }
 
@@ -382,20 +382,33 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     }
 
     /**
-     * @return the keepLongStdio.
-     */
-    @Override
-    public boolean isKeepLongStdio() {
-        return keepLongStdio;
-    }
-
-    /**
      * @param keepLongStdio Whether to keep long stdio.
      *
      * @since 1.2-beta-1
      */
+    @Deprecated
     @DataBoundSetter public final void setKeepLongStdio(boolean keepLongStdio) {
-        this.keepLongStdio = keepLongStdio;
+        this.stdioRetention = StdioRetention.fromKeepLongStdio(keepLongStdio).name();
+    }
+
+    @Deprecated
+    public boolean isKeepLongStdio() {
+        return StdioRetention.ALL == getParsedStdioRetention();
+    }
+
+    /**
+     * @return the stdioRetention
+     */
+    @Override
+    public String getStdioRetention() {
+        return stdioRetention == null ? StdioRetention.DEFAULT.name() : stdioRetention;
+    }
+
+    /**
+     * @param stdioRetention How to keep long stdio.
+     */
+    @DataBoundSetter public final void setStdioRetention(String stdioRetention) {
+        this.stdioRetention = stdioRetention;
     }
 
     /**
@@ -506,6 +519,27 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                     5,
                     (int) (100.0 - Math.max(0.0, Math.min(100.0, 5 * value)))
             ));
+        }
+
+        public ListBoxModel doFillStdioRetentionItems(@QueryParameter("stdioRetention") String value) {
+            ListBoxModel result = new ListBoxModel();
+
+            StdioRetention selectedOption;
+            try {
+                selectedOption = StdioRetention.parse(value);
+            } catch (IllegalArgumentException e) {
+                selectedOption  = StdioRetention.DEFAULT;
+            }
+
+            for (StdioRetention option : StdioRetention.values()) {
+                result.add(new ListBoxModel.Option(
+                        option.getDisplayName(),
+                        option.name(),
+                        option == selectedOption
+                ));
+            }
+
+            return result;
         }
     }
 }

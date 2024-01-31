@@ -63,19 +63,23 @@ public class SuiteResultTest {
     }
 
     private SuiteResult parseOne(File file) throws Exception {
-        List<SuiteResult> results = SuiteResult.parse(file, false, false, null);
+        return parseOne(file, StdioRetention.DEFAULT);
+    }
+
+    private SuiteResult parseOne(File file, StdioRetention stdioRetention) throws Exception {
+        List<SuiteResult> results = SuiteResult.parse(file, stdioRetention, false, null);
         assertEquals(1,results.size());
         return results.get(0);
     }
     
     private SuiteResult parseOneWithProperties(File file) throws Exception {
-        List<SuiteResult> results = SuiteResult.parse(file, false, true, null);
+        List<SuiteResult> results = SuiteResult.parse(file, StdioRetention.DEFAULT, true, null);
         assertEquals(1,results.size());
         return results.get(0);
     }
 
     private List<SuiteResult> parseSuites(File file) throws Exception {
-        return SuiteResult.parse(file, false, null);
+        return SuiteResult.parse(file, StdioRetention.DEFAULT, false, null);
     }
 
     @Issue("JENKINS-1233")
@@ -198,6 +202,35 @@ public class SuiteResultTest {
         }
     }
 
+    @Issue("JENKINS-27931")
+    @Test
+    public void testSuiteStdioTrimmingRetainOnlyFailed() throws Exception {
+        File data = File.createTempFile("testSuiteStdioTrimming", ".xml");
+        try {
+            try (Writer w = new FileWriter(data)) {
+                PrintWriter pw = new PrintWriter(w);
+                pw.println("<testsuites name='x'>");
+                pw.println("<testsuite failures='0' errors='0' tests='1' name='x'>");
+                pw.println("<testcase name='x' classname='x'/>");
+                pw.println("<system-out/>");
+                pw.print("<system-err><![CDATA[");
+                pw.println("First line is intact.");
+                for (int i = 0; i < 100; i++) {
+                    pw.println("Line #" + i + " might be elided.");
+                }
+                pw.println("Last line is intact.");
+                pw.println("]]></system-err>");
+                pw.println("</testsuite>");
+                pw.println("</testsuites>");
+                pw.flush();
+            }
+            SuiteResult sr = parseOne(data, StdioRetention.FAILED);
+            assertEquals(sr.getStderr(), 1030, sr.getStderr().length());
+        } finally {
+            data.delete();
+        }
+    }
+
     @Test
     public void testSuiteStdioTrimmingOnFail() throws Exception {
         File data = File.createTempFile("testSuiteStdioTrimming", ".xml");
@@ -221,6 +254,64 @@ public class SuiteResultTest {
             }
             SuiteResult sr = parseOne(data);
             assertEquals(sr.getStderr(), 100032, sr.getStderr().length());
+        } finally {
+            data.delete();
+        }
+    }
+
+    @Issue("JENKINS-27931")
+    @Test
+    public void testSuiteStdioTrimmingOnFailRetainOnlyFailed() throws Exception {
+        File data = File.createTempFile("testSuiteStdioTrimming", ".xml");
+        try {
+            try (Writer w = new FileWriter(data)) {
+                PrintWriter pw = new PrintWriter(w);
+                pw.println("<testsuites name='x'>");
+                pw.println("<testsuite failures='1' errors='0' tests='1' name='x'>");
+                pw.println("<testcase name='x' classname='x'><error>oops</error></testcase>");
+                pw.println("<system-out/>");
+                pw.print("<system-err><![CDATA[");
+                pw.println("First line is intact.");
+                for (int i = 0; i < 10000; i++) {
+                    pw.println("Line #" + i + " should be retained.");
+                }
+                pw.println("Last line is intact.");
+                pw.println("]]></system-err>");
+                pw.println("</testsuite>");
+                pw.println("</testsuites>");
+                pw.flush();
+            }
+            SuiteResult sr = parseOne(data, StdioRetention.FAILED);
+            assertEquals(sr.getStderr(), 308933, sr.getStderr().length());
+        } finally {
+            data.delete();
+        }
+    }
+
+    @Issue("JENKINS-27931")
+    @Test
+    public void testSuiteStdioTrimmingOnFailRetainAll() throws Exception {
+        File data = File.createTempFile("testSuiteStdioTrimming", ".xml");
+        try {
+            try (Writer w = new FileWriter(data)) {
+                PrintWriter pw = new PrintWriter(w);
+                pw.println("<testsuites name='x'>");
+                pw.println("<testsuite failures='1' errors='0' tests='1' name='x'>");
+                pw.println("<testcase name='x' classname='x'><error>oops</error></testcase>");
+                pw.println("<system-out/>");
+                pw.print("<system-err><![CDATA[");
+                pw.println("First line is intact.");
+                for (int i = 0; i < 10000; i++) {
+                    pw.println("Line #" + i + " should be retained.");
+                }
+                pw.println("Last line is intact.");
+                pw.println("]]></system-err>");
+                pw.println("</testsuite>");
+                pw.println("</testsuites>");
+                pw.flush();
+            }
+            SuiteResult sr = parseOne(data, StdioRetention.ALL);
+            assertEquals(sr.getStderr(), 308933, sr.getStderr().length());
         } finally {
             data.delete();
         }
@@ -300,6 +391,48 @@ public class SuiteResultTest {
                 }
                 SuiteResult sr = parseOne(data);
                 assertEquals(sr.getStdout(), 100032, sr.getStdout().length());
+            } finally {
+                data2.delete();
+            }
+        } finally {
+            data.delete();
+        }
+    }
+
+    @SuppressFBWarnings({"RV_RETURN_VALUE_IGNORED_BAD_PRACTICE", "DM_DEFAULT_ENCODING", "OS_OPEN_STREAM"})
+    @Issue("JENKINS-27931")
+    @Test
+    public void testSuiteStdioTrimmingSurefireOnFailRetainAll() throws Exception {
+        File data = File.createTempFile("TEST-", ".xml");
+        try {
+            Writer w = new FileWriter(data);
+            try {
+                PrintWriter pw = new PrintWriter(w);
+                pw.println("<testsuites name='x'>");
+                pw.println("<testsuite failures='1' errors='0' tests='1' name='x'>");
+                pw.println("<testcase name='x' classname='x'><error>oops</error></testcase>");
+                pw.println("</testsuite>");
+                pw.println("</testsuites>");
+                pw.flush();
+            } finally {
+                w.close();
+            }
+            File data2 = new File(data.getParentFile(), data.getName().replaceFirst("^TEST-(.+)[.]xml$", "$1-output.txt"));
+            try {
+                w = new FileWriter(data2);
+                try {
+                    PrintWriter pw = new PrintWriter(w);
+                    pw.println("First line is intact.");
+                    for (int i = 0; i < 10000; i++) {
+                        pw.println("Line #" + i + " should be retained.");
+                    }
+                    pw.println("Last line is intact.");
+                    pw.flush();
+                } finally {
+                    w.close();
+                }
+                SuiteResult sr = parseOne(data, StdioRetention.ALL);
+                assertEquals(sr.getStdout(), data2.length(), sr.getStdout().length());
             } finally {
                 data2.delete();
             }

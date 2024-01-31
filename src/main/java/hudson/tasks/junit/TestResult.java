@@ -122,7 +122,7 @@ public final class TestResult extends MetaTabulatedResult {
      */
     private transient List<CaseResult> failedTests;
 
-    private final boolean keepLongStdio;
+    private final StdioRetention stdioRetention;
 
     private final boolean keepProperties;
 
@@ -139,8 +139,9 @@ public final class TestResult extends MetaTabulatedResult {
     /**
      * @since 1.522
      */
+    @Deprecated
     public TestResult(boolean keepLongStdio) {
-        this.keepLongStdio = keepLongStdio;
+        this.stdioRetention = StdioRetention.fromKeepLongStdio(keepLongStdio);
         this.keepProperties = false;
         impl = null;
     }
@@ -158,7 +159,7 @@ public final class TestResult extends MetaTabulatedResult {
     @Deprecated
     public TestResult(long filesTimestamp, DirectoryScanner results, boolean keepLongStdio,
                       PipelineTestDetails pipelineTestDetails) throws IOException {
-        this.keepLongStdio = keepLongStdio;
+        this.stdioRetention = StdioRetention.fromKeepLongStdio(keepLongStdio);
         this.keepProperties = false;
         impl = null;
         parse(filesTimestamp, results, pipelineTestDetails);
@@ -172,9 +173,23 @@ public final class TestResult extends MetaTabulatedResult {
      * @param skipOldReports to parse or not test files older than filesTimestamp
      * @since 1.22
      */
+    @Deprecated
     public TestResult(long filesTimestamp, DirectoryScanner results, boolean keepLongStdio, boolean keepProperties,
                       PipelineTestDetails pipelineTestDetails, boolean skipOldReports) throws IOException {
-        this.keepLongStdio = keepLongStdio;
+        this(filesTimestamp, results, StdioRetention.fromKeepLongStdio(keepLongStdio), keepProperties, pipelineTestDetails, skipOldReports);
+    }
+
+    /**
+     * Collect reports from the given {@link DirectoryScanner}, while
+     * filtering out all files that were created before the given time.
+     * @param filesTimestamp per default files older than this will be ignored (depending on param skipOldReports)
+     * @param stdioRetention how to retain stdout/stderr for large outputs
+     * @param pipelineTestDetails A {@link PipelineTestDetails} instance containing Pipeline-related additional arguments.
+     * @param skipOldReports to parse or not test files older than filesTimestamp
+     */
+    public TestResult(long filesTimestamp, DirectoryScanner results, StdioRetention stdioRetention, boolean keepProperties,
+                      PipelineTestDetails pipelineTestDetails, boolean skipOldReports) throws IOException {
+        this.stdioRetention = stdioRetention;
         this.keepProperties = keepProperties;
         impl = null;
         this.skipOldReports = skipOldReports;
@@ -183,7 +198,7 @@ public final class TestResult extends MetaTabulatedResult {
 
     public TestResult(TestResultImpl impl) {
         this.impl = impl;
-        keepLongStdio = false; // irrelevant
+        stdioRetention = StdioRetention.DEFAULT; // irrelevant
         this.keepProperties = false; // irrelevant
     }
 
@@ -404,7 +419,7 @@ public final class TestResult extends MetaTabulatedResult {
             throw new IllegalStateException("Cannot reparse using a pluggable impl");
         }
         try {
-            List<SuiteResult> suiteResults = SuiteResult.parse(reportFile, keepLongStdio, keepProperties, pipelineTestDetails);
+            List<SuiteResult> suiteResults = SuiteResult.parse(reportFile, stdioRetention, keepProperties, pipelineTestDetails);
             for (SuiteResult suiteResult : suiteResults)
                 add(suiteResult);
 
