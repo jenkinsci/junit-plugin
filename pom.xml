@@ -214,7 +214,7 @@
             <dependency>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-bom</artifactId>
-                <version>1.9.22</version>
+                <version>1.9.23</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
