@@ -165,7 +165,7 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>database-h2</artifactId>
-            <version>1.2</version>
+            <version>1.4.97.v8b_21e67e883a_</version>
             <scope>test</scope>
         </dependency>
         <dependency>
