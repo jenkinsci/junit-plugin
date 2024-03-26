@@ -1,0 +1,27 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<build>
+  <actions>
+    <hudson.tasks.junit.TestResultAction>
+      <descriptions class="concurrent-hash-map"/>
+      <failCount>1</failCount>
+      <skipCount>0</skipCount>
+      <totalCount>1</totalCount>
+      <healthScaleFactor>1.0</healthScaleFactor>
+      <testData/>
+    </hudson.tasks.junit.TestResultAction>
+  </actions>
+  <queueId>1</queueId>
+  <timestamp>1690829598625</timestamp>
+  <startTime>1690829598648</startTime>
+  <result>UNSTABLE</result>
+  <duration>152</duration>
+  <charset>UTF-8</charset>
+  <keepLog>false</keepLog>
+  <builtOn></builtOn>
+  <workspace>…/workspace/p</workspace>
+  <hudsonVersion>2.361.4</hudsonVersion>
+  <scm class="hudson.scm.NullChangeLogParser"/>
+  <culprits class="java.util.Collections$UnmodifiableSet">
+    <c class="sorted-set"/>
+  </culprits>
+</build>
