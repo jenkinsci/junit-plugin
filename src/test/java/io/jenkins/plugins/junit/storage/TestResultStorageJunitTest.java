@@ -116,8 +116,11 @@ public class TestResultStorageJunitTest {
      * @see <a href="http://www.h2database.com/html/features.html#auto_mixed_mode">Automatic Mixed Mode</a>
      */
     @Before public void autoServer() throws Exception {
-        LocalH2Database database = (LocalH2Database) GlobalDatabaseConfiguration.get().getDatabase();
-        GlobalDatabaseConfiguration.get().setDatabase(new LocalH2Database(database.getPath(), true));
+        GlobalDatabaseConfiguration gdc = GlobalDatabaseConfiguration.get();
+        gdc.setDatabase(null);
+        LocalH2Database.setDefaultGlobalDatabase();
+        LocalH2Database database = (LocalH2Database) gdc.getDatabase();
+        gdc.setDatabase(new LocalH2Database(database.getPath(), true));
         JunitTestResultStorageConfiguration.get().setStorage(new Impl());
     }
 
