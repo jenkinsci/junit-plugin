@@ -15,7 +15,7 @@
     <properties>
         <changelist>999999-SNAPSHOT</changelist>
         <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
-        <jenkins.baseline>2.387</jenkins.baseline>
+        <jenkins.baseline>2.414</jenkins.baseline>
         <jenkins.version>${jenkins.baseline}.3</jenkins.version>
         <no-test-jar>false</no-test-jar>
     </properties>
@@ -153,19 +153,11 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>database</artifactId>
-            <version>191.vd5981b_97a_5fa_</version>
             <scope>test</scope>
-            <exclusions>
-                <exclusion> <!-- TODO move to bom in Jenkins core -->
-                    <groupId>antlr</groupId>
-                    <artifactId>antlr</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>database-h2</artifactId>
-            <version>1.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -200,15 +192,9 @@
             <dependency>
                 <groupId>io.jenkins.tools.bom</groupId>
                 <artifactId>bom-${jenkins.baseline}.x</artifactId>
-                <version>2543.vfb_1a_5fb_9496d</version>
+                <version>2950.va_633b_f42f759</version>
                 <scope>import</scope>
                 <type>pom</type>
-            </dependency>
-            <!-- mockito and hibernate are conflicting (both test dependencies) -->
-            <dependency>
-                <groupId>net.bytebuddy</groupId>
-                <artifactId>byte-buddy</artifactId>
-                <version>1.14.13</version>
             </dependency>
             <!-- Workaround until https://github.com/jenkinsci/plugin-pom/issues/705 is fixed -->
             <dependency>
