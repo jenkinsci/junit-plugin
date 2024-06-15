@@ -24,6 +24,7 @@
 
 package io.jenkins.plugins.junit.storage;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import hudson.ExtensionPoint;
 import hudson.model.AbstractDescribableImpl;
 import hudson.model.Run;
@@ -41,10 +42,14 @@ import org.kohsuke.accmod.restrictions.Beta;
 @Restricted(Beta.class)
 public abstract class JunitTestResultStorage extends AbstractDescribableImpl<JunitTestResultStorage> implements ExtensionPoint {
 
+    public RemotePublisher createRemotePublisher(Run<?,?> build) throws IOException {
+        throw new UnsupportedOperationException("Implement createRemotePublisher(Run<?,?>, String) instead.");
+    }
+
     /**
      * Runs during {@link JUnitParser#summarizeResult}.
      */
-    public abstract RemotePublisher createRemotePublisher(Run<?,?> build) throws IOException;
+    public abstract RemotePublisher createRemotePublisher(Run<?,?> build, @CheckForNull String flowNodeId) throws IOException;
 
     /**
      * Remotable hook to perform test result publishing.

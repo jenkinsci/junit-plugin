@@ -129,8 +129,10 @@ public class JUnitParser extends TestResultParser {
     public TestResultSummary summarizeResult(String testResultLocations, Run<?,?> build, PipelineTestDetails pipelineTestDetails,
                                   FilePath workspace, Launcher launcher, TaskListener listener, JunitTestResultStorage storage)
             throws InterruptedException, IOException {
+        String nodeId = pipelineTestDetails != null ? pipelineTestDetails.getNodeId() : null;
+
         return workspace.act(new StorageParseResultCallable(testResultLocations, build, stdioRetention, keepProperties, allowEmptyResults,
-                pipelineTestDetails, listener, storage.createRemotePublisher(build), skipOldReports));
+                pipelineTestDetails, listener, storage.createRemotePublisher(build, nodeId), skipOldReports));
     }
 
     private static abstract class ParseResultCallable<T> extends MasterToSlaveFileCallable<T> {
