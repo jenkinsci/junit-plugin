@@ -1,0 +1,27 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<result>
+  <suites>
+    <suite>
+      <file>…/workspace/p/TEST-x.xml</file>
+      <name>x</name>
+      <stdout>foo&#x0;bar</stdout>
+      <duration>0.0</duration>
+      <enclosingBlocks/>
+      <enclosingBlockNames/>
+      <cases>
+        <case>
+          <duration>0.0</duration>
+          <className>X</className>
+          <testName>x</testName>
+          <skipped>false</skipped>
+          <errorStackTrace>xxx</errorStackTrace>
+          <errorDetails>x</errorDetails>
+          <failedSince>0</failedSince>
+        </case>
+      </cases>
+    </suite>
+  </suites>
+  <duration>0.0</duration>
+  <skipOldReports>false</skipOldReports>
+  <keepLongStdio>false</keepLongStdio>
+</result>
