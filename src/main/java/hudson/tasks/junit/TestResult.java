@@ -24,6 +24,7 @@
 package hudson.tasks.junit;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import hudson.XmlFile;
 import hudson.model.Run;
 import io.jenkins.plugins.junit.storage.TestResultImpl;
 import hudson.tasks.test.AbstractTestResultAction;
@@ -36,6 +37,7 @@ import hudson.tasks.test.TestObject;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.Reader;
 import java.io.StringWriter;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -53,11 +55,18 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import javax.xml.namespace.QName;
+import javax.xml.stream.*;
+import javax.xml.stream.events.*;
+
 import org.apache.tools.ant.DirectoryScanner;
 import org.dom4j.DocumentException;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
+
+import com.thoughtworks.xstream.XStream;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
 
@@ -78,7 +87,7 @@ public final class TestResult extends MetaTabulatedResult {
      * List of all {@link SuiteResult}s in this test.
      * This is the core data structure to be persisted in the disk.
      */
-    private final List<SuiteResult> suites = new ArrayList<>();
+    private List<SuiteResult> suites = new ArrayList<>();
 
     /**
      * {@link #suites} keyed by their names for faster lookup. Since multiple suites can have the same name, holding a collection.
@@ -122,9 +131,10 @@ public final class TestResult extends MetaTabulatedResult {
      */
     private transient List<CaseResult> failedTests;
 
-    private final StdioRetention stdioRetention;
+    private StdioRetention stdioRetention;
+    private boolean keepTestNames;
 
-    private final boolean keepProperties;
+    private boolean keepProperties;
 
     // default 3s as it depends on OS some can be good some not really....
     public static final long FILE_TIME_PRECISION_MARGIN = Long.getLong(TestResult.class.getName() + "filetime.precision.margin", 3000);
@@ -143,6 +153,16 @@ public final class TestResult extends MetaTabulatedResult {
     public TestResult(boolean keepLongStdio) {
         this.stdioRetention = StdioRetention.fromKeepLongStdio(keepLongStdio);
         this.keepProperties = false;
+        this.keepTestNames = false;
+        impl = null;
+    }
+
+    // Compatibility to XUnit plugin (and maybe more)
+    @Deprecated
+    public TestResult(long buildTime, boolean keepLongStdio) throws IOException {
+        this.stdioRetention = StdioRetention.fromKeepLongStdio(keepLongStdio);
+        this.keepTestNames = false;
+        this.keepProperties = false;
         impl = null;
     }
 
@@ -153,7 +173,7 @@ public final class TestResult extends MetaTabulatedResult {
 
     @Deprecated
     public TestResult(long filesTimestamp, DirectoryScanner results, boolean keepLongStdio) throws IOException {
-        this(filesTimestamp, results, keepLongStdio, null);
+        this(filesTimestamp, results, StdioRetention.fromKeepLongStdio(keepLongStdio), false, false, null, false);
     }
 
     @Deprecated
@@ -176,7 +196,13 @@ public final class TestResult extends MetaTabulatedResult {
     @Deprecated
     public TestResult(long filesTimestamp, DirectoryScanner results, boolean keepLongStdio, boolean keepProperties,
                       PipelineTestDetails pipelineTestDetails, boolean skipOldReports) throws IOException {
-        this(filesTimestamp, results, StdioRetention.fromKeepLongStdio(keepLongStdio), keepProperties, pipelineTestDetails, skipOldReports);
+        this(filesTimestamp, results, StdioRetention.fromKeepLongStdio(keepLongStdio), keepProperties, false, pipelineTestDetails, skipOldReports);
+    }
+
+    @Deprecated
+    public TestResult(long filesTimestamp, DirectoryScanner results, boolean keepLongStdio, boolean keepProperties, boolean keepTestNames,
+                      PipelineTestDetails pipelineTestDetails, boolean skipOldReports) throws IOException {
+        this(filesTimestamp, results, StdioRetention.fromKeepLongStdio(keepLongStdio), keepProperties, keepTestNames, pipelineTestDetails, skipOldReports);
     }
 
     /**
@@ -187,10 +213,11 @@ public final class TestResult extends MetaTabulatedResult {
      * @param pipelineTestDetails A {@link PipelineTestDetails} instance containing Pipeline-related additional arguments.
      * @param skipOldReports to parse or not test files older than filesTimestamp
      */
-    public TestResult(long filesTimestamp, DirectoryScanner results, StdioRetention stdioRetention, boolean keepProperties,
+    public TestResult(long filesTimestamp, DirectoryScanner results, StdioRetention stdioRetention, boolean keepProperties, boolean keepTestNames,
                       PipelineTestDetails pipelineTestDetails, boolean skipOldReports) throws IOException {
         this.stdioRetention = stdioRetention;
         this.keepProperties = keepProperties;
+        this.keepTestNames = keepTestNames;
         impl = null;
         this.skipOldReports = skipOldReports;
         parse(filesTimestamp, results, pipelineTestDetails);
@@ -200,6 +227,7 @@ public final class TestResult extends MetaTabulatedResult {
         this.impl = impl;
         stdioRetention = StdioRetention.DEFAULT; // irrelevant
         this.keepProperties = false; // irrelevant
+        keepTestNames = false; // irrelevant
     }
 
     @CheckForNull
@@ -220,6 +248,92 @@ public final class TestResult extends MetaTabulatedResult {
     @Override
     public TestResult getTestResult() {
     	return this;
+    }
+
+    public TestResult(TestResult src) {
+        this.stdioRetention = src.stdioRetention;
+        this.keepProperties = src.keepProperties;
+        this.keepTestNames = src.keepTestNames;
+        this.duration = src.duration;
+        if (src.suites != null) {
+            this.suites = new ArrayList<SuiteResult>();
+            for (SuiteResult sr : src.suites) {
+                suites.add(new SuiteResult(sr));
+            }
+        } else {
+            this.suites = null;
+        }
+        this.impl = null;
+    }
+
+    private static final XMLInputFactory factory = XMLInputFactory.newInstance();
+    public void parse(XmlFile f) throws XMLStreamException, IOException {
+        try (Reader r = f.readRaw()){
+            final XMLEventReader reader = factory.createXMLEventReader(r);
+            while (reader.hasNext()) {
+                final XMLEvent event = reader.nextEvent();
+                if (event.isStartElement() && event.asStartElement().getName()
+                        .getLocalPart().equals("result")) {
+                    parseXmlResult(reader, event.asStartElement());
+                }
+            }
+            r.close();
+        } /*catch (Exception e) {
+            e.printStackTrace();
+        }*/
+    }
+
+    private void parseXmlResult(final XMLEventReader reader, StartElement startEvent) throws XMLStreamException {
+        Attribute attr = startEvent.getAttributeByName(QName.valueOf("plugin"));
+        String ver = attr == null ? null : attr.getValue();
+        while (reader.hasNext()) {
+            XMLEvent event = reader.nextEvent();
+            if (event.isEndElement() && event.asEndElement().getName().getLocalPart().equals("result")) {
+                return;
+            }
+            if (event.isStartElement()) {
+                final StartElement element = event.asStartElement();
+                final String elementName = element.getName().getLocalPart();
+                switch (elementName) {
+                    case "suites":
+                        parseXmlSuites(reader, ver);
+                        break;
+                    case "duration":
+                        duration = CaseResult.clampDuration(new TimeToFloat(reader.getElementText()).parse());
+                        break;
+                    case "keepLongStdio":
+                        stdioRetention = StdioRetention.fromKeepLongStdio(Boolean.parseBoolean(reader.getElementText()));
+                        break;
+                    case "stdioRetention":
+                        stdioRetention = StdioRetention.parse(reader.getElementText());
+                        break;
+                    case "keepTestNames":
+                        keepTestNames = Boolean.parseBoolean(reader.getElementText());
+                        break;
+                    case "keepProperties":
+                        keepProperties = Boolean.parseBoolean(reader.getElementText());
+                        break;
+                }
+            }
+        }
+    }
+
+    private void parseXmlSuites(final XMLEventReader reader, String ver) throws XMLStreamException {
+        while (reader.hasNext()) {
+            final XMLEvent event = reader.nextEvent();
+            if (event.isEndElement() && event.asEndElement().getName().getLocalPart().equals("suites")) {
+                return;
+            }
+            if (event.isStartElement()) {
+                final StartElement element = event.asStartElement();
+                final String elementName = element.getName().getLocalPart();
+                switch (elementName) {
+                    case "suite":
+                        suites.add(SuiteResult.parse(reader, ver));
+                        break;
+                }
+            }
+        }
     }
 
     @Deprecated
@@ -419,7 +533,7 @@ public final class TestResult extends MetaTabulatedResult {
             throw new IllegalStateException("Cannot reparse using a pluggable impl");
         }
         try {
-            List<SuiteResult> suiteResults = SuiteResult.parse(reportFile, stdioRetention, keepProperties, pipelineTestDetails);
+            List<SuiteResult> suiteResults = SuiteResult.parse(reportFile, stdioRetention, keepProperties, keepTestNames, pipelineTestDetails);
             for (SuiteResult suiteResult : suiteResults)
                 add(suiteResult);
 

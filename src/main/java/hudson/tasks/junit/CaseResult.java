@@ -56,6 +56,9 @@ import java.util.logging.Logger;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
+import javax.xml.stream.*;
+import javax.xml.stream.events.*;
+
 /**
  * One test result.
  *
@@ -65,7 +68,7 @@ import static java.util.Collections.singletonList;
  */
 public class CaseResult extends TestResult implements Comparable<CaseResult> {
     private static final Logger LOGGER = Logger.getLogger(CaseResult.class.getName());
-    private final float duration;
+    private float duration;
     /**
      * Start time in epoch milliseconds - default is -1 for unset
      */
@@ -74,16 +77,17 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      * In JUnit, a test is a method of a class. This field holds the fully qualified class name
      * that the test was in.
      */
-    private final String className;
+    private String className;
     /**
      * This field retains the method name.
      */
-    private final String testName;
+    private String testName;
     private transient String safeName;
-    private final boolean skipped;
-    private final String skippedMessage;
-    private final String errorStackTrace;
-    private final String errorDetails;
+    private boolean skipped;
+    private boolean keepTestNames;
+    private String skippedMessage;
+    private String errorStackTrace;
+    private String errorDetails;
     private final Map<String, String> properties;
     @SuppressFBWarnings(value = "SE_TRANSIENT_FIELD_NOT_RESTORED", justification = "Specific method to restore it")
     private transient SuiteResult parent;
@@ -98,14 +102,14 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      * If these information are reported at the test case level, these fields are set,
      * otherwise null, in which case {@link SuiteResult#stdout}.
      */
-    private final String stdout,stderr;
+    private String stdout,stderr;
 
     /**
      * This test has been failing since this build number (not id.)
      *
      * If {@link #isPassed() passing}, this field is left unused to 0.
      */
-    private /*final*/ int failedSince;
+    private int failedSince;
 
     private static float parseTime(Element testCase) {
         String time = testCase.attributeValue("time");
@@ -138,6 +142,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         this.skipped = false;
         this.skippedMessage = null;
         this.properties = Collections.emptyMap();
+        this.keepTestNames = false;
     }
 
     @Restricted(Beta.class)
@@ -165,14 +170,15 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         this.skipped = skippedMessage != null;
         this.skippedMessage = skippedMessage;
         this.properties = Collections.emptyMap();
+        this.keepTestNames = false;
     }
 
     @Deprecated
-    CaseResult(SuiteResult parent, Element testCase, String testClassName, boolean keepLongStdio, boolean keepProperties) {
-        this(parent, testCase, testClassName, StdioRetention.fromKeepLongStdio(keepLongStdio), keepProperties);
+    CaseResult(SuiteResult parent, Element testCase, String testClassName, boolean keepLongStdio, boolean keepProperties, boolean keepTestNames) {
+        this(parent, testCase, testClassName, StdioRetention.fromKeepLongStdio(keepLongStdio), keepProperties, keepTestNames);
     }
 
-    CaseResult(SuiteResult parent, Element testCase, String testClassName, StdioRetention stdioRetention, boolean keepProperties) {
+    CaseResult(SuiteResult parent, Element testCase, String testClassName, StdioRetention stdioRetention, boolean keepProperties, boolean keepTestNames) {
         // schema for JUnit report XML format is not available in Ant,
         // so I don't know for sure what means what.
         // reports in http://www.nabble.com/difference-in-junit-publisher-and-ant-junitreport-tf4308604.html#a12265700
@@ -200,7 +206,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         errorStackTrace = getError(testCase);
         errorDetails = getErrorMessage(testCase);
         this.parent = parent;
-        duration = parseTime(testCase);
+        duration = clampDuration(parseTime(testCase));
         this.startTime = -1;
         skipped = isMarkedAsSkipped(testCase);
         skippedMessage = getSkippedMessage(testCase);
@@ -226,6 +232,77 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
             }
         }
         this.properties = properties;
+        this.keepTestNames = keepTestNames;
+    }
+
+    public CaseResult(CaseResult src) {
+        this.duration = src.duration;
+        this.className = src.className;
+        this.testName = src.testName;
+        this.skippedMessage = src.skippedMessage;
+        this.skipped = src.skipped;
+        this.keepTestNames = src.keepTestNames;
+        this.errorStackTrace = src.errorStackTrace;
+        this.errorDetails = src.errorDetails;
+        this.failedSince = src.failedSince;
+        this.stdout = src.stdout;
+        this.stderr = src.stderr;
+        this.properties = new HashMap<>();
+        this.properties.putAll(src.properties);
+    }
+
+    public static float clampDuration(float d) {
+        return Math.min(7 * 24 * 60 * 60, Math.max(0.0f, d));
+    }
+
+    public static CaseResult parse(SuiteResult parent, final XMLEventReader reader, String ver) throws XMLStreamException {
+        CaseResult r = new CaseResult(parent, null, null, null);
+        while (reader.hasNext()) {
+            final XMLEvent event = reader.nextEvent();
+            if (event.isEndElement() && event.asEndElement().getName().getLocalPart().equals("case")) {
+                return r;
+            }
+            if (event.isStartElement()) {
+                final StartElement element = event.asStartElement();
+                final String elementName = element.getName().getLocalPart();
+                switch (elementName) {
+                    case "duration":
+                        r.duration = clampDuration(new TimeToFloat(reader.getElementText()).parse());
+                        break;
+                    case "className":
+                        r.className = reader.getElementText();
+                        break;
+                    case "testName":
+                        r.testName = reader.getElementText();
+                        break;
+                    case "skippedMessage":
+                        r.skippedMessage = reader.getElementText();
+                        break;
+                    case "skipped":
+                        r.skipped = Boolean.parseBoolean(reader.getElementText());
+                        break;
+                    case "keepTestNames":
+                        r.keepTestNames = Boolean.parseBoolean(reader.getElementText());
+                        break;
+                    case "errorStackTrace":
+                        r.errorStackTrace = reader.getElementText();
+                        break;
+                    case "errorDetails":
+                        r.errorDetails = reader.getElementText();
+                        break;
+                    case "failedSince":
+                        r.failedSince = Integer.parseInt(reader.getElementText());
+                        break;
+                    case "stdout":
+                        r.stdout = reader.getElementText();
+                        break;
+                    case "stderr":
+                        r.stderr = reader.getElementText();
+                        break;
+                }
+            }
+        }
+        return r;
     }
 
     static String possiblyTrimStdio(Collection<CaseResult> results, StdioRetention stdioRetention, String stdio) { // HUDSON-6516
@@ -354,7 +431,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     private String getNameWithEnclosingBlocks(String rawName) {
         // Only prepend the enclosing flow node names if there are any and the run this is in has multiple blocks directly containing
         // test results.
-        if (!getEnclosingFlowNodeNames().isEmpty()) {
+        if (!keepTestNames && !getEnclosingFlowNodeNames().isEmpty()) {
             Run<?, ?> r = getRun();
             if (r != null) {
                 TestResultAction action = r.getAction(TestResultAction.class);
@@ -583,11 +660,20 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     public CaseResult getPreviousResult() {
         if (parent == null) return null;
 
-        TestResult previousResult = parent.getParent().getPreviousResult();
-        if (previousResult == null) return null;
-        if (previousResult instanceof hudson.tasks.junit.TestResult) {
-            hudson.tasks.junit.TestResult pr = (hudson.tasks.junit.TestResult) previousResult;
-            return pr.getCase(parent.getName(), getTransformedFullDisplayName());
+        TestResult previousResult = parent.getParent();
+        int n = 0;
+        while (previousResult != null && n < 25) {
+            previousResult = previousResult.getPreviousResult();
+            if (previousResult == null) 
+                return null;
+            if (previousResult instanceof hudson.tasks.junit.TestResult) {
+	            hudson.tasks.junit.TestResult pr = (hudson.tasks.junit.TestResult) previousResult;
+                CaseResult cr = pr.getCase(parent.getName(), getTransformedFullDisplayName());
+                if (cr != null) {
+                    return cr;
+                }
+            }
+            ++n;
         }
         return null;
     }

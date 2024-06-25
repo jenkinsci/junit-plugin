@@ -20,6 +20,8 @@ public interface JUnitTask {
 
     boolean isKeepProperties();
 
+    boolean isKeepTestNames();
+
     boolean isAllowEmptyResults();
     
     boolean isSkipPublishingChecks();

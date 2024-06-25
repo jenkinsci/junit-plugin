@@ -15,6 +15,9 @@ public class TestDurationTrendSeriesBuilder extends SeriesBuilder<TestObject> {
         Map<String, Integer> series = new HashMap<>();
 
         series.put(SECONDS, (int) testObject.getDuration());
+        series.put("failed", (int) testObject.getFailCount());
+        series.put("skipped", (int) testObject.getSkipCount());
+        series.put("passed", (int) testObject.getPassCount());
 
         return series;
     }

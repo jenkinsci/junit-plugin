@@ -91,7 +91,8 @@ public class CaseResultTest {
         FreeStyleBuild b = configureTestBuild(null);
         TestResult tr = b.getAction(TestResultAction.class).getResult();
         assertEquals(3,tr.getFailedTests().size());
-        CaseResult cr = tr.getFailedTests().get(0);
+        // Alphabetic order to ensure a stable list regardless of parallel execution or multiple result suites.
+        CaseResult cr = tr.getFailedTests().get(2);
         assertEquals("org.twia.vendor.VendorManagerTest",cr.getClassName());
         assertEquals("testGetVendorFirmKeyForVendorRep",cr.getName());
 

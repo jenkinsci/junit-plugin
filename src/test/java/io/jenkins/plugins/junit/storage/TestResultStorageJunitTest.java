@@ -476,7 +476,7 @@ public class TestResultStorageJunitTest {
                                     Job<?, ?> theJob = Jenkins.get().getItemByFullName(getJobName(), Job.class);
                                     if (theJob != null) {
                                         Run<?, ?> run = theJob.getBuildByNumber(buildNumber);
-                                        historyTestResultSummaries.add(new HistoryTestResultSummary(run, duration, failed, skipped, passed));
+                                        historyTestResultSummaries.add(new HistoryTestResultSummary(run, null, duration, failed, skipped, passed));
                                     }
                                 }
                                 return historyTestResultSummaries;
