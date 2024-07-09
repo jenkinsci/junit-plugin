@@ -174,7 +174,7 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
             skipCount = r.getSkipCount();
         }
         long d = System.currentTimeMillis() - started;
-        if (d > 100) {
+        if (d > 500) {
             LOGGER.info("TestResultAction.load took " + d + " ms.");
         }
         return r;
