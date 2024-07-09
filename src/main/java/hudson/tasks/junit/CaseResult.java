@@ -252,7 +252,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     }
 
     public static float clampDuration(float d) {
-        return Math.min(7 * 24 * 60 * 60, Math.max(0.0f, d));
+        return Math.min(365.0f * 24 * 60 * 60, Math.max(0.0f, d));
     }
 
     public static CaseResult parse(SuiteResult parent, final XMLEventReader reader, String ver) throws XMLStreamException {

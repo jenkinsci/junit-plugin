@@ -3,7 +3,7 @@
     $(document).ready(function ($) {
         const trendConfigurationDialogId = 'chart-configuration-test-history';
 
-        document.getElementById(trendConfigurationDialogId).on('hidden.bs.modal', function () {
+        $('#' + trendConfigurationDialogId).on('hidden.bs.modal', function () {
             redrawTrendCharts();
         });
 
