@@ -283,7 +283,7 @@ public class JUnitResultsStepTest {
                 "    touch 'third-result.xml'\n" +
                 "    parallel(a: { def first = junit(testResults: 'first-result.xml'); assert first.totalCount == 6 },\n" +
                 "             b: { def second = junit(testResults: 'second-result.xml'); assert second.totalCount == 1 },\n" +
-                "             c: { def third = junit(testResults: 'third-result.xml', keepTestNames: false); assert third.totalCount == 3 })\n" +
+                "             c: { def third = junit(testResults: 'third-result.xml', keepTestNames: true); assert third.totalCount == 3 })\n" +
                 "  }\n" +
                 "}\n", true
         ));
@@ -294,8 +294,8 @@ public class JUnitResultsStepTest {
         assertEquals(5, action.getResult().getSuites().size());
         assertEquals(10, action.getTotalCount());
 
-        assertBranchResults(r, 1, 6, 0, "a", "first", null, true);
-        assertBranchResults(r, 1, 1, 0, "b", "first", null, true);
+        assertBranchResults(r, 1, 6, 0, "a", "first", null, false);
+        assertBranchResults(r, 1, 1, 0, "b", "first", null, false);
         assertBranchResults(r, 3, 3, 1, "c", "first", null, true);
         assertStageResults(r, 5, 10, 1, "first");
     }
