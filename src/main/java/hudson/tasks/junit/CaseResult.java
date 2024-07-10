@@ -51,7 +51,7 @@ import java.util.Map;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.logging.Logger;
+import java.util.logging.Level;import java.util.logging.Logger;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -299,6 +299,10 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
                     case "stderr":
                         r.stderr = reader.getElementText();
                         break;
+                    default:
+                        if (LOGGER.isLoggable(Level.FINEST)) {
+                            LOGGER.finest("CaseResult.parse encountered an unknown field: " + elementName);
+                        }
                 }
             }
         }

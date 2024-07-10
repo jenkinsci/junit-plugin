@@ -315,6 +315,10 @@ public final class TestResult extends MetaTabulatedResult {
                     case "keepProperties":
                         keepProperties = Boolean.parseBoolean(reader.getElementText());
                         break;
+                    default:
+                        if (LOGGER.isLoggable(Level.FINEST)) {
+                            LOGGER.finest("TestResult.parseXmlResult encountered an unknown field: " + elementName);
+                        }
                 }
             }
         }
@@ -333,6 +337,10 @@ public final class TestResult extends MetaTabulatedResult {
                     case "suite":
                         suites.add(SuiteResult.parse(reader, ver));
                         break;
+                    default:
+                        if (LOGGER.isLoggable(Level.FINEST)) {
+                            LOGGER.finest("TestResult.parseXmlSuites encountered an unknown field: " + elementName);
+                        }
                 }
             }
         }

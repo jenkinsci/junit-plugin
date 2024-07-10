@@ -92,20 +92,6 @@ public class History {
         return new TestResultTrendChart().createFromTestObject(createBuildHistory(testObject, start, end), chartModelConfiguration);
     }
 
-    private class TrendJsons {
-  
-        public String duration;
-        public String result;
-        public String buildMap;
-      
-        public TrendJsons(String duration, String result, String buildMap) {
-      
-            this.duration = duration;
-            this.result = result;
-            this.buildMap = buildMap;
-        }
-    }
-
     private ObjectNode computeDurationTrendJson(List<HistoryTestResultSummary> history) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode root = mapper.createObjectNode();

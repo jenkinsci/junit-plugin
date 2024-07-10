@@ -50,7 +50,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Logger;
+import java.util.logging.Level;import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -207,6 +207,10 @@ public final class SuiteResult implements Serializable {
                     case "stderr":
                         r.stderr = reader.getElementText();
                         break;
+                    default:
+                        if (LOGGER.isLoggable(Level.FINEST)) {
+                            LOGGER.finest("SuiteResult.parse encountered an unknown field: " + elementName);
+                        }
                 }
             }
         }
@@ -226,6 +230,10 @@ public final class SuiteResult implements Serializable {
                     case "string":
                         r.enclosingBlocks.add(reader.getElementText());
                         break;
+                    default:
+                        if (LOGGER.isLoggable(Level.FINEST)) {
+                            LOGGER.finest("SuiteResult.parseEnclosingBlocks encountered an unknown field: " + elementName);
+                        }
                 }
             }
         }
@@ -244,6 +252,10 @@ public final class SuiteResult implements Serializable {
                     case "string":
                         r.enclosingBlockNames.add(reader.getElementText());
                         break;
+                    default:
+                        if (LOGGER.isLoggable(Level.FINEST)) {
+                            LOGGER.finest("SuiteResult.parseEnclosingBlockNames encountered an unknown field: " + elementName);
+                        }
                 }
             }
         }
@@ -262,6 +274,10 @@ public final class SuiteResult implements Serializable {
                     case "case":
                         r.cases.add(CaseResult.parse(r, reader, ver));
                         break;
+                    default:
+                        if (LOGGER.isLoggable(Level.FINEST)) {
+                            LOGGER.finest("SuiteResult.parseCases encountered an unknown field: " + elementName);
+                        }
                 }
             }
         }

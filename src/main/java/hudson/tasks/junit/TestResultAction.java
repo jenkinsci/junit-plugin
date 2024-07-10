@@ -252,6 +252,7 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
     }
 
     static ConcurrentHashMap<String, SoftReference<TestResult>> resultCache = new ConcurrentHashMap<>();
+    static Object syncObj = new Object();
     static long lastCleanupMs = 0;
 
     /**
@@ -259,7 +260,7 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
      */
     private TestResult load() {
         if (resultCache.size() > 1000) {
-            synchronized (resultCache)
+            synchronized (syncObj)
             {
                 if (resultCache.size() > 1000 && (System.currentTimeMillis() - lastCleanupMs) > 500) {
                     lastCleanupMs = System.currentTimeMillis();
