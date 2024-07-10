@@ -165,12 +165,10 @@ public class JUnitResultsStep extends Step implements JUnitTask {
     }
 
     /**
-     * @param keepTestNames Whether to keep long stdio.
-     *
-     * @since 1.2-beta-1
+     * @param keepTestNames Whether to avoid adding parallel stage name into test name.
      */
-    @DataBoundSetter public final void setKeepTestNames(boolean v) {
-        this.keepTestNames = v;
+    @DataBoundSetter public final void setKeepTestNames(boolean keepTestNames) {
+        this.keepTestNames = keepTestNames;
     }
 
     /**

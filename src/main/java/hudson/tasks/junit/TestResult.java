@@ -210,6 +210,8 @@ public final class TestResult extends MetaTabulatedResult {
      * filtering out all files that were created before the given time.
      * @param filesTimestamp per default files older than this will be ignored (depending on param skipOldReports)
      * @param stdioRetention how to retain stdout/stderr for large outputs
+     * @param keepProperties to keep properties or not
+     * @param keepTestNames to prepend parallel test stage to test name or not
      * @param pipelineTestDetails A {@link PipelineTestDetails} instance containing Pipeline-related additional arguments.
      * @param skipOldReports to parse or not test files older than filesTimestamp
      */

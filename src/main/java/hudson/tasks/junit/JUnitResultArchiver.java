@@ -87,8 +87,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
 
     private boolean keepProperties;
     /**
-     * If true, retain a suite's complete stdout/stderr even if this is huge and the suite passed.
-     * @since 1.358
+     * If true, retain the original test name (do not prepend the parallel stage name).
      */
     private boolean keepTestNames;
 
@@ -430,19 +429,17 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     }
 
     /**
-     * @return the keepTestNames.
+     * @return the keepTestNames
      */
     public boolean isKeepTestNames() {
         return keepTestNames;
     }
 
     /**
-     * @param keepTestNames Whether to keep long stdio.
-     *
-     * @since 1.2-beta-1
+     * @param keepTestNames Whether to avoid prepending the parallel stage name to test name.
      */
-    @DataBoundSetter public final void setKeepTestNames(boolean v) {
-        this.keepTestNames = v;
+    @DataBoundSetter public final void setKeepTestNames(boolean keepTestNames) {
+        this.keepTestNames = keepTestNames;
     }
 
     /**
