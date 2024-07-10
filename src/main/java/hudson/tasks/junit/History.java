@@ -230,7 +230,7 @@ public class History {
             return;
         }
         double windowSize = 100.0;
-        double rho = Math.min(1.0, 1.0 / (history.size() / 2));
+        double rho = Math.min(1.0, 1.0 / Math.max(1, (history.size() / 2)));
         if (rho > 0.75) {
             return; // Too close to linear
         }
