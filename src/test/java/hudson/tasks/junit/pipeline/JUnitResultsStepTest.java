@@ -503,16 +503,17 @@ public class JUnitResultsStepTest {
         assertNotNull(aBranch);
         TestResult branchResult = assertBlockResults(run, suiteCount, testCount, failCount, aBranch);
         String namePrefix;
-        if (keepTestNames) {
+        if (!keepTestNames) {
             namePrefix = stageName + " / " + branchName;
             if (innerStageName != null) {
                 namePrefix += " / " + innerStageName;
             }
+            namePrefix += " / ";
         } else {
             namePrefix = "";
         }
         for (CaseResult c : branchResult.getPassedTests()) {
-            assertEquals(namePrefix + " / " + c.getTransformedTestName(), c.getDisplayName());
+            assertEquals(namePrefix + c.getTransformedTestName(), c.getDisplayName());
         }
     }
 
