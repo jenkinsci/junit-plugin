@@ -105,16 +105,15 @@ public class TestResultProjectAction implements Action, AsyncTrendChart, AsyncCo
     }
 
     public AbstractTestResultAction getLastTestResultAction() {
-        //final Run<?,?> tb = job.getLastSuccessfulBuild();
-
+        /*
+        Any build with test results should be considered.
+        Nowadays pipeline builds can be failed, even though just a substage failed, whereas other stages do produce test results.
+        Using UNSTABLE is not feasible for this, as that does not mark a build as containing a failure for other systems that list the Jenkins builds externally.
+        */
         Run<?,?> b = job.getLastBuild();
         while(b!=null) {
             AbstractTestResultAction a = b.getAction(AbstractTestResultAction.class);
             if(a!=null && (!b.isBuilding())) return a;
-            //if(b==tb)
-                // if even the last successful build didn't produce the test result,
-                // that means we just don't have any tests configured.
-                //return null;
             b = b.getPreviousBuild();
         }
 
