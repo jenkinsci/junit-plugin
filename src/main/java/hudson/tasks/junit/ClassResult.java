@@ -214,7 +214,6 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
 
     void freeze() {
         this.tally();
-        //Collections.sort(cases);
     }
 
     public String getClassName() {

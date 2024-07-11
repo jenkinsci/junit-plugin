@@ -280,9 +280,7 @@ public final class TestResult extends MetaTabulatedResult {
                 }
             }
             r.close();
-        } /*catch (Exception e) {
-            e.printStackTrace();
-        }*/
+        }
     }
 
     private void parseXmlResult(final XMLEventReader reader, StartElement startEvent) throws XMLStreamException {
