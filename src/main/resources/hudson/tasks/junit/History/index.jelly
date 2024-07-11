@@ -20,24 +20,6 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-<div id="trend-carousel" class="carousel slide carousel-fade carousel-dark" data-bs-interval="false">
-              <div class="carousel-inner" style="overflow: visible;">
-                <div class="carousel-item active">
-                  <div id="test-duration-trend-chart" class="graph-cursor-pointer card-chart-carousel"/>
-                </div>
-                <div class="carousel-item">
-                  <div id="test-result-trend-chart" class="graph-cursor-pointer card-chart-carousel"/>
-                </div>
-              </div>
-              <button class="carousel-control-prev" type="button" data-bs-target="#trend-carousel" data-bs-slide="prev">
-                <span class="carousel-control-prev-icon" aria-hidden="true"/>
-                <span class="visually-hidden">Previous</span>
-              </button>
-              <button class="carousel-control-next" type="button" data-bs-target="#trend-carousel" data-bs-slide="next">
-                <span class="carousel-control-next-icon" aria-hidden="true"/>
-                <span class="visually-hidden">Next</span>
-              </button>
-            </div>
 -->
 
 <!-- Displays the chart that show how long builds are taking -->
