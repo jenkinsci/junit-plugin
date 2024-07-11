@@ -141,7 +141,7 @@
                             color: textColor
                         },
                         minInterval: model.duration.integerRangeAxis ? 1 : null,
-                        name: 'Duration (seconds)',
+                        name: model.duration.yAxis.name,
                         nameLocation: 'middle',
                         nameGap: 60,
                         nameTextStyle: {
@@ -262,7 +262,7 @@
                         color: textColor
                     },
                     data: model.distribution.domainAxisLabels,
-                    name: 'Duration (seconds)',
+                    name: model.distribution.xAxis.name,
                     nameLocation: 'middle',
                     nameGap: 26,
                     nameTextStyle: {

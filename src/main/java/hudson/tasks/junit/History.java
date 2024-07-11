@@ -23,7 +23,8 @@
  */
 package hudson.tasks.junit;
 
-import java.util.*;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -99,7 +100,6 @@ public class History {
         ArrayNode series = mapper.createArrayNode();
         ObjectNode durationSeries = mapper.createObjectNode();
         series.add(durationSeries);
-        durationSeries.put("name", "Seconds");
         durationSeries.put("type", "line");
         durationSeries.put("symbol", "circle");
         durationSeries.put("symbolSize", "6");
@@ -132,6 +132,38 @@ public class History {
         durationAvgMark.set("lineStyle", dashLineStyle);
         durationMarkData.add(durationAvgMark);
 
+        float maxDuration = (float)0.0;
+        for (HistoryTestResultSummary h : history) {
+            hudson.tasks.test.TestResult to = h.getResultInRun();
+            if (maxDuration < to.getDuration()) {
+                maxDuration = to.getDuration();
+            }
+        }
+        ObjectNode yAxis = mapper.createObjectNode();
+        double mul = 1.0;
+        double roundMul = 1000.0;
+        String durationStr = "Seconds";
+        if (maxDuration < 1e-3) {
+            durationStr = "Microseconds";
+            mul = 1e6;
+        } else if (maxDuration < 1) {
+            durationStr = "Milliseconds";
+            mul = 1e3;
+        } else if (maxDuration < 90) {
+            durationStr = "Seconds";
+            mul = 1.0;
+        } else if (maxDuration < 90 * 60) {
+            durationStr = "Minutes";
+            mul = 1.0d / 60.0d;
+            roundMul = 100.0;
+        } else {
+            durationStr = "Hours";
+            mul = 1.0d / 3600.0d;
+            roundMul = 100.0;
+        }
+        yAxis.put("name", "Duration (" + durationStr.toLowerCase() + ")");
+        durationSeries.put("name", durationStr);
+
         int index = 0;
         ObjectNode skippedStyle = mapper.createObjectNode();
         skippedStyle.put("color", "gray");
@@ -140,20 +172,17 @@ public class History {
         float tmpMax = 0;
         double[] lrX = new double[history.size()];
         double[] lrY = new double[history.size()];
-        float maxDuration = (float)0.0;
         for (HistoryTestResultSummary h : history) {
             hudson.tasks.test.TestResult to = h.getResultInRun();
             lrX[index] = ((double)index);
             Run<?,?> r = h.getRun();
             String fdn = r.getDisplayName();
             domainAxisLabels.add(fdn);
-            tmpMax = Math.max(to.getDuration(), tmpMax);
             ObjectNode durationColor = mapper.createObjectNode();
-            lrY[index] = ((double)to.getDuration());
-            if (maxDuration < to.getDuration()) {
-                maxDuration = to.getDuration();
-            }
-            durationColor.put("value", to.getDuration());
+            double duration = Math.round(mul * to.getDuration() * roundMul) / roundMul;
+            tmpMax = Math.max((float)duration, tmpMax);
+            lrY[index] = (double)(duration);
+            durationColor.put("value", duration);
             if (to.isPassed() || (to.getPassCount() > 0 && to.getFailCount() == 0)) {
                 durationColor.set("itemStyle", okStyle);
             } else {
@@ -170,20 +199,20 @@ public class History {
             ++index;
         }
 
-        createLinearTrend(mapper, series, history, lrX, lrY, "Trend of Seconds", "rgba(0, 120, 255, 0.5)", 0.0, Double.MAX_VALUE, 0, 0);
-        createSplineTrend(mapper, series, history, lrX, lrY, "Smooth of Seconds", "rgba(120, 50, 255, 0.5)", 0.0, Double.MAX_VALUE, 0, 0);
+        createLinearTrend(mapper, series, history, lrX, lrY, "Trend of " + durationStr, "rgba(0, 120, 255, 0.5)", 0.0, Double.MAX_VALUE, 0, 0);
+        createSplineTrend(mapper, series, history, lrX, lrY, "Smooth of " + durationStr, "rgba(120, 50, 255, 0.5)", 0.0, Double.MAX_VALUE, 0, 0);
 
         root.set("series", series);
         root.set("domainAxisLabels", domainAxisLabels);
         root.put("integerRangeAxis", true);
         root.put("domainAxisItemName", "Build");
-        if (maxDuration > 0.0) {
-            root.put("rangeMax", maxDuration);
-        }
+        if (tmpMax > 50) {
+           root.put("rangeMax", (int)Math.ceil(tmpMax));
+        } else if (tmpMax > 0.0) {
+           root.put("rangeMax", tmpMax);
+        } else
         root.put("rangeMin", 0);
-        if (tmpMax > 5) {
-            root.put("rangeMax", (int)Math.ceil(tmpMax));
-        }
+        root.set("yAxis", yAxis);
         return root;
     }
 
@@ -436,18 +465,44 @@ public class History {
         for (int i = 0; i < lrY.length; ++i) {
             lrX[i] = ((minDuration + (maxDuration - minDuration) / lrY.length * i) / scale * 100.0);
         }
+
+        ObjectNode xAxis = mapper.createObjectNode();
+        double mul = 1.0;
+        double roundMul = 1000.0;
+        if (maxDuration < 1e-3) {
+            xAxis.put("name", "Duration (microseconds)");
+            mul = 1e6;
+        } else if (maxDuration < 1) {
+            xAxis.put("name", "Duration (milliseconds)");
+            mul = 1e3;
+       } else if (maxDuration < 90) {
+            xAxis.put("name", "Duration (seconds)");
+            mul = 1.0;
+        } else if (maxDuration < 90 * 60) {
+            xAxis.put("name", "Duration (minutes)");
+            mul = 1.0d / 60.0d;
+            roundMul = 100.0;
+        } else {
+            xAxis.put("name", "Duration (hours)");
+            mul = 1.0d / 3600.0d;
+            roundMul = 100.0;
+        }
+
         SmoothingCubicSpline scs = new SmoothingCubicSpline(lrX, lrY, 0.1);
         int smoothPts = counts.length * 4;
         double k = (double)counts.length / smoothPts;
+        int roundNum = 6;
         for (double z = minDuration; z < maxDuration; z += step * k) {
+            // Use float for smaller JSONs.
             durationData.add((float)Math.max(0.0, scs.evaluate(z / scale * 100.0)));
-            domainAxisLabels.add((float)z);
+            domainAxisLabels.add((float)(Math.round(mul * z * roundMul) / roundMul));
         }
 
         root.set("series", series);
         root.put("integerRangeAxis", true);
         root.put("domainAxisItemName", "Number of Builds");
         root.set("domainAxisLabels", domainAxisLabels);
+        root.set("xAxis", xAxis);
         return root;
     }
 
@@ -463,7 +518,7 @@ public class History {
         }
         return buildMap;
     }
-    
+
     private ObjectNode computeTrendJsons(List<HistoryTestResultSummary> history) {
         Collections.reverse(history);
         ObjectMapper mapper = new ObjectMapper();
