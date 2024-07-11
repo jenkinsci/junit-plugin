@@ -43,7 +43,9 @@
                         yAxisIndex: 'none'
                       },
                       restore: {},
-                      saveAsImage: {}
+                      saveAsImage: {
+						  name: model.saveAsImage.name
+					  }
                     }
                 },
                 tooltip: {
@@ -62,7 +64,7 @@
                     },
                     padding: 5,
                     order: 'seriesAsc',
-                    position: [-400, '7%'],
+                    position: [-260, '7%'],
                 },
                 axisPointer: {
                     snap: true,
@@ -211,7 +213,9 @@
                 toolbox: {
                     feature: {
                       restore: {},
-                      saveAsImage: {}
+                      saveAsImage: {
+						  name: model.saveAsImage.name
+					  }
                     }
                 },
                 tooltip: {

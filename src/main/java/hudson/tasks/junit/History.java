@@ -188,6 +188,9 @@ public class History {
     }
 
     private void createLinearTrend(ObjectMapper mapper, ArrayNode series, List<HistoryTestResultSummary> history, double[] lrX, double[] lrY, String title, String color, double minV, double maxV, int xAxisIndex, int yAxisIndex) {
+        if (history.size() < 2) {
+            return;
+        }
         LinearRegression lr = new LinearRegression(lrX, lrY);
         ObjectNode lrSeries = mapper.createObjectNode();
         series.add(lrSeries);
@@ -460,6 +463,7 @@ public class History {
         }
         return buildMap;
     }
+    
     private ObjectNode computeTrendJsons(List<HistoryTestResultSummary> history) {
         Collections.reverse(history);
         ObjectMapper mapper = new ObjectMapper();
@@ -468,6 +472,13 @@ public class History {
         root.set("result", computeResultTrendJson(history));
         root.set("distribution", computeDistributionJson(history));
         root.set("buildMap", computeBuildMapJson(history));
+        ObjectNode saveAsImage = mapper.createObjectNode();
+        if (history.size() > 0) {
+            saveAsImage.put("name", "test-history-" + history.get(0).getRun().getParent().getFullName() + "-" + history.get(0).getRun().getNumber() + "-" + history.get(history.size() - 1).getRun().getNumber());
+        } else {
+            saveAsImage.put("name", "test-history");
+        }
+        root.set("saveAsImage", saveAsImage);
         return root;
     }
 
