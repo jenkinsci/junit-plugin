@@ -96,13 +96,6 @@
                     },
                     selector: ['all', 'inverse']
                 },
-                /*grid: {
-                    left: '20',
-                    right: '10',
-                    bottom: '30',
-                    top: '40',
-                    containLabel: true
-                },*/
                 grid: [
                     {
                       left: 80,
@@ -323,17 +316,8 @@
             console.log('configuration=' + configuration + ";" + JSON.stringify(start) + ";" + JSON.stringify(end))
             console.log('trendChartJsonStr=' + trendChartJsonStr)
             /**
-             * Creates a build trend chart that shows the test duration across a number of builds.
-             * Requires that a DOM <div> element exists with the ID '#test-duration-trend-chart'.
+             * Creates the charts that show the test results, duration and distribution across a number of builds.
              */
-            /*view.getTestDurationTrend(start, end, configuration, function (lineModel) {
-                let response = JSON.parse(responseJSON)
-                echartsJenkinsApi.renderConfigurableZoomableTrendChart('test-duration-trend-chart', lineModel.responseJSON, trendConfigurationDialogId, 
-                    function (buildDisplayName) {
-                        console.log(buildDisplayName + ' clicked on chart')
-                        window.open(response.buildMap[buildDisplayName].url, '_blank');
-                    });
-            });*/
             // TODO: Improve ECharts plugin to allow more direct interaction with ECharts
             renderTrendChart('test-trend-chart', trendChartJson, trendConfigurationDialogId, 
                 function (buildDisplayName) {
@@ -343,7 +327,6 @@
             renderDistributionChart('test-distribution-chart', trendChartJson, trendConfigurationDialogId, 
                 function (buildDisplayName) {
                     console.log(buildDisplayName + ' clicked on chart')
-                    //window.open(rootUrl + trendChartJson.buildMap[buildDisplayName].url);
                 });
         }
         jQuery3(window).resize(function () {
