@@ -57,8 +57,10 @@ import java.util.logging.Logger;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
-import javax.xml.stream.*;
-import javax.xml.stream.events.*;
+import javax.xml.stream.XMLEventReader;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.events.StartElement;
+import javax.xml.stream.events.XMLEvent;
 
 /**
  * One test result.
