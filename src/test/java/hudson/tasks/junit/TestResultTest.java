@@ -40,7 +40,9 @@ import org.junit.Test;
 
 import org.jvnet.hudson.test.Issue;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Tests the JUnit result XML file parsing in {@link TestResult}.
