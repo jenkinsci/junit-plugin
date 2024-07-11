@@ -24,7 +24,6 @@ import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
 
 import edu.umd.cs.findbugs.annotations.NonNull;
-import javax.swing.tree.VariableHeightLayoutCache;
 
 import java.util.Collections;
 import java.util.HashSet;

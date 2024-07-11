@@ -11,7 +11,7 @@ public class HistoryTestResultSummary {
     private final int skipCount;
     private final int passCount;
     private final String description;
-    private final hudson.tasks.test.TestResult resultInRun;
+    private final TestResult testResult;
 
     public HistoryTestResultSummary(Run<?, ?> run, hudson.tasks.test.TestResult resultInRun,
     float duration, int failCount, int skipCount, int passCount) {

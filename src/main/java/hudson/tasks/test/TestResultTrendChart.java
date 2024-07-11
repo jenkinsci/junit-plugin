@@ -2,7 +2,6 @@ package hudson.tasks.test;
 
 import java.util.List;
 
-import org.jfree.data.general.Series;
 
 import edu.hm.hafner.echarts.ChartModelConfiguration;
 import edu.hm.hafner.echarts.LineSeries;
