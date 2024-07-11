@@ -132,19 +132,6 @@ public class History {
         durationAvgMark.set("lineStyle", dashLineStyle);
         durationMarkData.add(durationAvgMark);
 
-        /*ObjectNode durationMinMark = mapper.createObjectNode();
-        durationMinMark.put("type", "min");
-        durationMinMark.put("name", "Min");
-        durationMinMark.set("label", hideLabel);
-        durationMinMark.set("lineStyle", dashLineStyle);
-        durationMarkData.add(durationMinMark);
-        ObjectNode durationMaxMark = mapper.createObjectNode();
-        durationMaxMark.put("type", "max");
-        durationMaxMark.put("name", "Max");
-        durationMaxMark.set("label", hideLabel);
-        durationMaxMark.set("lineStyle", dashLineStyle);
-        durationMarkData.add(durationMaxMark);*/
-
         int index = 0;
         ObjectNode skippedStyle = mapper.createObjectNode();
         skippedStyle.put("color", "gray");
@@ -220,7 +207,6 @@ public class History {
         lrAreaStyle.put("color", "rgba(0, 0, 0, 0)");
 
         for (int index = 0; index < history.size(); ++index) {
-            //lrData.add((float)Math.min(maxV, Math.max(minV, lr.predict(index))));
             lrData.add((float)lr.predict(index));
         }
     }
@@ -253,7 +239,6 @@ public class History {
         lrAreaStyle.put("color", "rgba(0, 0, 0, 0)");
 
         for (int index = 0; index < history.size(); ++index) {
-            //lrData.add((float)Math.min(maxV, Math.max(minV, scs.evaluate(index))));
             lrData.add((float)scs.evaluate(index));
         }
     }
@@ -301,8 +286,6 @@ public class History {
         avgMark.set("label", hideLabel);
         avgMark.set("lineStyle", dashLineStyle);
         okMarkData.add(avgMark);
-
-        //mapper.readTree();
 
         ObjectNode failSeries = mapper.createObjectNode();
         failSeries.put("name", "Failed");
@@ -395,9 +378,6 @@ public class History {
         root.set("domainAxisLabels", domainAxisLabels);
         root.put("integerRangeAxis", true);
         root.put("domainAxisItemName", "Build");
-        //if (maxTotalCount > 0.0) {
-        //    root.put("rangeMax", maxTotalCount);
-        //}
         root.put("rangeMin", 0);
         return root;
     }
@@ -465,8 +445,6 @@ public class History {
         root.put("integerRangeAxis", true);
         root.put("domainAxisItemName", "Number of Builds");
         root.set("domainAxisLabels", domainAxisLabels);
-        //root.put("rangeMax", 0);
-        //root.put("rangeMin", 0);
         return root;
     }
 
@@ -492,16 +470,6 @@ public class History {
         root.set("buildMap", computeBuildMapJson(history));
         return root;
     }
-
-    /*private LinesChartModel createTestDurationResultTrend(int start, int end, ChartModelConfiguration chartModelConfiguration) {
-        TestResultImpl pluggableStorage = getPluggableStorage();
-
-        if (pluggableStorage != null) {
-            return new TestResultDurationChart().create(pluggableStorage.getTestDurationResultSummary());
-        }
-
-        return new TestResultDurationChart().create(createBuildHistory(testObject, start, end), chartModelConfiguration);
-    }*/
 
     private TestObjectIterable createBuildHistory(final TestObject testObject, int start, int end) {
         HistoryTableResult r = retrieveHistorySummary(start, end);
@@ -578,6 +546,8 @@ public class History {
     }
     static int parallelism = Math.min(Runtime.getRuntime().availableProcessors(), Math.max(4, (int)(Runtime.getRuntime().availableProcessors() * 0.75 * 0.75)));
     static ExecutorService executor = Executors.newFixedThreadPool(Math.max(4, (int)(Runtime.getRuntime().availableProcessors() * 0.75 * 0.75)));
+    static int MAX_TIME_ELAPSED_RETRIEVING_HISTORY_MS =
+            Integer.parseInt(System.getProperty(HistoryTableResult.class.getName() + ".MAX_TIME_ELAPSED_RETRIEVING_HISTORY_MS","15000"));
     private List<HistoryTestResultSummary> getHistoryFromFileStorage(int start, int end) {
         TestObject testObject = getTestObject();
         RunList<?> builds = testObject.getRun().getParent().getBuilds();
@@ -586,7 +556,8 @@ public class History {
         return builds.stream().skip(start)
             .collect(ParallelCollectors.parallel(build -> {
                 int c = count.incrementAndGet();
-                if (c > end - start + 1 || (java.lang.System.currentTimeMillis() - startedMs) > 15000) { // Do not navigate too far or for too long, we need to finish the request this year and have to think about RAM
+                // Do not navigate too far or for too long, we need to finish the request this year and have to think about RAM
+                if (c > end - start + 1 || (java.lang.System.currentTimeMillis() - startedMs) > MAX_TIME_ELAPSED_RETRIEVING_HISTORY_MS) {
                     return null;
                 }
                 hudson.tasks.test.TestResult resultInRun = testObject.getResultInRun(build);

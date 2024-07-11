@@ -89,6 +89,11 @@ public class JUnitParser extends TestResultParser {
         this(StdioRetention.fromKeepLongStdio(keepLongStdio), keepProperties, allowEmptyResults, skipOldReports, false);
     }
 
+    @Deprecated
+    public JUnitParser(StdioRetention stdioRetention, boolean keepProperties, boolean allowEmptyResults, boolean skipOldReports) {
+        this(stdioRetention, keepProperties, allowEmptyResults, skipOldReports, false);
+    }
+
     public JUnitParser(StdioRetention stdioRetention, boolean keepProperties, boolean allowEmptyResults, boolean skipOldReports, boolean keepTestNames) {
         this.stdioRetention = stdioRetention;
         this.keepProperties = keepProperties;
@@ -96,7 +101,6 @@ public class JUnitParser extends TestResultParser {
         this.keepTestNames = keepTestNames;
         this.skipOldReports = skipOldReports;
     }
-
 
     @Override
     public String getDisplayName() {
