@@ -50,8 +50,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import hudson.tasks.junit.util.*;
-
+import umontreal.ssj.functionfit.LeastSquares;
 import umontreal.ssj.functionfit.SmoothingCubicSpline;
 
 /**
@@ -221,7 +220,9 @@ public class History {
         if (history.size() < 2) {
             return;
         }
-        LinearRegression lr = new LinearRegression(lrX, lrY);
+        LeastSquares lr = new LeastSquares();
+        double[] cs = lr.calcCoefficients(lrX, lrY);
+
         ObjectNode lrSeries = mapper.createObjectNode();
         series.add(lrSeries);
         lrSeries.put("name", title);
@@ -244,7 +245,7 @@ public class History {
         }
         for (int index = 0; index < history.size(); ++index) {
             // Use float to reduce JSON size.
-            lrData.add((float)(Math.round(lr.predict(index) * roundMul) / roundMul));
+            lrData.add((float)(Math.round((cs[0] + index * cs[1]) * roundMul) / roundMul));
         }
     }
 
