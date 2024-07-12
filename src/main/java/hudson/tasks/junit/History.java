@@ -141,7 +141,7 @@ public class History {
         }
         ObjectNode yAxis = mapper.createObjectNode();
         double mul = 1.0;
-        double roundMul = 1000.0;
+        double roundMul = 1.0;
         String durationStr = "Seconds";
         if (maxDuration < 1e-3) {
             durationStr = "Microseconds";
@@ -151,6 +151,7 @@ public class History {
             mul = 1e3;
         } else if (maxDuration < 90) {
             durationStr = "Seconds";
+            roundMul = 1000.0;
             mul = 1.0;
         } else if (maxDuration < 90 * 60) {
             durationStr = "Minutes";
@@ -199,8 +200,8 @@ public class History {
             ++index;
         }
 
-        createLinearTrend(mapper, series, history, lrX, lrY, "Trend of " + durationStr, "rgba(0, 120, 255, 0.5)", 0.0, Double.MAX_VALUE, 0, 0);
-        createSplineTrend(mapper, series, history, lrX, lrY, "Smooth of " + durationStr, "rgba(120, 50, 255, 0.5)", 0.0, Double.MAX_VALUE, 0, 0);
+        createLinearTrend(mapper, series, history, lrX, lrY, "Trend of " + durationStr, "rgba(0, 120, 255, 0.5)", 0.0, Double.MAX_VALUE, 0, 0, roundMul);
+        createSplineTrend(mapper, series, history, lrX, lrY, "Smooth of " + durationStr, "rgba(120, 50, 255, 0.5)", 0.0, Double.MAX_VALUE, 0, 0, roundMul);
 
         root.set("series", series);
         root.set("domainAxisLabels", domainAxisLabels);
@@ -216,7 +217,7 @@ public class History {
         return root;
     }
 
-    private void createLinearTrend(ObjectMapper mapper, ArrayNode series, List<HistoryTestResultSummary> history, double[] lrX, double[] lrY, String title, String color, double minV, double maxV, int xAxisIndex, int yAxisIndex) {
+    private void createLinearTrend(ObjectMapper mapper, ArrayNode series, List<HistoryTestResultSummary> history, double[] lrX, double[] lrY, String title, String color, double minV, double maxV, int xAxisIndex, int yAxisIndex, double roundMul) {
         if (history.size() < 2) {
             return;
         }
@@ -238,12 +239,16 @@ public class History {
         lrSeries.set("areaStyle", lrAreaStyle);
         lrAreaStyle.put("color", "rgba(0, 0, 0, 0)");
 
+        if (roundMul < 10.0) {
+            roundMul = 10.0;
+        }
         for (int index = 0; index < history.size(); ++index) {
-            lrData.add((float)lr.predict(index));
+            // Use float to reduce JSON size.
+            lrData.add((float)(Math.round(lr.predict(index) * roundMul) / roundMul));
         }
     }
 
-    private void createSplineTrend(ObjectMapper mapper, ArrayNode series, List<HistoryTestResultSummary> history, double[] lrX, double[] lrY, String title, String color, double minV, double maxV, int xAxisIndex, int yAxisIndex) {
+    private void createSplineTrend(ObjectMapper mapper, ArrayNode series, List<HistoryTestResultSummary> history, double[] lrX, double[] lrY, String title, String color, double minV, double maxV, int xAxisIndex, int yAxisIndex, double roundMul) {
         if (history.size() < 200) {
             return;
         }
@@ -270,8 +275,12 @@ public class History {
         lrSeries.set("areaStyle", lrAreaStyle);
         lrAreaStyle.put("color", "rgba(0, 0, 0, 0)");
 
+        if (roundMul < 10.0) {
+            roundMul = 10.0;
+        }
         for (int index = 0; index < history.size(); ++index) {
-            lrData.add((float)scs.evaluate(index));
+            // Use float to reduce JSON size.
+            lrData.add((float)(Math.round(scs.evaluate(index) * roundMul) / roundMul));
         }
     }
 
@@ -403,8 +412,8 @@ public class History {
             ++index;
         }
 
-        createLinearTrend(mapper, series, history, lrX, lrY, "Trend of Passed", "rgba(50, 50, 255, 0.5)", 0.0, maxTotalCount, 1, 1);
-        createSplineTrend(mapper, series, history, lrX, lrY, "Smooth of Passed", "rgba(255, 50, 255, 0.5)", 0.0, maxTotalCount, 1, 1);
+        createLinearTrend(mapper, series, history, lrX, lrY, "Trend of Passed", "rgba(50, 50, 255, 0.5)", 0.0, maxTotalCount, 1, 1, 10.0);
+        createSplineTrend(mapper, series, history, lrX, lrY, "Smooth of Passed", "rgba(255, 50, 255, 0.5)", 0.0, maxTotalCount, 1, 1, 10.0);
 
         root.set("series", series);
         root.set("domainAxisLabels", domainAxisLabels);
@@ -460,7 +469,8 @@ public class History {
         for (HistoryTestResultSummary h : history) {
             hudson.tasks.test.TestResult to = h.getResultInRun();
             int idx = smoothBuffer + (int)Math.round((to.getDuration() - minDuration) / step);
-            lrY[Math.max(0, Math.min(idx, lrY.length - 1))]++;
+            int idx2 = Math.max(0, Math.min(idx, lrY.length - 1));
+            lrY[idx2]++;
         }
         for (int i = 0; i < lrY.length; ++i) {
             lrX[i] = ((minDuration + (maxDuration - minDuration) / lrY.length * i) / scale * 100.0);
@@ -488,13 +498,15 @@ public class History {
             roundMul = 100.0;
         }
 
+        int maxBuilds = 0;
         SmoothingCubicSpline scs = new SmoothingCubicSpline(lrX, lrY, 0.1);
         int smoothPts = counts.length * 4;
         double k = (double)counts.length / smoothPts;
-        int roundNum = 6;
         for (double z = minDuration; z < maxDuration; z += step * k) {
             // Use float for smaller JSONs.
-            durationData.add((float)Math.max(0.0, scs.evaluate(z / scale * 100.0)));
+            double v = Math.round(100.0 * Math.max(0.0, scs.evaluate(z / scale * 100.0))) / 100.0;
+            durationData.add((float)v);
+            maxBuilds = Math.max(maxBuilds, (int)Math.ceil(v));
             domainAxisLabels.add((float)(Math.round(mul * z * roundMul) / roundMul));
         }
 
@@ -503,6 +515,9 @@ public class History {
         root.put("domainAxisItemName", "Number of Builds");
         root.set("domainAxisLabels", domainAxisLabels);
         root.set("xAxis", xAxis);
+        if (maxBuilds >= 10) {
+            root.put("rangeMax", maxBuilds);
+        }
         return root;
     }
 
