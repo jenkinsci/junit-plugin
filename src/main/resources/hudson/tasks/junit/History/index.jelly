@@ -100,7 +100,7 @@ THE SOFTWARE.
       </bs:card>
 
       <br/>
-      <div class="jenkins-!-margin-bottom-1">
+      <div class="jenkins-!-margin-bottom-2">
         <j:if test="${it.testObject.run.parent.builds.size() > end}">
           <a href="${app.rootUrl}${it.testObject.url}/history?start=${end+1}&amp;count=${count}">
              ${%Older}
