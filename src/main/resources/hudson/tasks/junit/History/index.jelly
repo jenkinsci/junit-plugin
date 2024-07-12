@@ -102,7 +102,8 @@ THE SOFTWARE.
       <br/>
       <div class="jenkins-!-margin-bottom-2">
         <j:if test="${it.testObject.run.parent.builds.size() > end}">
-          <a href="${app.rootUrl}${it.testObject.url}/history?start=${end+1}&amp;count=${count}">
+          <a href="${app.rootUrl}${it.testObject.url}/history?start=${end+1}&amp;count=${count}"
+             class="jenkins-!-margin-right-1">
              ${%Older}
           </a>
         </j:if>
@@ -149,7 +150,8 @@ THE SOFTWARE.
 
       <div>
         <j:if test="${it.testObject.run.parent.builds.size() > end}">
-          <a href="${app.rootUrl}${it.testObject.url}/history?start=${end+1}&amp;count=${count}">
+          <a href="${app.rootUrl}${it.testObject.url}/history?start=${end+1}&amp;count=${count}"
+             class="jenkins-!-margin-right-1">
              ${%Older}
           </a>
         </j:if>

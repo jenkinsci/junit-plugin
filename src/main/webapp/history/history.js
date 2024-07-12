@@ -44,8 +44,8 @@
                       },
                       restore: {},
                       saveAsImage: {
-						  name: model.saveAsImage.name
-					  }
+                          name: model.saveAsImage.name
+                      }
                     }
                 },
                 tooltip: {
@@ -214,8 +214,8 @@
                     feature: {
                       restore: {},
                       saveAsImage: {
-						  name: model.saveAsImage.name + '-distribution'
-					  }
+                          name: model.saveAsImage.name + '-distribution'
+                      }
                     }
                 },
                 tooltip: {
@@ -326,9 +326,9 @@
             renderTrendChart('test-trend-chart', trendChartJson, trendConfigurationDialogId, 
                 function (buildDisplayName) {
                     console.log(buildDisplayName + ' clicked on chart')
-					if (trendChartJson.buildMap[buildDisplayName]) {
-						window.open(rootUrl + trendChartJson.buildMap[buildDisplayName].url);
-					}
+                    if (trendChartJson.buildMap[buildDisplayName]) {
+                        window.open(rootUrl + trendChartJson.buildMap[buildDisplayName].url);
+                    }
                 });
             renderDistributionChart('test-distribution-chart', trendChartJson, trendConfigurationDialogId, 
                 function (buildDisplayName) {
