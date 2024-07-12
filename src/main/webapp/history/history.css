@@ -21,6 +21,19 @@
     height: 10px;
 }
 
+.icon-border {
+	display: none !important
+}
+
+.card-header {
+	display: none !important
+}
+
 details > summary > * {
     display: inline;
+}
+
+.test-result-table-row {
+    background: transparent !important;
+    text-align: center;
 }

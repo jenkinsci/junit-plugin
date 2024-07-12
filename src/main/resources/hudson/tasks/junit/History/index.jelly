@@ -53,21 +53,21 @@ THE SOFTWARE.
 
     <st:include from="${it.testObject}" it="${it.testObject}" page="sidepanel.jelly"/>
     <l:main-panel>
-      <div style="margin-bottom: 0.5em; margin-top: -1.75em; height: 1.5em;">
+      <div class="jenkins-!-margin-bottom-2 jenkins-!-margin-top-1" style="height: 1.5em;">
         <j:if test="${it.testObject.run.parent.builds.size() > end}">
           <a href="${app.rootUrl}${it.testObject.url}/history?start=${end+1}&amp;count=${count}"
-              style="margin:1px; margin-right: 10px;">${%Older}
+              class="jenkins-!-margin-bottom-1 jenkins-!-margin-top-1 jenkins-!-margin-right-1">${%Older}
           </a>
         </j:if>
 
         <j:if test="${start > 0}">
           <a href="${app.rootUrl}${it.testObject.url}/history${(start-count)>0?'?start='+(start-count)+'&amp;':'?'}count=${count}"
-              style="margin:1px">${%Newer}
+              class="jenkins-!-margin-bottom-1 jenkins-!-margin-top-1">${%Newer}
           </a>
         </j:if>
 
-        <div style="float: right; margin-left: auto; margin-bottom: 7px;">
-          Builds (only builds with test results are shown): 
+        <div style="float: right; margin-left: auto; margin-bottom: 7px;" tooltip="The history window size. Out of N builds, only the builds with test results are shown.">
+          Builds: 
           <a href="${app.rootUrl}${it.testObject.url}/history?start=${start}&amp;count=100" style="margin:1px; margin-left: 10px;${count==100?'font-weight: bold;':''}">100</a>
           <a href="${app.rootUrl}${it.testObject.url}/history?start=${start}&amp;count=200" style="margin:1px; margin-left: 10px;${count==200?'font-weight: bold;':''}">200</a>
           <a href="${app.rootUrl}${it.testObject.url}/history?start=${start}&amp;count=500" style="margin:1px; margin-left: 10px;${count==500?'font-weight: bold;':''}">500</a>
@@ -75,40 +75,41 @@ THE SOFTWARE.
           <a href="${app.rootUrl}${it.testObject.url}/history?start=${start}&amp;count=2000" style="margin:1px; margin-left: 10px;${count==2000?'font-weight: bold;':''}">2000</a>
           <a href="${app.rootUrl}${it.testObject.url}/history?start=${start}&amp;count=4000" style="margin:1px; margin-left: 10px;${count==4000?'font-weight: bold;':''}">4000</a>
         </div>
+        
       </div>
       <bs:card title="">
-        <details open="true" style="margin-top: -67px;">
-          <summary>
+        <details open="true">
+          <summary style="width: fit-content">
             <div class="card-title">History</div>
           </summary>
-            <div class="" style="overflow: visible;">
+            <div class="jenkins-!-margin-bottom-2" style="overflow: visible;">
               <div id="test-trend-chart" class="graph-cursor-pointer card-chart-carousel-2"/>
             </div>
         </details>
       </bs:card>
       <br/>
       <bs:card title="">
-        <details open="true" style="margin-top: -67px;">
-          <summary>
+        <details open="true">
+          <summary style="width: fit-content">
             <div class="card-title">Distribution</div>
           </summary>
-            <div class="" style="overflow: visible;">
+            <div class="jenkins-!-margin-bottom-2" style="overflow: visible;">
               <div id="test-distribution-chart" class="graph-cursor-pointer card-chart-carousel"/>
             </div>
         </details>
       </bs:card>
 
       <br/>
-      <div>
+      <div class="jenkins-!-margin-bottom-1">
         <j:if test="${it.testObject.run.parent.builds.size() > end}">
-          <a href="${app.rootUrl}${it.testObject.url}/history?start=${end+1}&amp;count=${count}"
-             style="margin:1px; margin-right: 10px;">${%Older}
+          <a href="${app.rootUrl}${it.testObject.url}/history?start=${end+1}&amp;count=${count}">
+             ${%Older}
           </a>
         </j:if>
 
         <j:if test="${start > 0}">
-          <a href="${app.rootUrl}${it.testObject.url}/history${(start-count)>0?'?start='+(start-count)+'&amp;':'?'}count=${count}"
-             style="margin:1px">${%Newer}
+          <a href="${app.rootUrl}${it.testObject.url}/history${(start-count)>0?'?start='+(start-count)+'&amp;':'?'}count=${count}">
+             ${%Newer}
           </a>
         </j:if>
 
@@ -129,17 +130,17 @@ THE SOFTWARE.
         <tbody>
           <j:forEach var="item" items="${historySummary.historySummaries}" begin="0" end="${count}">
             <j:if test="${item != null}">
-              <tr style="height: 0px; ${item.failCount > 0 ? 'background: rgba(255, 0, 0, ' + (0.05+item.badness*0.1) +');' :(item.skipCount == 0 ? 'background: rgba(0, 255, 0, 0.075);' : '')}">
-                <td class="pane" style="text-align:center">
+              <tr style="height: 0px; ${item.failCount > 0 ? 'background: rgba(255, 0, 0, ' + (0.05+item.badness*0.1) +');' :(item.skipCount == 0 ? 'background: rgba(0, 255, 0, 0.075);' : 'var(--table-body-background)')}">
+                <td class="pane test-result-table-row">
                   <a href="${app.rootUrl}${item.url}">${item.fullDisplayName}</a>
                 </td>
                 <j:if test="${historySummary.descriptionAvailable}">
-                  <td class="pane" style="text-align:center"><j:out value="${app.markupFormatter.translate(item.description)}"/></td>
+                  <td class="pane test-result-table-row"><j:out value="${app.markupFormatter.translate(item.description)}"/></td>
                 </j:if>
-                <td class="pane no-wrap" style="text-align:center" data="${item.duration}">${item.durationString}</td>
-                <td class="pane" style="text-align:center">${item.failCount}</td>
-                <td class="pane" style="text-align:center">${item.skipCount}</td>
-                <td class="pane" style="text-align:center">${item.totalCount}</td>
+                <td class="pane no-wrap test-result-table-row" data="${item.duration}">${item.durationString}</td>
+                <td class="pane test-result-table-row" style="${item.failCount > 0 ? 'font-weight: bold; color: var(--error-color);' : ''}">${item.failCount}</td>
+                <td class="pane test-result-table-row" style="${item.skipCount > 0 ? 'font-weight: bold; color: var(--warning-color);' : ''}">${item.skipCount}</td>
+                <td class="pane test-result-table-row">${item.totalCount}</td>
               </tr>
             </j:if>
           </j:forEach>
@@ -148,14 +149,14 @@ THE SOFTWARE.
 
       <div>
         <j:if test="${it.testObject.run.parent.builds.size() > end}">
-          <a href="${app.rootUrl}${it.testObject.url}/history?start=${end+1}&amp;count=${count}"
-             style="margin:1px; margin-right: 10px;">${%Older}
+          <a href="${app.rootUrl}${it.testObject.url}/history?start=${end+1}&amp;count=${count}">
+             ${%Older}
           </a>
         </j:if>
 
         <j:if test="${start > 0}">
-          <a href="${app.rootUrl}${it.testObject.url}/history${(start-count)>0?'?start='+(start-count)+'&amp;':'?'}count=${count}"
-             style="margin:1px">${%Newer}
+          <a href="${app.rootUrl}${it.testObject.url}/history${(start-count)>0?'?start='+(start-count)+'&amp;':'?'}count=${count}">
+             ${%Newer}
           </a>
         </j:if>
       </div>

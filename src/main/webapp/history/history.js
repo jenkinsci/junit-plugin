@@ -214,7 +214,7 @@
                     feature: {
                       restore: {},
                       saveAsImage: {
-						  name: model.saveAsImage.name
+						  name: model.saveAsImage.name + '-distribution'
 					  }
                     }
                 },
@@ -326,7 +326,9 @@
             renderTrendChart('test-trend-chart', trendChartJson, trendConfigurationDialogId, 
                 function (buildDisplayName) {
                     console.log(buildDisplayName + ' clicked on chart')
-                    window.open(rootUrl + trendChartJson.buildMap[buildDisplayName].url);
+					if (trendChartJson.buildMap[buildDisplayName]) {
+						window.open(rootUrl + trendChartJson.buildMap[buildDisplayName].url);
+					}
                 });
             renderDistributionChart('test-distribution-chart', trendChartJson, trendConfigurationDialogId, 
                 function (buildDisplayName) {

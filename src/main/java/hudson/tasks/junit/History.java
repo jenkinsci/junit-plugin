@@ -502,9 +502,10 @@ public class History {
         SmoothingCubicSpline scs = new SmoothingCubicSpline(lrX, lrY, 0.1);
         int smoothPts = counts.length * 4;
         double k = (double)counts.length / smoothPts;
+        final double splineRoundMul = 1000.0;
         for (double z = minDuration; z < maxDuration; z += step * k) {
             // Use float for smaller JSONs.
-            double v = Math.round(100.0 * Math.max(0.0, scs.evaluate(z / scale * 100.0))) / 100.0;
+            double v = Math.round(splineRoundMul * Math.max(0.0, scs.evaluate(z / scale * 100.0))) / splineRoundMul;
             durationData.add((float)v);
             maxBuilds = Math.max(maxBuilds, (int)Math.ceil(v));
             domainAxisLabels.add((float)(Math.round(mul * z * roundMul) / roundMul));
