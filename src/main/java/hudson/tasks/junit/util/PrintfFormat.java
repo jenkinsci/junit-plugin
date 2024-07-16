@@ -40,8 +40,6 @@ import java.util.Formatter;
  * Most methods of this class format numbers for the English US locale only.
  * One can use the Java class  Formatter for performing locale-independent
  * formatting.
- *
- * <div class="SSJ-bigskip"></div>
  */
 public class PrintfFormat implements CharSequence, Appendable {
    private static NumberFormat nf = NumberFormat.getInstance (Locale.US);

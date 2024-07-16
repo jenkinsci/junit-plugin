@@ -35,33 +35,11 @@ import cern.colt.matrix.linalg.Algebra;
 /**
  * This class implements different *linear regression* models, using the
  * least squares method to estimate the regression coefficients. Given input
- * data @f$x_{ij}@f$ and response @f$y_i@f$, one want to find the
+ * data x_{ij} and response y_i, one want to find the
  * coefficients @f$\beta_j@f$ that minimize the residuals of the form (using
  * matrix notation)
- * @f[
- *   r = \min_{\beta}\| Y - X\beta\|_2,
- * @f]
- * where the @f$L_2@f$ norm is used. Particular cases are
- * @f[
- *   r = \min_{\beta}\sum_i \left(y_i - \beta_0 - \sum_{j=1}^k \beta_j x_{ij}\right)^2.
- * @f]
- * for @f$k@f$ regressor variables @f$x_j@f$. The well-known case of the
- * single variable @f$x@f$ is
- * @f[
- *   r = \min_{\alpha,\beta} \sum_i \left(y_i - \alpha- \beta x_i\right)^2.
- * @f]
- * Sometimes, one wants to use a basis of general functions @f$\psi_j(t)@f$
- * with a minimization of the form
- * @f[
- *   r = \min_{\beta}\sum_i \left(y_i - \sum_{j=1}^k \beta_j\psi_j(t_i)\right)^2.
- * @f]
- * For example, we could have @f$\psi_j(t) = e^{-\lambda_j t}@f$ or some
- * other functions. In that case, one has to choose the points @f$t_i@f$ at
- * which to compute the basis functions, and use a method below with
- * @f$x_{ij} = \psi_j(t_i)@f$.
- *
- * <div class="SSJ-bigskip"></div>
- */
+*/
+
 public class LeastSquares {
 
    private static double[] solution (DoubleMatrix2D X, DoubleMatrix2D Y, int k) {

@@ -27,8 +27,6 @@ package hudson.tasks.junit.util;
 /**
  * Provides utility methods for computing derivatives and integrals of
  * functions.
- *
- * <div class="SSJ-bigskip"></div>
  */
 public class MathFunctionUtil {
 

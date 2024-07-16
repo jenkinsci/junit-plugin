@@ -27,8 +27,6 @@ package hudson.tasks.junit.util;
 /**
  * Represents a mathematical function whose derivative can be computed using
  * #derivative(double).
- *
- * <div class="SSJ-bigskip"></div>
  */
 public interface MathFunctionWithFirstDerivative extends MathFunction {
 

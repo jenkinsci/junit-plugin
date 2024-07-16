@@ -25,10 +25,8 @@
 package hudson.tasks.junit.util;
 
 /**
- * Represents a function computing @f$(af(x) + b)^2@f$ for a user-defined
- * function @f$f(x)@f$.
- *
- * <div class="SSJ-bigskip"></div>
+ * Represents a function computing (af(x) + b)^2 for a user-defined
+ * function f(x).
  */
 public class SquareMathFunction implements MathFunctionWithFirstDerivative {
    private MathFunction func;

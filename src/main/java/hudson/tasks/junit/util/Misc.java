@@ -27,8 +27,6 @@ package hudson.tasks.junit.util;
 /**
  * This class provides miscellaneous functions that are hard to classify.
  * Some may be moved to another class in the future.
- *
- * <div class="SSJ-bigskip"></div>
  */
 public class Misc {
    private Misc() {}

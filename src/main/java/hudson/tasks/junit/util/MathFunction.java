@@ -29,8 +29,6 @@ package hudson.tasks.junit.util;
  * mathematical functions. It is used to pass an arbitrary function of one
  * variable as argument to another function. For example, it is used in
  * @ref umontreal.ssj.util.RootFinder to find the zeros of a function.
- *
- * <div class="SSJ-bigskip"></div><div class="SSJ-bigskip"></div>
  */
 public interface MathFunction {
 

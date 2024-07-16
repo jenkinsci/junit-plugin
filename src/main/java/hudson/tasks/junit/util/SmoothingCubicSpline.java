@@ -25,62 +25,8 @@
 package hudson.tasks.junit.util;
 
 /**
- * Represents a cubic spline with nodes at @f$(x_i, y_i)@f$ computed with the
+ * Represents a cubic spline with nodes at (x_i, y_i) computed with the
  * smoothing cubic spline algorithm of Schoenberg @cite mDEB78a,
- * @cite mPOL93a&thinsp;. A smoothing cubic spline is made of @f$n+1@f$ cubic
- * polynomials. The @f$i@f$th polynomial of such a spline, for
- * @f$i=1,…,n-1@f$, is defined as @f$S_i(x)@f$ while the complete spline is
- * defined as
- * @f[
- *   S(x) = S_i(x), \qquad\mbox{ for }x\in[x_{i-1}, x_i].
- * @f]
- * For @f$x<x_0@f$ and @f$x>x_{n-1}@f$, the spline is not precisely defined,
- * but this class performs extrapolation by using @f$S_0@f$ and @f$S_n@f$
- * linear polynomials. The algorithm which calculates the smoothing spline is
- * a generalization of the algorithm for an interpolating spline. @f$S_i@f$
- * is linked to @f$S_{i+1}@f$ at @f$x_{i+1}@f$ and keeps continuity
- * properties for first and second derivatives at this point, therefore
- * @f$S_i(x_{i+1})=S_{i+1}(x_{i+1})@f$, @f$S’_i(x_{i+1})=S’_{i+1}(x_{i+1})@f$
- * and @f$S"_i(x_{i+1})=S"_{i+1}(x_{i+1})@f$.
- *
- * The spline is computed with a smoothing parameter @f$\rho\in[0, 1]@f$
- * which represents its accuracy with respect to the initial @f$(x_i, y_i)@f$
- * nodes. The smoothing spline minimizes
- * @f[
- *   L = \rho\sum_{i=0}^{n-1}{w_i}\left({y_i - S_i(x_i)}\right)^2 + (1-\rho)\int_{x_0}^{x_{n-1}}\left(S"(x)\right)^2dx
- * @f]
- * In fact, by setting @f$\rho= 1@f$, we obtain the interpolating spline;
- * and we obtain a linear function by setting @f$\rho= 0@f$. The weights
- * @f$w_i>0@f$, which default to 1, can be used to change the contribution of
- * each point in the error term. A large value @f$w_i@f$ will give a large
- * weight to the @f$i@f$th point, so the spline will pass closer to it. Here
- * is a small example that uses smoothing splines:
- *
- * @code
- *
- *    int n;
- *    double[] X = new double[n];
- *    double[] Y = new double[n];
- *    // here, fill arrays X and Y with n data points (x_i, y_i)
- *    // The points must be sorted with respect to x_i.
- *
- *    double rho = 0.1;
- *    SmoothingCubicSpline fit = new SmoothingCubicSpline(X, Y, rho);
- *
- *    int m = 40;
- *    double[] Xp = new double[m+1];       // Xp, Yp are spline points
- *    double[] Yp = new double[m+1];
- *    double h = (X[n-1] - X[0]) / m;      // step
- *
- *    for (int i = 0; i <= m; i++) {
- *       double z = X[0] + i * h;
- *       Xp[i] = z;
- *       Yp[i] = fit.evaluate(z);          // evaluate spline at z
- *    }
- *
- * @endcode
- *
- * <div class="SSJ-bigskip"></div>
  */
 public class SmoothingCubicSpline implements MathFunction,
              MathFunctionWithFirstDerivative, MathFunctionWithDerivative,

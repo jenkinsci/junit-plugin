@@ -25,10 +25,8 @@
 package hudson.tasks.junit.util;
 
 /**
- * Represents a mathematical function whose @f$n@f$th derivative can be
+ * Represents a mathematical function whose nth derivative can be
  * computed using  #derivative(double,int).
- *
- * <div class="SSJ-bigskip"></div>
  */
 public interface MathFunctionWithDerivative extends MathFunction {
 

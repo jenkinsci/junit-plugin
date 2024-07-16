@@ -28,8 +28,6 @@ import cern.jet.math.Bessel;
 /**
  * This class provides various constants and methods to compute numerical
  * quantities such as factorials, combinations, gamma functions, and so on.
- *
- * <div class="SSJ-bigskip"></div>
  */
 public class Num {
    private static final double XBIG = 40.0;

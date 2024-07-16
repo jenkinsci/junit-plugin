@@ -28,14 +28,8 @@ import java.io.Serializable;
 import hudson.tasks.junit.util.PrintfFormat;
 
 /**
- * Represents a polynomial of degree @f$n@f$ in power form. Such a polynomial
+ * Represents a polynomial of degree n in power form. Such a polynomial
  * is of the form
- * @f[
- *   p(x) = c_0 + c_1x + \cdots+ c_nx^n,
- * @f]
- * where @f$c_0, …, c_n@f$ are the coefficients of the polynomial.
- *
- * <div class="SSJ-bigskip"></div>
  */
 public class Polynomial implements MathFunction
 ,

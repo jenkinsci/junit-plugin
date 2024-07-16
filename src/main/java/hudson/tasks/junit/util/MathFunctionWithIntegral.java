@@ -27,8 +27,6 @@ package hudson.tasks.junit.util;
 /**
  * Represents a mathematical function whose integral can be computed by the
  * #integral(double,double) method.
- *
- * <div class="SSJ-bigskip"></div>
  */
 public interface MathFunctionWithIntegral extends MathFunction {
 
