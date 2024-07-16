@@ -25,16 +25,12 @@
 package hudson.tasks.junit.util;
 
 import java.io.Serializable;
-import hudson.tasks.junit.util.PrintfFormat;
 
 /**
  * Represents a polynomial of degree n in power form. Such a polynomial
  * is of the form
  */
-public class Polynomial implements MathFunction
-,
-      MathFunctionWithFirstDerivative, MathFunctionWithDerivative,
-      MathFunctionWithIntegral, Serializable, Cloneable {
+public class Polynomial implements MathFunction, Serializable, Cloneable {
    private static final long serialVersionUID = -2911550952861456470L;
    private double[] coeff;
 
@@ -179,8 +175,6 @@ public Polynomial integralPolynomial (double c) {
    }
 
    @Override
-
-
    public String toString () {
       final StringBuilder sb = new StringBuilder ();
       for (int i = 0; i < coeff.length; i++) {
@@ -191,10 +185,10 @@ public Polynomial integralPolynomial (double c) {
                sb.append (" + ");
             else
                sb.append (" - ");
-            sb.append (PrintfFormat.format (8, 3, 3, Math.abs (coeff[i])));
+            sb.append (Math.abs(coeff[i]));
          }
          else
-            sb.append (PrintfFormat.format (8, 3, 3, coeff[i]));
+            sb.append (coeff[i]);
          if (i > 0) {
             sb.append ("*X");
             if (i > 1)

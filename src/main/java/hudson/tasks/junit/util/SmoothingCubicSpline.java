@@ -200,16 +200,6 @@ public class SmoothingCubicSpline implements MathFunction,
       return splineVector.clone();
    }
 
-   /**
-    * Returns the index of P, the
-    * @ref umontreal.ssj.functions.Polynomial instance used to evaluate
-    * x, in an `ArrayList` table instance returned by
-    * `getSplinePolynomials()`. This index k gives also the interval
-    * in table **X** which contains the value x (i.e. such that
-    * x_k < x \leq x_{k+1}).
-    *  @return Index of the polynomial check with x in the Polynomial list
-    * returned by  #getSplinePolynomials
-    */
    public int getFitPolynomialIndex (double x) {
       // Algorithme de recherche binaire legerement modifie
       int j = this.x.length-1;

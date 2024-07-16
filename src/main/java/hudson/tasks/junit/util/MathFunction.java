@@ -28,7 +28,7 @@ package hudson.tasks.junit.util;
  * This interface should be implemented by classes which represent univariate
  * mathematical functions. It is used to pass an arbitrary function of one
  * variable as argument to another function. For example, it is used in
- * @ref umontreal.ssj.util.RootFinder to find the zeros of a function.
+ *  umontreal.ssj.util.RootFinder to find the zeros of a function.
  */
 public interface MathFunction {
 

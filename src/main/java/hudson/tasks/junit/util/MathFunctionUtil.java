@@ -99,9 +99,9 @@ public static int NUMINTERVALS = 1024;
    /**
     * Computes and returns an estimate of the nth derivative of the
     * function f(x). This method estimates
-    * [
+    * @f[
     *   \frac{d^nf(x)}{dx^n},
-    * ]
+    * @f]
     * the nth derivative of f(x) evaluated at x. This
     * method first computes f_i=f(x+i\epsilon), for i=0,…,n,
     * with \epsilon=h^{1/n}. The estimate is then given by
@@ -196,15 +196,15 @@ public static int NUMINTERVALS = 1024;
     * Computes and returns an approximation of the integral of `func` over
     * [a, b], using the Simpson’s 1/3 method with
     * `numIntervals` intervals. This method estimates
-    * [
+    * @f[
     *   \int_a^b f(x)dx,
-    * ]
+    * @f]
     * where f(x) is the function defined by `func` evaluated at
     * x, by dividing [a, b] in n=&nbsp;`numIntervals`
     * intervals of length h=(b - a)/n. The integral is estimated by
-    * [
+    * @f[
     *   \frac{h}{3}(f(a)+4f(a+h)+2f(a+2h)+4f(a+3h)+\cdots+f(b))
-    * ]
+    * @f]
     * This method assumes that a\le b<\infty, and n is even.
     *  @param func         the function being integrated.
     *  @param a            the left bound
