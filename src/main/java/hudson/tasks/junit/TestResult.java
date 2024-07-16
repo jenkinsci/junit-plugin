@@ -56,13 +56,9 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.xml.namespace.QName;
-import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.events.Attribute;
-import javax.xml.stream.events.StartElement;
-import javax.xml.stream.events.XMLEvent;
+import javax.xml.stream.XMLStreamReader;
 
 import org.apache.tools.ant.DirectoryScanner;
 import org.dom4j.DocumentException;
@@ -272,32 +268,42 @@ public final class TestResult extends MetaTabulatedResult {
         this.impl = null;
     }
 
-    private static final XMLInputFactory factory = XMLInputFactory.newInstance();
+    static final XMLInputFactory xmlFactory = XMLInputFactory.newInstance();
+    static boolean USE_SAFE_XML_FACTORY =
+            Boolean.parseBoolean(System.getProperty(TestResult.class.getName() + ".USE_SAFE_XML_FACTORY","true"));
+    static boolean isXmlFactoryAdjusted = false;
+    
+    public static XMLInputFactory getXmlFactory() {
+        if (!isXmlFactoryAdjusted && USE_SAFE_XML_FACTORY) {
+            xmlFactory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
+            xmlFactory.setProperty(XMLInputFactory.IS_REPLACING_ENTITY_REFERENCES, false);
+        }
+        return xmlFactory;
+    }
+
     public void parse(XmlFile f) throws XMLStreamException, IOException {
         try (Reader r = f.readRaw()){
-            final XMLEventReader reader = factory.createXMLEventReader(r);
+            final XMLStreamReader reader = getXmlFactory().createXMLStreamReader(r);
             while (reader.hasNext()) {
-                final XMLEvent event = reader.nextEvent();
-                if (event.isStartElement() && event.asStartElement().getName()
+                final int event = reader.next();
+                if (event == XMLStreamReader.START_ELEMENT && reader.getName()
                         .getLocalPart().equals("result")) {
-                    parseXmlResult(reader, event.asStartElement());
+                    parseXmlResult(reader);
                 }
             }
             r.close();
         }
     }
 
-    private void parseXmlResult(final XMLEventReader reader, StartElement startEvent) throws XMLStreamException {
-        Attribute attr = startEvent.getAttributeByName(QName.valueOf("plugin"));
-        String ver = attr == null ? null : attr.getValue();
+    private void parseXmlResult(final XMLStreamReader reader) throws XMLStreamException {
+        String ver = reader.getAttributeValue(null, "plugin");
         while (reader.hasNext()) {
-            XMLEvent event = reader.nextEvent();
-            if (event.isEndElement() && event.asEndElement().getName().getLocalPart().equals("result")) {
+            int event = reader.next();
+            if (event == XMLStreamReader.END_ELEMENT && reader.getLocalName().equals("result")) {
                 return;
             }
-            if (event.isStartElement()) {
-                final StartElement element = event.asStartElement();
-                final String elementName = element.getName().getLocalPart();
+            if (event == XMLStreamReader.START_ELEMENT) {
+                final String elementName = reader.getLocalName();
                 switch (elementName) {
                     case "suites":
                         parseXmlSuites(reader, ver);
@@ -326,15 +332,14 @@ public final class TestResult extends MetaTabulatedResult {
         }
     }
 
-    private void parseXmlSuites(final XMLEventReader reader, String ver) throws XMLStreamException {
+    private void parseXmlSuites(final XMLStreamReader reader, String ver) throws XMLStreamException {
         while (reader.hasNext()) {
-            final XMLEvent event = reader.nextEvent();
-            if (event.isEndElement() && event.asEndElement().getName().getLocalPart().equals("suites")) {
+            final int event = reader.next();
+            if (event == XMLStreamReader.END_ELEMENT && reader.getLocalName().equals("suites")) {
                 return;
             }
-            if (event.isStartElement()) {
-                final StartElement element = event.asStartElement();
-                final String elementName = element.getName().getLocalPart();
+            if (event == XMLStreamReader.START_ELEMENT) {
+                final String elementName = reader.getLocalName();
                 switch (elementName) {
                     case "suite":
                         suites.add(SuiteResult.parse(reader, ver));

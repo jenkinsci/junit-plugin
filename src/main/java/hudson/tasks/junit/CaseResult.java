@@ -57,10 +57,8 @@ import java.util.logging.Logger;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
-import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.events.StartElement;
-import javax.xml.stream.events.XMLEvent;
+import javax.xml.stream.XMLStreamReader;
 
 /**
  * One test result.
@@ -258,16 +256,15 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         return Math.min(365.0f * 24 * 60 * 60, Math.max(0.0f, d));
     }
 
-    public static CaseResult parse(SuiteResult parent, final XMLEventReader reader, String ver) throws XMLStreamException {
+    public static CaseResult parse(SuiteResult parent, final XMLStreamReader reader, String ver) throws XMLStreamException {
         CaseResult r = new CaseResult(parent, null, null, null);
         while (reader.hasNext()) {
-            final XMLEvent event = reader.nextEvent();
-            if (event.isEndElement() && event.asEndElement().getName().getLocalPart().equals("case")) {
+            final int event = reader.next();
+            if (event == XMLStreamReader.END_ELEMENT && reader.getLocalName().equals("case")) {
                 return r;
             }
-            if (event.isStartElement()) {
-                final StartElement element = event.asStartElement();
-                final String elementName = element.getName().getLocalPart();
+            if (event == XMLStreamReader.START_ELEMENT) {
+                final String elementName = reader.getLocalName();
                 switch (elementName) {
                     case "duration":
                         r.duration = clampDuration(new TimeToFloat(reader.getElementText()).parse());
@@ -663,13 +660,16 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         return getSuiteResult().getStderr();
     }
 
+    static int PREVIOUS_TEST_RESULT_BACKTRACK_BUILDS_MAX =
+        Integer.parseInt(System.getProperty(History.HistoryTableResult.class.getName() + ".PREVIOUS_TEST_RESULT_BACKTRACK_BUILDS_MAX","25"));
+
     @Override
     public CaseResult getPreviousResult() {
         if (parent == null) return null;
 
         TestResult previousResult = parent.getParent();
         int n = 0;
-        while (previousResult != null && n < 25) {
+        while (previousResult != null && n < PREVIOUS_TEST_RESULT_BACKTRACK_BUILDS_MAX) {
             previousResult = previousResult.getPreviousResult();
             if (previousResult == null) 
                 return null;

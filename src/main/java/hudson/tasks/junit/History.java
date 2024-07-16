@@ -285,6 +285,9 @@ public class History {
         }
     }
 
+    static boolean EXTRA_GRAPH_MATH_ENABLED =
+        Boolean.parseBoolean(System.getProperty(History.class.getName() + ".EXTRA_GRAPH_MATH_ENABLED","true"));
+
     private ObjectNode computeResultTrendJson(List<HistoryTestResultSummary> history) {
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode root = mapper.createObjectNode();
@@ -413,8 +416,10 @@ public class History {
             ++index;
         }
 
-        createLinearTrend(mapper, series, history, lrX, lrY, "Trend of Passed", "rgba(50, 50, 255, 0.5)", 0.0, maxTotalCount, 1, 1, 10.0);
-        createSplineTrend(mapper, series, history, lrX, lrY, "Smooth of Passed", "rgba(255, 50, 255, 0.5)", 0.0, maxTotalCount, 1, 1, 10.0);
+        if (EXTRA_GRAPH_MATH_ENABLED) {
+            createLinearTrend(mapper, series, history, lrX, lrY, "Trend of Passed", "rgba(50, 50, 255, 0.5)", 0.0, maxTotalCount, 1, 1, 10.0);
+            createSplineTrend(mapper, series, history, lrX, lrY, "Smooth of Passed", "rgba(255, 50, 255, 0.5)", 0.0, maxTotalCount, 1, 1, 10.0);
+        }
 
         root.set("series", series);
         root.set("domainAxisLabels", domainAxisLabels);
@@ -630,7 +635,9 @@ public class History {
     static int parallelism = Math.min(Runtime.getRuntime().availableProcessors(), Math.max(4, (int)(Runtime.getRuntime().availableProcessors() * 0.75 * 0.75)));
     static ExecutorService executor = Executors.newFixedThreadPool(Math.max(4, (int)(Runtime.getRuntime().availableProcessors() * 0.75 * 0.75)));
     static int MAX_TIME_ELAPSED_RETRIEVING_HISTORY_MS =
-            Integer.parseInt(System.getProperty(HistoryTableResult.class.getName() + ".MAX_TIME_ELAPSED_RETRIEVING_HISTORY_MS","15000"));
+        Integer.parseInt(System.getProperty(History.class.getName() + ".MAX_TIME_ELAPSED_RETRIEVING_HISTORY_MS","15000"));
+    static int MAX_THREADS_RETRIEVING_HISTORY =
+        Integer.parseInt(System.getProperty(History.class.getName() + ".MAX_THREADS_RETRIEVING_HISTORY","-1"));
     private List<HistoryTestResultSummary> getHistoryFromFileStorage(int start, int end) {
         TestObject testObject = getTestObject();
         RunList<?> builds = testObject.getRun().getParent().getBuilds();
@@ -654,7 +661,7 @@ public class History {
                         resultInRun.getPassCount(),
                         resultInRun.getDescription()
                 );
-            }, executor, parallelism))
+            }, executor, MAX_THREADS_RETRIEVING_HISTORY < 1 ? parallelism : Math.min(parallelism, MAX_THREADS_RETRIEVING_HISTORY)))
             .join()
             .filter(Objects::nonNull)
             .collect(Collectors.toList());

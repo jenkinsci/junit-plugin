@@ -56,10 +56,8 @@ import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.xml.stream.XMLEventReader;
 import javax.xml.stream.XMLStreamException;
-import javax.xml.stream.events.StartElement;
-import javax.xml.stream.events.XMLEvent;
+import javax.xml.stream.XMLStreamReader;
 
 /**
  * Result of one test suite.
@@ -164,16 +162,15 @@ public final class SuiteResult implements Serializable {
         this.properties.putAll(src.properties);
     }
 
-    public static SuiteResult parse(final XMLEventReader reader, String ver) throws XMLStreamException {
+    public static SuiteResult parse(final XMLStreamReader reader, String ver) throws XMLStreamException {
         SuiteResult r = new SuiteResult("", "", "", null);
         while (reader.hasNext()) {
-            final XMLEvent event = reader.nextEvent();
-            if (event.isEndElement() && event.asEndElement().getName().getLocalPart().equals("suite")) {
+            final int event = reader.next();
+            if (event == XMLStreamReader.END_ELEMENT && reader.getLocalName().equals("suite")) {
                 return r;
             }
-            if (event.isStartElement()) {
-                final StartElement element = event.asStartElement();
-                final String elementName = element.getName().getLocalPart();
+            if (event == XMLStreamReader.START_ELEMENT) {
+                final String elementName = reader.getLocalName();
                 switch (elementName) {
                     case "cases":
                         parseCases(r, reader, ver);
@@ -221,15 +218,14 @@ public final class SuiteResult implements Serializable {
         return r;
     }
 
-    public static void parseEnclosingBlocks(SuiteResult r, final XMLEventReader reader, String ver) throws XMLStreamException {
+    public static void parseEnclosingBlocks(SuiteResult r, final XMLStreamReader reader, String ver) throws XMLStreamException {
         while (reader.hasNext()) {
-            final XMLEvent event = reader.nextEvent();
-            if (event.isEndElement() && event.asEndElement().getName().getLocalPart().equals("enclosingBlocks")) {
+            final int event = reader.next();
+            if (event == XMLStreamReader.END_ELEMENT && reader.getLocalName().equals("enclosingBlocks")) {
                 return;
             }
-            if (event.isStartElement()) {
-                final StartElement element = event.asStartElement();
-                final String elementName = element.getName().getLocalPart();
+            if (event == XMLStreamReader.START_ELEMENT) {
+                final String elementName = reader.getLocalName();
                 switch (elementName) {
                     case "string":
                         r.enclosingBlocks.add(reader.getElementText());
@@ -243,15 +239,14 @@ public final class SuiteResult implements Serializable {
         }
     }
 
-    public static void parseEnclosingBlockNames(SuiteResult r, final XMLEventReader reader, String ver) throws XMLStreamException {
+    public static void parseEnclosingBlockNames(SuiteResult r, final XMLStreamReader reader, String ver) throws XMLStreamException {
         while (reader.hasNext()) {
-            final XMLEvent event = reader.nextEvent();
-            if (event.isEndElement() && event.asEndElement().getName().getLocalPart().equals("enclosingBlockNames")) {
+            final int event = reader.next();
+            if (event == XMLStreamReader.END_ELEMENT && reader.getLocalName().equals("enclosingBlockNames")) {
                 return;
             }
-            if (event.isStartElement()) {
-                final StartElement element = event.asStartElement();
-                final String elementName = element.getName().getLocalPart();
+            if (event == XMLStreamReader.START_ELEMENT) {
+                final String elementName = reader.getLocalName();
                 switch (elementName) {
                     case "string":
                         r.enclosingBlockNames.add(reader.getElementText());
@@ -265,15 +260,14 @@ public final class SuiteResult implements Serializable {
         }
     }
     
-    public static void parseCases(SuiteResult r, final XMLEventReader reader, String ver) throws XMLStreamException {
+    public static void parseCases(SuiteResult r, final XMLStreamReader reader, String ver) throws XMLStreamException {
         while (reader.hasNext()) {
-            final XMLEvent event = reader.nextEvent();
-            if (event.isEndElement() && event.asEndElement().getName().getLocalPart().equals("cases")) {
+            final int event = reader.next();
+            if (event == XMLStreamReader.END_ELEMENT && reader.getLocalName().equals("cases")) {
                 return;
             }
-            if (event.isStartElement()) {
-                final StartElement element = event.asStartElement();
-                final String elementName = element.getName().getLocalPart();
+            if (event == XMLStreamReader.START_ELEMENT) {
+                final String elementName = reader.getLocalName();
                 switch (elementName) {
                     case "case":
                         r.cases.add(CaseResult.parse(r, reader, ver));

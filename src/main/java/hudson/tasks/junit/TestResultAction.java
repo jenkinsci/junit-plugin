@@ -157,7 +157,7 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
             return new TestResult(storage.load(run.getParent().getFullName(), run.getNumber()));
         }
         TestResult r;
-        if(result==null) {
+        if (result==null) {
             r = load();
             result = new WeakReference<>(r);
         } else {
@@ -174,8 +174,8 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
             skipCount = r.getSkipCount();
         }
         long d = System.currentTimeMillis() - started;
-        if (d > 500) {
-            LOGGER.info("TestResultAction.load took " + d + " ms.");
+        if (d > 500 && LOGGER.isLoggable(Level.WARNING)) {
+            LOGGER.warning("TestResultAction.load took " + d + " ms.");
         }
         return r;
     }
@@ -255,14 +255,46 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
     static Object syncObj = new Object();
     static long lastCleanupMs = 0;
 
+    static int LARGE_RESULT_CACHE_CLEANUP_INTERVAL_MS =
+        Integer.parseInt(System.getProperty(TestResultAction.class.getName() + ".LARGE_RESULT_CACHE_CLEANUP_INTERVAL_MS","500"));
+    static int LARGE_RESULT_CACHE_THRESHOLD =
+        Integer.parseInt(System.getProperty(TestResultAction.class.getName() + ".LARGE_RESULT_CACHE_THRESHOLD","1000"));
+    static boolean RESULT_CACHE_ENABLED =
+        Boolean.parseBoolean(System.getProperty(TestResultAction.class.getName() + ".RESULT_CACHE_ENABLED","true"));
+
     /**
-     * Loads a {@link TestResult} from disk.
+     * Loads a {@link TestResult} from cache or disk.
      */
     private TestResult load() {
-        if (resultCache.size() > 1000) {
+        if (RESULT_CACHE_ENABLED) {
+            return loadCached();
+        }
+        return loadFallback();
+    }
+
+    /**
+     * Loads a {@link TestResult} from disk, fallback.
+     */
+    private TestResult loadFallback() {
+        TestResult r;
+        try {
+            r = (TestResult)getDataFile().read();
+        } catch (IOException e) {
+            logger.log(Level.WARNING, "Failed to load "+getDataFile(),e);
+            r = new TestResult();   // return a dummy
+        }
+        r.freeze(this);
+        return r;
+    }
+
+    /**
+     * Loads a {@link TestResult} from cache or disk, optimized.
+     */
+    private TestResult loadCached() {
+        if (resultCache.size() > LARGE_RESULT_CACHE_THRESHOLD) {
             synchronized (syncObj)
             {
-                if (resultCache.size() > 1000 && (System.currentTimeMillis() - lastCleanupMs) > 500) {
+                if (resultCache.size() > LARGE_RESULT_CACHE_THRESHOLD && (System.currentTimeMillis() - lastCleanupMs) > LARGE_RESULT_CACHE_CLEANUP_INTERVAL_MS) {
                     lastCleanupMs = System.currentTimeMillis();
                     resultCache.forEach((String k, SoftReference<TestResult> v) -> {
                         if (v.get() == null) {
@@ -276,11 +308,6 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         String k = getDataFilePath();
         r = resultCache.computeIfAbsent(k, path -> {
             return new SoftReference<TestResult>(parseOnly());
-            /*CacheEntry nce = new CacheEntry();
-            nce.tr = r2;
-            nce.addedMs = System.currentTimeMillis();
-            nce.usedCount = 1;
-            return nce;*/
         }).get();
         if (r == null) {
             r = parseOnly();
