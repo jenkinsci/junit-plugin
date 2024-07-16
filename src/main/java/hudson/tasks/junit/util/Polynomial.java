@@ -40,7 +40,7 @@ public class Polynomial implements MathFunction
 
 /**
  * Constructs a new polynomial with coefficients `coeff`. The value of
- * `coeff[i]` in this array corresponds to @f$c_i@f$.
+ * `coeff[i]` in this array corresponds to c_i.
  *  @param coeff        the coefficients of the polynomial.
  *  @exception NullPointerException if `coeff` is `null`.
  *  @exception IllegalArgumentException if the length of `coeff` is 0.
@@ -71,7 +71,7 @@ public Polynomial (double... coeff) {
    }
 
    /**
-    * Returns the @f$i@f$th coefficient of the polynomial.
+    * Returns the ith coefficient of the polynomial.
     *  @return the array of coefficients.
     */
    public double getCoefficient (int i) {
@@ -122,7 +122,7 @@ public Polynomial (double... coeff) {
    }
 
 /**
- * Returns a polynomial corresponding to the @f$n@f$th derivative of this
+ * Returns a polynomial corresponding to the nth derivative of this
  * polynomial.
  *  @param n            the degree of the derivative.
  *  @return the derivative.
@@ -166,7 +166,7 @@ public Polynomial derivativePolynomial (int n) {
  * @f[
  *   \int p(x)dx = c + c_0x + \frac{c_1 x^2}{2} + \cdots+ \frac{c_n x^{n+1}}{n+1},
  * @f]
- * where @f$c@f$ is a user-defined constant.
+ * where c is a user-defined constant.
  *  @param c            the constant for the integral.
  *  @return the polynomial representing the integral.
  */

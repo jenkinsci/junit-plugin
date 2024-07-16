@@ -31,8 +31,8 @@ package hudson.tasks.junit.util;
 public interface MathFunctionWithDerivative extends MathFunction {
 
 /**
- * Computes (or estimates) the @f$n@f$th derivative of the function at point
- * `x`. For @f$n=0@f$, this returns the result of
+ * Computes (or estimates) the nth derivative of the function at point
+ * `x`. For n=0, this returns the result of
  * umontreal.ssj.functions.MathFunction.evaluate(double).
  *  @param x            the point to evaluate the derivate to.
  *  @param n            the order of the derivative.

@@ -33,7 +33,7 @@ package hudson.tasks.junit.util;
 public interface MathFunction {
 
    /**
-    * Returns the value of the function evaluated at @f$x@f$.
+    * Returns the value of the function evaluated at x.
     *  @param x            value at which the function is evaluated
     *  @return function evaluated at `x`
     */

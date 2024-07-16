@@ -420,7 +420,7 @@ public class PrintfFormat implements CharSequence, Appendable {
 
    /**
     * Converts the integer `x` to a  String representation in base `b`.
-    * Restrictions: @f$2\le@f$ `b` @f$\le10@f$.
+    * Restrictions: 2\le `b` \le10.
     *  @param fieldwidth   minimum length of the returned string
     *  @param b            the base used for conversion
     *  @param x            the value to be processed
@@ -628,7 +628,7 @@ public class PrintfFormat implements CharSequence, Appendable {
     * `printf`. The argument is converted in style <tt>%f</tt> or
     * <tt>%E</tt>. `precision` specifies the number of significant digits.
     * If it is 0, it is treated as 1. Style <tt>%E</tt> is used if the
-    * exponent from its conversion is less than @f$-4@f$ or greater than
+    * exponent from its conversion is less than -4 or greater than
     * or equal to `precision`. Trailing zeros are removed from the
     * fractional part of the result; a decimal point appears only if it is
     * followed by at least one digit.
@@ -839,13 +839,13 @@ public class PrintfFormat implements CharSequence, Appendable {
    }
 
    /**
-    * Converts @f$x@f$ to a String representation in base @f$b@f$ using
-    * formatting similar to the @f$f@f$ methods. Uses a total of at least
+    * Converts x to a String representation in base b using
+    * formatting similar to the f methods. Uses a total of at least
     * `fieldwidth` positions (including the sign and point when they
     * appear) and `accuracy` digits after the decimal point. If
     * `fieldwidth` is negative, the number is printed left-justified,
-    * otherwise right-justified. Restrictions: @f$2 \le b \le10@f$ and
-    * @f$|x| < 2^{63}@f$.
+    * otherwise right-justified. Restrictions: 2 \le b \le10 and
+    * |x| < 2^{63}.
     *  @param fieldwidth   minimum length of the returned string
     *  @param accuracy     number of digits after the decimal point
     *  @param b            base

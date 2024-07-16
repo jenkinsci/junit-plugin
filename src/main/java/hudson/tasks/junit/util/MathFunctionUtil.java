@@ -31,7 +31,7 @@ package hudson.tasks.junit.util;
 public class MathFunctionUtil {
 
 /**
- * Step length in @f$x@f$ to compute derivatives. Default: @f$10^{-6}@f$.
+ * Step length in x to compute derivatives. Default: 10^{-6}.
  */
 public static double H = 1e-6;
 
@@ -97,8 +97,8 @@ public static int NUMINTERVALS = 1024;
    }
 
    /**
-    * Returns the @f$n@f$th derivative of function `func` evaluated at
-    * `x`. If @f$n=0@f$, this returns @f$f(x)@f$. If @f$n=1@f$, this calls
+    * Returns the nth derivative of function `func` evaluated at
+    * `x`. If n=0, this returns f(x). If n=1, this calls
     * {@link #derivative() derivative(MathFunction, double)} and returns
     * the resulting first derivative. Otherwise, if the function
     * implements  @ref MathFunctionWithDerivative, this method calls
@@ -106,15 +106,15 @@ public static int NUMINTERVALS = 1024;
     * int)}. If the function does not implement this interface, the method
     * uses  {@link #finiteCenteredDifferenceDerivative()
     * finiteCenteredDifferenceDerivative(MathFunction, double, int,
-    * double)} if @f$n@f$ is even, or
+    * double)} if n is even, or
     * {@link #finiteDifferenceDerivative()
     * finiteDifferenceDerivative(MathFunction, double, int, double)} if
-    * @f$n@f$ is odd, to obtain a numerical approximation of the
+    * n is odd, to obtain a numerical approximation of the
     * derivative.
     *  @param func         the function to derivate.
     *  @param x            the evaluation point.
     *  @param n            the order of the derivative.
-    *  @return the @f$n@f$th derivative.
+    *  @return the nth derivative.
     */
    public static double derivative (MathFunction func, double x, int n) {
       if (n == 0)
@@ -130,16 +130,16 @@ public static int NUMINTERVALS = 1024;
    }
 
    /**
-    * Computes and returns an estimate of the @f$n@f$th derivative of the
-    * function @f$f(x)@f$. This method estimates
+    * Computes and returns an estimate of the nth derivative of the
+    * function f(x). This method estimates
     * @f[
     *   \frac{d^nf(x)}{dx^n},
     * @f]
-    * the @f$n@f$th derivative of @f$f(x)@f$ evaluated at @f$x@f$. This
-    * method first computes @f$f_i=f(x+i\epsilon)@f$, for @f$i=0,…,n@f$,
-    * with @f$\epsilon=h^{1/n}@f$. The estimate is then given by
-    * @f$\Delta^nf_0/h@f$, where @f$\Delta^nf_i=\Delta^{n-1}f_{i+1} -
-    * \Delta^{n-1}f_i@f$, and @f$\Delta f_i = f_{i+1} - f_i@f$.
+    * the nth derivative of f(x) evaluated at x. This
+    * method first computes f_i=f(x+i\epsilon), for i=0,…,n,
+    * with \epsilon=h^{1/n}. The estimate is then given by
+    * \Delta^nf_0/h, where \Delta^nf_i=\Delta^{n-1}f_{i+1} -
+    * \Delta^{n-1}f_i, and \Delta f_i = f_{i+1} - f_i.
     *  @param func         the function to derivate.
     *  @param x            the evaluation point.
     *  @param n            the order of the derivative.
@@ -165,8 +165,8 @@ public static int NUMINTERVALS = 1024;
    }
 
    /**
-    * Returns @f$(f(x + h) - f(x - h))/(2h)@f$, an estimate of the first
-    * derivative of @f$f(x)@f$ using centered differences.
+    * Returns (f(x + h) - f(x - h))/(2h), an estimate of the first
+    * derivative of f(x) using centered differences.
     *  @param func         the function to derivate.
     *  @param x            the evaluation point.
     *  @param h            the error.
@@ -180,12 +180,12 @@ public static int NUMINTERVALS = 1024;
    }
 
    /**
-    * Computes and returns an estimate of the @f$n@f$th derivative of the
-    * function @f$f(x)@f$ using finite centered differences. If @f$n@f$ is
+    * Computes and returns an estimate of the nth derivative of the
+    * function f(x) using finite centered differences. If n is
     * even, this method returns
     * {@link #finiteDifferenceDerivative(MathFunction,double,int,double)
     * finiteDifferenceDerivative(func, x - \epsilon*n/2, n, h)}, with
-    * @f$h=\epsilon^n@f$.
+    * h=\epsilon^n.
     *  @param func         the function to derivate.
     *  @param x            the evaluation point.
     *  @param n            the order of the derivative.
@@ -211,9 +211,9 @@ public static int NUMINTERVALS = 1024;
     * filters each pair (<tt>x[i]</tt>, <tt>y[i]</tt>) containing at least
     * one NaN element. It constructs a 2D array containing the two
     * filtered arrays, whose size is smaller than or equal to `x.length`.
-    *  @param x            the @f$X@f$ coordinates.
-    *  @param y            the @f$Y@f$ coordinates.
-    *  @return the filtered @f$X@f$ and @f$Y@f$ arrays.
+    *  @param x            the X coordinates.
+    *  @param y            the Y coordinates.
+    *  @return the filtered X and Y arrays.
     */
    public static double[][] removeNaNs (double[] x, double[] y) {
       if (x.length != y.length)
@@ -236,7 +236,7 @@ public static int NUMINTERVALS = 1024;
    }
 
    /**
-    * Returns the integral of the function `func` over @f$[a, b]@f$. If
+    * Returns the integral of the function `func` over [a, b]. If
     * the given function implements  @ref MathFunctionWithIntegral, this
     * returns
     * {@link umontreal.ssj.functions.MathFunctionWithIntegral.integral()
@@ -257,18 +257,18 @@ public static int NUMINTERVALS = 1024;
 
    /**
     * Computes and returns an approximation of the integral of `func` over
-    * @f$[a, b]@f$, using the Simpson’s @f$1/3@f$ method with
+    * [a, b], using the Simpson’s 1/3 method with
     * `numIntervals` intervals. This method estimates
     * @f[
     *   \int_a^b f(x)dx,
     * @f]
-    * where @f$f(x)@f$ is the function defined by `func` evaluated at
-    * @f$x@f$, by dividing @f$[a, b]@f$ in @f$n=@f$&nbsp;`numIntervals`
-    * intervals of length @f$h=(b - a)/n@f$. The integral is estimated by
+    * where f(x) is the function defined by `func` evaluated at
+    * x, by dividing [a, b] in n=&nbsp;`numIntervals`
+    * intervals of length h=(b - a)/n. The integral is estimated by
     * @f[
     *   \frac{h}{3}(f(a)+4f(a+h)+2f(a+2h)+4f(a+3h)+\cdots+f(b))
     * @f]
-    * This method assumes that @f$a\le b<\infty@f$, and @f$n@f$ is even.
+    * This method assumes that a\le b<\infty, and n is even.
     *  @param func         the function being integrated.
     *  @param a            the left bound
     *  @param b            the right bound.
@@ -305,13 +305,13 @@ public static int NUMINTERVALS = 1024;
 
    /**
     * Computes and returns a numerical approximation of the integral of
-    * @f$f(x)@f$ over @f$[a, b]@f$, using Gauss-Lobatto adaptive
+    * f(x) over [a, b], using Gauss-Lobatto adaptive
     * quadrature with 5 nodes, with tolerance `tol`. This method estimates
     * @f[
     *   \int_a^b f(x)dx,
     * @f]
-    * where @f$f(x)@f$ is the function defined by `func`. Whenever the
-    * estimated error is larger than `tol`, the interval @f$[a, b]@f$ will
+    * where f(x) is the function defined by `func`. Whenever the
+    * estimated error is larger than `tol`, the interval [a, b] will
     * be halved in two smaller intervals, and the method will recursively
     * call itself on the two smaller intervals until the estimated error
     * is smaller than `tol`.
@@ -359,10 +359,10 @@ public static int NUMINTERVALS = 1024;
     * double, double, double)}, but also returns in `T[0]` the
     * subintervals of integration, and in `T[1]`, the partial values of
     * the integral over the corresponding subintervals. Thus `T[0][0]`
-    * @f$= x_0 = a@f$ and `T[0][n]` @f$=x_n =b@f$; `T[1][i]` contains the
-    * value of the integral over the subinterval @f$[x_{i-1}, x_i]@f$; we
-    * also have `T[1][0]` @f$=0@f$. The sum over all `T[1][i]`, for
-    * @f$i=1, …, n@f$ gives the value of the integral over @f$[a,b]@f$,
+    * = x_0 = a and `T[0][n]` =x_n =b; `T[1][i]` contains the
+    * value of the integral over the subinterval [x_{i-1}, x_i]; we
+    * also have `T[1][0]` =0. The sum over all `T[1][i]`, for
+    * i=1, …, n gives the value of the integral over [a,b],
     * which is the value returned by this method. *WARNING:* The user
     * *must reserve* the 2 elements of the first dimension (<tt>T[0]</tt>
     * and <tt>T[1]</tt>) before calling this method.
@@ -370,7 +370,7 @@ public static int NUMINTERVALS = 1024;
     *  @param a            left bound of interval
     *  @param b            right bound of interval
     *  @param tol          error
-    *  @param T            @f$(x,y)@f$ = (values of partial
+    *  @param T            (x,y) = (values of partial
     *                      intervals,partial values of integral)
     *  @return value of the integral
     */

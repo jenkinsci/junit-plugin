@@ -37,12 +37,12 @@ public class SmoothingCubicSpline implements MathFunction,
    private double rho;
 
    /**
-    * Constructs a spline with nodes at @f$(x_i, y_i)@f$, with weights
-    * @f$w_i@f$ and smoothing factor @f$\rho@f$ = `rho`. The @f$x_i@f$
+    * Constructs a spline with nodes at (x_i, y_i), with weights
+    * w_i and smoothing factor \rho = `rho`. The x_i
     * *must* be sorted in increasing order.
-    *  @param x            the @f$x_i@f$ coordinates.
-    *  @param y            the @f$y_i@f$ coordinates.
-    *  @param w            the weight for each point, must be @f$> 0@f$.
+    *  @param x            the x_i coordinates.
+    *  @param y            the y_i coordinates.
+    *  @param w            the weight for each point, must be > 0.
     *  @param rho          the smoothing parameter
     *  @exception IllegalArgumentException if `x`, `y` and `z` do not have
     * the same length, if rho has wrong value, or if the spline cannot be
@@ -75,11 +75,11 @@ public class SmoothingCubicSpline implements MathFunction,
    }
 
    /**
-    * Constructs a spline with nodes at @f$(x_i, y_i)@f$, with weights
-    * @f$= 1@f$ and smoothing factor @f$\rho@f$ = `rho`. The @f$x_i@f$
+    * Constructs a spline with nodes at (x_i, y_i), with weights
+    * = 1 and smoothing factor \rho = `rho`. The x_i
     * *must* be sorted in increasing order.
-    *  @param x            the @f$x_i@f$ coordinates.
-    *  @param y            the @f$y_i@f$ coordinates.
+    *  @param x            the x_i coordinates.
+    *  @param y            the y_i coordinates.
     *  @param rho          the smoothing parameter
     *  @exception IllegalArgumentException if `x` and `y` do not have the
     * same length, if rho has wrong value, or if the spline cannot be
@@ -90,7 +90,7 @@ public class SmoothingCubicSpline implements MathFunction,
    }
 
    /**
-    * Evaluates and returns the value of the spline at @f$z@f$.
+    * Evaluates and returns the value of the spline at z.
     *  @param z            argument of the spline.
     *  @return value of spline.
     */
@@ -104,7 +104,7 @@ public class SmoothingCubicSpline implements MathFunction,
 
    /**
     * Evaluates and returns the value of the integral of the spline from
-    * @f$a@f$ to @f$b@f$.
+    * a to b.
     *  @param a            lower limit of integral.
     *  @param b            upper limit of integral.
     *  @return value of integral.
@@ -133,7 +133,7 @@ public class SmoothingCubicSpline implements MathFunction,
 
    /**
     * Evaluates and returns the value of the *first* derivative of the
-    * spline at @f$z@f$.
+    * spline at z.
     *  @param z            argument of the spline.
     *  @return value of first derivative.
     */
@@ -147,7 +147,7 @@ public class SmoothingCubicSpline implements MathFunction,
 
    /**
     * Evaluates and returns the value of the <em>n</em>-th derivative of
-    * the spline at @f$z@f$.
+    * the spline at z.
     *  @param z            argument of the spline.
     *  @param n            order of the derivative.
     *  @return value of n-th derivative.
@@ -161,16 +161,16 @@ public class SmoothingCubicSpline implements MathFunction,
    }
 
    /**
-    * Returns the @f$x_i@f$ coordinates for this spline.
-    *  @return the @f$x_i@f$ coordinates.
+    * Returns the x_i coordinates for this spline.
+    *  @return the x_i coordinates.
     */
    public double[] getX() {
       return x.clone ();
    }
 
    /**
-    * Returns the @f$y_i@f$ coordinates for this spline.
-    *  @return the @f$y_i@f$ coordinates.
+    * Returns the y_i coordinates for this spline.
+    *  @return the y_i coordinates.
     */
    public double[] getY() {
       return y.clone ();
@@ -201,12 +201,12 @@ public class SmoothingCubicSpline implements MathFunction,
    }
 
    /**
-    * Returns the index of @f$P@f$, the
+    * Returns the index of P, the
     * @ref umontreal.ssj.functions.Polynomial instance used to evaluate
-    * @f$x@f$, in an `ArrayList` table instance returned by
-    * `getSplinePolynomials()`. This index @f$k@f$ gives also the interval
-    * in table **X** which contains the value @f$x@f$ (i.e. such that
-    * @f$x_k < x \leq x_{k+1}@f$).
+    * x, in an `ArrayList` table instance returned by
+    * `getSplinePolynomials()`. This index k gives also the interval
+    * in table **X** which contains the value x (i.e. such that
+    * x_k < x \leq x_{k+1}).
     *  @return Index of the polynomial check with x in the Polynomial list
     * returned by  #getSplinePolynomials
     */

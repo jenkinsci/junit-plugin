@@ -36,7 +36,7 @@ import cern.colt.matrix.linalg.Algebra;
  * This class implements different *linear regression* models, using the
  * least squares method to estimate the regression coefficients. Given input
  * data x_{ij} and response y_i, one want to find the
- * coefficients @f$\beta_j@f$ that minimize the residuals of the form (using
+ * coefficients \beta_j that minimize the residuals of the form (using
  * matrix notation)
 */
 
@@ -80,12 +80,12 @@ public class LeastSquares {
    /**
     * Computes the regression coefficients using the least squares method.
     * This is a simple linear regression with 2 regression coefficients,
-    * @f$\alpha@f$ and @f$\beta@f$. The model is
+    * \alpha and \beta. The model is
     * @f[
     *   y = \alpha+ \beta x.
     * @f]
-    * Given the @f$n@f$ data points @f$(X_i, Y_i)@f$, @f$i=0,1,…,(n-1)@f$,
-    * the method computes and returns the array @f$[\alpha, \beta]@f$.
+    * Given the n data points (X_i, Y_i), i=0,1,…,(n-1),
+    * the method computes and returns the array [\alpha, \beta].
     *  @param X            the regressor variables
     *  @param Y            the response
     *  @return the regression coefficients
@@ -103,15 +103,15 @@ public class LeastSquares {
 
    /**
     * Computes the regression coefficients using the least squares method.
-    * This is a linear regression with a polynomial of degree `deg` @f$=
-    * k@f$ and @f$k+1@f$ regression coefficients @f$\beta_j@f$. The model
+    * This is a linear regression with a polynomial of degree `deg` =
+    * k and k+1 regression coefficients \beta_j. The model
     * is
     * @f[
     *   y = \beta_0 + \sum_{j=1}^k \beta_j x^j.
     * @f]
-    * Given the @f$n@f$ data points @f$(X_i, Y_i)@f$, @f$i=0,1,…,(n-1)@f$,
-    * the method computes and returns the array @f$[\beta_0, \beta_1, …,
-    * \beta_k]@f$. Restriction: @f$n > k@f$.
+    * Given the n data points (X_i, Y_i), i=0,1,…,(n-1),
+    * the method computes and returns the array [\beta_0, \beta_1, …,
+    * \beta_k]. Restriction: n > k.
     *  @param X     the regressor variables
     *  @param Y     the response
     *  @param deg   degree of the function    
@@ -152,18 +152,18 @@ public class LeastSquares {
 
    /**
     * Computes the regression coefficients using the least squares method.
-    * This is a model for multiple linear regression. There are @f$k+1@f$
-    * regression coefficients @f$\beta_j@f$, and @f$k@f$ regressors
-    * variables @f$x_j@f$. The model is
+    * This is a model for multiple linear regression. There are k+1
+    * regression coefficients \beta_j, and k regressors
+    * variables x_j. The model is
     * @f[
     *   y = \beta_0 + \sum_{j=1}^k \beta_j x_j.
     * @f]
-    * There are @f$n@f$ data points @f$Y_i@f$, @f$X_{ij}@f$,
-    * @f$i=0,1,…,(n-1)@f$, and each @f$X_i@f$ is a @f$k@f$-dimensional
+    * There are n data points Y_i, X_{ij},
+    * i=0,1,…,(n-1), and each X_i is a k-dimensional
     * point. Given the response `Y[i]` and the regressor variables
-    * `X[i][j]`, @f$\mathtt{i} =0,1,…,(n-1)@f$, @f$\mathtt{j}
-    * =0,1,…,(k-1)@f$, the method computes and returns the array
-    * @f$[\beta_0, \beta_1, …, \beta_k]@f$. Restriction: @f$n > k+1@f$.
+    * `X[i][j]`, \mathtt{i} =0,1,…,(n-1), \mathtt{j}
+    * =0,1,…,(k-1), the method computes and returns the array
+    * [\beta_0, \beta_1, …, \beta_k]. Restriction: n > k+1.
     *  @param X            the regressor variables
     *  @param Y            the response
     *  @return the regression coefficients
@@ -193,19 +193,19 @@ public class LeastSquares {
 
    /**
     * Computes the regression coefficients using the least squares method.
-    * This is a model for multiple linear regression. There are @f$k@f$
-    * regression coefficients @f$\beta_j@f$, @f$j=0,1,…,(k-1)@f$ and
-    * @f$k@f$ regressors variables @f$x_j@f$. The model is
+    * This is a model for multiple linear regression. There are k
+    * regression coefficients \beta_j, j=0,1,…,(k-1) and
+    * k regressors variables x_j. The model is
     * @f[
     *   y = \sum_{j=0}^{k-1} \beta_j x_j.
     * @f]
-    * There are @f$n@f$ data points @f$Y_i@f$, @f$X_{ij}@f$,
-    * @f$i=0,1,…,(n-1)@f$, and each @f$X_i@f$ is a @f$k@f$-dimensional
+    * There are n data points Y_i, X_{ij},
+    * i=0,1,…,(n-1), and each X_i is a k-dimensional
     * point. Given the response `Y[i]` and the regressor variables
-    * `X[i][j]`, @f$\mathtt{i} =0,1,…,(n-1)@f$, @f$\mathtt{j}
-    * =0,1,…,(k-1)@f$, the method computes and returns the array
-    * @f$[\beta_0, \beta_1, …, \beta_{k-1}]@f$. Restriction: @f$n >
-    * k@f$.
+    * `X[i][j]`, \mathtt{i} =0,1,…,(n-1), \mathtt{j}
+    * =0,1,…,(k-1), the method computes and returns the array
+    * [\beta_0, \beta_1, …, \beta_{k-1}]. Restriction: n >
+    * k.
     *  @param X            the regressor variables
     *  @param Y            the response
     *  @return the regression coefficients

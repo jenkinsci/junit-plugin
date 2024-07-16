@@ -134,19 +134,19 @@ public class Num {
    public static final double DBL_EPSILON = 2.2204460492503131e-16;
 
    /**
-    * Largest `int` @f$x@f$ such that @f$2^{x-1}@f$ is representable
+    * Largest `int` x such that 2^{x-1} is representable
     * (approximately) as a `double`.
     */
    public static final int DBL_MAX_EXP = 1024;
 
    /**
-    * Smallest `int` @f$x@f$ such that @f$2^{x-1}@f$ is representable
+    * Smallest `int` x such that 2^{x-1} is representable
     * (approximately) as a normalised `double`.
     */
    public static final int DBL_MIN_EXP = -1021;
 
    /**
-    * Largest `int` @f$x@f$ such that @f$10^x@f$ is representable
+    * Largest `int` x such that 10^x is representable
     * (approximately) as a `double`.
     */
    public static final int DBL_MAX_10_EXP = 308;
@@ -167,7 +167,7 @@ public class Num {
    public static final int DBL_DIG = 15;
 
    /**
-    * The constant @f$e@f$.
+    * The constant e.
     */
    public static final double EBASE = 2.7182818284590452354;
 
@@ -177,28 +177,28 @@ public class Num {
    public static final double EULER = 0.57721566490153286;
 
    /**
-    * The value of @f$\sqrt{2}@f$.
+    * The value of \sqrt{2}.
     */
    public static final double RAC2 = 1.41421356237309504880;
 
    /**
-    * The value of @f$1/\sqrt{2}@f$.
+    * The value of 1/\sqrt{2}.
     */
    public static final double IRAC2 = 0.70710678118654752440;
 
    /**
-    * The values of @f$\ln2@f$.
+    * The values of \ln2.
     */
    public static final double LN2 = 0.69314718055994530941;
 
    /**
-    * The values of @f$1/\ln2@f$.
+    * The values of 1/\ln2.
     */
    public static final double ILN2 = 1.44269504088896340737;
 
    /**
-    * Largest integer @f$n_0 = 2^{53}@f$ such that any integer @f$n
-    * \le n_0@f$ is represented exactly as a `double`.
+    * Largest integer n_0 = 2^{53} such that any integer n
+    * \le n_0 is represented exactly as a `double`.
     */
    public static final double MAXINTDOUBLE = 9007199254740992.0;
 
@@ -210,7 +210,7 @@ public class Num {
 
    /**
     * Contains the precomputed positive powers of 2. One has
-    * <tt>TWOEXP[j]</tt>@f$ = 2^j@f$, for @f$j=0,…,64@f$.
+    * <tt>TWOEXP[j]</tt> = 2^j, for j=0,…,64.
     */
    public static final double TWOEXP[] = {
       1.0, 2.0, 4.0, 8.0, 1.6e1, 3.2e1,
@@ -240,7 +240,7 @@ public class Num {
 
    /**
     * Contains the precomputed negative powers of 10. One has
-    * <tt>TEN_NEG_POW[j]</tt>@f$ = 10^{-j}@f$, for @f$j=0,…,16@f$.
+    * <tt>TEN_NEG_POW[j]</tt> = 10^{-j}, for j=0,…,16.
     */
    public static final double TEN_NEG_POW[] = {
       1.0, 1.0e-1, 1.0e-2, 1.0e-3, 1.0e-4, 1.0e-5, 1.0e-6, 1.0e-7, 1.0e-8,
@@ -252,10 +252,10 @@ public class Num {
     */
 
    /**
-    * Returns the greatest common divisor (gcd) of @f$x@f$ and @f$y@f$.
+    * Returns the greatest common divisor (gcd) of x and y.
     *  @param x            integer
     *  @param y            integer
-    *  @return the GCD of @f$x@f$ and @f$y@f$
+    *  @return the GCD of x and y
     */
    public static int gcd (int x, int y) {
       if (x < 0) x = -x;
@@ -270,10 +270,10 @@ public class Num {
    }
 
    /**
-    * Returns the greatest common divisor (gcd) of @f$x@f$ and @f$y@f$.
+    * Returns the greatest common divisor (gcd) of x and y.
     *  @param x            integer
     *  @param y            integer
-    *  @return the GCD of @f$x@f$ and @f$y@f$
+    *  @return the GCD of x and y
     */
    public static long gcd (long x, long y) {
       if (x < 0) x = -x;
@@ -289,12 +289,12 @@ public class Num {
 
    /**
     * Returns the
-    * value of @f$\binom{n}{s}@f$, the
-    *  number of different combinations of @f$s@f$ objects amongst
-    * @f$n@f$.
+    * value of \binom{n}{s}, the
+    *  number of different combinations of s objects amongst
+    * n.
     *  @param n            total number of objects
     *  @param s            number of chosen objects on a combination
-    *  @return the combination of @f$s@f$ objects amongst @f$n@f$
+    *  @return the combination of s objects amongst n
     */
    public static double combination (int n, int s) {
       final int NLIM = 100;      // pour eviter les debordements
@@ -328,9 +328,9 @@ public class Num {
 
    /**
     * Returns the natural logarithm of
-    *  @f$\binom{n}{s}@f$, the
-    *  number of different combinations of @f$s@f$ objects amongst
-    * @f$n@f$.
+    *  \binom{n}{s}, the
+    *  number of different combinations of s objects amongst
+    * n.
     *  @param n            total number of objects
     *  @param s            number of chosen objects on a combination
     *  @return the natural log of the combination
@@ -346,10 +346,10 @@ public class Num {
    }
 
    /**
-    * Returns the value of @f$n!@f$
+    * Returns the value of n!
     *  @param n            the integer for which the factorial must be
     *                      computed
-    *  @return the value of @f$n!@f$
+    *  @return the value of n!
     */
    public static double factorial (int n) {
       if (n < 0)
@@ -361,22 +361,22 @@ public class Num {
    }
 
    /**
-    * Returns the value of @f$\ln(n!)@f$, the natural logarithm of
-    * factorial @f$n@f$. Gives 16 decimals of precision (relative error
-    * @f$< 0.5\times10^{-15}@f$).
+    * Returns the value of \ln(n!), the natural logarithm of
+    * factorial n. Gives 16 decimals of precision (relative error
+    * < 0.5\times10^{-15}).
     *  @param n            argument of the log-factorial
-    *  @return natural logarithm of @f$n@f$ factorial
+    *  @return natural logarithm of n factorial
     */
    public static double lnFactorial (int n) {
       return lnFactorial ((long) n);
    }
 
    /**
-    * Returns the value of @f$\ln(n!)@f$, the natural logarithm of
-    * factorial @f$n@f$. Gives 16 decimals of precision (relative error
-    * @f$< 0.5\times10^{-15}@f$).
+    * Returns the value of \ln(n!), the natural logarithm of
+    * factorial n. Gives 16 decimals of precision (relative error
+    * < 0.5\times10^{-15}).
     *  @param n            argument of the log-factorial
-    *  @return natural logarithm of @f$n@f$ factorial
+    *  @return natural logarithm of n factorial
     */
    public static double lnFactorial (long n) {
       final int NLIM = 14;
@@ -406,9 +406,9 @@ public class Num {
    }
 
    /**
-    * Returns the value of @f$n!/n^n@f$.
+    * Returns the value of n!/n^n.
     *  @param n            integer
-    *  @return the value of @f$n!/n^n@f$
+    *  @return the value of n!/n^n
     */
    public static double factoPow (int n) {
       if (n < 0)
@@ -430,7 +430,7 @@ public class Num {
     *   i
     *   \end{matrix}\right\} \quad\mbox{ for $0\le i\le m$ and $0\le i\le j\le n$}. \tag{Stirling2}
     * @f]
-    * See @cite iKNU73a&thinsp; (Section 1.2.6). The matrix @f$M@f$ is the
+    * See @cite iKNU73a&thinsp; (Section 1.2.6). The matrix M is the
     * transpose of Knuth’s (1973).
     *  @param m            number of rows of the allocated matrix
     *  @param n            number of columns of the allocated matrix
@@ -460,19 +460,19 @@ public class Num {
    }
 
    /**
-    * Returns @f$\log_2 (@f$<tt>x</tt>@f$)@f$.
+    * Returns \log_2 (<tt>x</tt>).
     *  @param x            the value for which the logarithm must be
     *                      computed
-    *  @return the value of @f$\log_2 (@f$<tt>x</tt>@f$)@f$
+    *  @return the value of \log_2 (<tt>x</tt>)
     */
    public static double log2 (double x) {
      return ILN2*Math.log (x);
    }
 
    /**
-    * Returns the natural logarithm of the gamma function @f$\Gamma(x)@f$
+    * Returns the natural logarithm of the gamma function \Gamma(x)
     * evaluated at `x`. Gives 16 decimals of precision, but is implemented
-    * only for @f$x>0@f$.
+    * only for x>0.
     *  @param x            the value for which the lnGamma function must
     *                      be computed
     *  @return the natural logarithm of the gamma function
@@ -534,12 +534,12 @@ public class Num {
    }
 
    /**
-    * Computes the natural logarithm of the Beta function @f$B(\lambda,
-    * \nu)@f$. It is defined in terms of the Gamma function as
+    * Computes the natural logarithm of the Beta function B(\lambda,
+    * \nu). It is defined in terms of the Gamma function as
     * @f[
     *   B(\lambda, \nu) = \frac{\Gamma(\lambda)\Gamma(\nu)}{\Gamma(\lambda+ \nu)}
     * @f]
-    * with `lam` @f$=\lambda@f$ and `nu` @f$=\nu@f$.
+    * with `lam` =\lambda and `nu` =\nu.
     */
    public static double lnBeta (double lam, double nu) {
       if (0. == lam || 0. == nu)
@@ -551,7 +551,7 @@ public class Num {
 
    /**
     * Returns the value of the logarithmic derivative of the Gamma
-    * function @f$\psi(x) = \Gamma’(x) / \Gamma(x)@f$.
+    * function \psi(x) = \Gamma’(x) / \Gamma(x).
     */
    public static double digamma (double x) {
       final double C7[][] = {
@@ -600,8 +600,8 @@ public class Num {
    }
 
    /**
-    * Returns the value of the trigamma function @f$d\psi(x)/dx@f$, the
-    * derivative of the digamma function, evaluated at @f$x@f$.
+    * Returns the value of the trigamma function d\psi(x)/dx, the
+    * derivative of the digamma function, evaluated at x.
     */
    public static double trigamma (double x) {
       double y, sum;
@@ -651,8 +651,8 @@ public class Num {
    }
 
    /**
-    * Returns the value of the tetragamma function @f$d^2\psi(x)/d^2x@f$,
-    * the second derivative of the digamma function, evaluated at @f$x@f$.
+    * Returns the value of the tetragamma function d^2\psi(x)/d^2x,
+    * the second derivative of the digamma function, evaluated at x.
     */
    public static double tetragamma (double x) {
       double y, sum;
@@ -703,9 +703,9 @@ public class Num {
    }
 
    /**
-    * Returns the value of the ratio @f$\Gamma(x+1/2)/\Gamma(x)@f$ of
+    * Returns the value of the ratio \Gamma(x+1/2)/\Gamma(x) of
     * two gamma functions. This ratio is evaluated in a numerically stable
-    * way. Restriction: @f$x>0@f$.
+    * way. Restriction: x>0.
     */
    public static double gammaRatioHalf (double x) {
       if (x <= 0.0)
@@ -742,7 +742,7 @@ public class Num {
 
    /**
     * Implementation of the Kahan summation algorithm. Sums the first
-    * @f$n@f$ elements of @f$A@f$ and returns the sum. This algorithm is
+    * n elements of A and returns the sum. This algorithm is
     * more precise than the naive algorithm. See
     * [http://en.wikipedia.org/wiki/Kahan_summation_algorithm](http://en.wikipedia.org/wiki/Kahan_summation_algorithm).
     */
@@ -764,8 +764,8 @@ public class Num {
    }
 
    /**
-    * Computes the @f$n@f$-th harmonic number @f$H_n = \sum_{j=1}^n
-    * 1/j@f$.
+    * Computes the n-th harmonic number H_n = \sum_{j=1}^n
+    * 1/j.
     */
    public static double harmonic (long n) {
       if (n < 1)
@@ -778,8 +778,8 @@ public class Num {
     * @f[
     *   \sideset{}’\sum_{-n/2<j\le n/2}\; \frac{1}{|j|},
     * @f]
-    * where the symbol @f$\sum^{\prime}@f$ means that the term with
-    * @f$j=0@f$ is excluded from the sum.
+    * where the symbol \sum^{\prime} means that the term with
+    * j=0 is excluded from the sum.
     */
    public static double harmonic2 (long n) {
       if (n <= 0)
@@ -796,14 +796,14 @@ public class Num {
    }
 
    /**
-    * Returns the volume @f$V@f$ of a sphere of radius 1 in @f$t@f$
-    * dimensions using the norm @f$L_p@f$. It is given by the formula
+    * Returns the volume V of a sphere of radius 1 in t
+    * dimensions using the norm L_p. It is given by the formula
     * @f[
     *   V = \frac{\left[2 \Gamma(1 + 1/p)\right]^t}{\Gamma\left(1 + t/p\right)}, \qquad p > 0,
     * @f]
-    * where @f$\Gamma@f$ is the gamma function. The case of the sup norm
-    * @f$L_{\infty}@f$ is obtained by choosing @f$p=0@f$. Restrictions:
-    * @f$p\ge0@f$ and @f$t\ge1@f$.
+    * where \Gamma is the gamma function. The case of the sup norm
+    * L_{\infty} is obtained by choosing p=0. Restrictions:
+    * p\ge0 and t\ge1.
     *  @param p            index of the used norm
     *  @param t            number of dimensions
     *  @return the volume of a sphere
@@ -841,8 +841,8 @@ public class Num {
    }
 
    /**
-    * Evaluates the Bernoulli polynomial @f$B_n(x)@f$ of degree @f$n@f$ at
-    * @f$x@f$. Only degrees @f$n\le8@f$ are programmed for now. The first
+    * Evaluates the Bernoulli polynomial B_n(x) of degree n at
+    * x. Only degrees n\le8 are programmed for now. The first
     * Bernoulli polynomials of even degree are:
     * @anchor REF_util_Num_bernoulli
     * @f{align}{
@@ -900,16 +900,16 @@ public class Num {
     }
 
    /**
-    * Evaluates a series of Chebyshev polynomials @f$T_j@f$ at @f$x@f$
-    * over the basic interval @f$[-1, \;1]@f$, using the method of
+    * Evaluates a series of Chebyshev polynomials T_j at x
+    * over the basic interval [-1, \;1], using the method of
     * Clenshaw @cite mCLE62a&thinsp;, i.e., computes and returns
     * @f[
     *   y = \frac{a_0}{2} + \sum_{j=1}^n a_j T_j (x).
     * @f]
     * @param a            coefficients of the polynomials
     *  @param n            largest degree of polynomials
-    *  @param x            the parameter of the @f$T_j@f$ functions
-    *  @return the value of a series of Chebyshev polynomials @f$T_j@f$.
+    *  @param x            the parameter of the T_j functions
+    *  @return the value of a series of Chebyshev polynomials T_j.
     */
    public static double evalCheby (double a[], int n, double x) {
       if (Math.abs (x) > 1.0)
@@ -928,16 +928,16 @@ public class Num {
    }
 
    /**
-    * Evaluates a series of shifted Chebyshev polynomials @f$T_j^*@f$ at
-    * @f$x@f$ over the basic interval @f$ [0, \;1]@f$, using the method of
+    * Evaluates a series of shifted Chebyshev polynomials T_j^* at
+    * x over the basic interval  [0, \;1], using the method of
     * Clenshaw @cite mCLE62a&thinsp;, i.e., computes and returns
     * @f[
     *   y = \frac{a_0}{2} + \sum_{j=1}^n a_j T_j^* (x).
     * @f]
     * @param a            coefficients of the polynomials
     *  @param n            largest degree of polynomials
-    *  @param x            the parameter of the @f$T_j^*@f$ functions
-    *  @return the value of a series of Chebyshev polynomials @f$T_j^*@f$.
+    *  @param x            the parameter of the T_j^* functions
+    *  @return the value of a series of Chebyshev polynomials T_j^*.
     */
    public static double evalChebyStar (double a[], int n, double x) {
       if (x > 1.0 || x < 0.0)
@@ -956,13 +956,13 @@ public class Num {
    }
 
    /**
-    * Returns the value of @f$K_{1/4}(x)@f$, where
-    *  @f$K_{\nu}@f$
+    * Returns the value of K_{1/4}(x), where
+    *  K_{\nu}
     *  is the modified Bessel’s function of the second kind. The relative
-    * error on the returned value is less than @f$0.5\times10^{-6}@f$ for
-    * @f$x > 10^{-300}@f$.
+    * error on the returned value is less than 0.5\times10^{-6} for
+    * x > 10^{-300}.
     *  @param x            value at which the function is calculated
-    *  @return the value of @f$K_{1/4}(x)@f$
+    *  @return the value of K_{1/4}(x)
     */
    public static double besselK025 (double x) {
       if (Double.isNaN(x))
@@ -1021,9 +1021,9 @@ public class Num {
    }
 
    /**
-    * Returns the value of @f$e^x K_1(y)@f$, where @f$ K_1@f$ is the
+    * Returns the value of e^x K_1(y), where  K_1 is the
     * modified Bessel function of the second kind of order 1. Restriction:
-    * @f$y > 0@f$.
+    * y > 0.
     */
    public static double expBesselK1 (double x, double y) {
       if (Double.isNaN(x) || Double.isNaN(y))
@@ -1040,13 +1040,13 @@ public class Num {
    }
 
    /**
-    * Returns the value of <tt>erf</tt>(@f$x@f$), the error function. It
+    * Returns the value of <tt>erf</tt>(x), the error function. It
     * is defined as
     * @f[
     *   \mbox{erf}(x) = \frac{2}{\sqrt{\pi}}\int_0^x dt  e^{-t^2}.
     * @f]
     * @param x            value at which the function is calculated
-    *  @return the value of <tt>erf</tt>@f$(x)@f$
+    *  @return the value of <tt>erf</tt>(x)
     */
    public static double erf (double x) {
       if (Double.isNaN(x))
@@ -1064,13 +1064,13 @@ public class Num {
    }
 
    /**
-    * Returns the value of <tt>erfc</tt>(@f$x@f$), the complementary error
+    * Returns the value of <tt>erfc</tt>(x), the complementary error
     * function. It is defined as
     * @f[
     *   \mbox{erfc}(x) = \frac{2}{\sqrt{\pi}}\int_x^{\infty}dt  e^{-t^2}.
     * @f]
     * @param x            value at which the function is calculated
-    *  @return the value of <tt>erfc</tt>@f$(x)@f$
+    *  @return the value of <tt>erfc</tt>(x)
     */
    public static double erfc (double x) {
       if (Double.isNaN(x))
@@ -1155,11 +1155,11 @@ public class Num {
     };
 
 /**
- * Returns the value of <tt>erf</tt>@f${}^{-1}(u)@f$, the inverse of the
- * error function. If @f$u = @f$<tt>erf</tt>@f$(x)@f$, then @f$x =
- * @f$<tt>erf</tt>@f${}^{-1}(u)@f$.
+ * Returns the value of <tt>erf</tt>{}^{-1}(u), the inverse of the
+ * error function. If u = <tt>erf</tt>(x), then x =
+ * <tt>erf</tt>{}^{-1}(u).
  *  @param u            value at which the function is calculated
- *  @return the value of erfInv@f$(u)@f$
+ *  @return the value of erfInv(u)
  */
 public static double erfInv (double u) {
       if (Double.isNaN(u))
@@ -1197,12 +1197,12 @@ public static double erfInv (double u) {
    }
 
    /**
-    * Returns the value of <tt>erfc</tt>@f${}^{-1}(u)@f$, the inverse of
-    * the complementary error function. If @f$u =
-    * @f$<tt>erfc</tt>@f$(x)@f$, then @f$x =
-    * @f$<tt>erfc</tt>@f${}^{-1}(u)@f$.
+    * Returns the value of <tt>erfc</tt>{}^{-1}(u), the inverse of
+    * the complementary error function. If u =
+    * <tt>erfc</tt>(x), then x =
+    * <tt>erfc</tt>{}^{-1}(u).
     *  @param u            value at which the function is calculated
-    *  @return the value of erfcInv@f$(u)@f$
+    *  @return the value of erfcInv(u)
     */
    public static double erfcInv (double u) {
       if (Double.isNaN(u))

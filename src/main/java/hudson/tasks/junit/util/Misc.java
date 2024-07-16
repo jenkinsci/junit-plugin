@@ -32,13 +32,13 @@ public class Misc {
    private Misc() {}
 
    /**
-    * Returns the @f$k^{th}@f$ smallest item of the array @f$A@f$ of size
-    * @f$n@f$. Array @f$A@f$ is unchanged by the method. Restriction: @f$1
-    * \le k \le n@f$.
+    * Returns the k^{th} smallest item of the array A of size
+    * n. Array A is unchanged by the method. Restriction: 1
+    * \le k \le n.
     *  @param A            the array which contain the items
     *  @param n            the number of items in the array
     *  @param k            the index of the smallest item
-    *  @return the kth smallest item of the array @f$A@f$
+    *  @return the kth smallest item of the array A
     */
    public static double quickSelect (double[] A, int n, int k) {
       double[] U = new double[n];
@@ -66,13 +66,13 @@ public class Misc {
    }
 
    /**
-    * Returns the @f$k^{th}@f$ smallest item of the array @f$A@f$ of size
-    * @f$n@f$. Array @f$A@f$ is unchanged by the method. Restriction: @f$1
-    * \le k \le n@f$.
+    * Returns the k^{th} smallest item of the array A of size
+    * n. Array A is unchanged by the method. Restriction: 1
+    * \le k \le n.
     *  @param A            the array which contain the items
     *  @param n            the number of items in the array
     *  @param k            the index of the smallest item
-    *  @return the kth smallest item of the array @f$A@f$
+    *  @return the kth smallest item of the array A
     */
    public static int quickSelect (int[] A, int n, int k) {
       int[] U = new int[n];
@@ -100,10 +100,10 @@ public class Misc {
    }
 
    /**
-    * Returns the median of the first @f$n@f$ elements of array @f$A@f$.
+    * Returns the median of the first n elements of array A.
     *  @param A            the array
     *  @param n            the number of used elements
-    *  @return the median of @f$A@f$
+    *  @return the median of A
     */
    public static double getMedian (double[] A, int n) {
       int k = (n+1)/2;     // median index
@@ -117,10 +117,10 @@ public class Misc {
    }
 
    /**
-    * Returns the median of the first @f$n@f$ elements of array @f$A@f$.
+    * Returns the median of the first n elements of array A.
     *  @param A            the array
     *  @param n            the number of used elements
-    *  @return the median of @f$A@f$
+    *  @return the median of A
     */
    public static double getMedian (int[] A, int n) {
       int k = (n+1)/2;     // median index
@@ -135,14 +135,14 @@ public class Misc {
 
    /**
     * Returns the index of the time interval corresponding to time `t`.
-    * Let @f$t_0\le\cdots\le t_n@f$ be simulation times stored in a
+    * Let t_0\le\cdots\le t_n be simulation times stored in a
     * subset of `times`. This method uses binary search to determine the
-    * smallest value @f$i@f$ for which @f$t_i\le t < t_{i+1}@f$, and
-    * returns @f$i@f$. The value of @f$t_i@f$ is stored in
-    * `times[start+i]` whereas @f$n@f$ is defined as `end - start`. If
-    * @f$t<t_0@f$, this returns @f$-1@f$. If @f$t\ge t_n@f$, this returns
-    * @f$n@f$. Otherwise, the returned value is greater than or equal to
-    * 0, and smaller than or equal to @f$n-1@f$. `start` and `end` are
+    * smallest value i for which t_i\le t < t_{i+1}, and
+    * returns i. The value of t_i is stored in
+    * `times[start+i]` whereas n is defined as `end - start`. If
+    * t<t_0, this returns -1. If t\ge t_n, this returns
+    * n. Otherwise, the returned value is greater than or equal to
+    * 0, and smaller than or equal to n-1. `start` and `end` are
     * only used to set lower and upper limits of the search in the `times`
     * array; the index space of the returned value always starts at 0.
     * Note that if the elements of `times` with indices `start`, …, `end`
@@ -197,19 +197,19 @@ public class Misc {
    }
 
    /**
-    * Computes the Newton interpolating polynomial. Given the @f$n+1@f$
-    * real distinct points @f$(x_0, y_0),@f$ @f$(x_1, y_1),…, (x_n,
-    * y_n)@f$, with `X[i]` @f$= x_i@f$, `Y[i]` @f$= y_i@f$, this function
-    * computes the @f$n+1@f$ coefficients `C[i]` @f$= c_i@f$ of the Newton
-    * interpolating polynomial @f$P(x)@f$ of degree @f$n@f$ passing
-    * through these points, i.e. such that @f$y_i= P(x_i)@f$, given by
+    * Computes the Newton interpolating polynomial. Given the n+1
+    * real distinct points (x_0, y_0), (x_1, y_1),…, (x_n,
+    * y_n), with `X[i]` = x_i, `Y[i]` = y_i, this function
+    * computes the n+1 coefficients `C[i]` = c_i of the Newton
+    * interpolating polynomial P(x) of degree n passing
+    * through these points, i.e. such that y_i= P(x_i), given by
     * @anchor REF_util_Misc_eq_newton_interpol
     * @f[
     *   \qquad P(x) = c_0 + c_1(x-x_0) + c_2(x-x_0)(x-x_1) + \cdots+ c_n(x-x_0)(x-x_1) \cdots(x-x_{n-1}). \tag{eq.newton.interpol}
     * @f]
     * @param n            degree of the interpolating polynomial
-    *  @param X            @f$x@f$-coordinates of points
-    *  @param Y            @f$y@f$-coordinates of points
+    *  @param X            x-coordinates of points
+    *  @param Y            y-coordinates of points
     *  @param C            Coefficients of the interpolating polynomial
     */
    public static void interpol (int n, double[] X, double[] Y, double[] C) {
@@ -227,17 +227,17 @@ public class Misc {
    }
 
    /**
-    * Given @f$n@f$, @f$X@f$ and @f$C@f$ as described in
+    * Given n, X and C as described in
     * {@link #interpol(int,double[],double[],double[]) interpol(n, X, Y,
     * C)}, this function returns the value of the interpolating polynomial
-    * @f$P(z)@f$ evaluated at @f$z@f$ (see eq.
+    * P(z) evaluated at z (see eq.
     * {@link REF_util_Misc_eq_newton_interpol
     * eq.newton.interpol} ).
     *  @param n            degree of the interpolating polynomial
-    *  @param X            @f$x@f$-coordinates of points
+    *  @param X            x-coordinates of points
     *  @param C            Coefficients of the interpolating polynomial
     *  @param z            argument where polynomial is evaluated
-    *  @return Value of the interpolating polynomial @f$P(z)@f$
+    *  @return Value of the interpolating polynomial P(z)
     */
    public static double evalPoly (int n, double[] X, double[] C, double z) {
       double v = C[n];
@@ -247,8 +247,8 @@ public class Misc {
    }
 
    /**
-    * Evaluates the polynomial @f$P(x)@f$ of degree @f$n@f$ with
-    * coefficients @f$c_j =@f$ `C[j]` at @f$x@f$:
+    * Evaluates the polynomial P(x) of degree n with
+    * coefficients c_j = `C[j]` at x:
     * @anchor REF_util_Misc_eq_horner
     * @f[
     *   \qquad P(x) = c_0 + c_1 x + c_2 x^2 + \cdots+ c_n x^n \tag{eq.horner}
@@ -256,7 +256,7 @@ public class Misc {
     * @param C            Coefficients of the polynomial
     *  @param n            degree of the polynomial
     *  @param x            argument where polynomial is evaluated
-    *  @return Value of the polynomial @f$P(x)@f$
+    *  @return Value of the polynomial P(x)
     */
    public static double evalPoly (double[] C, int n, double x) {
       double v = C[n];

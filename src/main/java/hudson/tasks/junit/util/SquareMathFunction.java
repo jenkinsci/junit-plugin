@@ -34,8 +34,8 @@ public class SquareMathFunction implements MathFunctionWithFirstDerivative {
 
 /**
  * Constructs a new square function for function `func`. The values of the
- * constants are @f$a=1@f$ and @f$b=0@f$.
- *  @param func         the function @f$f(x)@f$.
+ * constants are a=1 and b=0.
+ *  @param func         the function f(x).
  */
 public SquareMathFunction (MathFunction func) {
       this (func, 1, 0);
@@ -44,7 +44,7 @@ public SquareMathFunction (MathFunction func) {
    /**
     * Constructs a new power function for function `func`, and constants
     * `a` and `b`.
-    *  @param func         the function @f$f(x)@f$.
+    *  @param func         the function f(x).
     *  @param a            the multiplicative constant.
     *  @param b            the additive constant.
     */
@@ -57,7 +57,7 @@ public SquareMathFunction (MathFunction func) {
    }
 
    /**
-    * Returns the function @f$f(x)@f$.
+    * Returns the function f(x).
     *  @return the function.
     */
    public MathFunction getFunction() {
@@ -65,16 +65,16 @@ public SquareMathFunction (MathFunction func) {
    }
 
    /**
-    * Returns the value of @f$a@f$.
-    *  @return the value of @f$a@f$.
+    * Returns the value of a.
+    *  @return the value of a.
     */
    public double getA() {
       return a;
    }
 
    /**
-    * Returns the value of @f$b@f$.
-    *  @return the value of @f$b@f$.
+    * Returns the value of b.
+    *  @return the value of b.
     */
    public double getB() {
       return b;
