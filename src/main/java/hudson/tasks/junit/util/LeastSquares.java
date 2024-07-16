@@ -81,9 +81,9 @@ public class LeastSquares {
     * Computes the regression coefficients using the least squares method.
     * This is a simple linear regression with 2 regression coefficients,
     * \alpha and \beta. The model is
-    * @f[
+    * [
     *   y = \alpha+ \beta x.
-    * @f]
+    * ]
     * Given the n data points (X_i, Y_i), i=0,1,…,(n-1),
     * the method computes and returns the array [\alpha, \beta].
     *  @param X            the regressor variables
@@ -106,9 +106,9 @@ public class LeastSquares {
     * This is a linear regression with a polynomial of degree `deg` =
     * k and k+1 regression coefficients \beta_j. The model
     * is
-    * @f[
+    * [
     *   y = \beta_0 + \sum_{j=1}^k \beta_j x^j.
-    * @f]
+    * ]
     * Given the n data points (X_i, Y_i), i=0,1,…,(n-1),
     * the method computes and returns the array [\beta_0, \beta_1, …,
     * \beta_k]. Restriction: n > k.
@@ -155,9 +155,9 @@ public class LeastSquares {
     * This is a model for multiple linear regression. There are k+1
     * regression coefficients \beta_j, and k regressors
     * variables x_j. The model is
-    * @f[
+    * [
     *   y = \beta_0 + \sum_{j=1}^k \beta_j x_j.
-    * @f]
+    * ]
     * There are n data points Y_i, X_{ij},
     * i=0,1,…,(n-1), and each X_i is a k-dimensional
     * point. Given the response `Y[i]` and the regressor variables
@@ -196,9 +196,9 @@ public class LeastSquares {
     * This is a model for multiple linear regression. There are k
     * regression coefficients \beta_j, j=0,1,…,(k-1) and
     * k regressors variables x_j. The model is
-    * @f[
+    * [
     *   y = \sum_{j=0}^{k-1} \beta_j x_j.
-    * @f]
+    * ]
     * There are n data points Y_i, X_{ij},
     * i=0,1,…,(n-1), and each X_i is a k-dimensional
     * point. Given the response `Y[i]` and the regressor variables

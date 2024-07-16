@@ -163,9 +163,9 @@ public Polynomial derivativePolynomial (int n) {
 /**
  * Returns a polynomial representing the integral of this polynomial. This
  * integral is of the form
- * @f[
+ * [
  *   \int p(x)dx = c + c_0x + \frac{c_1 x^2}{2} + \cdots+ \frac{c_n x^{n+1}}{n+1},
- * @f]
+ * ]
  * where c is a user-defined constant.
  *  @param c            the constant for the integral.
  *  @return the polynomial representing the integral.

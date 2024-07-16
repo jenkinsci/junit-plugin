@@ -97,44 +97,11 @@ public static int NUMINTERVALS = 1024;
    }
 
    /**
-    * Returns the nth derivative of function `func` evaluated at
-    * `x`. If n=0, this returns f(x). If n=1, this calls
-    * {@link #derivative() derivative(MathFunction, double)} and returns
-    * the resulting first derivative. Otherwise, if the function
-    * implements  @ref MathFunctionWithDerivative, this method calls
-    * {@link MathFunctionWithDerivative.derivative() derivative(double,
-    * int)}. If the function does not implement this interface, the method
-    * uses  {@link #finiteCenteredDifferenceDerivative()
-    * finiteCenteredDifferenceDerivative(MathFunction, double, int,
-    * double)} if n is even, or
-    * {@link #finiteDifferenceDerivative()
-    * finiteDifferenceDerivative(MathFunction, double, int, double)} if
-    * n is odd, to obtain a numerical approximation of the
-    * derivative.
-    *  @param func         the function to derivate.
-    *  @param x            the evaluation point.
-    *  @param n            the order of the derivative.
-    *  @return the nth derivative.
-    */
-   public static double derivative (MathFunction func, double x, int n) {
-      if (n == 0)
-         return func.evaluate (x);
-      else if (n == 1)
-         return derivative (func, x);
-      else if (func instanceof MathFunctionWithDerivative)
-         return ((MathFunctionWithDerivative)func).derivative (x, n);
-      else if (n % 2 == 0)
-         return finiteCenteredDifferenceDerivative (func, x, n, H);
-      else
-         return finiteDifferenceDerivative (func, x, n, H);
-   }
-
-   /**
     * Computes and returns an estimate of the nth derivative of the
     * function f(x). This method estimates
-    * @f[
+    * [
     *   \frac{d^nf(x)}{dx^n},
-    * @f]
+    * ]
     * the nth derivative of f(x) evaluated at x. This
     * method first computes f_i=f(x+i\epsilon), for i=0,…,n,
     * with \epsilon=h^{1/n}. The estimate is then given by
@@ -206,36 +173,6 @@ public static int NUMINTERVALS = 1024;
    }
 
    /**
-    * Removes any point `(NaN, y)` or `(x, NaN)` from `x` and `y`, and
-    * returns a 2D array containing the filtered points. This method
-    * filters each pair (<tt>x[i]</tt>, <tt>y[i]</tt>) containing at least
-    * one NaN element. It constructs a 2D array containing the two
-    * filtered arrays, whose size is smaller than or equal to `x.length`.
-    *  @param x            the X coordinates.
-    *  @param y            the Y coordinates.
-    *  @return the filtered X and Y arrays.
-    */
-   public static double[][] removeNaNs (double[] x, double[] y) {
-      if (x.length != y.length)
-         throw new IllegalArgumentException();
-      int numNaNs = 0;
-      for (int i = 0; i < x.length; i++)
-         if (Double.isNaN (x[i]) || Double.isNaN (y[i]))
-            ++numNaNs;
-      if (numNaNs == 0)
-         return new double[][] { x, y };
-      final double[] nx = new double[x.length - numNaNs];
-      final double[] ny = new double[y.length - numNaNs];
-      int j = 0;
-      for (int i = 0; i < x.length; i++)
-         if (!Double.isNaN (x[i]) && !Double.isNaN (y[i])) {
-            nx[j] = x[i];
-            ny[j++] = y[i];
-         }
-      return new double[][] { nx, ny };
-   }
-
-   /**
     * Returns the integral of the function `func` over [a, b]. If
     * the given function implements  @ref MathFunctionWithIntegral, this
     * returns
@@ -259,15 +196,15 @@ public static int NUMINTERVALS = 1024;
     * Computes and returns an approximation of the integral of `func` over
     * [a, b], using the Simpson’s 1/3 method with
     * `numIntervals` intervals. This method estimates
-    * @f[
+    * [
     *   \int_a^b f(x)dx,
-    * @f]
+    * ]
     * where f(x) is the function defined by `func` evaluated at
     * x, by dividing [a, b] in n=&nbsp;`numIntervals`
     * intervals of length h=(b - a)/n. The integral is estimated by
-    * @f[
+    * [
     *   \frac{h}{3}(f(a)+4f(a+h)+2f(a+2h)+4f(a+3h)+\cdots+f(b))
-    * @f]
+    * ]
     * This method assumes that a\le b<\infty, and n is even.
     *  @param func         the function being integrated.
     *  @param a            the left bound
@@ -302,132 +239,4 @@ public static int NUMINTERVALS = 1024;
       sum += func.evaluate (a) + func.evaluate (b) + 4*func.evaluate (b - h);
       return sum * h / 3;
    }
-
-   /**
-    * Computes and returns a numerical approximation of the integral of
-    * f(x) over [a, b], using Gauss-Lobatto adaptive
-    * quadrature with 5 nodes, with tolerance `tol`. This method estimates
-    * @f[
-    *   \int_a^b f(x)dx,
-    * @f]
-    * where f(x) is the function defined by `func`. Whenever the
-    * estimated error is larger than `tol`, the interval [a, b] will
-    * be halved in two smaller intervals, and the method will recursively
-    * call itself on the two smaller intervals until the estimated error
-    * is smaller than `tol`.
-    *  @param func         the function being integrated.
-    *  @param a            the left bound
-    *  @param b            the right bound.
-    *  @param tol          error.
-    *  @return the approximate value of the integral.
-    */
-   public static double gaussLobatto (MathFunction func, double a, double b,
-                                      double tol) {
-      if (b < a)
-         throw new IllegalArgumentException ("b < a");
-      if (Double.isInfinite (a) || Double.isInfinite (b) ||
-          Double.isNaN (a) || Double.isNaN (b))
-         throw new IllegalArgumentException ("a or b is infinite or NaN");
-      if (a == b)
-         return 0;
-      double r0 = simpleGaussLob (func, a, b);
-      final double h = (b - a)/2;
-      double r1 = simpleGaussLob (func, a, a + h) +
-                  simpleGaussLob (func, a + h, b);
-      double maxi = Math.max(1.0, Math.abs(r1));
-      if (Math.abs(r0 - r1) <= tol*maxi)
-         return r1;
-      return gaussLobatto (func, a, a + h, tol) +
-             gaussLobatto (func, a + h, b, tol);
-   }
-
-
-   private static double simpleGaussLob (MathFunction func, double a, double b) {
-      // Gauss-Lobatto integral over [a, b] with 5 nodes
-      if (a == b)
-         return 0;
-      final double h = b - a;
-      double sum = 0;
-      for (int i = 0; i < 5; i++) {
-         sum += Wg[i] * func.evaluate(a + h*Cg[i]);
-      }
-      return h*sum;
-   }
-
-   /**
-    * Similar to method  {@link #gaussLobatto() gaussLobatto(MathFunction,
-    * double, double, double)}, but also returns in `T[0]` the
-    * subintervals of integration, and in `T[1]`, the partial values of
-    * the integral over the corresponding subintervals. Thus `T[0][0]`
-    * = x_0 = a and `T[0][n]` =x_n =b; `T[1][i]` contains the
-    * value of the integral over the subinterval [x_{i-1}, x_i]; we
-    * also have `T[1][0]` =0. The sum over all `T[1][i]`, for
-    * i=1, …, n gives the value of the integral over [a,b],
-    * which is the value returned by this method. *WARNING:* The user
-    * *must reserve* the 2 elements of the first dimension (<tt>T[0]</tt>
-    * and <tt>T[1]</tt>) before calling this method.
-    *  @param func         function being integrated
-    *  @param a            left bound of interval
-    *  @param b            right bound of interval
-    *  @param tol          error
-    *  @param T            (x,y) = (values of partial
-    *                      intervals,partial values of integral)
-    *  @return value of the integral
-    */
-   public static double gaussLobatto (MathFunction func, double a, double b,
-                                      double tol, double[][] T) {
-      if (b < a)
-         throw new IllegalArgumentException ("b < a");
-      if (a == b) {
-         T[0] = new double [1];
-         T[1] = new double [1];
-         T[0][0] = a;
-         T[1][0] = 0;
-         return 0;
-      }
-
-      int n = 1;         // initial capacity
-      T[0] = new double [n];
-      T[1] = new double [n];
-      T[0][0] = a;
-      T[1][0] = 0;
-      int[] s = {0};    // actual number of intervals
-      double res = innerGaussLob (func, a, b, tol, T, s);
-      n = s[0] + 1;
-      double[] temp = new double[n];
-      System.arraycopy (T[0], 0, temp, 0, n);
-      T[0] = temp;
-      temp = new double[n];
-      System.arraycopy (T[1], 0, temp, 0, n);
-      T[1] = temp;
-      return res;
-   }
-
-
-   private static double innerGaussLob (MathFunction func, double a, double b,
-                                        double tol, double[][] T, int[] s) {
-      double r0 = simpleGaussLob (func, a, b);
-      final double h = (b - a) / 2;
-      double r1 = simpleGaussLob (func, a, a + h) +
-                  simpleGaussLob (func, a + h, b);
-      if (Math.abs(r0 - r1) <= tol) {
-         ++s[0];
-         int len = s[0];
-         if (len >= T[0].length) {
-            double[] temp = new double[2 * len];
-            System.arraycopy (T[0], 0, temp, 0, len);
-            T[0] = temp;
-            temp = new double[2 * len];
-            System.arraycopy (T[1], 0, temp, 0, len);
-            T[1] = temp;
-         }
-         T[0][len] = b;
-         T[1][len] = r1;
-         return r1;
-      }
-
-      return innerGaussLob (func, a, a + h, tol, T, s) +
-             innerGaussLob (func, a + h, b, tol, T, s);
-   }
-
 }

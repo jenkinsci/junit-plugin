@@ -306,7 +306,7 @@ public class PrintfFormat implements CharSequence, Appendable {
    }
 
    /**
-    * Formats the string `str` like the <tt>%s</tt> in the C `printf`
+    * Formats the string `str` like the %s in the C `printf`
     * function. The `fieldwidth` argument gives the minimum length of the
     * resulting string. If `str` is shorter than `fieldwidth`, it is
     * left-padded with spaces. If `fieldwidth` is negative, the string is
@@ -362,7 +362,7 @@ public class PrintfFormat implements CharSequence, Appendable {
    }
 
    /**
-    * Formats the long integer `x` into a string like <tt>%d</tt> in the C
+    * Formats the long integer `x` into a string like %d in the C
     * `printf` function. It converts its argument to decimal notation,
     * `precision` gives the minimum number of digits that must appear; if
     * the converted value requires fewer digits, it is padded on the left
@@ -479,8 +479,8 @@ public class PrintfFormat implements CharSequence, Appendable {
    }
 
    /**
-    * Formats a double-precision number `x` like <tt>%E</tt> in C
-    * <tt>printf</tt>. The double argument is rounded and converted in the
+    * Formats a double-precision number `x` like %E in C
+    * printf. The double argument is rounded and converted in the
     * style `[-]d.dddE+-dd` where there is one digit before the
     * decimal-point character and the number of digits after it is equal
     * to the precision; if the precision is 0, no decimal-point character
@@ -577,7 +577,7 @@ public class PrintfFormat implements CharSequence, Appendable {
    }
 
    /**
-    * Formats the double-precision `x` into a string like <tt>%f</tt> in C
+    * Formats the double-precision `x` into a string like %f in C
     * `printf`. The argument is rounded and converted to decimal notation
     * in the style `[-]ddd.ddd`, where the number of digits after the
     * decimal-point character is equal to the precision specification. If
@@ -624,10 +624,10 @@ public class PrintfFormat implements CharSequence, Appendable {
    }
 
    /**
-    * Formats the double-precision `x` into a string like <tt>%G</tt> in C
-    * `printf`. The argument is converted in style <tt>%f</tt> or
-    * <tt>%E</tt>. `precision` specifies the number of significant digits.
-    * If it is 0, it is treated as 1. Style <tt>%E</tt> is used if the
+    * Formats the double-precision `x` into a string like %G in C
+    * `printf`. The argument is converted in style %f or
+    * %E. `precision` specifies the number of significant digits.
+    * If it is 0, it is treated as 1. Style %E is used if the
     * exponent from its conversion is less than -4 or greater than
     * or equal to `precision`. Trailing zeros are removed from the
     * fractional part of the result; a decimal point appears only if it is
@@ -740,7 +740,7 @@ public class PrintfFormat implements CharSequence, Appendable {
     * strictly smaller than `fieldwidth`. The number is rounded if
     * necessary. If there is not enough space to format the number in
     * decimal notation with at least `precision` significant digits
-    * (<tt>accuracy</tt> or `fieldwidth` is too small), it will be
+    * (accuracy or `fieldwidth` is too small), it will be
     * converted to scientific notation with at least `precision`
     * significant digits. In that case, `fieldwidth` is increased if
     * necessary.
@@ -947,7 +947,7 @@ public class PrintfFormat implements CharSequence, Appendable {
     * `accuracy` and `precision` must be strictly smaller than
     * `fieldwidth`. The numbers are rounded if necessary. If there is not
     * enough space to format `x` in decimal notation with at least
-    * `precision` significant digits (<tt>accuracy</tt> or `fieldwidth`
+    * `precision` significant digits (accuracy or `fieldwidth`
     * are too small), it will be converted to scientific notation with at
     * least `precision` significant digits. In that case, `fieldwidth` is
     * increased if necessary, and the error is also formatted in

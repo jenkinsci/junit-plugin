@@ -203,10 +203,10 @@ public class Misc {
     * computes the n+1 coefficients `C[i]` = c_i of the Newton
     * interpolating polynomial P(x) of degree n passing
     * through these points, i.e. such that y_i= P(x_i), given by
-    * @anchor REF_util_Misc_eq_newton_interpol
-    * @f[
+    *  REF_util_Misc_eq_newton_interpol
+    * [
     *   \qquad P(x) = c_0 + c_1(x-x_0) + c_2(x-x_0)(x-x_1) + \cdots+ c_n(x-x_0)(x-x_1) \cdots(x-x_{n-1}). \tag{eq.newton.interpol}
-    * @f]
+    * ]
     * @param n            degree of the interpolating polynomial
     *  @param X            x-coordinates of points
     *  @param Y            y-coordinates of points
@@ -249,10 +249,10 @@ public class Misc {
    /**
     * Evaluates the polynomial P(x) of degree n with
     * coefficients c_j = `C[j]` at x:
-    * @anchor REF_util_Misc_eq_horner
-    * @f[
+    *  REF_util_Misc_eq_horner
+    * [
     *   \qquad P(x) = c_0 + c_1 x + c_2 x^2 + \cdots+ c_n x^n \tag{eq.horner}
-    * @f]
+    * ]
     * @param C            Coefficients of the polynomial
     *  @param n            degree of the polynomial
     *  @param x            argument where polynomial is evaluated
