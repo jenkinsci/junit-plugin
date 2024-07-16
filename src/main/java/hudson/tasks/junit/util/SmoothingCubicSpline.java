@@ -22,14 +22,7 @@
  * limitations under the License.
  *
  */
-package umontreal.ssj.functionfit;
-   import umontreal.ssj.functions.*;
-   import umontreal.ssj.functions.Polynomial;
-import umontreal.ssj.functions.MathFunctionWithFirstDerivative;
-import umontreal.ssj.functions.MathFunctionWithDerivative;
-import umontreal.ssj.functions.MathFunctionWithIntegral;
-import umontreal.ssj.functions.SquareMathFunction;
-import umontreal.ssj.functions.MathFunctionUtil;
+package hudson.tasks.junit.util;
 
 /**
  * Represents a cubic spline with nodes at @f$(x_i, y_i)@f$ computed with the

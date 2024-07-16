@@ -22,7 +22,7 @@
  * limitations under the License.
  *
  */
-package umontreal.ssj.functions;
+package hudson.tasks.junit.util;
 
 /**
  * This interface should be implemented by classes which represent univariate

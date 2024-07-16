@@ -22,7 +22,8 @@
  * limitations under the License.
  *
  */
-package umontreal.ssj.util; import cern.jet.math.Bessel;
+package hudson.tasks.junit.util;
+import cern.jet.math.Bessel;
 
 /**
  * This class provides various constants and methods to compute numerical

@@ -22,7 +22,7 @@
  * limitations under the License.
  *
  */
-package umontreal.ssj.functionfit;
+package hudson.tasks.junit.util;
 
 import java.io.Serializable;
 import cern.colt.matrix.DoubleMatrix1D;

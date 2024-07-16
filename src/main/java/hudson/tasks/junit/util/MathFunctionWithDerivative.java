@@ -22,7 +22,7 @@
  * limitations under the License.
  *
  */
-package umontreal.ssj.functions;
+package hudson.tasks.junit.util;
 
 /**
  * Represents a mathematical function whose @f$n@f$th derivative can be

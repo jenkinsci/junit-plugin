@@ -22,10 +22,10 @@
  * limitations under the License.
  *
  */
-package umontreal.ssj.functions;
+package hudson.tasks.junit.util;
 
 import java.io.Serializable;
-import umontreal.ssj.util.PrintfFormat;
+import hudson.tasks.junit.util.PrintfFormat;
 
 /**
  * Represents a polynomial of degree @f$n@f$ in power form. Such a polynomial

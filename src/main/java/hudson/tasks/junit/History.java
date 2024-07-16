@@ -50,8 +50,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import umontreal.ssj.functionfit.LeastSquares;
-import umontreal.ssj.functionfit.SmoothingCubicSpline;
+import hudson.tasks.junit.util.LeastSquares;
+import hudson.tasks.junit.util.SmoothingCubicSpline;
 
 /**
  * History of {@link hudson.tasks.test.TestObject} over time.

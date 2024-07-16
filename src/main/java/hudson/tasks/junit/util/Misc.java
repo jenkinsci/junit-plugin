@@ -22,7 +22,7 @@
  * limitations under the License.
  *
  */
-package umontreal.ssj.util;
+package hudson.tasks.junit.util;
 
 /**
  * This class provides miscellaneous functions that are hard to classify.

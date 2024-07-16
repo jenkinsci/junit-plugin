@@ -22,7 +22,7 @@
  * limitations under the License.
  *
  */
-package umontreal.ssj.util;
+package hudson.tasks.junit.util;
 
 import java.text.NumberFormat;
 import java.text.DecimalFormat;

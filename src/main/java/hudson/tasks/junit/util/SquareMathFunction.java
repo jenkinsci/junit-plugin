@@ -22,7 +22,7 @@
  * limitations under the License.
  *
  */
-package umontreal.ssj.functions;
+package hudson.tasks.junit.util;
 
 /**
  * Represents a function computing @f$(af(x) + b)^2@f$ for a user-defined
