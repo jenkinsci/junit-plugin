@@ -60,6 +60,7 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 
+import jenkins.util.SystemProperties;
 import org.apache.tools.ant.DirectoryScanner;
 import org.dom4j.DocumentException;
 import org.kohsuke.stapler.StaplerRequest;
@@ -268,16 +269,19 @@ public final class TestResult extends MetaTabulatedResult {
         this.impl = null;
     }
 
-    static final XMLInputFactory xmlFactory = XMLInputFactory.newInstance();
+    static final XMLInputFactory xmlFactory;
     static boolean USE_SAFE_XML_FACTORY =
-            Boolean.parseBoolean(System.getProperty(TestResult.class.getName() + ".USE_SAFE_XML_FACTORY","true"));
-    static boolean isXmlFactoryAdjusted = false;
-    
-    public static XMLInputFactory getXmlFactory() {
-        if (!isXmlFactoryAdjusted && USE_SAFE_XML_FACTORY) {
-            xmlFactory.setProperty(XMLInputFactory.SUPPORT_DTD, false);
-            xmlFactory.setProperty(XMLInputFactory.IS_REPLACING_ENTITY_REFERENCES, false);
+            SystemProperties.getBoolean(TestResult.class.getName() + ".USE_SAFE_XML_FACTORY", true);
+
+    static {
+         xmlFactory = XMLInputFactory.newInstance();
+         if (USE_SAFE_XML_FACTORY) {
+            xmlFactory.setProperty(XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
+            xmlFactory.setProperty(XMLInputFactory.IS_REPLACING_ENTITY_REFERENCES, Boolean.FALSE);
         }
+    }
+
+    public static XMLInputFactory getXmlFactory() {
         return xmlFactory;
     }
 
