@@ -270,12 +270,9 @@ public final class TestResult extends MetaTabulatedResult {
     }
 
     static final XMLInputFactory xmlFactory;
-    static boolean USE_SAFE_XML_FACTORY =
-            SystemProperties.getBoolean(TestResult.class.getName() + ".USE_SAFE_XML_FACTORY", true);
-
     static {
          xmlFactory = XMLInputFactory.newInstance();
-         if (USE_SAFE_XML_FACTORY) {
+         if (SystemProperties.getBoolean(TestResult.class.getName() + ".USE_SAFE_XML_FACTORY", true)) {
             xmlFactory.setProperty(XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
             xmlFactory.setProperty(XMLInputFactory.IS_REPLACING_ENTITY_REFERENCES, Boolean.FALSE);
         }
