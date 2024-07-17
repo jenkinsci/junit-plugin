@@ -23,10 +23,10 @@
             const chartPlaceHolder = document.getElementById(chartDivId);
             const chart = echarts.init(chartPlaceHolder);
             chartPlaceHolder.echart = chart;
-            
-            const textColor = getComputedStyle(document.body).getPropertyValue('--darkreader-text--text-color') || getComputedStyle(document.body).getPropertyValue('--text-color') || '#222';
+            let style = getComputedStyle(document.body)
+            const textColor = style.getPropertyValue('--darkreader-text--text-color') || style.getPropertyValue('--text-color') || '#222';
             const showSettings = document.getElementById(settingsDialogId);
-            let darkMode = getComputedStyle(document.body).getPropertyValue('--darkreader-bg--background')
+            let darkMode = style.getPropertyValue('--darkreader-bg--background')
             darkMode = darkMode !== undefined && darkMode !== null && darkMode !== ''
             console.log('darkMode: ' + darkMode)
             let series = model.duration.series.concat(model.result.series)
@@ -36,7 +36,7 @@
             const options = {
                 animation: false,
                 darkMode: darkMode,
-                //backgroundColor: getComputedStyle(document.body).getPropertyValue('--darkreader-bg--background') || getComputedStyle(document.body).getPropertyValue('--bs-body-bg') || '#fff',
+                //backgroundColor: style.getPropertyValue('--darkreader-bg--background') || style.getPropertyValue('--bs-body-bg') || '#fff',
                 toolbox: {
                     feature: {
                       dataZoom: {
@@ -196,10 +196,10 @@
             const chartPlaceHolder = document.getElementById(chartDivId);
             const chart = echarts.init(chartPlaceHolder);
             chartPlaceHolder.echart = chart;
-            
-            const textColor = getComputedStyle(document.body).getPropertyValue('--darkreader-text--text-color') || getComputedStyle(document.body).getPropertyValue('--text-color') || '#222';
+            let style = getComputedStyle(document.body)
+            const textColor = style.getPropertyValue('--darkreader-text--text-color') || style.getPropertyValue('--text-color') || '#222';
             const showSettings = document.getElementById(settingsDialogId);
-            let darkMode = getComputedStyle(document.body).getPropertyValue('--darkreader-bg--background')
+            let darkMode = style.getPropertyValue('--darkreader-bg--background')
             darkMode = darkMode !== undefined && darkMode !== null && darkMode !== ''
 
             console.log('darkMode: ' + darkMode)
@@ -305,7 +305,16 @@
             }
         }
 
-
+        function applyCssColors(chartData) {
+            let style = getComputedStyle(document.body)
+            chartData.series.forEach((s) => {
+                //console.log('s[' + s.name + '].itemStyle.color = ' + s.itemStyle.color)
+                if (s?.itemStyle?.color && s.itemStyle.color.startsWith('--')) {
+                    s.itemStyle.color = style.getPropertyValue(s.itemStyle.color)
+                    //console.log('color => ' + s.itemStyle.color)
+                }
+            })
+        }
         /**
          * Redraws the trend charts. Reads the last selected X-Axis type from the browser local storage and
          * redraws the trend charts.
@@ -317,6 +326,9 @@
                 "numberOfDays":"0",
                 "buildAsDomain":"true"
             });
+            applyCssColors(trendChartJson.result)
+            applyCssColors(trendChartJson.distribution)
+            applyCssColors(trendChartJson.duration)
             console.log('configuration=' + configuration + ";" + JSON.stringify(start) + ";" + JSON.stringify(end))
             console.log('trendChartJsonStr=' + trendChartJsonStr)
             /**

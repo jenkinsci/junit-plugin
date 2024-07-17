@@ -200,8 +200,8 @@ public class History {
         }
 
         if (EXTRA_GRAPH_MATH_ENABLED) {
-            createLinearTrend(mapper, series, history, lrX, lrY, "Trend of " + durationStr, "rgba(0, 120, 255, 0.5)", 0.0, Double.MAX_VALUE, 0, 0, roundMul);
-            createSplineTrend(mapper, series, history, lrX, lrY, "Smooth of " + durationStr, "rgba(120, 50, 255, 0.5)", 0.0, Double.MAX_VALUE, 0, 0, roundMul);
+            createLinearTrend(mapper, series, history, lrX, lrY, "Trend of " + durationStr, "rgba(0, 120, 255, 0.5)", 0.0, Double.MAX_VALUE, 0, 0, roundMul); // "--blue"
+            createSplineTrend(mapper, series, history, lrX, lrY, "Smooth of " + durationStr, "rgba(120, 50, 255, 0.5)", 0.0, Double.MAX_VALUE, 0, 0, roundMul); // "--indigo"
         }
         root.set("series", series);
         root.set("domainAxisLabels", domainAxisLabels);
@@ -307,7 +307,7 @@ public class History {
         okSeries.set("data", okData);
         ObjectNode okStyle = mapper.createObjectNode();
         okSeries.set("itemStyle", okStyle);
-        okStyle.put("color", "rgba(50, 200, 50, 0.8)");
+        okStyle.put("color", "--success-color"); // "rgba(50, 200, 50, 0.8)");
         okSeries.put("stack", "stacked");
         ObjectNode okAreaStyle = mapper.createObjectNode();
         okSeries.set("areaStyle", okAreaStyle);
@@ -345,7 +345,7 @@ public class History {
         failSeries.set("data", failData);
         ObjectNode failStyle = mapper.createObjectNode();
         failSeries.set("itemStyle", failStyle);
-        failStyle.put("color", "rgba(200, 50, 50, 0.8)");
+        failStyle.put("color", "--light-red"); //"rgba(200, 50, 50, 0.8)");
         failSeries.put("stack", "stacked");
         ObjectNode failAreaStyle = mapper.createObjectNode();
         failSeries.set("areaStyle", failAreaStyle);
@@ -385,7 +385,7 @@ public class History {
         lineStyle.put("type", "dashed");
         ObjectNode totalStyle = mapper.createObjectNode();
         totalSeries.set("itemStyle", totalStyle);
-        totalStyle.put("color", "rgba(0, 255, 255, 0.6)");
+        totalStyle.put("color", "--light-blue"); //"rgba(0, 255, 255, 0.6)");
 
         ObjectNode totalAreaStyle = mapper.createObjectNode();
         totalSeries.set("areaStyle", totalAreaStyle);
@@ -418,8 +418,8 @@ public class History {
         }
 
         if (EXTRA_GRAPH_MATH_ENABLED) {
-            createLinearTrend(mapper, series, history, lrX, lrY, "Trend of Passed", "rgba(50, 50, 255, 0.5)", 0.0, maxTotalCount, 1, 1, 10.0);
-            createSplineTrend(mapper, series, history, lrX, lrY, "Smooth of Passed", "rgba(255, 50, 255, 0.5)", 0.0, maxTotalCount, 1, 1, 10.0);
+            createLinearTrend(mapper, series, history, lrX, lrY, "Trend of Passed", "rgba(50, 50, 255, 0.5)" , 0.0, maxTotalCount, 1, 1, 10.0); // "--dark-blue"
+            createSplineTrend(mapper, series, history, lrX, lrY, "Smooth of Passed", "rgba(255, 50, 255, 0.5)", 0.0, maxTotalCount, 1, 1, 10.0); // "--purple"
         }
 
         root.set("series", series);
@@ -446,7 +446,7 @@ public class History {
         durationSeries.set("data", durationData);
         ObjectNode durationStyle = mapper.createObjectNode();
         durationSeries.set("itemStyle", durationStyle);
-        durationStyle.put("color", "rgba(50, 200, 50, 0.8)");
+        durationStyle.put("color", "--success-color");//"rgba(50, 200, 50, 0.8)");
         durationSeries.put("stack", "stacked");
         ObjectNode durAreaStyle = mapper.createObjectNode();
         durationSeries.set("areaStyle", durAreaStyle);
