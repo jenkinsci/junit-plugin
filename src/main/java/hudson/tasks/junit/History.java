@@ -199,9 +199,10 @@ public class History {
             ++index;
         }
 
-        createLinearTrend(mapper, series, history, lrX, lrY, "Trend of " + durationStr, "rgba(0, 120, 255, 0.5)", 0.0, Double.MAX_VALUE, 0, 0, roundMul);
-        createSplineTrend(mapper, series, history, lrX, lrY, "Smooth of " + durationStr, "rgba(120, 50, 255, 0.5)", 0.0, Double.MAX_VALUE, 0, 0, roundMul);
-
+        if (EXTRA_GRAPH_MATH_ENABLED) {
+            createLinearTrend(mapper, series, history, lrX, lrY, "Trend of " + durationStr, "rgba(0, 120, 255, 0.5)", 0.0, Double.MAX_VALUE, 0, 0, roundMul);
+            createSplineTrend(mapper, series, history, lrX, lrY, "Smooth of " + durationStr, "rgba(120, 50, 255, 0.5)", 0.0, Double.MAX_VALUE, 0, 0, roundMul);
+        }
         root.set("series", series);
         root.set("domainAxisLabels", domainAxisLabels);
         root.put("integerRangeAxis", true);
