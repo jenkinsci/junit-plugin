@@ -40,6 +40,7 @@ import hudson.tasks.test.TestObject;
 import hudson.tasks.test.TestResultProjectAction;
 import hudson.util.HeapSpaceStringConverter;
 import hudson.util.XStream2;
+import jenkins.util.SystemProperties;
 import org.kohsuke.stapler.StaplerProxy;
 
 import java.io.File;
@@ -151,7 +152,7 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
 
     @Override
     public synchronized TestResult getResult() {
-        long started = System.currentTimeMillis();
+        long started = System.nanoTime();
         JunitTestResultStorage storage = JunitTestResultStorage.find();
         if (!(storage instanceof FileJunitTestResultStorage)) {
             return new TestResult(storage.load(run.getParent().getFullName(), run.getNumber()));
@@ -173,9 +174,9 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
             failCount = r.getFailCount();
             skipCount = r.getSkipCount();
         }
-        long d = System.currentTimeMillis() - started;
-        if (d > 500 && LOGGER.isLoggable(Level.WARNING)) {
-            LOGGER.warning("TestResultAction.load took " + d + " ms.");
+        long d = System.nanoTime() - started;
+        if (d > 500000000L && LOGGER.isLoggable(Level.WARNING)) {
+            LOGGER.warning("TestResultAction.load took " + d / 1000000L + " ms.");
         }
         return r;
     }
@@ -253,14 +254,14 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
 
     static ConcurrentHashMap<String, SoftReference<TestResult>> resultCache = new ConcurrentHashMap<>();
     static Object syncObj = new Object();
-    static long lastCleanupMs = 0;
+    static long lastCleanupNs = 0;
 
-    static int LARGE_RESULT_CACHE_CLEANUP_INTERVAL_MS =
-        Integer.parseInt(System.getProperty(TestResultAction.class.getName() + ".LARGE_RESULT_CACHE_CLEANUP_INTERVAL_MS","500"));
+    static long LARGE_RESULT_CACHE_CLEANUP_INTERVAL_NS =
+        SystemProperties.getLong(TestResultAction.class.getName() + ".LARGE_RESULT_CACHE_CLEANUP_INTERVAL_MS",500L) * 1000000L;
     static int LARGE_RESULT_CACHE_THRESHOLD =
-        Integer.parseInt(System.getProperty(TestResultAction.class.getName() + ".LARGE_RESULT_CACHE_THRESHOLD","1000"));
+        SystemProperties.getInteger(TestResultAction.class.getName() + ".LARGE_RESULT_CACHE_THRESHOLD",1000);
     static boolean RESULT_CACHE_ENABLED =
-        Boolean.parseBoolean(System.getProperty(TestResultAction.class.getName() + ".RESULT_CACHE_ENABLED","true"));
+        SystemProperties.getBoolean(TestResultAction.class.getName() + ".RESULT_CACHE_ENABLED",true);
 
     /**
      * Loads a {@link TestResult} from cache or disk.
@@ -294,8 +295,8 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         if (resultCache.size() > LARGE_RESULT_CACHE_THRESHOLD) {
             synchronized (syncObj)
             {
-                if (resultCache.size() > LARGE_RESULT_CACHE_THRESHOLD && (System.currentTimeMillis() - lastCleanupMs) > LARGE_RESULT_CACHE_CLEANUP_INTERVAL_MS) {
-                    lastCleanupMs = System.currentTimeMillis();
+                if (resultCache.size() > LARGE_RESULT_CACHE_THRESHOLD && (System.nanoTime() - lastCleanupNs) > LARGE_RESULT_CACHE_CLEANUP_INTERVAL_NS) {
+                    lastCleanupNs = System.nanoTime();
                     resultCache.forEach((String k, SoftReference<TestResult> v) -> {
                         if (v.get() == null) {
                             resultCache.remove(k);

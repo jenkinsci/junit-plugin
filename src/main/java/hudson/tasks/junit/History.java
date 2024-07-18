@@ -31,6 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+import jenkins.util.SystemProperties;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
@@ -661,10 +662,10 @@ public class History {
 
     static int parallelism = Math.min(Runtime.getRuntime().availableProcessors(), Math.max(4, (int)(Runtime.getRuntime().availableProcessors() * 0.75 * 0.75)));
     static ExecutorService executor = Executors.newFixedThreadPool(Math.max(4, (int)(Runtime.getRuntime().availableProcessors() * 0.75 * 0.75)));
-    static int MAX_TIME_ELAPSED_RETRIEVING_HISTORY_MS =
-        Integer.parseInt(System.getProperty(History.class.getName() + ".MAX_TIME_ELAPSED_RETRIEVING_HISTORY_MS","15000"));
+    static long MAX_TIME_ELAPSED_RETRIEVING_HISTORY_NS =
+        SystemProperties.getLong(History.class.getName() + ".MAX_TIME_ELAPSED_RETRIEVING_HISTORY_MS", 15000L) * 1000000L;
     static int MAX_THREADS_RETRIEVING_HISTORY =
-        Integer.parseInt(System.getProperty(History.class.getName() + ".MAX_THREADS_RETRIEVING_HISTORY","-1"));
+        SystemProperties.getInteger(History.class.getName() + ".MAX_THREADS_RETRIEVING_HISTORY",-1);
 
     private HistoryParseResult getHistoryFromFileStorage(int start, int end) {
         TestObject testObject = getTestObject();
@@ -672,13 +673,13 @@ public class History {
         final int requestedCount = end - start;
         final AtomicBoolean hasTimedOut = new AtomicBoolean(false);
         final AtomicInteger parsedCount = new AtomicInteger(0);
-        final long startedMs = java.lang.System.currentTimeMillis();
+        final long startedNs = java.lang.System.nanoTime();
         List<HistoryTestResultSummary> history = builds.stream()
             .skip(start).limit(requestedCount)
             .collect(ParallelCollectors.parallel(build -> {
                 parsedCount.incrementAndGet();
                 // Do not navigate too far or for too long, we need to finish the request this year and have to think about RAM
-                if ((java.lang.System.currentTimeMillis() - startedMs) > MAX_TIME_ELAPSED_RETRIEVING_HISTORY_MS) {
+                if ((java.lang.System.nanoTime() - startedNs) > MAX_TIME_ELAPSED_RETRIEVING_HISTORY_NS) {
                     hasTimedOut.set(true);
                     return null;
                 }
