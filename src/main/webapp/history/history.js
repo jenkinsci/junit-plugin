@@ -9,6 +9,14 @@
 
         redrawTrendCharts();
 
+        document.getElementById('history-window').value = count
+
+        console.log("status: " + JSON.stringify(trendChartJson?.status))
+        if (trendChartJson?.status && trendChartJson?.status.buildsWithTestResult < trendChartJson?.status.buildsRequested) {
+            let logStr = "Showing " + trendChartJson?.status.buildsWithTestResult + " test results out of "
+            console.log(logStr)
+            document.getElementById("history-info").innerHTML = logStr;
+        }
         /**
          * Activate tooltips.
          */

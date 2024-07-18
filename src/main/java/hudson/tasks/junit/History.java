@@ -27,6 +27,7 @@ import java.math.RoundingMode;
 import java.text.DecimalFormat;import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -542,7 +543,8 @@ public class History {
         return buildMap;
     }
 
-    private ObjectNode computeTrendJsons(List<HistoryTestResultSummary> history) {
+    private ObjectNode computeTrendJsons(HistoryParseResult parseResult) {
+        List<HistoryTestResultSummary> history = parseResult.historySummaries;
         Collections.reverse(history);
         ObjectMapper mapper = new ObjectMapper();
         ObjectNode root = mapper.createObjectNode();
@@ -557,6 +559,12 @@ public class History {
             saveAsImage.put("name", "test-history");
         }
         root.set("saveAsImage", saveAsImage);
+        ObjectNode status = mapper.createObjectNode();
+        status.put("hasTimedOut", parseResult.hasTimedOut);
+        status.put("buildsRequested", parseResult.buildsRequested);
+        status.put("buildsParsed", parseResult.buildsParsed);
+        status.put("buildsWithTestResult", parseResult.buildsWithTestResult);
+        root.set("status", status);
         return root;
     }
 
@@ -589,10 +597,9 @@ public class History {
         private String trendChartJson;
         private String trendChartJsonStr; 
 
-        public HistoryTableResult(List<HistoryTestResultSummary> historySummaries, ObjectNode json) {
-            this.descriptionAvailable = historySummaries.stream()
-            .anyMatch(summary -> summary.getDescription() != null);
-            this.historySummaries = historySummaries;
+        public HistoryTableResult(HistoryParseResult parseResult, ObjectNode json) {
+            this.historySummaries = parseResult.historySummaries;
+            this.descriptionAvailable = this.historySummaries.stream().anyMatch(summary -> summary.getDescription() != null);
             ObjectMapper mapper = new ObjectMapper();
             this.trendChartJson = json.toString();
             try {
@@ -619,43 +626,66 @@ public class History {
         }
     }
 
+    public static class HistoryParseResult {
+        List<HistoryTestResultSummary> historySummaries;
+        int buildsRequested;
+        int buildsParsed;
+        int buildsWithTestResult;
+        boolean hasTimedOut;
+        public HistoryParseResult(List<HistoryTestResultSummary> historySummaries, int buildsRequested, int buildsParsed, int buildsWithTestResult, boolean hasTimedOut) {
+            this.buildsRequested = buildsRequested;
+            this.historySummaries = historySummaries;
+            this.buildsParsed = buildsParsed;
+            this.buildsWithTestResult = buildsWithTestResult;
+            this.hasTimedOut = hasTimedOut;
+        }
+        public HistoryParseResult(List<HistoryTestResultSummary> historySummaries, int buildsRequested) {
+            this(historySummaries, buildsRequested, -1, -1, false);
+        }
+    }
+
     public HistoryTableResult retrieveHistorySummary(int start, int end) {
         TestResultImpl pluggableStorage = getPluggableStorage();
-        List<HistoryTestResultSummary> trs = null;
+        HistoryParseResult parseResult = null;
         if (pluggableStorage != null) {
             int offset = start;
             if (start > 1000 || start < 0) {
                 offset = 0;
             }
-            trs = pluggableStorage.getHistorySummary(offset);
+            parseResult = new HistoryParseResult(pluggableStorage.getHistorySummary(offset), end - start + 1);
         } else {
-            trs = getHistoryFromFileStorage(start, end);
+            parseResult = getHistoryFromFileStorage(start, end);
         }
-        return new HistoryTableResult(trs, computeTrendJsons(trs));
+        return new HistoryTableResult(parseResult, computeTrendJsons(parseResult));
     }
+
     static int parallelism = Math.min(Runtime.getRuntime().availableProcessors(), Math.max(4, (int)(Runtime.getRuntime().availableProcessors() * 0.75 * 0.75)));
     static ExecutorService executor = Executors.newFixedThreadPool(Math.max(4, (int)(Runtime.getRuntime().availableProcessors() * 0.75 * 0.75)));
     static int MAX_TIME_ELAPSED_RETRIEVING_HISTORY_MS =
         Integer.parseInt(System.getProperty(History.class.getName() + ".MAX_TIME_ELAPSED_RETRIEVING_HISTORY_MS","15000"));
     static int MAX_THREADS_RETRIEVING_HISTORY =
         Integer.parseInt(System.getProperty(History.class.getName() + ".MAX_THREADS_RETRIEVING_HISTORY","-1"));
-    private List<HistoryTestResultSummary> getHistoryFromFileStorage(int start, int end) {
+
+    private HistoryParseResult getHistoryFromFileStorage(int start, int end) {
         TestObject testObject = getTestObject();
         RunList<?> builds = testObject.getRun().getParent().getBuilds();
-        final AtomicInteger count = new AtomicInteger(0);
+        final int requestedCount = end - start;
+        final AtomicBoolean hasTimedOut = new AtomicBoolean(false);
+        final AtomicInteger parsedCount = new AtomicInteger(0);
         final long startedMs = java.lang.System.currentTimeMillis();
-        return builds.stream().skip(start)
+        List<HistoryTestResultSummary> history = builds.stream()
+            .skip(start).limit(requestedCount)
             .collect(ParallelCollectors.parallel(build -> {
-                int c = count.incrementAndGet();
+                parsedCount.incrementAndGet();
                 // Do not navigate too far or for too long, we need to finish the request this year and have to think about RAM
-                if (c > end - start + 1 || (java.lang.System.currentTimeMillis() - startedMs) > MAX_TIME_ELAPSED_RETRIEVING_HISTORY_MS) {
+                if ((java.lang.System.currentTimeMillis() - startedMs) > MAX_TIME_ELAPSED_RETRIEVING_HISTORY_MS) {
+                    hasTimedOut.set(true);
                     return null;
                 }
                 hudson.tasks.test.TestResult resultInRun = testObject.getResultInRun(build);
                 if (resultInRun == null) {
                     return null;
                 }
-
                 return new HistoryTestResultSummary(build, resultInRun, resultInRun.getDuration(),
                         resultInRun.getFailCount(),
                         resultInRun.getSkipCount(),
@@ -666,6 +696,7 @@ public class History {
             .join()
             .filter(Objects::nonNull)
             .collect(Collectors.toList());
+        return new HistoryParseResult(history, requestedCount, parsedCount.get(), history.size(), hasTimedOut.get());
     }
 
     @SuppressWarnings("unused") // Called by jelly view

@@ -24,7 +24,7 @@ THE SOFTWARE.
 
 <!-- Displays the chart that show how long builds are taking -->
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:bs="/bootstrap5" xmlns:c="/charts" xmlns:f="/lib/form">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:bs="/bootstrap5" xmlns:c="/charts" xmlns:f="/lib/form" xmlns:dd="/lib/layout/dropdowns">
   <bs:layout title="${%title(it.testObject.displayName)}">
     <j:set var="count" value="${it.asInt(request.getParameter('count'),100)}"/>
     <j:set var="start" value="${it.asInt(request.getParameter('start'),0)}"/>
@@ -44,36 +44,48 @@ THE SOFTWARE.
       var view = <st:bind value="${it}"/>
       var start = ${start}
       var end = ${end}
+      var count = ${count}
       var trendChartJson = ${trendChartJson}
       var trendChartJsonStr = ${trendChartJsonStr}
       var rootUrl = "${app.rootUrl}"
+
+      function onBuildWindowChange(selectObj) {
+          var idx = selectObj.selectedIndex;
+          var count = selectObj.options[idx].value;
+          document.location = "${app.rootUrl}${it.testObject.url}/history?start=${start}&amp;count=" + count
+      }
+
       </script>
       <script type="text/javascript" src="${resURL}/plugin/junit/history/history.js"/>
     </st:once>
 
     <st:include from="${it.testObject}" it="${it.testObject}" page="sidepanel.jelly"/>
     <l:main-panel>
-      <div class="jenkins-!-margin-bottom-2 jenkins-!-margin-top-1" style="height: 1.5em;">
+      <div class="jenkins-!-margin-bottom-2 jenkins-!-margin-top-0" style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; height: auto;">
         <j:if test="${it.testObject.run.parent.builds.size() > end}">
           <a href="${app.rootUrl}${it.testObject.url}/history?start=${end+1}&amp;count=${count}"
-              class="jenkins-!-margin-bottom-1 jenkins-!-margin-top-1 jenkins-!-margin-right-1">${%Older}
+              class="jenkins-!-margin-right-2" style="height: fit-content">${%Older}
           </a>
         </j:if>
 
         <j:if test="${start > 0}">
           <a href="${app.rootUrl}${it.testObject.url}/history${(start-count)>0?'?start='+(start-count)+'&amp;':'?'}count=${count}"
-              class="jenkins-!-margin-bottom-1 jenkins-!-margin-top-1">${%Newer}
+              class="jenkins-!-margin-right-2" style="height: fit-content">${%Newer}
           </a>
         </j:if>
+        <div style="flex-grow: 1"/>
+        <div style="display: flex; flex-basis: auto; justify-content: space-between; align-items: center" tooltip="The history window size. Out of N builds, only the builds with test results are shown.">
+          <div id="history-info" class="jenkins-!-margin-right-1" style="text-wrap: nowrap"></div>
+          <select name="history-window" id="history-window" onchange="onBuildWindowChange(this);" class="jenkins-!-margin-left-0 jenkins-!-margin-right-1 jenkins-select__input " style="min-width: fit-content;">
+            <option value="100">100</option>
+            <option value="200">200</option>
+            <option value="500">500</option>
+            <option value="1000">1000</option>
+            <option value="2000">2000</option>
+            <option value="4000">4000</option>
+          </select>
+          <div>builds.</div>
 
-        <div style="float: right; margin-left: auto; margin-bottom: 7px;" tooltip="The history window size. Out of N builds, only the builds with test results are shown.">
-          Builds: 
-          <a href="${app.rootUrl}${it.testObject.url}/history?start=${start}&amp;count=100" style="margin:1px; margin-left: 10px;${count==100?'font-weight: bold;':''}">100</a>
-          <a href="${app.rootUrl}${it.testObject.url}/history?start=${start}&amp;count=200" style="margin:1px; margin-left: 10px;${count==200?'font-weight: bold;':''}">200</a>
-          <a href="${app.rootUrl}${it.testObject.url}/history?start=${start}&amp;count=500" style="margin:1px; margin-left: 10px;${count==500?'font-weight: bold;':''}">500</a>
-          <a href="${app.rootUrl}${it.testObject.url}/history?start=${start}&amp;count=1000" style="margin:1px; margin-left: 10px;${count==1000?'font-weight: bold;':''}">1000</a>
-          <a href="${app.rootUrl}${it.testObject.url}/history?start=${start}&amp;count=2000" style="margin:1px; margin-left: 10px;${count==2000?'font-weight: bold;':''}">2000</a>
-          <a href="${app.rootUrl}${it.testObject.url}/history?start=${start}&amp;count=4000" style="margin:1px; margin-left: 10px;${count==4000?'font-weight: bold;':''}">4000</a>
         </div>
         
       </div>
@@ -103,7 +115,7 @@ THE SOFTWARE.
       <div class="jenkins-!-margin-bottom-2">
         <j:if test="${it.testObject.run.parent.builds.size() > end}">
           <a href="${app.rootUrl}${it.testObject.url}/history?start=${end+1}&amp;count=${count}"
-             class="jenkins-!-margin-right-1">
+             class="jenkins-!-margin-right-2">
              ${%Older}
           </a>
         </j:if>
@@ -151,7 +163,7 @@ THE SOFTWARE.
       <div>
         <j:if test="${it.testObject.run.parent.builds.size() > end}">
           <a href="${app.rootUrl}${it.testObject.url}/history?start=${end+1}&amp;count=${count}"
-             class="jenkins-!-margin-right-1">
+             class="jenkins-!-margin-right-2">
              ${%Older}
           </a>
         </j:if>

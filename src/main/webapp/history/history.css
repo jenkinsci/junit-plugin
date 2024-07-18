@@ -17,8 +17,8 @@
 .jenkins-table > tbody > tr > td {
     vertical-align: middle;
     padding: var(--table-padding) 0 var(--table-padding) var(--table-padding);
-    font-weight: 500;
     height: 10px;
+    font-weight: 0;
 }
 
 .icon-border {
