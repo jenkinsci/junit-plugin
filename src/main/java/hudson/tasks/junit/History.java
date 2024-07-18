@@ -50,8 +50,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
-import hudson.tasks.junit.util.LeastSquares;
-import hudson.tasks.junit.util.SmoothingCubicSpline;
+import umontreal.ssj.functionfit.LeastSquares;
+import umontreal.ssj.functionfit.SmoothingCubicSpline;
 
 /**
  * History of {@link hudson.tasks.test.TestObject} over time.
@@ -218,7 +218,7 @@ public class History {
     }
 
     private void createLinearTrend(ObjectMapper mapper, ArrayNode series, List<HistoryTestResultSummary> history, double[] lrX, double[] lrY, String title, String color, double minV, double maxV, int xAxisIndex, int yAxisIndex, double roundMul) {
-        if (history.size() < 2) {
+        if (history.size() < 3) {
             return;
         }
         LeastSquares lr = new LeastSquares();

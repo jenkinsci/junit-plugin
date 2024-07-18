@@ -51,7 +51,6 @@ public class TestObjectIterable implements Iterable<BuildResult<TestObject>> {
             })
             .collect(Collectors.toList())
             .iterator();
-        //return new TestResultActionIterator2(items);
     }
 
     private static class TestResultActionIterator implements Iterator<BuildResult<TestObject>> {
