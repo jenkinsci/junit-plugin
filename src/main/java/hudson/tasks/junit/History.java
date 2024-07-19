@@ -29,6 +29,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 import jenkins.util.SystemProperties;
@@ -62,6 +64,7 @@ import umontreal.ssj.functionfit.SmoothingCubicSpline;
  */
 @Restricted(NoExternalUse.class)
 public class History {
+    private static final Logger LOGGER = Logger.getLogger(History.class.getName());
     private static final JacksonFacade JACKSON_FACADE = new JacksonFacade();
     private static final String EMPTY_CONFIGURATION = "{}";
     private final TestObject testObject;
@@ -596,18 +599,11 @@ public class History {
         private List<HistoryTestResultSummary> historySummaries;
         // Something weird happens on Javascript side, preventing the Json from being serialized again there, so provide it as JSON escaped string
         private String trendChartJson;
-        private String trendChartJsonStr; 
 
         public HistoryTableResult(HistoryParseResult parseResult, ObjectNode json) {
             this.historySummaries = parseResult.historySummaries;
             this.descriptionAvailable = this.historySummaries.stream().anyMatch(summary -> summary.getDescription() != null);
-            ObjectMapper mapper = new ObjectMapper();
             this.trendChartJson = json.toString();
-            try {
-                this.trendChartJsonStr = mapper.writeValueAsString(trendChartJson);
-            } catch (Exception e) {
-                this.trendChartJsonStr = e.toString();
-            }
         }
 
         public boolean isDescriptionAvailable() {
@@ -620,10 +616,6 @@ public class History {
 
         public String getTrendChartJson() {
             return trendChartJson;
-        }
-
-        public String getTrendChartJsonStr() {
-            return trendChartJsonStr;
         }
     }
 

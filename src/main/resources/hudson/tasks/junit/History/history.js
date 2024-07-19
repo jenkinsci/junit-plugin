@@ -1,6 +1,29 @@
-/* global jQuery3, bootstrap5, view, echartsJenkinsApi */
+/* global jQuery3, bootstrap5, echartsJenkinsApi */
+var start
+var end
+var count
+var trendChartJson
+var appRootUrl
+var testObjectUrl
+
+function onBuildWindowChange(selectObj) {
+    let idx = selectObj.selectedIndex;
+    let c = selectObj.options[idx].value
+    document.location = `${appRootUrl}${testObjectUrl}/history?start=${start}&count=${c}`
+}
+
 (function ($) {
     $(document).ready(function ($) {
+        let dataEl = document.getElementById("history-data");
+        start = dataEl.getAttribute("data-start")
+        end = dataEl.getAttribute("data-end")
+        count = dataEl.getAttribute("data-count")
+        trendChartJson = JSON.parse(dataEl.getAttribute("data-trendChartJson"))
+        appRootUrl = dataEl.getAttribute("data-appRootUrl")
+        testObjectUrl = dataEl.getAttribute("data-testObjectUrl")
+
+        //console.log(`start: ${start}, end: ${end}, count: ${count}, trendChartJson: ${trendChartJson}`)
+
         const trendConfigurationDialogId = 'chart-configuration-test-history';
 
         $('#' + trendConfigurationDialogId).on('hidden.bs.modal', function () {
@@ -13,9 +36,8 @@
 
         console.log("status: " + JSON.stringify(trendChartJson?.status))
         if (trendChartJson?.status && trendChartJson?.status.buildsWithTestResult < trendChartJson?.status.buildsRequested) {
-            let logStr = "Showing " + trendChartJson?.status.buildsWithTestResult + " test results out of "
-            console.log(logStr)
-            document.getElementById("history-info").innerHTML = logStr;
+            let s = "Showing " + trendChartJson?.status.buildsWithTestResult + " test results out of "
+            document.getElementById("history-info").innerHTML = s;
         }
         /**
          * Activate tooltips.
@@ -26,7 +48,7 @@
                 tooltip.enable();
             });
         });
-        
+
         function renderTrendChart(chartDivId, model, settingsDialogId, chartClickedEventHandler) {
             const chartPlaceHolder = document.getElementById(chartDivId);
             const chart = echarts.init(chartPlaceHolder);
@@ -328,29 +350,21 @@
          * redraws the trend charts.
          */
         function redrawTrendCharts() {
-            //const configuration = JSON.stringify(echartsJenkinsApi.readFromLocalStorage('jenkins-echarts-chart-configuration-test-history'));
-            let configuration = JSON.stringify({
-                numberOfBuilds: end - start + 1,
-                "numberOfDays":"0",
-                "buildAsDomain":"true"
-            });
             applyCssColors(trendChartJson.result)
             applyCssColors(trendChartJson.distribution)
             applyCssColors(trendChartJson.duration)
-            console.log('configuration=' + configuration + ";" + JSON.stringify(start) + ";" + JSON.stringify(end))
-            console.log('trendChartJsonStr=' + trendChartJsonStr)
             /**
              * Creates the charts that show the test results, duration and distribution across a number of builds.
              */
             // TODO: Improve ECharts plugin to allow more direct interaction with ECharts
-            renderTrendChart('test-trend-chart', trendChartJson, trendConfigurationDialogId, 
+            renderTrendChart('test-trend-chart', trendChartJson, trendConfigurationDialogId,
                 function (buildDisplayName) {
                     console.log(buildDisplayName + ' clicked on chart')
                     if (trendChartJson.buildMap[buildDisplayName]) {
                         window.open(rootUrl + trendChartJson.buildMap[buildDisplayName].url);
                     }
                 });
-            renderDistributionChart('test-distribution-chart', trendChartJson, trendConfigurationDialogId, 
+            renderDistributionChart('test-distribution-chart', trendChartJson, trendConfigurationDialogId,
                 function (buildDisplayName) {
                     console.log(buildDisplayName + ' clicked on chart')
                 });
