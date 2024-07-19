@@ -23,7 +23,7 @@
  */
 package hudson.tasks.junit;
 
-import java.math.RoundingMode;
+import java.lang.ref.SoftReference;import java.math.RoundingMode;
 import java.text.DecimalFormat;import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -597,13 +597,14 @@ public class History {
     public static class HistoryTableResult {
         private boolean descriptionAvailable;
         private List<HistoryTestResultSummary> historySummaries;
-        // Something weird happens on Javascript side, preventing the Json from being serialized again there, so provide it as JSON escaped string
         private String trendChartJson;
+        public HistoryParseResult parseResult;
 
         public HistoryTableResult(HistoryParseResult parseResult, ObjectNode json) {
             this.historySummaries = parseResult.historySummaries;
             this.descriptionAvailable = this.historySummaries.stream().anyMatch(summary -> summary.getDescription() != null);
             this.trendChartJson = json.toString();
+            this.parseResult = parseResult;
         }
 
         public boolean isDescriptionAvailable() {
@@ -624,32 +625,54 @@ public class History {
         int buildsRequested;
         int buildsParsed;
         int buildsWithTestResult;
+        int start;
+        int end;
+        int interval;
         boolean hasTimedOut;
-        public HistoryParseResult(List<HistoryTestResultSummary> historySummaries, int buildsRequested, int buildsParsed, int buildsWithTestResult, boolean hasTimedOut) {
+        public HistoryParseResult(List<HistoryTestResultSummary> historySummaries, int buildsRequested, int buildsParsed, int buildsWithTestResult, boolean hasTimedOut, int start, int end, int interval) {
             this.buildsRequested = buildsRequested;
             this.historySummaries = historySummaries;
             this.buildsParsed = buildsParsed;
             this.buildsWithTestResult = buildsWithTestResult;
             this.hasTimedOut = hasTimedOut;
+            this.start = start;
+            this.end = end;
+            this.interval = interval;
         }
-        public HistoryParseResult(List<HistoryTestResultSummary> historySummaries, int buildsRequested) {
-            this(historySummaries, buildsRequested, -1, -1, false);
+        public HistoryParseResult(List<HistoryTestResultSummary> historySummaries, int buildsRequested, int start, int end) {
+            this(historySummaries, buildsRequested, -1, -1, false, start, end, 1);
         }
     }
 
+    // Handle multiple consecutive requests to same data from Jelly.
+    private Object cachedResultLock = new Object();
+    private SoftReference<HistoryTableResult> cachedResult = new SoftReference<>(null);
+
     public HistoryTableResult retrieveHistorySummary(int start, int end) {
-        TestResultImpl pluggableStorage = getPluggableStorage();
-        HistoryParseResult parseResult = null;
-        if (pluggableStorage != null) {
-            int offset = start;
-            if (start > 1000 || start < 0) {
-                offset = 0;
+        return retrieveHistorySummary(start, end, 1);
+    }
+
+    public HistoryTableResult retrieveHistorySummary(int start, int end, int interval) {
+        synchronized (cachedResultLock) {
+            HistoryTableResult result = cachedResult.get();
+            if (result != null && result.parseResult.start == start && result.parseResult.end == end && result.parseResult.interval == interval) {
+                return result;
             }
-            parseResult = new HistoryParseResult(pluggableStorage.getHistorySummary(offset), end - start + 1);
-        } else {
-            parseResult = getHistoryFromFileStorage(start, end);
+            TestResultImpl pluggableStorage = getPluggableStorage();
+            HistoryParseResult parseResult = null;
+            if (pluggableStorage != null) {
+                int offset = start;
+                if (start > 1000 || start < 0) {
+                    offset = 0;
+                }
+                parseResult = new HistoryParseResult(pluggableStorage.getHistorySummary(offset), end - start + 1, start, end);
+            } else {
+                parseResult = getHistoryFromFileStorage(start, end, interval);
+            }
+            result = new HistoryTableResult(parseResult, computeTrendJsons(parseResult));
+            cachedResult = new SoftReference<>(result);
+            return result;
         }
-        return new HistoryTableResult(parseResult, computeTrendJsons(parseResult));
     }
 
     static int parallelism = Math.min(Runtime.getRuntime().availableProcessors(), Math.max(4, (int)(Runtime.getRuntime().availableProcessors() * 0.75 * 0.75)));
@@ -659,22 +682,31 @@ public class History {
     static int MAX_THREADS_RETRIEVING_HISTORY =
         SystemProperties.getInteger(History.class.getName() + ".MAX_THREADS_RETRIEVING_HISTORY",-1);
 
-    private HistoryParseResult getHistoryFromFileStorage(int start, int end) {
+    private HistoryParseResult getHistoryFromFileStorage(int start, int end, int interval) {
         TestObject testObject = getTestObject();
         RunList<?> builds = testObject.getRun().getParent().getBuilds();
         final int requestedCount = end - start;
         final AtomicBoolean hasTimedOut = new AtomicBoolean(false);
         final AtomicInteger parsedCount = new AtomicInteger(0);
         final long startedNs = java.lang.System.nanoTime();
+        final AtomicInteger orderedCount = new AtomicInteger(0);
         List<HistoryTestResultSummary> history = builds.stream()
-            .skip(start).limit(requestedCount)
+            .skip(start)
+            .limit(requestedCount)
+            .filter(build -> {
+                if (interval == 1) {
+                    return true;
+                }
+                int n = orderedCount.getAndIncrement();
+                return (n % interval) == 0;
+            })
             .collect(ParallelCollectors.parallel(build -> {
-                parsedCount.incrementAndGet();
                 // Do not navigate too far or for too long, we need to finish the request this year and have to think about RAM
                 if ((java.lang.System.nanoTime() - startedNs) > MAX_TIME_ELAPSED_RETRIEVING_HISTORY_NS) {
                     hasTimedOut.set(true);
                     return null;
                 }
+                parsedCount.incrementAndGet();
                 hudson.tasks.test.TestResult resultInRun = testObject.getResultInRun(build);
                 if (resultInRun == null) {
                     return null;
@@ -689,7 +721,7 @@ public class History {
             .join()
             .filter(Objects::nonNull)
             .collect(Collectors.toList());
-        return new HistoryParseResult(history, requestedCount, parsedCount.get(), history.size(), hasTimedOut.get());
+        return new HistoryParseResult(history, requestedCount, parsedCount.get(), history.size(), hasTimedOut.get(), start, end, interval);
     }
 
     @SuppressWarnings("unused") // Called by jelly view

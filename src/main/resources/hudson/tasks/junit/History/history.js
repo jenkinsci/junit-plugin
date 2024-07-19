@@ -2,6 +2,7 @@
 var start
 var end
 var count
+var interval
 var trendChartJson
 var appRootUrl
 var testObjectUrl
@@ -9,7 +10,13 @@ var testObjectUrl
 function onBuildWindowChange(selectObj) {
     let idx = selectObj.selectedIndex;
     let c = selectObj.options[idx].value
-    document.location = `${appRootUrl}${testObjectUrl}/history?start=${start}&count=${c}`
+    document.location = `${appRootUrl}${testObjectUrl}/history?start=${start}&count=${c}&interval=${interval}`
+}
+
+function onBuildIntervalChange(selectObj) {
+    let idx = selectObj.selectedIndex;
+    let i = selectObj.options[idx].value
+    document.location = `${appRootUrl}${testObjectUrl}/history?start=${start}&count=${count}&interval=${i}`
 }
 
 (function ($) {
@@ -18,11 +25,16 @@ function onBuildWindowChange(selectObj) {
         start = dataEl.getAttribute("data-start")
         end = dataEl.getAttribute("data-end")
         count = dataEl.getAttribute("data-count")
-        trendChartJson = JSON.parse(dataEl.getAttribute("data-trendChartJson"))
+        interval = dataEl.getAttribute("data-interval")
+        let trendChartJsonStr = dataEl.innerHTML
+        trendChartJson = JSON.parse(trendChartJsonStr)
         appRootUrl = dataEl.getAttribute("data-appRootUrl")
         testObjectUrl = dataEl.getAttribute("data-testObjectUrl")
 
-        //console.log(`start: ${start}, end: ${end}, count: ${count}, trendChartJson: ${trendChartJson}`)
+        console.log(`start: ${start}, end: ${end}, count: ${count}, trendChartJsonStr.length: ${trendChartJsonStr.length}, trendChartJson: ${trendChartJson}`)
+
+        trendChartJsonStr = null
+        dataEl.setAttribute("data-trendChartJson", "")
 
         const trendConfigurationDialogId = 'chart-configuration-test-history';
 
@@ -33,10 +45,16 @@ function onBuildWindowChange(selectObj) {
         redrawTrendCharts();
 
         document.getElementById('history-window').value = count
+        document.getElementById('history-interval').value = interval
 
         console.log("status: " + JSON.stringify(trendChartJson?.status))
         if (trendChartJson?.status && trendChartJson?.status.buildsWithTestResult < trendChartJson?.status.buildsRequested) {
-            let s = "Showing " + trendChartJson?.status.buildsWithTestResult + " test results out of "
+            let s
+            if (trendChartJson.status.hasTimedOut) {
+                s = `Too big. Showing ${trendChartJson.status.buildsWithTestResult} results from the most recent ${trendChartJson.status.buildsParsed} out of `
+            } else {
+                s = `Showing ${trendChartJson.status.buildsWithTestResult} test results out of `
+            }
             document.getElementById("history-info").innerHTML = s;
         }
         /**
@@ -66,7 +84,6 @@ function onBuildWindowChange(selectObj) {
             const options = {
                 animation: false,
                 darkMode: darkMode,
-                //backgroundColor: style.getPropertyValue('--darkreader-bg--background') || style.getPropertyValue('--bs-body-bg') || '#fff',
                 toolbox: {
                     feature: {
                       dataZoom: {
@@ -364,10 +381,7 @@ function onBuildWindowChange(selectObj) {
                         window.open(rootUrl + trendChartJson.buildMap[buildDisplayName].url);
                     }
                 });
-            renderDistributionChart('test-distribution-chart', trendChartJson, trendConfigurationDialogId,
-                function (buildDisplayName) {
-                    console.log(buildDisplayName + ' clicked on chart')
-                });
+            renderDistributionChart('test-distribution-chart', trendChartJson, trendConfigurationDialogId, null);
         }
         jQuery3(window).resize(function () {
             document.getElementById('test-trend-chart').echart.resize();
