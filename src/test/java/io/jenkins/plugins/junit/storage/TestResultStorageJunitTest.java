@@ -267,7 +267,8 @@ public class TestResultStorageJunitTest {
 
         private final ConnectionSupplier connectionSupplier = new LocalConnectionSupplier();
 
-        @Override public RemotePublisher createRemotePublisher(Run<?, ?> build) throws IOException {
+        @Override
+        public RemotePublisher createRemotePublisher(Run<?, ?> build, String flowNodeId) throws IOException {
             try {
                 connectionSupplier.connection(); // make sure we start a local server and create table first
             } catch (SQLException x) {

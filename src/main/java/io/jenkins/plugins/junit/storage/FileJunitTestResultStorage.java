@@ -22,6 +22,11 @@ public class FileJunitTestResultStorage extends JunitTestResultStorage {
     }
 
     @Override
+    public RemotePublisher createRemotePublisher(Run<?, ?> build, String flowNodeId) throws IOException {
+        return null;
+    }
+
+    @Override
     public TestResultImpl load(String job, int build) {
         return null;
     }
