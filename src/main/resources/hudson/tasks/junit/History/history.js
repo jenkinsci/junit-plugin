@@ -6,6 +6,9 @@ var interval
 var trendChartJson
 var appRootUrl
 var testObjectUrl
+var resultSeries
+var durationSeries
+var trendChartId = 'test-trend-chart'
 
 function onBuildWindowChange(selectObj) {
     let idx = selectObj.selectedIndex;
@@ -31,8 +34,6 @@ function onBuildIntervalChange(selectObj) {
         appRootUrl = dataEl.getAttribute("data-appRootUrl")
         testObjectUrl = dataEl.getAttribute("data-testObjectUrl")
 
-        console.log(`start: ${start}, end: ${end}, count: ${count}, trendChartJsonStr.length: ${trendChartJsonStr.length}, trendChartJson: ${trendChartJson}`)
-
         trendChartJsonStr = null
         dataEl.setAttribute("data-trendChartJson", "")
 
@@ -47,7 +48,6 @@ function onBuildIntervalChange(selectObj) {
         document.getElementById('history-window').value = count
         document.getElementById('history-interval').value = interval
 
-        console.log("status: " + JSON.stringify(trendChartJson?.status))
         if (trendChartJson?.status && trendChartJson?.status.buildsWithTestResult < trendChartJson?.status.buildsRequested) {
             let s
             if (trendChartJson.status.hasTimedOut) {
@@ -67,6 +67,27 @@ function onBuildIntervalChange(selectObj) {
             });
         });
 
+        function filterTrendSeries() {
+            let model = trendChartJson
+            const chartPlaceHolder = document.getElementById(trendChartId);
+            if (resultSeries === undefined) {
+                resultSeries = model.result.series
+            }
+            if (durationSeries === undefined) {
+                durationSeries = model.duration.series
+            }
+            let r = chartPlaceHolder.getBoundingClientRect()
+            let aspect = r.width / r.height
+            let series = durationSeries.concat(resultSeries)
+            if (aspect < 1.75) {
+                series = series.filter((s) => !s.preferScreenOrient || s.preferScreenOrient != "landscape")
+            }
+            series.forEach(s => s.emphasis = {
+                disabled: true
+            });
+            return series
+        }
+
         function renderTrendChart(chartDivId, model, settingsDialogId, chartClickedEventHandler) {
             const chartPlaceHolder = document.getElementById(chartDivId);
             const chart = echarts.init(chartPlaceHolder);
@@ -76,11 +97,6 @@ function onBuildIntervalChange(selectObj) {
             const showSettings = document.getElementById(settingsDialogId);
             let darkMode = style.getPropertyValue('--darkreader-bg--background')
             darkMode = darkMode !== undefined && darkMode !== null && darkMode !== ''
-            console.log('darkMode: ' + darkMode)
-            let series = model.duration.series.concat(model.result.series)
-            series.forEach(s => s.emphasis = {
-                disabled: true
-            });
             const options = {
                 animation: false,
                 darkMode: darkMode,
@@ -139,7 +155,7 @@ function onBuildIntervalChange(selectObj) {
                     type: 'plain',
                     x: 'center',
                     y: 'top',
-                    width: '80%',
+                    width: '75%',
                     textStyle: {
                         color: textColor
                     },
@@ -222,7 +238,7 @@ function onBuildIntervalChange(selectObj) {
                         }
                     }
                 ],
-                series: series
+                series: filterTrendSeries()
             };
             chart.setOption(options);
             chart.resize();
@@ -249,7 +265,6 @@ function onBuildIntervalChange(selectObj) {
             let darkMode = style.getPropertyValue('--darkreader-bg--background')
             darkMode = darkMode !== undefined && darkMode !== null && darkMode !== ''
 
-            console.log('darkMode: ' + darkMode)
             let series = model.distribution.series
             series.forEach(s => s.emphasis = {
                 disabled: true
@@ -355,10 +370,8 @@ function onBuildIntervalChange(selectObj) {
         function applyCssColors(chartData) {
             let style = getComputedStyle(document.body)
             chartData.series.forEach((s) => {
-                //console.log('s[' + s.name + '].itemStyle.color = ' + s.itemStyle.color)
                 if (s?.itemStyle?.color && s.itemStyle.color.startsWith('--')) {
                     s.itemStyle.color = style.getPropertyValue(s.itemStyle.color)
-                    //console.log('color => ' + s.itemStyle.color)
                 }
             })
         }
@@ -374,9 +387,8 @@ function onBuildIntervalChange(selectObj) {
              * Creates the charts that show the test results, duration and distribution across a number of builds.
              */
             // TODO: Improve ECharts plugin to allow more direct interaction with ECharts
-            renderTrendChart('test-trend-chart', trendChartJson, trendConfigurationDialogId,
+            renderTrendChart(trendChartId, trendChartJson, trendConfigurationDialogId,
                 function (buildDisplayName) {
-                    console.log(buildDisplayName + ' clicked on chart')
                     if (trendChartJson.buildMap[buildDisplayName]) {
                         window.open(rootUrl + trendChartJson.buildMap[buildDisplayName].url);
                     }
@@ -384,7 +396,13 @@ function onBuildIntervalChange(selectObj) {
             renderDistributionChart('test-distribution-chart', trendChartJson, trendConfigurationDialogId, null);
         }
         jQuery3(window).resize(function () {
-            document.getElementById('test-trend-chart').echart.resize();
+            let trendEchart = document.getElementById(trendChartId).echart
+            trendEchart.setOption({
+                series: filterTrendSeries()
+            }, {
+                replaceMerge: ['series']
+            })
+            trendEchart.resize();
             document.getElementById('test-distribution-chart').echart.resize();
         });
     })

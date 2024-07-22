@@ -232,6 +232,7 @@ public class History {
         ObjectNode lrSeries = mapper.createObjectNode();
         series.add(lrSeries);
         lrSeries.put("name", title);
+        lrSeries.put("preferScreenOrient", "landscape");
         lrSeries.put("type", "line");
         lrSeries.put("symbol", "circle");
         lrSeries.put("symbolSize", 0);
@@ -268,6 +269,7 @@ public class History {
         ObjectNode lrSeries = mapper.createObjectNode();
         series.add(lrSeries);
         lrSeries.put("name", title);
+        lrSeries.put("preferScreenOrient", "landscape");
         lrSeries.put("type", "line");
         lrSeries.put("symbol", "circle");
         lrSeries.put("symbolSize", 0);
@@ -516,10 +518,10 @@ public class History {
         double k = (double)counts.length / smoothPts;
         final double splineRoundMul = 1000.0;
         for (double z = minDuration; z < maxDuration; z += step * k) {
-            // Use float for smaller JSONs.
             double v = Math.round(splineRoundMul * Math.max(0.0, scs.evaluate(z / scale * 100.0))) / splineRoundMul;
             durationData.add((float)v);
             maxBuilds = Math.max(maxBuilds, (int)Math.ceil(v));
+            // Use float for smaller JSONs.
             domainAxisLabels.add((float)(Math.round(mul * z * roundMul) / roundMul));
         }
 
