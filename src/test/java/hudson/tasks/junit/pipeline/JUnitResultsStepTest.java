@@ -496,6 +496,11 @@ public class JUnitResultsStepTest {
     }
 
     public static void assertBranchResults(WorkflowRun run, int suiteCount, int testCount, int failCount, String branchName, String stageName,
+                                           String innerStageName) {
+        assertBranchResults(run, suiteCount, testCount, failCount, branchName, stageName, innerStageName, false);
+    }
+
+    public static void assertBranchResults(WorkflowRun run, int suiteCount, int testCount, int failCount, String branchName, String stageName,
                                            String innerStageName, boolean keepTestNames) {
         FlowExecution execution = run.getExecution();
         DepthFirstScanner scanner = new DepthFirstScanner();
