@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>4.80</version>
+        <version>4.85</version>
         <relativePath />
     </parent>
     <artifactId>junit</artifactId>
@@ -15,7 +15,7 @@
     <properties>
         <changelist>999999-SNAPSHOT</changelist>
         <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
-        <jenkins.baseline>2.387</jenkins.baseline>
+        <jenkins.baseline>2.414</jenkins.baseline>
         <jenkins.version>${jenkins.baseline}.3</jenkins.version>
         <no-test-jar>false</no-test-jar>
     </properties>
@@ -73,7 +73,7 @@
         <dependency>
             <groupId>io.jenkins.plugins</groupId>
             <artifactId>github-checks</artifactId>
-            <version>554.vb_ee03a_000f65</version>
+            <version>581.va_9669c91d6cb_</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -153,19 +153,11 @@
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>database</artifactId>
-            <version>191.vd5981b_97a_5fa_</version>
             <scope>test</scope>
-            <exclusions>
-                <exclusion> <!-- TODO move to bom in Jenkins core -->
-                    <groupId>antlr</groupId>
-                    <artifactId>antlr</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.jenkins-ci.plugins</groupId>
             <artifactId>database-h2</artifactId>
-            <version>1.2</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -216,21 +208,15 @@
             <dependency>
                 <groupId>io.jenkins.tools.bom</groupId>
                 <artifactId>bom-${jenkins.baseline}.x</artifactId>
-                <version>2543.vfb_1a_5fb_9496d</version>
+                <version>2982.vdce2153031a_0</version>
                 <scope>import</scope>
                 <type>pom</type>
-            </dependency>
-            <!-- mockito and hibernate are conflicting (both test dependencies) -->
-            <dependency>
-                <groupId>net.bytebuddy</groupId>
-                <artifactId>byte-buddy</artifactId>
-                <version>1.14.12</version>
             </dependency>
             <!-- Workaround until https://github.com/jenkinsci/plugin-pom/issues/705 is fixed -->
             <dependency>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-bom</artifactId>
-                <version>1.9.23</version>
+                <version>2.0.0</version>
                 <scope>import</scope>
                 <type>pom</type>
             </dependency>
