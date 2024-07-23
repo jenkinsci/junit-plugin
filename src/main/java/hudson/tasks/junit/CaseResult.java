@@ -89,7 +89,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     private String skippedMessage;
     private String errorStackTrace;
     private String errorDetails;
-    private final Map<String, String> properties;
+    private Map<String, String> properties;
     @SuppressFBWarnings(value = "SE_TRANSIENT_FIELD_NOT_RESTORED", justification = "Specific method to restore it")
     private transient SuiteResult parent;
 
@@ -299,6 +299,10 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
                     case "stderr":
                         r.stderr = reader.getElementText();
                         break;
+                    case "properties":
+                        r.properties = new HashMap<>();
+                        parseProperties(r.properties, reader, ver);
+                        break;
                     default:
                         if (LOGGER.isLoggable(Level.FINEST)) {
                             LOGGER.finest("CaseResult.parse encountered an unknown field: " + elementName);
@@ -307,6 +311,56 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
             }
         }
         return r;
+    }
+
+    public static void parseProperties(Map<String, String> r, final XMLStreamReader reader, String ver) throws XMLStreamException {
+        while (reader.hasNext()) {
+            final int event = reader.next();
+            if (event == XMLStreamReader.END_ELEMENT && reader.getLocalName().equals("properties")) {
+                return;
+            }
+            if (event == XMLStreamReader.START_ELEMENT) {
+                final String elementName = reader.getLocalName();
+                switch (elementName) {
+                    case "entry":
+                        parseProperty(r, reader, ver);
+                        break;
+                    default:
+                        if (LOGGER.isLoggable(Level.FINEST)) {
+                            LOGGER.finest("CaseResult.parseProperties encountered an unknown field: " + elementName);
+                        }
+                }
+            }
+        }
+    }
+
+    public static void parseProperty(Map<String, String> r, final XMLStreamReader reader, String ver) throws XMLStreamException {
+        while (reader.hasNext()) {
+            String name = null, value = null;
+            final int event = reader.next();
+            if (event == XMLStreamReader.END_ELEMENT && reader.getLocalName().equals("entry")) {
+                if (name != null || value != null) {
+                    r.put(name, value);
+                }
+                return;
+            }
+            if (event == XMLStreamReader.START_ELEMENT) {
+                final String elementName = reader.getLocalName();
+                switch (elementName) {
+                    case "name":
+                        name = reader.getElementText();
+                        break;
+                    case "value":
+                        value = reader.getElementText();
+                        break;
+                    default:
+                        if (LOGGER.isLoggable(Level.FINEST)) {
+                            LOGGER.finest("CaseResult.parseProperty encountered an unknown field: " + elementName);
+                        }
+                }
+            }
+        }
+
     }
 
     static String possiblyTrimStdio(Collection<CaseResult> results, StdioRetention stdioRetention, String stdio) { // HUDSON-6516

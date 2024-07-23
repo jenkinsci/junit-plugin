@@ -81,7 +81,7 @@ public final class SuiteResult implements Serializable {
     private String stderr;
     private float duration;
     private long startTime;
-    private final Map<String, String> properties;
+    private Map<String, String> properties;
 
     /**
      * The 'timestamp' attribute of  the test suite.
@@ -207,6 +207,10 @@ public final class SuiteResult implements Serializable {
                         break;
                     case "stderr":
                         r.stderr = reader.getElementText();
+                        break;
+                    case "properties":
+                        r.properties = new HashMap<>();
+                        CaseResult.parseProperties(r.properties, reader, ver);
                         break;
                     default:
                         if (LOGGER.isLoggable(Level.FINEST)) {
