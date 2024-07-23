@@ -163,7 +163,7 @@ public final class SuiteResult implements Serializable {
     }
 
     public static SuiteResult parse(final XMLStreamReader reader, String ver) throws XMLStreamException {
-        SuiteResult r = new SuiteResult("", "", "", null);
+        SuiteResult r = new SuiteResult("", null, null, null);
         while (reader.hasNext()) {
             final int event = reader.next();
             if (event == XMLStreamReader.END_ELEMENT && reader.getLocalName().equals("suite")) {
@@ -186,6 +186,9 @@ public final class SuiteResult implements Serializable {
                         break;
                     case "duration":
                         r.duration = Math.max(0.0f, Math.min(365 * 24 * 60 * 60, new TimeToFloat(reader.getElementText()).parse()));
+                        break;
+                    case "startTime":
+                        r.startTime = Long.parseLong(reader.getElementText());
                         break;
                     case "timestamp":
                         r.timestamp = reader.getElementText();

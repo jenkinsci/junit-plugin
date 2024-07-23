@@ -35,14 +35,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.tools.ant.DirectoryScanner;
-import org.junit.Test;
+import org.apache.commons.io.FileUtils;import org.apache.tools.ant.DirectoryScanner;
+import org.junit.Rule;import org.junit.Test;
 
-import org.jvnet.hudson.test.Issue;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import org.junit.rules.TemporaryFolder;import org.jvnet.hudson.test.Issue;import static org.junit.Assert.*;
 
 /**
  * Tests the JUnit result XML file parsing in {@link TestResult}.
@@ -50,6 +46,9 @@ import static org.junit.Assert.assertNotNull;
  * @author dty
  */
 public class TestResultTest {
+    @Rule
+    public TemporaryFolder tmp = new TemporaryFolder();
+
     protected static File getDataFile(String name) throws URISyntaxException {
         return new File(TestResultTest.class.getResource(name).toURI());
     }
@@ -413,6 +412,33 @@ public class TestResultTest {
         assertEquals(-1, class9.getStartTime());
         assertEquals(-1, case12.getStartTime());
         
+    }
+
+    /*
+    For performance reasons, we parse the XML directly.
+    Make sure parser handles all the fields.
+     */
+    @Test
+    public void bigResultReadWrite() throws Exception {
+        List<SuiteResult> results = SuiteResult.parse(getDataFile("junit-report-huge.xml"), StdioRetention.ALL, true, true, null);
+        assertEquals(1, results.size());
+        SuiteResult sr = results.get(0);
+
+        TestResult tr = new TestResult();
+        tr.getSuites().add(sr);
+        XmlFile f = new XmlFile(TestResultAction.XSTREAM, tmp.newFile("junitResult.xml"));
+        f.write(tr);
+
+        TestResult tr2 = new TestResult();
+        tr2.parse(f);
+        XmlFile f2 = new XmlFile(TestResultAction.XSTREAM, tmp.newFile("junitResult2.xml"));
+        f2.write(tr2);
+
+        assertEquals(2, tr.getSuites().stream().findFirst().get().getProperties().size());
+        assertEquals(2, tr2.getSuites().stream().findFirst().get().getProperties().size());
+
+        boolean isTwoEqual = FileUtils.contentEquals(f.getFile(), f2.getFile());
+        assertTrue("Forgot to implement XML parsing for something?", isTwoEqual);
     }
 
 }

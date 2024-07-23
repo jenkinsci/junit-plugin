@@ -269,6 +269,9 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
                     case "duration":
                         r.duration = clampDuration(new TimeToFloat(reader.getElementText()).parse());
                         break;
+                    case "startTime":
+                        r.startTime = Long.parseLong(reader.getElementText());
+                        break;
                     case "className":
                         r.className = reader.getElementText();
                         break;
@@ -335,11 +338,11 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     }
 
     public static void parseProperty(Map<String, String> r, final XMLStreamReader reader, String ver) throws XMLStreamException {
+        String name = null, value = null;
         while (reader.hasNext()) {
-            String name = null, value = null;
             final int event = reader.next();
             if (event == XMLStreamReader.END_ELEMENT && reader.getLocalName().equals("entry")) {
-                if (name != null || value != null) {
+                if (name != null && value != null) {
                     r.put(name, value);
                 }
                 return;
@@ -347,11 +350,12 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
             if (event == XMLStreamReader.START_ELEMENT) {
                 final String elementName = reader.getLocalName();
                 switch (elementName) {
-                    case "name":
-                        name = reader.getElementText();
-                        break;
-                    case "value":
-                        value = reader.getElementText();
+                    case "string":
+                        if (name == null) {
+                            name = reader.getElementText();
+                        } else {
+                            value = reader.getElementText();
+                        }
                         break;
                     default:
                         if (LOGGER.isLoggable(Level.FINEST)) {

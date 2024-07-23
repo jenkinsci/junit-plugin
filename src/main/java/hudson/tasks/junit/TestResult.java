@@ -324,6 +324,12 @@ public final class TestResult extends MetaTabulatedResult {
                     case "keepProperties":
                         keepProperties = Boolean.parseBoolean(reader.getElementText());
                         break;
+                    case "skipOldReports":
+                        skipOldReports = Boolean.parseBoolean(reader.getElementText());
+                        break;
+                    case "startTime":
+                        startTime = Long.parseLong(reader.getElementText());
+                        break;
                     default:
                         if (LOGGER.isLoggable(Level.FINEST)) {
                             LOGGER.finest("TestResult.parseXmlResult encountered an unknown field: " + elementName);
