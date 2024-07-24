@@ -31,9 +31,7 @@ import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * Cumulative test result of a test class.
@@ -44,7 +42,7 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
     private final String className; // simple name
     private transient String safeName;
 
-    private final List<CaseResult> cases = new ArrayList<>();
+    private final Set<CaseResult> cases = new TreeSet<CaseResult>();
 
     private int passCount,failCount,skipCount;
     
@@ -146,7 +144,7 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
 
     @Exported(name="child")
     @Override
-    public List<CaseResult> getChildren() {
+    public Collection<CaseResult> getChildren() {
         return cases;
     }
 
@@ -216,7 +214,6 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
 
     void freeze() {
         this.tally();
-        Collections.sort(cases);
     }
 
     public String getClassName() {

@@ -2,10 +2,12 @@ package hudson.tasks.test;
 
 import java.util.List;
 
+
 import edu.hm.hafner.echarts.ChartModelConfiguration;
 import edu.hm.hafner.echarts.LineSeries;
 import edu.hm.hafner.echarts.LinesChartModel;
 import edu.hm.hafner.echarts.LinesDataSet;
+import edu.hm.hafner.echarts.SeriesBuilder;
 import edu.umd.cs.findbugs.annotations.NonNull;
 
 import hudson.tasks.junit.TrendTestResultSummary;
@@ -54,7 +56,6 @@ public class TestResultTrendChart {
 
     private LinesChartModel getLinesChartModel(final LinesDataSet dataSet, final PassedColor passedColor) {
         LinesChartModel model = new LinesChartModel(dataSet);
-
         LineSeries passed = new LineSeries("Passed",
                 passedColor == PassedColor.BLUE ? JenkinsPalette.BLUE.normal() : JenkinsPalette.GREEN.normal(),
                 LineSeries.StackedMode.STACKED, LineSeries.FilledMode.FILLED);

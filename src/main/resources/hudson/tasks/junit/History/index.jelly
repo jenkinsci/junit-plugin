@@ -24,84 +24,142 @@ THE SOFTWARE.
 
 <!-- Displays the chart that show how long builds are taking -->
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:bs="/bootstrap5" xmlns:c="/charts">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:bs="/bootstrap5" xmlns:c="/charts" xmlns:f="/lib/form">
   <bs:layout title="${%title(it.testObject.displayName)}">
+    <j:set var="count" value="${it.asInt(request.getParameter('count'),100)}"/>
     <j:set var="start" value="${it.asInt(request.getParameter('start'),0)}"/>
-    <j:set var="end" value="${it.asInt(request.getParameter('end'),start+24)}"/>
+    <j:set var="end" value="${it.asInt(request.getParameter('end'),start+count-1)}"/>
+    <j:set var="interval" value="${it.asInt(request.getParameter('interval'),1)}"/>
+    <j:set var="historySummary" value="${it.retrieveHistorySummary(start, end, interval)}"/>
     <st:adjunct includes="io.jenkins.plugins.echarts"/>
     <st:adjunct includes="io.jenkins.plugins.bootstrap5"/>
     <st:adjunct includes="io.jenkins.plugins.echarts-trend-default-setup"/>
+    <st:adjunct includes="hudson.tasks.junit.History.history"/>
     <link rel="stylesheet" href="${resURL}/plugin/junit/history/history.css"/>
 
     <st:once>
       <c:chart-setup id="test-history"/>
-      <script>var view =
-        <st:bind value="${it}"/>
-      </script>
-      <script type="text/javascript" src="${resURL}/plugin/junit/history/history.js"/>
+      <script id="history-data"
+        data-start="${start}"
+        data-end="${end}"
+        data-count="${count}"
+        data-interval="${interval}"
+        data-appRootUrl="${app.rootUrl}"
+        data-testObjectUrl="${it.testObject.url}"
+        type="application/json"
+      >${historySummary.trendChartJson}</script>
+
     </st:once>
 
     <st:include from="${it.testObject}" it="${it.testObject}" page="sidepanel.jelly"/>
     <l:main-panel>
-      <j:choose>
-        <j:when test="${it.historyAvailable()}">
-          <bs:card title="${%History}" fontAwesomeIcon="chart-line">
-            <div id="trend-carousel" class="carousel slide carousel-dark" data-bs-interval="false">
-              <div class="carousel-inner">
-                <div class="carousel-item">
-                  <div id="test-duration-trend-chart" class="graph-cursor-pointer card-chart-carousel"/>
-                </div>
-                <div class="carousel-item active">
-                  <div id="test-result-trend-chart" class="graph-cursor-pointer card-chart-carousel"/>
-                </div>
-              </div>
-              <button class="carousel-control-prev" type="button" data-bs-target="#trend-carousel" data-bs-slide="prev">
-                <span class="carousel-control-prev-icon" aria-hidden="true"/>
-                <span class="visually-hidden">Previous</span>
-              </button>
-              <button class="carousel-control-next" type="button" data-bs-target="#trend-carousel" data-bs-slide="next">
-                <span class="carousel-control-next-icon" aria-hidden="true"/>
-                <span class="visually-hidden">Next</span>
-              </button>
+      <div
+        class="jenkins-!-margin-bottom-2 jenkins-!-margin-top-0"
+        style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; height: auto; flex-wrap: wrap;"
+        >
+        <j:if test="${it.testObject.run.parent.builds.size() > end}">
+          <a href="${app.rootUrl}${it.testObject.url}/history?start=${end+1}&amp;count=${count}&amp;interval=${interval}"
+              class="jenkins-!-margin-right-2 jenkins-!-margin-bottom-1 jenkins-!-margin-top-1" style="height: fit-content">${%Older}
+          </a>
+        </j:if>
+
+        <j:if test="${start > 0}">
+          <a href="${app.rootUrl}${it.testObject.url}/history${(start-count)>0?'?start='+(start-count)+'&amp;':'?'}count=${count}&amp;interval=${interval}"
+              class="jenkins-!-margin-right-2 jenkins-!-margin-bottom-1 jenkins-!-margin-top-1" style="height: fit-content">${%Newer}
+          </a>
+        </j:if>
+        <div style="flex-grow: 1"/>
+        <div style="display: flex; flex-basis: auto; justify-content: space-between; align-items: center" tooltip="The history window size. Out of N builds, every Mth build with test results is shown, where M is the interval.">
+          <div id="history-info" class="jenkins-!-margin-right-1" style="text-wrap: nowrap"></div>
+          <select name="history-window" id="history-window" onchange="onBuildWindowChange(this);" class="jenkins-!-margin-left-0 jenkins-!-margin-right-1 jenkins-select__input " style="min-width: fit-content;">
+            <option value="100">100</option>
+            <option value="200">200</option>
+            <option value="500">500</option>
+            <option value="1000">1000</option>
+            <option value="2000">2000</option>
+            <option value="4000">4000</option>
+          </select>
+          <div style="text-wrap: nowrap" class="jenkins-!-margin-right-2">builds.</div>
+        </div>
+        <div style="display: flex; flex-basis: auto; justify-content: space-between; align-items: center" tooltip="Every Mth build will be taken into account.">
+          <div class="jenkins-!-margin-right-1" style="text-wrap: nowrap">Sample interval:</div>
+          <select name="history-interval" id="history-interval" onchange="onBuildIntervalChange(this);" class="jenkins-!-margin-left-0 jenkins-!-margin-right-0 jenkins-select__input " style="min-width: fit-content;">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="5">5</option>
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="40">40</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </div>
+      </div>
+      <bs:card title="">
+        <details open="true">
+          <summary style="width: fit-content">
+            <div class="card-title">History</div>
+          </summary>
+            <div class="jenkins-!-margin-bottom-2" style="overflow: visible;">
+              <div id="test-trend-chart" class="graph-cursor-pointer card-chart-carousel-2"/>
             </div>
-          </bs:card>
-
-        </j:when>
-        <j:otherwise>
-          ${%More than 1 builds are needed for the chart.}
-        </j:otherwise>
-      </j:choose>
-
-      <j:set var="historySummary" value="${it.retrieveHistorySummary(start)}"/>
+        </details>
+      </bs:card>
+      <br/>
+      <bs:card title="">
+        <details open="true">
+          <summary style="width: fit-content">
+            <div class="card-title">Distribution</div>
+          </summary>
+            <div class="jenkins-!-margin-bottom-2" style="overflow: visible;">
+              <div id="test-distribution-chart" class="graph-cursor-pointer card-chart-carousel"/>
+            </div>
+        </details>
+      </bs:card>
 
       <br/>
-      <table class="jenkins-table sortable" id="testresult">
+      <div class="jenkins-!-margin-bottom-2">
+        <j:if test="${it.testObject.run.parent.builds.size() > end}">
+          <a href="${app.rootUrl}${it.testObject.url}/history?start=${end+1}&amp;count=${count}&amp;interval=${interval}"
+             class="jenkins-!-margin-right-2">
+             ${%Older}
+          </a>
+        </j:if>
+
+        <j:if test="${start > 0}">
+          <a href="${app.rootUrl}${it.testObject.url}/history${(start-count)>0?'?start='+(start-count)+'&amp;':'?'}count=${count}&amp;interval=${interval}">
+             ${%Newer}
+          </a>
+        </j:if>
+
+      </div>
+      <table class="jenkins-table sortable" style="--table-padding: 5px;" id="testresult">
         <thead>
           <tr>
-            <th class="pane-header">${%Build}</th>
+            <th class="pane-header" style="text-align:center">${%Build}</th>
             <j:if test="${historySummary.descriptionAvailable}">
-              <th class="pane-header">${%Description}</th>
+              <th class="pane-header" style="text-align:center">${%Description}</th>
             </j:if>
-            <th class="pane-header" style="width:5em; text-align:right">${%Duration}</th>
-            <th class="pane-header" style="width:5em; text-align:right">${%Fail}</th>
-            <th class="pane-header" style="width:5em; text-align:right">${%Skip}</th>
-            <th class="pane-header" style="width:5em; text-align:right">${%Total}</th>
+            <th class="pane-header" style="text-align:center">${%Duration}</th>
+            <th class="pane-header" style="text-align:center">${%Fail}</th>
+            <th class="pane-header" style="text-align:center">${%Skip}</th>
+            <th class="pane-header" style="text-align:center">${%Total}</th>
           </tr>
         </thead>
         <tbody>
-          <j:forEach var="item" items="${historySummary.historySummaries}" begin="${start}" end="${end}">
+          <j:forEach var="item" items="${historySummary.historySummaries}" begin="0" end="${count}">
             <j:if test="${item != null}">
-              <tr>
-                <td class="pane">
+              <tr style="height: 0px; ${item.failCount > 0 ? 'background: rgba(255, 0, 0, ' + (0.05+item.badness*0.1) +');' :(item.skipCount == 0 ? 'background: rgba(0, 255, 0, 0.075);' : 'var(--table-body-background)')}">
+                <td class="pane test-result-table-row">
                   <a href="${app.rootUrl}${item.url}">${item.fullDisplayName}</a>
                 </td>
                 <j:if test="${historySummary.descriptionAvailable}">
-                  <td class="pane" style="text-align:right"><j:out value="${app.markupFormatter.translate(item.description)}"/></td>
+                  <td class="pane test-result-table-row"><j:out value="${app.markupFormatter.translate(item.description)}"/></td>
                 </j:if>
-                <td class="pane no-wrap" style="text-align:right" data="${item.duration}">${item.durationString}</td>
-                <td class="pane" style="text-align:right">${item.failCount}</td>
-                <td class="pane" style="text-align:right">${item.skipCount}</td>
-                <td class="pane" style="text-align:right">${item.totalCount}</td>
+                <td class="pane no-wrap test-result-table-row" data="${item.duration}">${item.durationString}</td>
+                <td class="pane test-result-table-row" style="${item.failCount > 0 ? 'font-weight: bold; color: var(--error-color);' : ''}">${item.failCount}</td>
+                <td class="pane test-result-table-row" style="${item.skipCount > 0 ? 'font-weight: bold; color: var(--warning-color);' : ''}">${item.skipCount}</td>
+                <td class="pane test-result-table-row">${item.totalCount}</td>
               </tr>
             </j:if>
           </j:forEach>
@@ -110,14 +168,15 @@ THE SOFTWARE.
 
       <div>
         <j:if test="${it.testObject.run.parent.builds.size() > end}">
-          <a href="${app.rootUrl}${it.testObject.url}/history?start=${end+1}"
-             style="margin:1px">${%Older}
+          <a href="${app.rootUrl}${it.testObject.url}/history?start=${end+1}&amp;count=${count}&amp;interval=${interval}"
+             class="jenkins-!-margin-right-2">
+             ${%Older}
           </a>
         </j:if>
 
         <j:if test="${start > 0}">
-          <a href="${app.rootUrl}${it.testObject.url}/history${(start-25)>0?'?start='+(start-25):''}"
-             style="margin:1px">${%Newer}
+          <a href="${app.rootUrl}${it.testObject.url}/history${(start-count)>0?'?start='+(start-count)+'&amp;':'?'}count=${count}&amp;interval=${interval}">
+             ${%Newer}
           </a>
         </j:if>
       </div>

@@ -40,15 +40,20 @@ import hudson.tasks.test.TestObject;
 import hudson.tasks.test.TestResultProjectAction;
 import hudson.util.HeapSpaceStringConverter;
 import hudson.util.XStream2;
+import jenkins.util.SystemProperties;
 import org.kohsuke.stapler.StaplerProxy;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -65,6 +70,7 @@ import jenkins.tasks.SimpleBuildStep;
  */
 @SuppressFBWarnings(value = "UG_SYNC_SET_UNSYNC_GET", justification = "False positive")
 public class TestResultAction extends AbstractTestResultAction<TestResultAction> implements StaplerProxy, SimpleBuildStep.LastBuildAction {
+    private static final Logger LOGGER = Logger.getLogger(TestResultAction.class.getName());
     private transient WeakReference<TestResult> result;
 
     /** null only if there is a {@link JunitTestResultStorage} */
@@ -121,6 +127,7 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         if (run != null) {
         // persist the data
         try {
+            resultCache.put(getDataFilePath(), new SoftReference<TestResult>(result));
             getDataFile().write(result);
         } catch (IOException e) {
             e.printStackTrace(listener.fatalError("Failed to save the JUnit test result"));
@@ -139,14 +146,19 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         return new XmlFile(XSTREAM, new File(run.getRootDir(), "junitResult.xml"));
     }
 
+    private String getDataFilePath() {
+        return Paths.get(run.getRootDir().getAbsolutePath(), "junitResult.xml").toString();
+    }
+
     @Override
     public synchronized TestResult getResult() {
+        long started = System.nanoTime();
         JunitTestResultStorage storage = JunitTestResultStorage.find();
         if (!(storage instanceof FileJunitTestResultStorage)) {
             return new TestResult(storage.load(run.getParent().getFullName(), run.getNumber()));
         }
         TestResult r;
-        if(result==null) {
+        if (result==null) {
             r = load();
             result = new WeakReference<>(r);
         } else {
@@ -161,6 +173,10 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
             totalCount = r.getTotalCount();
             failCount = r.getFailCount();
             skipCount = r.getSkipCount();
+        }
+        long d = System.nanoTime() - started;
+        if (d > 500000000L && LOGGER.isLoggable(Level.WARNING)) {
+            LOGGER.warning("TestResultAction.load took " + d / 1000000L + " ms.");
         }
         return r;
     }
@@ -223,11 +239,44 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         return getResult().getSkippedTests();
     }
 
+    private TestResult parseOnly() {
+        XmlFile df = getDataFile();
+        TestResult r;
+        try {
+            r = new TestResult();
+            r.parse(df);
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Failed to load " + df, e);
+            r = new TestResult();   // return a dummy
+        }
+        return r;
+    }
+
+    static ConcurrentHashMap<String, SoftReference<TestResult>> resultCache = new ConcurrentHashMap<>();
+    static Object syncObj = new Object();
+    static long lastCleanupNs = 0;
+
+    static long LARGE_RESULT_CACHE_CLEANUP_INTERVAL_NS =
+        SystemProperties.getLong(TestResultAction.class.getName() + ".LARGE_RESULT_CACHE_CLEANUP_INTERVAL_MS",500L) * 1000000L;
+    static int LARGE_RESULT_CACHE_THRESHOLD =
+        SystemProperties.getInteger(TestResultAction.class.getName() + ".LARGE_RESULT_CACHE_THRESHOLD",1000);
+    static boolean RESULT_CACHE_ENABLED =
+        SystemProperties.getBoolean(TestResultAction.class.getName() + ".RESULT_CACHE_ENABLED",true);
 
     /**
-     * Loads a {@link TestResult} from disk.
+     * Loads a {@link TestResult} from cache or disk.
      */
     private TestResult load() {
+        if (RESULT_CACHE_ENABLED) {
+            return loadCached();
+        }
+        return loadFallback();
+    }
+
+    /**
+     * Loads a {@link TestResult} from disk, fallback.
+     */
+    private TestResult loadFallback() {
         TestResult r;
         try {
             r = (TestResult)getDataFile().read();
@@ -235,6 +284,37 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
             logger.log(Level.WARNING, "Failed to load "+getDataFile(),e);
             r = new TestResult();   // return a dummy
         }
+        r.freeze(this);
+        return r;
+    }
+
+    /**
+     * Loads a {@link TestResult} from cache or disk, optimized.
+     */
+    private TestResult loadCached() {
+        if (resultCache.size() > LARGE_RESULT_CACHE_THRESHOLD) {
+            synchronized (syncObj)
+            {
+                if (resultCache.size() > LARGE_RESULT_CACHE_THRESHOLD && (System.nanoTime() - lastCleanupNs) > LARGE_RESULT_CACHE_CLEANUP_INTERVAL_NS) {
+                    lastCleanupNs = System.nanoTime();
+                    resultCache.forEach((String k, SoftReference<TestResult> v) -> {
+                        if (v.get() == null) {
+                            resultCache.remove(k);
+                        }
+                    });
+                }
+            }
+        }
+        TestResult r;
+        String k = getDataFilePath();
+        r = resultCache.computeIfAbsent(k, path -> {
+            return new SoftReference<TestResult>(parseOnly());
+        }).get();
+        if (r == null) {
+            r = parseOnly();
+            resultCache.replace(k, new SoftReference<TestResult>(r));
+        }
+        r = new TestResult(r);
         r.freeze(this);
         return r;
     }

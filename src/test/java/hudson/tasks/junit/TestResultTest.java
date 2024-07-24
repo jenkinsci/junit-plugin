@@ -35,14 +35,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.tools.ant.DirectoryScanner;
-import org.junit.Test;
+import org.apache.commons.io.FileUtils;import org.apache.tools.ant.DirectoryScanner;
+import org.junit.Rule;import org.junit.Test;
 
-import org.jvnet.hudson.test.Issue;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import org.junit.rules.TemporaryFolder;import org.jvnet.hudson.test.Issue;import static org.junit.Assert.*;
 
 /**
  * Tests the JUnit result XML file parsing in {@link TestResult}.
@@ -50,6 +46,9 @@ import static org.junit.Assert.assertNotNull;
  * @author dty
  */
 public class TestResultTest {
+    @Rule
+    public TemporaryFolder tmp = new TemporaryFolder();
+
     protected static File getDataFile(String name) throws URISyntaxException {
         return new File(TestResultTest.class.getResource(name).toURI());
     }
@@ -295,7 +294,7 @@ public class TestResultTest {
         directoryScanner.setIncludes(new String[]{"*.xml"});
         directoryScanner.scan();
         assertEquals( "directory scanner must find 2 files", 2, directoryScanner.getIncludedFiles().length);
-        TestResult testResult = new TestResult(start, directoryScanner, true, false, new PipelineTestDetails(),true);
+        TestResult testResult = new TestResult(start, directoryScanner, true, false, false, new PipelineTestDetails(),true);
         testResult.tally();
 
         assertEquals("Wrong number of testsuites", 2, testResult.getSuites().size());
@@ -322,7 +321,21 @@ public class TestResultTest {
         assertEquals("Wrong number of test cases", 6, testResult.getTotalCount());
 
     }
-    
+    @Test
+    public void clampDuration() throws Exception {
+        long start = System.currentTimeMillis();
+        File testResultFile1 = new File("src/test/resources/hudson/tasks/junit/junit-report-bad-duration.xml");
+        DirectoryScanner directoryScanner = new DirectoryScanner();
+        directoryScanner.setBasedir(new File("src/test/resources/hudson/tasks/junit/"));
+        directoryScanner.setIncludes(new String[]{"*-bad-duration.xml"});
+        directoryScanner.scan();
+        assertEquals( "directory scanner must find 1 files", 1, directoryScanner.getIncludedFiles().length);
+        TestResult testResult = new TestResult(start, directoryScanner, true, false, new PipelineTestDetails(), false);
+        testResult.tally();
+        assertEquals("Negative duration is invalid", 100, testResult.getDuration(), 0.00001);
+        assertEquals("Wrong number of testsuites", 1, testResult.getSuites().size());
+        assertEquals("Wrong number of test cases", 2, testResult.getTotalCount());
+    }
     @Test
     public void testStartTimes() throws Exception {
     	// Tests that start times are as expected for file with a mix of valid,
@@ -330,7 +343,6 @@ public class TestResultTest {
         TestResult testResult = new TestResult();
         testResult.parse(getDataFile("junit-report-testsuite-various-timestamps.xml"));
         testResult.tally();
-
         // Test that TestResult startTime is the startTime of the earliest suite.
         assertEquals(1704281235000L, testResult.getStartTime());
         
@@ -400,6 +412,33 @@ public class TestResultTest {
         assertEquals(-1, class9.getStartTime());
         assertEquals(-1, case12.getStartTime());
         
+    }
+
+    /*
+    For performance reasons, we parse the XML directly.
+    Make sure parser handles all the fields.
+     */
+    @Test
+    public void bigResultReadWrite() throws Exception {
+        List<SuiteResult> results = SuiteResult.parse(getDataFile("junit-report-huge.xml"), StdioRetention.ALL, true, true, null);
+        assertEquals(1, results.size());
+        SuiteResult sr = results.get(0);
+
+        TestResult tr = new TestResult();
+        tr.getSuites().add(sr);
+        XmlFile f = new XmlFile(TestResultAction.XSTREAM, tmp.newFile("junitResult.xml"));
+        f.write(tr);
+
+        TestResult tr2 = new TestResult();
+        tr2.parse(f);
+        XmlFile f2 = new XmlFile(TestResultAction.XSTREAM, tmp.newFile("junitResult2.xml"));
+        f2.write(tr2);
+
+        assertEquals(2, tr.getSuites().stream().findFirst().get().getProperties().size());
+        assertEquals(2, tr2.getSuites().stream().findFirst().get().getProperties().size());
+
+        boolean isTwoEqual = FileUtils.contentEquals(f.getFile(), f2.getFile());
+        assertTrue("Forgot to implement XML parsing for something?", isTwoEqual);
     }
 
 }
