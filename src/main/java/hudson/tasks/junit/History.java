@@ -23,23 +23,10 @@
  */
 package hudson.tasks.junit;
 
-import java.lang.ref.SoftReference;import java.math.RoundingMode;
-import java.text.DecimalFormat;import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Logger;
-import java.util.logging.Level;
-import java.util.stream.Collectors;
-
-import jenkins.util.SystemProperties;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.NoExternalUse;
-import org.kohsuke.stapler.bind.JavaScriptMethod;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.pivovarit.collectors.ParallelCollectors;
-
 import edu.hm.hafner.echarts.ChartModelConfiguration;
 import edu.hm.hafner.echarts.JacksonFacade;
 import edu.hm.hafner.echarts.LinesChartModel;
@@ -49,11 +36,19 @@ import hudson.tasks.test.TestObjectIterable;
 import hudson.tasks.test.TestResultTrendChart;
 import hudson.util.RunList;
 import io.jenkins.plugins.junit.storage.TestResultImpl;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-
+import java.lang.ref.SoftReference;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
+import jenkins.util.SystemProperties;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
+import org.kohsuke.stapler.bind.JavaScriptMethod;
 import umontreal.ssj.functionfit.LeastSquares;
 import umontreal.ssj.functionfit.SmoothingCubicSpline;
 
@@ -64,10 +59,10 @@ import umontreal.ssj.functionfit.SmoothingCubicSpline;
  */
 @Restricted(NoExternalUse.class)
 public class History {
-    private static final Logger LOGGER = Logger.getLogger(History.class.getName());
     private static final JacksonFacade JACKSON_FACADE = new JacksonFacade();
-    private static final String EMPTY_CONFIGURATION = "{}";
     private final TestObject testObject;
+
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     public History(TestObject testObject) {
         this.testObject = testObject;
@@ -98,35 +93,34 @@ public class History {
     }
 
     private ObjectNode computeDurationTrendJson(List<HistoryTestResultSummary> history) {
-        ObjectMapper mapper = new ObjectMapper();
-        ObjectNode root = mapper.createObjectNode();
-        ArrayNode domainAxisLabels = mapper.createArrayNode();
-        ArrayNode series = mapper.createArrayNode();
-        ObjectNode durationSeries = mapper.createObjectNode();
+        ObjectNode root = MAPPER.createObjectNode();
+        ArrayNode domainAxisLabels = MAPPER.createArrayNode();
+        ArrayNode series = MAPPER.createArrayNode();
+        ObjectNode durationSeries = MAPPER.createObjectNode();
         series.add(durationSeries);
         durationSeries.put("type", "line");
         durationSeries.put("symbol", "circle");
         durationSeries.put("symbolSize", "6");
         durationSeries.put("sampling", "lttb");
-        ArrayNode durationData = mapper.createArrayNode();
+        ArrayNode durationData = MAPPER.createArrayNode();
         durationSeries.set("data", durationData);
-        ObjectNode durationStyle = mapper.createObjectNode();
+        ObjectNode durationStyle = MAPPER.createObjectNode();
         durationSeries.set("itemStyle", durationStyle);
         durationStyle.put("color", "rgba(160, 173, 177, 0.6)");
-        ObjectNode durationAreaStyle = mapper.createObjectNode();
+        ObjectNode durationAreaStyle = MAPPER.createObjectNode();
         durationSeries.set("areaStyle", durationAreaStyle);
         durationAreaStyle.put("normal", true);
-        ObjectNode durationMarkLine = mapper.createObjectNode();
+        ObjectNode durationMarkLine = MAPPER.createObjectNode();
         durationSeries.set("markLine", durationMarkLine);
-        ArrayNode durationMarkData = mapper.createArrayNode();
+        ArrayNode durationMarkData = MAPPER.createArrayNode();
         durationMarkLine.set("data", durationMarkData);
-        ObjectNode durationAvgMark = mapper.createObjectNode();
-        ObjectNode hideLabel = mapper.createObjectNode();
+        ObjectNode durationAvgMark = MAPPER.createObjectNode();
+        ObjectNode hideLabel = MAPPER.createObjectNode();
         hideLabel.put("show", false);
-        ObjectNode dashLineStyle = mapper.createObjectNode();
+        ObjectNode dashLineStyle = MAPPER.createObjectNode();
         dashLineStyle.put("dashOffset", 50);
         dashLineStyle.put("color", "rgba(128, 128, 128, 0.1)");
-        ArrayNode lightDashType = mapper.createArrayNode();
+        ArrayNode lightDashType = MAPPER.createArrayNode();
         lightDashType.add(5);
         lightDashType.add(10);        
         dashLineStyle.set("type", lightDashType);
@@ -138,15 +132,14 @@ public class History {
 
         float maxDuration = (float)0.0;
         for (HistoryTestResultSummary h : history) {
-            hudson.tasks.test.TestResult to = h.getResultInRun();
-            if (maxDuration < to.getDuration()) {
-                maxDuration = to.getDuration();
+            if (maxDuration < h.getDuration()) {
+                maxDuration = h.getDuration();
             }
         }
-        ObjectNode yAxis = mapper.createObjectNode();
-        double mul = 1.0;
+        ObjectNode yAxis = MAPPER.createObjectNode();
+        double mul;
         double roundMul = 1.0;
-        String durationStr = "Seconds";
+        String durationStr;
         if (maxDuration < 1e-3) {
             durationStr = "Microseconds";
             mul = 1e6;
@@ -170,30 +163,29 @@ public class History {
         durationSeries.put("name", durationStr);
 
         int index = 0;
-        ObjectNode skippedStyle = mapper.createObjectNode();
+        ObjectNode skippedStyle = MAPPER.createObjectNode();
         skippedStyle.put("color", "gray");
-        ObjectNode okStyle = mapper.createObjectNode();
+        ObjectNode okStyle = MAPPER.createObjectNode();
         okStyle.put("color", "rgba(50, 200, 50, 0.8)");
         float tmpMax = 0;
         double[] lrX = new double[history.size()];
         double[] lrY = new double[history.size()];
         for (HistoryTestResultSummary h : history) {
-            hudson.tasks.test.TestResult to = h.getResultInRun();
-            lrX[index] = ((double)index);
+            lrX[index] = index;
             Run<?,?> r = h.getRun();
             String fdn = r.getDisplayName();
             domainAxisLabels.add(fdn);
-            ObjectNode durationColor = mapper.createObjectNode();
-            double duration = Math.round(mul * to.getDuration() * roundMul) / roundMul;
+            ObjectNode durationColor = MAPPER.createObjectNode();
+            double duration = Math.round(mul * h.getDuration() * roundMul) / roundMul;
             tmpMax = Math.max((float)duration, tmpMax);
-            lrY[index] = (double)(duration);
+            lrY[index] = duration;
             durationColor.put("value", duration);
-            if (to.isPassed() || (to.getPassCount() > 0 && to.getFailCount() == 0)) {
+            if (h.getPassCount() > 0 && h.getFailCount() == 0 && h.getSkipCount() == 0) {
                 durationColor.set("itemStyle", okStyle);
             } else {
-                if (to.getFailCount() > 0) {
-                    ObjectNode failedStyle = mapper.createObjectNode();
-                    double k = Math.min(1.0, to.getFailCount() / (to.getTotalCount() * 0.02));
+                if (h.getFailCount() > 0) {
+                    ObjectNode failedStyle = MAPPER.createObjectNode();
+                    double k = Math.min(1.0, h.getFailCount() / (h.getTotalCount() * 0.02));
                     failedStyle.put("color", "rgba(255, 100, 100, " + (0.5 + 0.5 * k) +")");
                     durationColor.set("itemStyle", failedStyle);
                 } else {
@@ -205,8 +197,8 @@ public class History {
         }
 
         if (EXTRA_GRAPH_MATH_ENABLED) {
-            createLinearTrend(mapper, series, history, lrX, lrY, "Trend of " + durationStr, "rgba(0, 120, 255, 0.5)", 0.0, Double.MAX_VALUE, 0, 0, roundMul); // "--blue"
-            createSplineTrend(mapper, series, history, lrX, lrY, "Smooth of " + durationStr, "rgba(120, 50, 255, 0.5)", 0.0, Double.MAX_VALUE, 0, 0, roundMul); // "--indigo"
+            createLinearTrend(series, history, lrX, lrY, "Trend of " + durationStr, "rgba(0, 120, 255, 0.5)", 0, 0, roundMul); // "--blue"
+            createSplineTrend(series, history, lrX, lrY, "Smooth of " + durationStr, "rgba(120, 50, 255, 0.5)", 0, 0, roundMul); // "--indigo"
         }
         root.set("series", series);
         root.set("domainAxisLabels", domainAxisLabels);
@@ -222,14 +214,13 @@ public class History {
         return root;
     }
 
-    private void createLinearTrend(ObjectMapper mapper, ArrayNode series, List<HistoryTestResultSummary> history, double[] lrX, double[] lrY, String title, String color, double minV, double maxV, int xAxisIndex, int yAxisIndex, double roundMul) {
+    private void createLinearTrend(ArrayNode series, List<HistoryTestResultSummary> history, double[] lrX, double[] lrY, String title, String color, int xAxisIndex, int yAxisIndex, double roundMul) {
         if (history.size() < 3) {
             return;
         }
-        LeastSquares lr = new LeastSquares();
-        double[] cs = lr.calcCoefficients(lrX, lrY);
+        double[] cs = LeastSquares.calcCoefficients(lrX, lrY);
 
-        ObjectNode lrSeries = mapper.createObjectNode();
+        ObjectNode lrSeries = MAPPER.createObjectNode();
         series.add(lrSeries);
         lrSeries.put("name", title);
         lrSeries.put("preferScreenOrient", "landscape");
@@ -238,12 +229,12 @@ public class History {
         lrSeries.put("symbolSize", 0);
         lrSeries.put("xAxisIndex", xAxisIndex);
         lrSeries.put("yAxisIndex", yAxisIndex);
-        ArrayNode lrData = mapper.createArrayNode();
+        ArrayNode lrData = MAPPER.createArrayNode();
         lrSeries.set("data", lrData);
-        ObjectNode lrStyle = mapper.createObjectNode();
+        ObjectNode lrStyle = MAPPER.createObjectNode();
         lrSeries.set("itemStyle", lrStyle);
         lrStyle.put("color", color);
-        ObjectNode lrAreaStyle = mapper.createObjectNode();
+        ObjectNode lrAreaStyle = MAPPER.createObjectNode();
         lrSeries.set("areaStyle", lrAreaStyle);
         lrAreaStyle.put("color", "rgba(0, 0, 0, 0)");
 
@@ -256,17 +247,16 @@ public class History {
         }
     }
 
-    private void createSplineTrend(ObjectMapper mapper, ArrayNode series, List<HistoryTestResultSummary> history, double[] lrX, double[] lrY, String title, String color, double minV, double maxV, int xAxisIndex, int yAxisIndex, double roundMul) {
+    private void createSplineTrend(ArrayNode series, List<HistoryTestResultSummary> history, double[] lrX, double[] lrY, String title, String color, int xAxisIndex, int yAxisIndex, double roundMul) {
         if (history.size() < 200) {
             return;
         }
-        double windowSize = 100.0;
         double rho = Math.min(1.0, 1.0 / Math.max(1, (history.size() / 2)));
         if (rho > 0.75) {
             return; // Too close to linear
         }
         SmoothingCubicSpline scs = new SmoothingCubicSpline(lrX, lrY, 0.001);
-        ObjectNode lrSeries = mapper.createObjectNode();
+        ObjectNode lrSeries = MAPPER.createObjectNode();
         series.add(lrSeries);
         lrSeries.put("name", title);
         lrSeries.put("preferScreenOrient", "landscape");
@@ -275,12 +265,12 @@ public class History {
         lrSeries.put("symbolSize", 0);
         lrSeries.put("xAxisIndex", xAxisIndex);
         lrSeries.put("yAxisIndex", yAxisIndex);
-        ArrayNode lrData = mapper.createArrayNode();
+        ArrayNode lrData = MAPPER.createArrayNode();
         lrSeries.set("data", lrData);
-        ObjectNode lrStyle = mapper.createObjectNode();
+        ObjectNode lrStyle = MAPPER.createObjectNode();
         lrSeries.set("itemStyle", lrStyle);
         lrStyle.put("color", color);
-        ObjectNode lrAreaStyle = mapper.createObjectNode();
+        ObjectNode lrAreaStyle = MAPPER.createObjectNode();
         lrSeries.set("areaStyle", lrAreaStyle);
         lrAreaStyle.put("color", "rgba(0, 0, 0, 0)");
 
@@ -297,12 +287,11 @@ public class History {
         Boolean.parseBoolean(System.getProperty(History.class.getName() + ".EXTRA_GRAPH_MATH_ENABLED","true"));
 
     private ObjectNode computeResultTrendJson(List<HistoryTestResultSummary> history) {
-        ObjectMapper mapper = new ObjectMapper();
-        ObjectNode root = mapper.createObjectNode();
-        ArrayNode domainAxisLabels = mapper.createArrayNode();
-        ArrayNode series = mapper.createArrayNode();
+        ObjectNode root = MAPPER.createObjectNode();
+        ArrayNode domainAxisLabels = MAPPER.createArrayNode();
+        ArrayNode series = MAPPER.createArrayNode();
 
-        ObjectNode okSeries = mapper.createObjectNode();
+        ObjectNode okSeries = MAPPER.createObjectNode();
         okSeries.put("name", "Passed");
         okSeries.put("xAxisIndex", 1);
         okSeries.put("yAxisIndex", 1);
@@ -310,27 +299,27 @@ public class History {
         okSeries.put("symbol", "circle");
         okSeries.put("symbolSize", "0");
         okSeries.put("sampling", "lttb");
-        ArrayNode okData = mapper.createArrayNode();
+        ArrayNode okData = MAPPER.createArrayNode();
         okSeries.set("data", okData);
-        ObjectNode okStyle = mapper.createObjectNode();
+        ObjectNode okStyle = MAPPER.createObjectNode();
         okSeries.set("itemStyle", okStyle);
         okStyle.put("color", "--success-color"); // "rgba(50, 200, 50, 0.8)");
         okSeries.put("stack", "stacked");
-        ObjectNode okAreaStyle = mapper.createObjectNode();
+        ObjectNode okAreaStyle = MAPPER.createObjectNode();
         okSeries.set("areaStyle", okAreaStyle);
         okAreaStyle.put("normal", true);
         
-        ObjectNode okMarkLine = mapper.createObjectNode();
+        ObjectNode okMarkLine = MAPPER.createObjectNode();
         okSeries.set("markLine", okMarkLine);
-        ArrayNode okMarkData = mapper.createArrayNode();
+        ArrayNode okMarkData = MAPPER.createArrayNode();
         okMarkLine.set("data", okMarkData);
-        ObjectNode avgMark = mapper.createObjectNode();
-        ObjectNode hideLabel = mapper.createObjectNode();
+        ObjectNode avgMark = MAPPER.createObjectNode();
+        ObjectNode hideLabel = MAPPER.createObjectNode();
         hideLabel.put("show", false);
-        ObjectNode dashLineStyle = mapper.createObjectNode();
+        ObjectNode dashLineStyle = MAPPER.createObjectNode();
         dashLineStyle.put("dashOffset", 50);
         dashLineStyle.put("color", "rgba(128, 128, 128, 0.1)");
-        ArrayNode lightDashType = mapper.createArrayNode();
+        ArrayNode lightDashType = MAPPER.createArrayNode();
         lightDashType.add(5);
         lightDashType.add(10);        
         dashLineStyle.set("type", lightDashType);
@@ -340,7 +329,7 @@ public class History {
         avgMark.set("lineStyle", dashLineStyle);
         okMarkData.add(avgMark);
 
-        ObjectNode failSeries = mapper.createObjectNode();
+        ObjectNode failSeries = MAPPER.createObjectNode();
         failSeries.put("name", "Failed");
         failSeries.put("type", "line");
         failSeries.put("symbol", "circle");
@@ -348,17 +337,17 @@ public class History {
         failSeries.put("sampling", "lttb");
         failSeries.put("xAxisIndex", 1);
         failSeries.put("yAxisIndex", 1);
-        ArrayNode failData = mapper.createArrayNode();
+        ArrayNode failData = MAPPER.createArrayNode();
         failSeries.set("data", failData);
-        ObjectNode failStyle = mapper.createObjectNode();
+        ObjectNode failStyle = MAPPER.createObjectNode();
         failSeries.set("itemStyle", failStyle);
         failStyle.put("color", "--light-red"); //"rgba(200, 50, 50, 0.8)");
         failSeries.put("stack", "stacked");
-        ObjectNode failAreaStyle = mapper.createObjectNode();
+        ObjectNode failAreaStyle = MAPPER.createObjectNode();
         failSeries.set("areaStyle", failAreaStyle);
         failAreaStyle.put("normal", true);
 
-        ObjectNode skipSeries = mapper.createObjectNode();
+        ObjectNode skipSeries = MAPPER.createObjectNode();
         skipSeries.put("name", "Skipped");
         skipSeries.put("type", "line");
         skipSeries.put("symbol", "circle");
@@ -366,17 +355,17 @@ public class History {
         skipSeries.put("sampling", "lttb");
         skipSeries.put("xAxisIndex", 1);
         skipSeries.put("yAxisIndex", 1);
-        ArrayNode skipData = mapper.createArrayNode();
+        ArrayNode skipData = MAPPER.createArrayNode();
         skipSeries.set("data", skipData);
-        ObjectNode skipStyle = mapper.createObjectNode();
+        ObjectNode skipStyle = MAPPER.createObjectNode();
         skipSeries.set("itemStyle", skipStyle);
         skipStyle.put("color", "rgba(160, 173, 177, 0.6)");
         skipSeries.put("stack", "stacked");
-        ObjectNode skipAreaStyle = mapper.createObjectNode();
+        ObjectNode skipAreaStyle = MAPPER.createObjectNode();
         skipSeries.set("areaStyle", skipAreaStyle);
         skipAreaStyle.put("normal", true);
 
-        ObjectNode totalSeries = mapper.createObjectNode();
+        ObjectNode totalSeries = MAPPER.createObjectNode();
         totalSeries.put("name", "Total");
         totalSeries.put("type", "line");
         totalSeries.put("symbol", "circle");
@@ -384,17 +373,17 @@ public class History {
         totalSeries.put("sampling", "lttb");
         totalSeries.put("xAxisIndex", 1);
         totalSeries.put("yAxisIndex", 1);
-        ArrayNode totalData = mapper.createArrayNode();
+        ArrayNode totalData = MAPPER.createArrayNode();
         totalSeries.set("data", totalData);
-        ObjectNode lineStyle = mapper.createObjectNode();
+        ObjectNode lineStyle = MAPPER.createObjectNode();
         totalSeries.set("lineStyle", lineStyle);
         lineStyle.put("width", 1);
         lineStyle.put("type", "dashed");
-        ObjectNode totalStyle = mapper.createObjectNode();
+        ObjectNode totalStyle = MAPPER.createObjectNode();
         totalSeries.set("itemStyle", totalStyle);
         totalStyle.put("color", "--light-blue"); //"rgba(0, 255, 255, 0.6)");
 
-        ObjectNode totalAreaStyle = mapper.createObjectNode();
+        ObjectNode totalAreaStyle = MAPPER.createObjectNode();
         totalSeries.set("areaStyle", totalAreaStyle);
         totalAreaStyle.put("color", "rgba(0, 0, 0, 0)");
 
@@ -408,25 +397,24 @@ public class History {
         double[] lrX = new double[history.size()];
         double[] lrY = new double[history.size()];
         for (HistoryTestResultSummary h : history) {
-            hudson.tasks.test.TestResult to = h.getResultInRun();
-            lrX[index] = ((double)index);
+            lrX[index] = index;
             Run<?,?> r = h.getRun();
             String fdn = r.getDisplayName();
             domainAxisLabels.add(fdn);
-            lrY[index] = ((double)to.getPassCount());
-            okData.add(to.getPassCount());
-            skipData.add(to.getSkipCount());
-            failData.add(to.getFailCount());
-            totalData.add(to.getTotalCount());
-            if (maxTotalCount < to.getTotalCount()) {
-                maxTotalCount = to.getTotalCount();
+            lrY[index] = h.getPassCount();
+            okData.add(h.getPassCount());
+            skipData.add(h.getSkipCount());
+            failData.add(h.getFailCount());
+            totalData.add(h.getTotalCount());
+            if (maxTotalCount < h.getTotalCount()) {
+                maxTotalCount = h.getTotalCount();
             }
             ++index;
         }
 
         if (EXTRA_GRAPH_MATH_ENABLED) {
-            createLinearTrend(mapper, series, history, lrX, lrY, "Trend of Passed", "rgba(50, 50, 255, 0.5)" , 0.0, maxTotalCount, 1, 1, 10.0); // "--dark-blue"
-            createSplineTrend(mapper, series, history, lrX, lrY, "Smooth of Passed", "rgba(255, 50, 255, 0.5)", 0.0, maxTotalCount, 1, 1, 10.0); // "--purple"
+            createLinearTrend(series, history, lrX, lrY, "Trend of Passed", "rgba(50, 50, 255, 0.5)" , 1, 1, 10.0); // "--dark-blue"
+            createSplineTrend(series, history, lrX, lrY, "Smooth of Passed", "rgba(255, 50, 255, 0.5)", 1, 1, 10.0); // "--purple"
         }
 
         root.set("series", series);
@@ -438,24 +426,23 @@ public class History {
     }
 
     private ObjectNode computeDistributionJson(List<HistoryTestResultSummary> history) {
-        ObjectMapper mapper = new ObjectMapper();
-        ObjectNode root = mapper.createObjectNode();
-        ArrayNode series = mapper.createArrayNode();
-        ArrayNode domainAxisLabels = mapper.createArrayNode();
+        ObjectNode root = MAPPER.createObjectNode();
+        ArrayNode series = MAPPER.createArrayNode();
+        ArrayNode domainAxisLabels = MAPPER.createArrayNode();
 
-        ObjectNode durationSeries = mapper.createObjectNode();
+        ObjectNode durationSeries = MAPPER.createObjectNode();
         durationSeries.put("name", "Build Count");
         durationSeries.put("type", "line");
         durationSeries.put("symbol", "circle");
         durationSeries.put("symbolSize", "0");
         durationSeries.put("sampling", "lttb");
-        ArrayNode durationData = mapper.createArrayNode();
+        ArrayNode durationData = MAPPER.createArrayNode();
         durationSeries.set("data", durationData);
-        ObjectNode durationStyle = mapper.createObjectNode();
+        ObjectNode durationStyle = MAPPER.createObjectNode();
         durationSeries.set("itemStyle", durationStyle);
         durationStyle.put("color", "--success-color");//"rgba(50, 200, 50, 0.8)");
         durationSeries.put("stack", "stacked");
-        ObjectNode durAreaStyle = mapper.createObjectNode();
+        ObjectNode durAreaStyle = MAPPER.createObjectNode();
         durationSeries.set("areaStyle", durAreaStyle);
         durAreaStyle.put("color", "rgba(0,0,0,0)");
         durationSeries.put("smooth", true);
@@ -463,12 +450,11 @@ public class History {
         
         double maxDuration = 0, minDuration = Double.MAX_VALUE;
         for (HistoryTestResultSummary h : history) {
-            hudson.tasks.test.TestResult to = h.getResultInRun();
-            if (maxDuration < to.getDuration()) {
-                maxDuration = to.getDuration();
+            if (maxDuration < h.getDuration()) {
+                maxDuration = h.getDuration();
             }
-            if (minDuration > to.getDuration()) {
-                minDuration = to.getDuration();
+            if (minDuration > h.getDuration()) {
+                minDuration = h.getDuration();
             }
         }
         double extraDuration = Math.max(0.001, (maxDuration - minDuration) * 0.05);
@@ -481,8 +467,7 @@ public class History {
         double scale = maxDuration - minDuration;
         double step = scale / counts.length;
         for (HistoryTestResultSummary h : history) {
-            hudson.tasks.test.TestResult to = h.getResultInRun();
-            int idx = smoothBuffer + (int)Math.round((to.getDuration() - minDuration) / step);
+            int idx = smoothBuffer + (int)Math.round((h.getDuration() - minDuration) / step);
             int idx2 = Math.max(0, Math.min(idx, lrY.length - 1));
             lrY[idx2]++;
         }
@@ -490,8 +475,8 @@ public class History {
             lrX[i] = ((minDuration + (maxDuration - minDuration) / lrY.length * i) / scale * 100.0);
         }
 
-        ObjectNode xAxis = mapper.createObjectNode();
-        double mul = 1.0;
+        ObjectNode xAxis = MAPPER.createObjectNode();
+        double mul;
         double roundMul = 1000.0;
         if (maxDuration < 1e-3) {
             xAxis.put("name", "Duration (microseconds)");
@@ -537,12 +522,11 @@ public class History {
     }
 
     private ObjectNode computeBuildMapJson(List<HistoryTestResultSummary> history) {
-        ObjectMapper mapper = new ObjectMapper();
-        ObjectNode buildMap = mapper.createObjectNode();
+        ObjectNode buildMap = MAPPER.createObjectNode();
         for (HistoryTestResultSummary h : history) {
             Run<?,?> r = h.getRun();
             String fdn = r.getDisplayName();
-            ObjectNode buildObj = mapper.createObjectNode();
+            ObjectNode buildObj = MAPPER.createObjectNode();
             buildObj.put("url", h.getUrl());
             buildMap.set(fdn, buildObj);
         }
@@ -552,20 +536,19 @@ public class History {
     private ObjectNode computeTrendJsons(HistoryParseResult parseResult) {
         List<HistoryTestResultSummary> history = parseResult.historySummaries;
         Collections.reverse(history);
-        ObjectMapper mapper = new ObjectMapper();
-        ObjectNode root = mapper.createObjectNode();
+        ObjectNode root = MAPPER.createObjectNode();
         root.set("duration", computeDurationTrendJson(history));
         root.set("result", computeResultTrendJson(history));
         root.set("distribution", computeDistributionJson(history));
         root.set("buildMap", computeBuildMapJson(history));
-        ObjectNode saveAsImage = mapper.createObjectNode();
-        if (history.size() > 0) {
+        ObjectNode saveAsImage = MAPPER.createObjectNode();
+        if (!history.isEmpty()) {
             saveAsImage.put("name", "test-history-" + history.get(0).getRun().getParent().getFullName() + "-" + history.get(0).getRun().getNumber() + "-" + history.get(history.size() - 1).getRun().getNumber());
         } else {
             saveAsImage.put("name", "test-history");
         }
         root.set("saveAsImage", saveAsImage);
-        ObjectNode status = mapper.createObjectNode();
+        ObjectNode status = MAPPER.createObjectNode();
         status.put("hasTimedOut", parseResult.hasTimedOut);
         status.put("buildsRequested", parseResult.buildsRequested);
         status.put("buildsParsed", parseResult.buildsParsed);
@@ -576,7 +559,7 @@ public class History {
 
     private TestObjectIterable createBuildHistory(final TestObject testObject, int start, int end) {
         HistoryTableResult r = retrieveHistorySummary(start, end);
-        if (r.getHistorySummaries().size() != 0) {
+        if (!r.getHistorySummaries().isEmpty()) {
             return new TestObjectIterable(testObject, r.getHistorySummaries());
         }
         return null;
@@ -597,9 +580,9 @@ public class History {
     }
 
     public static class HistoryTableResult {
-        private boolean descriptionAvailable;
-        private List<HistoryTestResultSummary> historySummaries;
-        private String trendChartJson;
+        private final boolean descriptionAvailable;
+        private final List<HistoryTestResultSummary> historySummaries;
+        private final String trendChartJson;
         public HistoryParseResult parseResult;
 
         public HistoryTableResult(HistoryParseResult parseResult, ObjectNode json) {
@@ -647,7 +630,7 @@ public class History {
     }
 
     // Handle multiple consecutive requests to same data from Jelly.
-    private Object cachedResultLock = new Object();
+    private final Object cachedResultLock = new Object();
     private SoftReference<HistoryTableResult> cachedResult = new SoftReference<>(null);
 
     public HistoryTableResult retrieveHistorySummary(int start, int end) {
@@ -661,13 +644,15 @@ public class History {
                 return result;
             }
             TestResultImpl pluggableStorage = getPluggableStorage();
-            HistoryParseResult parseResult = null;
+            HistoryParseResult parseResult;
             if (pluggableStorage != null) {
                 int offset = start;
                 if (start > 1000 || start < 0) {
                     offset = 0;
                 }
-                parseResult = new HistoryParseResult(pluggableStorage.getHistorySummary(offset), end - start + 1, start, end);
+                List<HistoryTestResultSummary> historySummary = pluggableStorage.getHistorySummary(offset);
+
+                parseResult = new HistoryParseResult(historySummary, end - start + 1, start, end);
             } else {
                 parseResult = getHistoryFromFileStorage(start, end, interval);
             }
@@ -713,7 +698,8 @@ public class History {
                 if (resultInRun == null) {
                     return null;
                 }
-                return new HistoryTestResultSummary(build, resultInRun, resultInRun.getDuration(),
+
+                return new HistoryTestResultSummary(build, resultInRun.getDuration(),
                         resultInRun.getFailCount(),
                         resultInRun.getSkipCount(),
                         resultInRun.getPassCount(),

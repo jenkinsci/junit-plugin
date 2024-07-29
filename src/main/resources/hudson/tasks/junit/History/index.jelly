@@ -44,7 +44,6 @@ THE SOFTWARE.
         data-end="${end}"
         data-count="${count}"
         data-interval="${interval}"
-        data-appRootUrl="${app.rootUrl}"
         data-testObjectUrl="${it.testObject.url}"
         type="application/json"
       >${historySummary.trendChartJson}</script>
