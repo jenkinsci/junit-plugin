@@ -693,10 +693,11 @@ public final class TestResult extends MetaTabulatedResult {
         if (impl != null) {
             return impl.getFailCount();
         }
-        if(failedTests==null)
+        if(failedTests==null) {
             return 0;
-        else
-        return failedTests.size();
+        } else {
+            return failedTests.size();
+        }
     }
 
     @Exported(visibility=999)

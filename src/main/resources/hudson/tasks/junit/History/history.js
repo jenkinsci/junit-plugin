@@ -31,7 +31,12 @@ function onBuildIntervalChange(selectObj) {
         interval = dataEl.getAttribute("data-interval")
         let trendChartJsonStr = dataEl.innerHTML
         trendChartJson = JSON.parse(trendChartJsonStr)
-        appRootUrl = dataEl.getAttribute("data-appRootUrl")
+        const rootUrl = document.head.dataset.rooturl
+        if (!rootUrl.endsWith("/")) {
+            appRootUrl = `${rootUrl}/`
+        } else {
+            appRootUrl = rootUrl
+        }
         testObjectUrl = dataEl.getAttribute("data-testObjectUrl")
 
         trendChartJsonStr = null
@@ -390,7 +395,7 @@ function onBuildIntervalChange(selectObj) {
             renderTrendChart(trendChartId, trendChartJson, trendConfigurationDialogId,
                 function (buildDisplayName) {
                     if (trendChartJson.buildMap[buildDisplayName]) {
-                        window.open(rootUrl + trendChartJson.buildMap[buildDisplayName].url);
+                        window.open(appRootUrl + trendChartJson.buildMap[buildDisplayName].url);
                     }
                 });
             renderDistributionChart('test-distribution-chart', trendChartJson, trendConfigurationDialogId, null);

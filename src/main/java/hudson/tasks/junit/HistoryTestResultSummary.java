@@ -2,6 +2,8 @@ package hudson.tasks.junit;
 
 import hudson.Util;
 import hudson.model.Run;
+import hudson.tasks.test.AbstractTestResultAction;
+import hudson.tasks.test.TestResult;
 
 public class HistoryTestResultSummary {
 
@@ -11,21 +13,19 @@ public class HistoryTestResultSummary {
     private final int skipCount;
     private final int passCount;
     private final String description;
-    private final hudson.tasks.test.TestResult resultInRun;
 
-    public HistoryTestResultSummary(Run<?, ?> run, hudson.tasks.test.TestResult resultInRun,
+    public HistoryTestResultSummary(Run<?, ?> run,
     float duration, int failCount, int skipCount, int passCount) {
-        this(run, resultInRun, duration, failCount, skipCount, passCount, null);
+        this(run, duration, failCount, skipCount, passCount, null);
     }
 
-    public HistoryTestResultSummary(Run<?, ?> run, hudson.tasks.test.TestResult resultInRun, float duration, int failCount, int skipCount, int passCount, String description) {
+    public HistoryTestResultSummary(Run<?, ?> run, float duration, int failCount, int skipCount, int passCount, String description) {
         this.run = run;
         this.duration = duration;
         this.failCount = failCount;
         this.skipCount = skipCount;
         this.passCount = passCount;
         this.description = description;
-        this.resultInRun = resultInRun;
     }
 
     public String getDescription() {
@@ -34,6 +34,10 @@ public class HistoryTestResultSummary {
 
     public Run<?, ?> getRun() {
         return run;
+    }
+
+    public float getDuration() {
+        return duration;
     }
 
     public String getDurationString() {
@@ -65,10 +69,9 @@ public class HistoryTestResultSummary {
     }
 
     public String getUrl() {
-        return resultInRun.getUrl();
-    }
+        AbstractTestResultAction<?> action = run.getAction(AbstractTestResultAction.class);
 
-    public hudson.tasks.test.TestResult getResultInRun() {
-        return resultInRun;
+        // TODO pass id to end of url
+        return getRun().getUrl() + action.getUrlName() + "/";
     }
 }
