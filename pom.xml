@@ -202,7 +202,11 @@
                 </exclusion>
                 <!-- Provided by Jenkins core -->
                 <exclusion>
-                    <groupId>jfree</groupId>
+                    <groupId>org.jfree</groupId>
+                    <artifactId>jcommon</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.jfree</groupId>
                     <artifactId>jfreechart</artifactId>
                 </exclusion>
             </exclusions> 
