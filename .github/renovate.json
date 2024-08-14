@@ -9,5 +9,14 @@
   "labels": [
     "dependencies"
   ],
-  "rebaseWhen": "conflicted"
+  "rebaseWhen": "conflicted",
+  "packageRules": [
+    {
+      "matchPackageNames": [
+        "com.pivovarit:parallel-collectors"
+      ],
+      "allowedVersions": "<3.0.0",
+      "description": "Requires Java 21 for 3.x"
+    }
+  ]
 }
