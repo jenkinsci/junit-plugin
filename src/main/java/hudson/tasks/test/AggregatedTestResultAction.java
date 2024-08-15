@@ -26,12 +26,11 @@ package hudson.tasks.test;
 import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.Run;
-import org.kohsuke.stapler.export.Exported;
-import org.kohsuke.stapler.export.ExportedBean;
-
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.List;
+import org.kohsuke.stapler.export.Exported;
+import org.kohsuke.stapler.export.ExportedBean;
 
 /**
  * {@link AbstractTestResultAction} that aggregates all the test results

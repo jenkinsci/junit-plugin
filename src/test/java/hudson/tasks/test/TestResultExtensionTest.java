@@ -23,21 +23,19 @@
  */
 package hudson.tasks.test;
 
-import org.htmlunit.html.HtmlPage;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import hudson.model.Run;
+import java.util.concurrent.TimeUnit;
+import org.htmlunit.html.HtmlPage;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TouchBuilder;
-
-import java.util.concurrent.TimeUnit;
-
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 
 /**
  * A test case to make sure that the TestResult extension mechanism

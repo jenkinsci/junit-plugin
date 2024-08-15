@@ -23,6 +23,7 @@
  */
 package hudson.tasks.test;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.AbortException;
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
@@ -32,9 +33,7 @@ import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-
 import java.io.IOException;
-import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Parses test result files and builds in-memory representation of it as {@link TestResult}.

@@ -29,10 +29,9 @@ import hudson.model.AbstractModelObject;
 import hudson.model.Api;
 import hudson.model.Run;
 import hudson.tasks.test.AbstractTestResultAction;
-import org.kohsuke.stapler.export.ExportedBean;
-
 import java.io.Serializable;
 import java.util.List;
+import org.kohsuke.stapler.export.ExportedBean;
 
 /**
  * Stub of base class for all test result objects. The real implementation of

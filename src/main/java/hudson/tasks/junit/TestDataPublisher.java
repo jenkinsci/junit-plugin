@@ -23,17 +23,21 @@
  */
 package hudson.tasks.junit;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.DescriptorExtensionList;
 import hudson.Extension;
 import hudson.ExtensionPoint;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Util;
-import hudson.model.*;
-import jenkins.model.Jenkins;
-
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractDescribableImpl;
+import hudson.model.BuildListener;
+import hudson.model.Descriptor;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import java.io.IOException;
-import edu.umd.cs.findbugs.annotations.NonNull;
+import jenkins.model.Jenkins;
 
 /**
  * Contributes {@link TestAction}s to test results.

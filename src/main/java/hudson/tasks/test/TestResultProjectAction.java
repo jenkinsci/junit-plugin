@@ -23,34 +23,30 @@
  */
 package hudson.tasks.test;
 
-import java.io.IOException;
-import java.util.List;
-import javax.servlet.ServletException;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletResponse;
-
 import edu.hm.hafner.echarts.ChartModelConfiguration;
 import edu.hm.hafner.echarts.JacksonFacade;
 import edu.hm.hafner.echarts.LinesChartModel;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
-
-import org.kohsuke.stapler.Ancestor;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
-import org.kohsuke.stapler.bind.JavaScriptMethod;
 import hudson.model.AbstractProject;
 import hudson.model.Action;
 import hudson.model.Job;
 import hudson.model.Run;
 import hudson.tasks.junit.JUnitResultArchiver;
 import hudson.tasks.junit.TrendTestResultSummary;
-import hudson.tasks.test.TestResultTrendChart.PassedColor;
-
 import io.jenkins.plugins.echarts.AsyncConfigurableTrendChart;
 import io.jenkins.plugins.echarts.AsyncTrendChart;
 import io.jenkins.plugins.junit.storage.FileJunitTestResultStorage;
 import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
 import io.jenkins.plugins.junit.storage.TestResultImpl;
+import java.io.IOException;
+import java.util.List;
+import javax.servlet.ServletException;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
+import org.kohsuke.stapler.Ancestor;
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.bind.JavaScriptMethod;
 
 /**
  * Project action object from test reporter, such as {@link JUnitResultArchiver},
@@ -122,10 +118,10 @@ public class TestResultProjectAction implements Action, AsyncTrendChart, AsyncCo
 
     @Deprecated
     protected LinesChartModel createChartModel() {
-        return createChartModel(new ChartModelConfiguration(), PassedColor.BLUE);
+        return createChartModel(new ChartModelConfiguration(), TestResultTrendChart.PassedColor.BLUE);
     }
 
-    private LinesChartModel createChartModel(ChartModelConfiguration configuration, PassedColor passedColor) {
+    private LinesChartModel createChartModel(ChartModelConfiguration configuration, TestResultTrendChart.PassedColor passedColor) {
         Run<?, ?> lastCompletedBuild = job.getLastCompletedBuild();
 
         JunitTestResultStorage storage = JunitTestResultStorage.find();
@@ -234,7 +230,7 @@ public class TestResultProjectAction implements Action, AsyncTrendChart, AsyncCo
     @JavaScriptMethod
     @Override
     public String getConfigurableBuildTrendModel(final String configuration) {
-        PassedColor useBlue = JACKSON_FACADE.getBoolean(configuration, "useBlue", false) ? PassedColor.BLUE : PassedColor.GREEN;
+        TestResultTrendChart.PassedColor useBlue = JACKSON_FACADE.getBoolean(configuration, "useBlue", false) ? TestResultTrendChart.PassedColor.BLUE : TestResultTrendChart.PassedColor.GREEN;
         return new JacksonFacade().toJson(createChartModel(ChartModelConfiguration.fromJson(configuration), useBlue));
     }
 

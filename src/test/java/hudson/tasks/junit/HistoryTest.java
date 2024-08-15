@@ -23,29 +23,28 @@
  */
 package hudson.tasks.junit;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+import hudson.model.FreeStyleBuild;
+import hudson.model.FreeStyleProject;
+import hudson.model.Project;
+import hudson.model.Result;
+import java.util.List;
+import java.util.Optional;
 import org.htmlunit.AlertHandler;
 import org.htmlunit.Page;
 import org.htmlunit.html.HtmlPage;
 import org.htmlunit.html.HtmlTable;
 import org.htmlunit.html.HtmlTableCell;
-import hudson.model.FreeStyleBuild;
-import hudson.model.FreeStyleProject;
-import hudson.model.Project;
-import hudson.model.Result;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.recipes.LocalData;
-
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 public class HistoryTest {
     @Rule

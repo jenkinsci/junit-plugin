@@ -1,9 +1,9 @@
 package hudson.tasks.junit;
 
+import static org.junit.Assert.assertEquals;
+
 import hudson.tasks.test.TestResult;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
 
 public class ClassResultTest {
 

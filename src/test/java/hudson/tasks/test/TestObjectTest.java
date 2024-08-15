@@ -1,16 +1,19 @@
 package hudson.tasks.test;
 
-import hudson.model.Run;
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 
+import hudson.model.Run;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.*;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class TestObjectTest {
 

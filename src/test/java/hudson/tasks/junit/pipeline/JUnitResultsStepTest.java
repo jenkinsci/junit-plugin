@@ -1,16 +1,19 @@
 package hudson.tasks.junit.pipeline;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
+
 import com.google.common.base.Predicate;
 import hudson.FilePath;
 import hudson.Functions;
 import hudson.Launcher;
-import hudson.model.AbstractBuild;
-import hudson.model.BuildListener;
 import hudson.model.Descriptor;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import hudson.tasks.Builder;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.Messages;
 import hudson.tasks.junit.SuiteResult;
@@ -19,11 +22,14 @@ import hudson.tasks.junit.TestResult;
 import hudson.tasks.junit.TestResultAction;
 import hudson.tasks.junit.TestResultTest;
 import hudson.tasks.test.PipelineBlockWithTests;
-
-import java.io.Serializable;
+import java.io.IOException;
 import java.net.URL;
-import org.hamcrest.CoreMatchers;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import org.hamcrest.BaseMatcher;
+import org.hamcrest.CoreMatchers;
 import org.hamcrest.Description;
 import org.jenkinsci.plugins.workflow.actions.LabelAction;
 import org.jenkinsci.plugins.workflow.actions.ThreadNameAction;
@@ -47,19 +53,6 @@ import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
 import org.kohsuke.stapler.DataBoundConstructor;
-
-import edu.umd.cs.findbugs.annotations.Nullable;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
 
 public class JUnitResultsStepTest {
     @Rule

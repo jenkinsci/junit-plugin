@@ -23,9 +23,13 @@
  */
 package hudson.tasks.junit;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import hudson.XmlFile;
 import hudson.tasks.test.PipelineTestDetails;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -34,11 +38,12 @@ import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
-import org.apache.commons.io.FileUtils;import org.apache.tools.ant.DirectoryScanner;
-import org.junit.Rule;import org.junit.Test;
-
-import org.junit.rules.TemporaryFolder;import org.jvnet.hudson.test.Issue;import static org.junit.Assert.*;
+import org.apache.commons.io.FileUtils;
+import org.apache.tools.ant.DirectoryScanner;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import org.jvnet.hudson.test.Issue;
 
 /**
  * Tests the JUnit result XML file parsing in {@link TestResult}.

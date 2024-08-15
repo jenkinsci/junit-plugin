@@ -23,16 +23,12 @@
  */
 package hudson.tasks.test;
 
-import hudson.tasks.junit.TestAction;
-import hudson.model.Run;
 import hudson.model.Result;
-
+import hudson.model.Run;
+import hudson.tasks.junit.TestAction;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
-
-import static java.util.Collections.emptyList;
-
 
 /**
  * A class that represents a general concept of a test result, without any
@@ -175,7 +171,7 @@ public abstract class TestResult extends TestObject {
      * @return the children of this test result, if any, or an empty collection
      */
     public Collection<? extends TestResult> getFailedTests() {
-        return emptyList();
+        return Collections.emptyList();
     }
 
 
@@ -184,7 +180,7 @@ public abstract class TestResult extends TestObject {
      * @return the children of this test result, if any, or an empty collection
      */
     public Collection<? extends TestResult> getPassedTests() {
-        return emptyList();
+        return Collections.emptyList();
     }
 
     /**
@@ -192,7 +188,7 @@ public abstract class TestResult extends TestObject {
      * @return the children of this test result, if any, or an empty list
      */
     public Collection<? extends TestResult> getSkippedTests() {
-        return emptyList();
+        return Collections.emptyList();
     }
 
     /**

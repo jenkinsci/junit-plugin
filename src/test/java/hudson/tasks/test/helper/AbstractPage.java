@@ -1,13 +1,12 @@
 package hudson.tasks.test.helper;
 
-import org.htmlunit.html.HtmlAnchor;
-import org.htmlunit.html.HtmlPage;
-import org.xml.sax.SAXException;
+import static org.junit.Assert.assertFalse;
 
 import java.io.IOException;
 import java.util.List;
-
-import static org.junit.Assert.assertFalse;
+import org.htmlunit.html.HtmlAnchor;
+import org.htmlunit.html.HtmlPage;
+import org.xml.sax.SAXException;
 
 public abstract class AbstractPage {
     public static final String AGGREGATED_TEST_REPORT_URL = "aggregatedTestReport";

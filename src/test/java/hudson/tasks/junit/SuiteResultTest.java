@@ -23,27 +23,24 @@
  */
 package hudson.tasks.junit;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import hudson.XmlFile;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.PrintWriter;
+import java.io.Writer;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
-import java.net.URISyntaxException;
 import org.apache.commons.io.FileUtils;
-
-import hudson.XmlFile;
-
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.jvnet.hudson.test.Issue;
-
-import java.io.FileWriter;
-import java.io.PrintWriter;
-import java.io.Writer;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Test cases for parsing JUnit report XML files.

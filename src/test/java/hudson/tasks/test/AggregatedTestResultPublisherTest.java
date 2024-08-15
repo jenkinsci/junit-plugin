@@ -1,5 +1,8 @@
 package hudson.tasks.test;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
+
 import hudson.Functions;
 import hudson.model.AbstractBuild;
 import hudson.model.FreeStyleBuild;
@@ -10,23 +13,19 @@ import hudson.tasks.BuildTrigger;
 import hudson.tasks.Fingerprinter;
 import hudson.tasks.Shell;
 import hudson.tasks.junit.JUnitResultArchiver;
-import hudson.tasks.test.helper.WebClientFactory;
 import hudson.tasks.test.helper.BuildPage;
 import hudson.tasks.test.helper.ProjectPage;
+import hudson.tasks.test.helper.WebClientFactory;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TouchBuilder;
 import org.jvnet.hudson.test.recipes.LocalData;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasSize;
 
 public class AggregatedTestResultPublisherTest {
     public static final String TEST_PROJECT_NAME = "junit";

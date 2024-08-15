@@ -23,13 +23,26 @@
  */
 package hudson.tasks.test;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Extension;
 import hudson.Functions;
-import hudson.model.*;
-import hudson.util.*;
-import hudson.util.ChartUtil.NumberOnlyBuildLabel;
-
-import java.awt.*;
+import hudson.model.AbstractBuild;
+import hudson.model.Action;
+import hudson.model.Api;
+import hudson.model.Build;
+import hudson.model.HealthReport;
+import hudson.model.HealthReportingAction;
+import hudson.model.Project;
+import hudson.model.ResultTrend;
+import hudson.model.Run;
+import hudson.util.Area;
+import hudson.util.ChartUtil;
+import hudson.util.ColorPalette;
+import hudson.util.DataSetBuilder;
+import hudson.util.ShiftedCategoryAxis;
+import hudson.util.StackedAreaRenderer2;
+import java.awt.Color;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
@@ -38,8 +51,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jenkins.model.RunAction2;
 import jenkins.model.lazy.LazyBuildMixIn;
 import org.jfree.chart.ChartFactory;
@@ -350,7 +361,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
         boolean failureOnly = Boolean.parseBoolean(req.getParameter("failureOnly"));
 
         // TODO stop using ChartUtil.NumberOnlyBuildLabel as it forces loading of a Run; create a plainer Comparable
-        DataSetBuilder<String,NumberOnlyBuildLabel> dsb = new DataSetBuilder<>();
+        DataSetBuilder<String,ChartUtil.NumberOnlyBuildLabel> dsb = new DataSetBuilder<>();
 
         int cap = Integer.getInteger(AbstractTestResultAction.class.getName() + ".test.trend.max", Integer.MAX_VALUE);
         int count = 0;
@@ -359,10 +370,10 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
                 LOGGER.log(Level.FINE, "capping test trend for {0} at {1}", new Object[] {run, cap});
                 break;
             }
-            dsb.add( a.getFailCount(), "failed", new NumberOnlyBuildLabel(a.run));
+            dsb.add( a.getFailCount(), "failed", new ChartUtil.NumberOnlyBuildLabel(a.run));
             if(!failureOnly) {
-                dsb.add( a.getSkipCount(), "skipped", new NumberOnlyBuildLabel(a.run));
-                dsb.add( a.getTotalCount()-a.getFailCount()-a.getSkipCount(),"total", new NumberOnlyBuildLabel(a.run));
+                dsb.add( a.getSkipCount(), "skipped", new ChartUtil.NumberOnlyBuildLabel(a.run));
+                dsb.add( a.getTotalCount()-a.getFailCount()-a.getSkipCount(),"total", new ChartUtil.NumberOnlyBuildLabel(a.run));
             }
         }
         LOGGER.log(Level.FINER, "total test trend count for {0}: {1}", new Object[] {run, count});
@@ -417,13 +428,13 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
         StackedAreaRenderer ar = new StackedAreaRenderer2() {
             @Override
             public String generateURL(CategoryDataset dataset, int row, int column) {
-                NumberOnlyBuildLabel label = (NumberOnlyBuildLabel) dataset.getColumnKey(column);
+                ChartUtil.NumberOnlyBuildLabel label = (ChartUtil.NumberOnlyBuildLabel) dataset.getColumnKey(column);
                 return relPath+label.getRun().getNumber()+"/testReport/";
             }
 
             @Override
             public String generateToolTip(CategoryDataset dataset, int row, int column) {
-                NumberOnlyBuildLabel label = (NumberOnlyBuildLabel) dataset.getColumnKey(column);
+                ChartUtil.NumberOnlyBuildLabel label = (ChartUtil.NumberOnlyBuildLabel) dataset.getColumnKey(column);
                 AbstractTestResultAction a = label.getRun().getAction(AbstractTestResultAction.class);
                 switch (row) {
                     case 0:

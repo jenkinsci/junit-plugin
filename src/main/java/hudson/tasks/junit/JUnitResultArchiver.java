@@ -24,9 +24,11 @@
  */
 package hudson.tasks.junit;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.AbortException;
 import hudson.Extension;
 import hudson.FilePath;
+import hudson.Functions;
 import hudson.Launcher;
 import hudson.Util;
 import hudson.model.AbstractBuild;
@@ -42,7 +44,6 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
-import hudson.tasks.junit.TestResultAction.Data;
 import hudson.tasks.test.PipelineTestDetails;
 import hudson.util.DescribableList;
 import hudson.util.FormValidation;
@@ -50,6 +51,11 @@ import hudson.util.ListBoxModel;
 import io.jenkins.plugins.junit.checks.JUnitChecksPublisher;
 import io.jenkins.plugins.junit.storage.FileJunitTestResultStorage;
 import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.logging.Logger;
 import jenkins.tasks.SimpleBuildStep;
 import org.apache.tools.ant.DirectoryScanner;
 import org.apache.tools.ant.types.FileSet;
@@ -57,14 +63,6 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
-import hudson.Functions;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.logging.Logger;
 
 /**
  * Generates HTML report from JUnit test result XML files.
@@ -226,7 +224,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
             // TODO: Move into JUnitParser [BUG 3123310]
             if (task.getTestDataPublishers() != null) {
                 for (TestDataPublisher tdp : task.getTestDataPublishers()) {
-                    Data d = tdp.contributeTestData(build, workspace, launcher, listener, result);
+                    TestResultAction.Data d = tdp.contributeTestData(build, workspace, launcher, listener, result);
                     if (d != null) {
                         action.addData(d);
                     }
@@ -294,7 +292,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
 
             if (task.getTestDataPublishers() != null) {
                 for (TestDataPublisher tdp : task.getTestDataPublishers()) {
-                    Data d = tdp.contributeTestData(build, workspace, launcher, listener, result);
+                    TestResultAction.Data d = tdp.contributeTestData(build, workspace, launcher, listener, result);
                     if (d != null) {
                         action.addData(d);
                     }

@@ -1,8 +1,7 @@
 package hudson.tasks.junit;
 
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
-
 import java.io.Serializable;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.DoNotUse;
 

@@ -12,11 +12,10 @@ import io.jenkins.plugins.checks.api.ChecksOutput;
 import io.jenkins.plugins.checks.api.ChecksPublisher;
 import io.jenkins.plugins.checks.api.ChecksPublisherFactory;
 import io.jenkins.plugins.checks.api.ChecksStatus;
+import java.util.List;
 import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
-
-import java.util.List;
 
 @Restricted(NoExternalUse.class)
 public class JUnitChecksPublisher {

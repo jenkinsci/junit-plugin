@@ -23,9 +23,14 @@
  */
 package hudson.tasks.junit;
 
-import org.htmlunit.Page;
-import org.htmlunit.html.*;
-import org.htmlunit.xml.XmlPage;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
@@ -38,7 +43,15 @@ import hudson.model.Run;
 import hudson.slaves.DumbSlave;
 import hudson.tasks.Builder;
 import hudson.tasks.test.helper.WebClientFactory;
-
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+import org.htmlunit.Page;
+import org.htmlunit.html.DomElement;
+import org.htmlunit.html.HtmlAnchor;
+import org.htmlunit.html.HtmlElement;
+import org.htmlunit.html.HtmlPage;
+import org.htmlunit.html.HtmlTable;
+import org.htmlunit.xml.XmlPage;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -46,21 +59,9 @@ import org.junit.Test;
 import org.jvnet.hudson.test.BuildWatcher;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.JenkinsRule.WebClient;
 import org.jvnet.hudson.test.TouchBuilder;
 import org.jvnet.hudson.test.recipes.LocalData;
 import org.xml.sax.SAXException;
-
-import java.io.IOException;
-import java.util.concurrent.TimeUnit;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 public class TestResultPublishingTest {
     @Rule
@@ -91,7 +92,7 @@ public class TestResultPublishingTest {
 
         assertTestResults(build);
 
-        WebClient wc = WebClientFactory.createWebClientWithDisabledJavaScript(rule);
+        JenkinsRule.WebClient wc = WebClientFactory.createWebClientWithDisabledJavaScript(rule);
         wc.getPage(build, "testReport");  // test report
         wc.getPage(build, "testReport/hudson.security"); // package
         wc.getPage(build, "testReport/hudson.security/HudsonPrivateSecurityRealmTest/"); // class
@@ -130,7 +131,7 @@ public class TestResultPublishingTest {
         assertNotNull("We should have a project named " + TEST_PROJECT_WITH_HISTORY, proj);
 
         // Validate that there are test results where I expect them to be:
-        WebClient wc = WebClientFactory.createWebClientWithDisabledJavaScript(rule);
+        JenkinsRule.WebClient wc = WebClientFactory.createWebClientWithDisabledJavaScript(rule);
 
         // On the project page:
         HtmlPage projectPage = wc.getPage(proj);
@@ -229,7 +230,7 @@ public class TestResultPublishingTest {
         assertNotNull("We should have a project named " + TEST_PROJECT_WITH_HISTORY, proj);
 
         // Validate that there are test results where I expect them to be:
-        WebClient wc = WebClientFactory.createWebClientWithDisabledJavaScript(rule);
+        JenkinsRule.WebClient wc = WebClientFactory.createWebClientWithDisabledJavaScript(rule);
         Run theRun = proj.getBuildByNumber(4);
         assertTestResultsAsExpected(wc, theRun, "/testReport",
                         "org.jvnet.hudson.examples.small", "12 ms", "FAILURE",
@@ -252,7 +253,7 @@ public class TestResultPublishingTest {
         assertNotNull("We should have a project named " + TEST_PROJECT_WITH_HISTORY, proj);
 
         // Validate that there are test results where I expect them to be:
-        WebClient wc = WebClientFactory.createWebClientWithDisabledJavaScript(rule);
+        JenkinsRule.WebClient wc = WebClientFactory.createWebClientWithDisabledJavaScript(rule);
 
         HtmlPage historyPage = wc.getPage(proj.getBuildByNumber(7),"/testReport/history/");
         rule.assertGoodStatus(historyPage);
@@ -317,7 +318,7 @@ public class TestResultPublishingTest {
         }
     }
 
-    void assertTestResultsAsExpected(WebClient wc, Run run, String restOfUrl,
+    void assertTestResultsAsExpected(JenkinsRule.WebClient wc, Run run, String restOfUrl,
                                      String packageName,
                                      String expectedResult, String expectedDurationStr,
                                      int expectedTotalTests, int expectedTotalDiff,

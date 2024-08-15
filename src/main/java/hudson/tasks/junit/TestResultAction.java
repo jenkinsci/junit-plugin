@@ -24,6 +24,7 @@
 package hudson.tasks.junit;
 
 import com.thoughtworks.xstream.XStream;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Util;
 import hudson.XmlFile;
@@ -33,16 +34,13 @@ import hudson.model.BuildListener;
 import hudson.model.Job;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import io.jenkins.plugins.junit.storage.FileJunitTestResultStorage;
-import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
 import hudson.tasks.test.AbstractTestResultAction;
 import hudson.tasks.test.TestObject;
 import hudson.tasks.test.TestResultProjectAction;
 import hudson.util.HeapSpaceStringConverter;
 import hudson.util.XStream2;
-import jenkins.util.SystemProperties;
-import org.kohsuke.stapler.StaplerProxy;
-
+import io.jenkins.plugins.junit.storage.FileJunitTestResultStorage;
+import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
 import java.io.File;
 import java.io.IOException;
 import java.lang.ref.SoftReference;
@@ -52,12 +50,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import edu.umd.cs.findbugs.annotations.Nullable;
 import jenkins.tasks.SimpleBuildStep;
+import jenkins.util.SystemProperties;
+import org.kohsuke.stapler.StaplerProxy;
 
 /**
  * {@link Action} that displays the JUnit test result.

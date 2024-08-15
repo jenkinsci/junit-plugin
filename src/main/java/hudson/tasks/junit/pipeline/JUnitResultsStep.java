@@ -1,5 +1,6 @@
 package hudson.tasks.junit.pipeline;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -8,11 +9,15 @@ import hudson.model.Descriptor;
 import hudson.model.Saveable;
 import hudson.model.TaskListener;
 import hudson.tasks.junit.JUnitTask;
-import hudson.tasks.junit.StdioRetention;
 import hudson.tasks.junit.Messages;
+import hudson.tasks.junit.StdioRetention;
 import hudson.tasks.junit.TestDataPublisher;
 import hudson.util.DescribableList;
 import hudson.util.FormValidation;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import org.apache.tools.ant.types.FileSet;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.steps.Step;
@@ -22,13 +27,6 @@ import org.jenkinsci.plugins.workflow.steps.StepExecution;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
-
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 public class JUnitResultsStep extends Step implements JUnitTask {
     /**
