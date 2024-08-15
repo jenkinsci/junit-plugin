@@ -23,11 +23,10 @@ public interface JUnitTask {
     boolean isKeepTestNames();
 
     boolean isAllowEmptyResults();
-    
+
     boolean isSkipPublishingChecks();
 
     String getChecksName();
 
     boolean isSkipOldReports();
-
 }

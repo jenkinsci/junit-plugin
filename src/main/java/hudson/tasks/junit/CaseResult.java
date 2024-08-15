@@ -1,18 +1,18 @@
 /*
  * The MIT License
- * 
+ *
  * Copyright (c) 2004-2009, Sun Microsystems, Inc., Kohsuke Kawaguchi, Daniel Dyer, Seiji Sogabe, Tom Huybrechts, Yahoo!, Inc.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -76,6 +76,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      * This field retains the method name.
      */
     private String testName;
+
     private transient String safeName;
     private boolean skipped;
     private boolean keepTestNames;
@@ -83,10 +84,13 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     private String errorStackTrace;
     private String errorDetails;
     private Map<String, String> properties;
+
     @SuppressFBWarnings(value = "SE_TRANSIENT_FIELD_NOT_RESTORED", justification = "Specific method to restore it")
     private transient SuiteResult parent;
 
-    @SuppressFBWarnings(value = "IS2_INCONSISTENT_SYNC", justification = "Not guarded, though read in synchronized blocks")
+    @SuppressFBWarnings(
+            value = "IS2_INCONSISTENT_SYNC",
+            justification = "Not guarded, though read in synchronized blocks")
     private transient ClassResult classResult;
 
     /**
@@ -96,7 +100,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      * If these information are reported at the test case level, these fields are set,
      * otherwise null, in which case {@link SuiteResult#stdout}.
      */
-    private String stdout,stderr;
+    private String stdout, stderr;
 
     /**
      * This test has been failing since this build number (not id.)
@@ -109,7 +113,6 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         String time = testCase.attributeValue("time");
         return new TimeToFloat(time).parse();
     }
-
 
     /**
      * Used to create a fake failure, when Hudson fails to load data from XML files.
@@ -141,16 +144,15 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
 
     @Restricted(Beta.class)
     public CaseResult(
-            SuiteResult parent, 
-            String className, 
-            String testName, 
-            String errorDetails, 
-            String skippedMessage, 
+            SuiteResult parent,
+            String className,
+            String testName,
+            String errorDetails,
+            String skippedMessage,
             float duration,
             String stdout,
             String stderr,
-            String stacktrace
-    ) {
+            String stacktrace) {
         this.className = className;
         this.testName = testName;
         this.errorStackTrace = stacktrace;
@@ -160,7 +162,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         this.stderr = fixNULs(stderr);
         this.duration = duration;
         this.startTime = -1;
-        
+
         this.skipped = skippedMessage != null;
         this.skippedMessage = skippedMessage;
         this.properties = Collections.emptyMap();
@@ -168,31 +170,48 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     }
 
     @Deprecated
-    CaseResult(SuiteResult parent, Element testCase, String testClassName, boolean keepLongStdio, boolean keepProperties, boolean keepTestNames) {
-        this(parent, testCase, testClassName, StdioRetention.fromKeepLongStdio(keepLongStdio), keepProperties, keepTestNames);
+    CaseResult(
+            SuiteResult parent,
+            Element testCase,
+            String testClassName,
+            boolean keepLongStdio,
+            boolean keepProperties,
+            boolean keepTestNames) {
+        this(
+                parent,
+                testCase,
+                testClassName,
+                StdioRetention.fromKeepLongStdio(keepLongStdio),
+                keepProperties,
+                keepTestNames);
     }
 
-    CaseResult(SuiteResult parent, Element testCase, String testClassName, StdioRetention stdioRetention, boolean keepProperties, boolean keepTestNames) {
+    CaseResult(
+            SuiteResult parent,
+            Element testCase,
+            String testClassName,
+            StdioRetention stdioRetention,
+            boolean keepProperties,
+            boolean keepTestNames) {
         // schema for JUnit report XML format is not available in Ant,
         // so I don't know for sure what means what.
         // reports in http://www.nabble.com/difference-in-junit-publisher-and-ant-junitreport-tf4308604.html#a12265700
         // indicates that maybe I shouldn't use @classname altogether.
 
-        //String cn = testCase.attributeValue("classname");
-        //if(cn==null)
+        // String cn = testCase.attributeValue("classname");
+        // if(cn==null)
         //    // Maven seems to skip classname, and that shows up in testSuite/@name
         //    cn = parent.getName();
 
-
         /*
-            According to http://www.nabble.com/NPE-(Fatal%3A-Null)-in-recording-junit-test-results-td23562964.html
-            there's some odd-ball cases where testClassName is null but
-            @name contains fully qualified name.
-         */
+           According to http://www.nabble.com/NPE-(Fatal%3A-Null)-in-recording-junit-test-results-td23562964.html
+           there's some odd-ball cases where testClassName is null but
+           @name contains fully qualified name.
+        */
         String nameAttr = testCase.attributeValue("name");
-        if(testClassName==null && nameAttr.contains(".")) {
-            testClassName = nameAttr.substring(0,nameAttr.lastIndexOf('.'));
-            nameAttr = nameAttr.substring(nameAttr.lastIndexOf('.')+1);
+        if (testClassName == null && nameAttr.contains(".")) {
+            testClassName = nameAttr.substring(0, nameAttr.lastIndexOf('.'));
+            nameAttr = nameAttr.substring(nameAttr.lastIndexOf('.') + 1);
         }
 
         className = testClassName;
@@ -215,12 +234,13 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
             Element properties_element = testCase.element("properties");
             if (properties_element != null) {
                 List<Element> property_elements = properties_element.elements("property");
-                for (Element prop : property_elements){
+                for (Element prop : property_elements) {
                     if (prop.attributeValue("name") != null) {
-                        if (prop.attributeValue("value") != null)
+                        if (prop.attributeValue("value") != null) {
                             properties.put(prop.attributeValue("name"), prop.attributeValue("value"));
-                        else
+                        } else {
                             properties.put(prop.attributeValue("name"), prop.getText());
+                        }
                     }
                 }
             }
@@ -249,7 +269,8 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         return Math.min(365.0f * 24 * 60 * 60, Math.max(0.0f, d));
     }
 
-    public static CaseResult parse(SuiteResult parent, final XMLStreamReader reader, String ver) throws XMLStreamException {
+    public static CaseResult parse(SuiteResult parent, final XMLStreamReader reader, String ver)
+            throws XMLStreamException {
         CaseResult r = new CaseResult(parent, null, null, null);
         while (reader.hasNext()) {
             final int event = reader.next();
@@ -309,7 +330,8 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         return r;
     }
 
-    public static void parseProperties(Map<String, String> r, final XMLStreamReader reader, String ver) throws XMLStreamException {
+    public static void parseProperties(Map<String, String> r, final XMLStreamReader reader, String ver)
+            throws XMLStreamException {
         while (reader.hasNext()) {
             final int event = reader.next();
             if (event == XMLStreamReader.END_ELEMENT && reader.getLocalName().equals("properties")) {
@@ -330,7 +352,8 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         }
     }
 
-    public static void parseProperty(Map<String, String> r, final XMLStreamReader reader, String ver) throws XMLStreamException {
+    public static void parseProperty(Map<String, String> r, final XMLStreamReader reader, String ver)
+            throws XMLStreamException {
         String name = null, value = null;
         while (reader.hasNext()) {
             final int event = reader.next();
@@ -357,10 +380,10 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
                 }
             }
         }
-
     }
 
-    static String possiblyTrimStdio(Collection<CaseResult> results, StdioRetention stdioRetention, String stdio) { // HUDSON-6516
+    static String possiblyTrimStdio(
+            Collection<CaseResult> results, StdioRetention stdioRetention, String stdio) { // HUDSON-6516
         if (stdio == null) {
             return null;
         }
@@ -375,7 +398,8 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         if (middle <= 0) {
             return stdio;
         }
-        return stdio.subSequence(0, halfMaxSize) + "\n...[truncated " + middle + " chars]...\n" + stdio.subSequence(len - halfMaxSize, len);
+        return stdio.subSequence(0, halfMaxSize) + "\n...[truncated " + middle + " chars]...\n"
+                + stdio.subSequence(len - halfMaxSize, len);
     }
 
     static String fixNULs(String stdio) { // JENKINS-71139
@@ -386,7 +410,8 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      * Flavor of {@link #possiblyTrimStdio(Collection, StdioRetention, String)} that doesn't try to read the whole thing into memory.
      */
     @SuppressFBWarnings(value = "DM_DEFAULT_ENCODING", justification = "Expected behavior")
-    static String possiblyTrimStdio(Collection<CaseResult> results, StdioRetention stdioRetention, File stdio) throws IOException {
+    static String possiblyTrimStdio(Collection<CaseResult> results, StdioRetention stdioRetention, File stdio)
+            throws IOException {
         long len = stdio.length();
         boolean keepAll = stdioRetention == StdioRetention.ALL
                 || (stdioRetention == StdioRetention.FAILED && hasFailures(results));
@@ -408,8 +433,8 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         int headBytes = head.getBytes().length;
         int tailBytes = tail.getBytes().length;
 
-        middle = len - (headBytes+tailBytes);
-        if (middle<=0) {
+        middle = len - (headBytes + tailBytes);
+        if (middle <= 0) {
             // if it turns out that we didn't have any middle section, just return the whole thing
             return FileUtils.readFileToString(stdio);
         }
@@ -419,6 +444,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
 
     private static final int HALF_MAX_SIZE = 500;
     private static final int HALF_MAX_FAILING_SIZE = 50000;
+
     private static int halfMaxSize(Collection<CaseResult> results) {
         return hasFailures(results) ? HALF_MAX_FAILING_SIZE : HALF_MAX_SIZE;
     }
@@ -434,8 +460,9 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
 
     private static String getError(Element testCase) {
         String msg = testCase.elementText("error");
-        if(msg!=null)
+        if (msg != null) {
             return msg;
+        }
         return testCase.elementText("failure");
     }
 
@@ -466,7 +493,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
 
         if (skippedElement != null) {
             message = skippedElement.attributeValue("message");
-            if(message == null) {
+            if (message == null) {
                 message = skippedElement.getText();
             }
         }
@@ -484,7 +511,8 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     }
 
     private String getNameWithEnclosingBlocks(String rawName) {
-        // Only prepend the enclosing flow node names if there are any and the run this is in has multiple blocks directly containing
+        // Only prepend the enclosing flow node names if there are any and the run this is in has multiple blocks
+        // directly containing
         // test results.
         if (!keepTestNames && !getEnclosingFlowNodeNames().isEmpty()) {
             Run<?, ?> r = getRun();
@@ -506,7 +534,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      * <p>
      * Note that this may contain any URL-unfriendly character.
      */
-    @Exported(visibility=999)
+    @Exported(visibility = 999)
     public @Override String getName() {
         if (testName == null || testName.isEmpty()) {
             return "(?)";
@@ -525,12 +553,12 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     /**
      * Gets the duration of the test, in seconds
      */
-    @Exported(visibility=9)
+    @Exported(visibility = 9)
     @Override
     public float getDuration() {
         return duration;
     }
-    
+
     /**
      * Gets the start time of the test, in epoch milliseconds
      */
@@ -546,12 +574,13 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
             return safeName;
         }
         StringBuilder buf = new StringBuilder(getDisplayName());
-        for( int i=0; i<buf.length(); i++ ) {
+        for (int i = 0; i < buf.length(); i++) {
             char ch = buf.charAt(i);
-            if(!Character.isJavaIdentifierPart(ch))
-                buf.setCharAt(i,'_');
+            if (!Character.isJavaIdentifierPart(ch)) {
+                buf.setCharAt(i, '_');
+            }
         }
-        Collection<CaseResult> siblings = classResult ==null ? Collections.emptyList(): classResult.getChildren();
+        Collection<CaseResult> siblings = classResult == null ? Collections.emptyList() : classResult.getChildren();
         return safeName = uniquifyName(siblings, buf.toString());
     }
 
@@ -560,7 +589,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      *
      * @return the class name of a test class.
      */
-    @Exported(visibility=9)
+    @Exported(visibility = 9)
     public String getClassName() {
         return className;
     }
@@ -572,7 +601,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      */
     public String getSimpleName() {
         int idx = className.lastIndexOf('.');
-        return className.substring(idx+1);
+        return className.substring(idx + 1);
     }
 
     /**
@@ -582,13 +611,16 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      */
     public String getPackageName() {
         int idx = className.lastIndexOf('.');
-        if(idx<0)       return "(root)";
-        else            return className.substring(0,idx);
+        if (idx < 0) {
+            return "(root)";
+        } else {
+            return className.substring(0, idx);
+        }
     }
 
     @Override
     public String getFullName() {
-        return className+'.'+getName();
+        return className + '.' + getName();
     }
 
     /**
@@ -598,18 +630,27 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     public String getFullDisplayName() {
         return getNameWithEnclosingBlocks(getTransformedFullDisplayName());
     }
+
     public String getTransformedFullDisplayName() {
         return TestNameTransformer.getTransformedName(getFullName());
     }
 
     @Override
     public int getFailCount() {
-        if (isFailed()) return 1; else return 0;
+        if (isFailed()) {
+            return 1;
+        } else {
+            return 0;
+        }
     }
 
     @Override
     public int getSkipCount() {
-        if (isSkipped()) return 1; else return 0;
+        if (isSkipped()) {
+            return 1;
+        } else {
+            return 0;
+        }
     }
 
     @Override
@@ -621,7 +662,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      * If this test failed, then return the build number
      * when this test started failing.
      */
-    @Exported(visibility=9)
+    @Exported(visibility = 9)
     @Override
     public int getFailedSince() {
         // If we haven't calculated failedSince yet, and we should,
@@ -631,7 +672,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     }
 
     private void recomputeFailedSinceIfNeeded() {
-        if (failedSince==0 && getFailCount()==1) {
+        if (failedSince == 0 && getFailCount() == 1) {
             CaseResult prev = getPreviousResult();
             if (prev != null && prev.isFailed()) {
                 this.failedSince = prev.getFailedSince();
@@ -639,20 +680,20 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
                 this.failedSince = getRun().getNumber();
             } else {
                 LOGGER.warning("trouble calculating getFailedSince. We've got prev, but no owner.");
-                // failedSince will be 0, which isn't correct. 
+                // failedSince will be 0, which isn't correct.
             }
         }
     }
 
     @Override
-    public Run<?,?> getFailedSinceRun() {
+    public Run<?, ?> getFailedSinceRun() {
         JunitTestResultStorage storage = JunitTestResultStorage.find();
         if (!(storage instanceof FileJunitTestResultStorage)) {
             Run<?, ?> run = Stapler.getCurrentRequest().findAncestorObject(Run.class);
             TestResultImpl pluggableStorage = storage.load(run.getParent().getFullName(), run.getNumber());
             return pluggableStorage.getFailedSinceRun(this);
         }
-        
+
         return getRun().getParent().getBuildByNumber(getFailedSince());
     }
 
@@ -662,16 +703,16 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      *
      * @return the number of consecutive failing builds.
      */
-    @Exported(visibility=9)
+    @Exported(visibility = 9)
     public int getAge() {
-        if(isPassed())
+        if (isPassed()) {
             return 0;
-        else if (getRun() != null) {
-            return getRun().getNumber()-getFailedSince()+1;
+        } else if (getRun() != null) {
+            return getRun().getNumber() - getFailedSince() + 1;
         } else {
             LOGGER.fine("Trying to get age of a CaseResult without an owner");
-            return 0; 
-    }
+            return 0;
+        }
     }
 
     /**
@@ -690,9 +731,13 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     @Exported
     @Override
     public String getStdout() {
-        if(stdout!=null)    return stdout;
+        if (stdout != null) {
+            return stdout;
+        }
         SuiteResult sr = getSuiteResult();
-        if (sr==null) return "";         
+        if (sr == null) {
+            return "";
+        }
         return getSuiteResult().getStdout();
     }
 
@@ -705,27 +750,34 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     @Exported
     @Override
     public String getStderr() {
-        if(stderr!=null)    return stderr;
+        if (stderr != null) {
+            return stderr;
+        }
         SuiteResult sr = getSuiteResult();
-        if (sr==null) return "";
+        if (sr == null) {
+            return "";
+        }
         return getSuiteResult().getStderr();
     }
 
-    static int PREVIOUS_TEST_RESULT_BACKTRACK_BUILDS_MAX =
-        Integer.parseInt(System.getProperty(History.HistoryTableResult.class.getName() + ".PREVIOUS_TEST_RESULT_BACKTRACK_BUILDS_MAX","25"));
+    static int PREVIOUS_TEST_RESULT_BACKTRACK_BUILDS_MAX = Integer.parseInt(System.getProperty(
+            History.HistoryTableResult.class.getName() + ".PREVIOUS_TEST_RESULT_BACKTRACK_BUILDS_MAX", "25"));
 
     @Override
     public CaseResult getPreviousResult() {
-        if (parent == null) return null;
+        if (parent == null) {
+            return null;
+        }
 
         TestResult previousResult = parent.getParent();
         int n = 0;
         while (previousResult != null && n < PREVIOUS_TEST_RESULT_BACKTRACK_BUILDS_MAX) {
             previousResult = previousResult.getPreviousResult();
-            if (previousResult == null) 
+            if (previousResult == null) {
                 return null;
+            }
             if (previousResult instanceof hudson.tasks.junit.TestResult) {
-	            hudson.tasks.junit.TestResult pr = (hudson.tasks.junit.TestResult) previousResult;
+                hudson.tasks.junit.TestResult pr = (hudson.tasks.junit.TestResult) previousResult;
                 CaseResult cr = pr.getCase(parent.getName(), getTransformedFullDisplayName());
                 if (cr != null) {
                     return cr;
@@ -744,7 +796,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     public TestResult findCorrespondingResult(String id) {
         if (id.equals(safe(getName()))) {
             return this;
-    }
+        }
         return null;
     }
 
@@ -779,10 +831,11 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     }
 
     private Collection<? extends hudson.tasks.test.TestResult> singletonListOfThisOrEmptyList(boolean f) {
-        if (f)
+        if (f) {
             return Collections.singletonList(this);
-        else
+        } else {
             return Collections.emptyList();
+        }
     }
 
     /**
@@ -814,7 +867,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      */
     @Override
     public boolean isPassed() {
-        return !skipped && errorDetails == null && errorStackTrace==null;
+        return !skipped && errorDetails == null && errorStackTrace == null;
     }
 
     /**
@@ -823,7 +876,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      * been configured to be skipped.
      * @return true if the test was not executed, false otherwise.
      */
-    @Exported(visibility=9)
+    @Exported(visibility = 9)
     public boolean isSkipped() {
         return skipped;
     }
@@ -877,9 +930,9 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     }
 
     @Override
-    public Run<?,?> getRun() {
+    public Run<?, ?> getRun() {
         SuiteResult sr = getSuiteResult();
-        if (sr==null) {
+        if (sr == null) {
             LOGGER.warning("In getOwner(), getSuiteResult is null");
             return null;
         }
@@ -896,14 +949,14 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
 
     public void setParentSuiteResult(SuiteResult parent) {
         this.parent = parent;
-            }
+    }
 
     public void freeze(SuiteResult parent) {
         this.parent = parent;
         // some old test data doesn't have failedSince value set, so for those compute them.
         recomputeFailedSinceIfNeeded();
     }
-    
+
     @Override
     public int compareTo(CaseResult that) {
         if (this == that) {
@@ -931,17 +984,17 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         return System.identityHashCode(this);
     }
 
-    @Exported(name="status",visibility=9) // because stapler notices suffix 's' and remove it
+    @Exported(name = "status", visibility = 9) // because stapler notices suffix 's' and remove it
     public Status getStatus() {
         if (skipped) {
             return Status.SKIPPED;
         }
         CaseResult pr = getPreviousResult();
-        if(pr==null) {
+        if (pr == null) {
             return isPassed() ? Status.PASSED : Status.FAILED;
         }
 
-        if(pr.isPassed()) {
+        if (pr.isPassed()) {
             return isPassed() ? Status.PASSED : Status.REGRESSION;
         } else {
             return isPassed() ? Status.FIXED : Status.FAILED;
@@ -951,7 +1004,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     public void setClass(ClassResult classResult) {
         this.classResult = classResult;
     }
-    
+
     public void setStartTime(long start) {
         startTime = start;
     }
@@ -967,34 +1020,34 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         /**
          * This test runs OK, just like its previous run.
          */
-        PASSED("result-passed",Messages._CaseResult_Status_Passed(),true),
+        PASSED("result-passed", Messages._CaseResult_Status_Passed(), true),
         /**
          * This test was skipped due to configuration or the
          * failure or skipping of a method that it depends on.
          */
-        SKIPPED("result-skipped",Messages._CaseResult_Status_Skipped(),false),
+        SKIPPED("result-skipped", Messages._CaseResult_Status_Skipped(), false),
         /**
          * This test failed, just like its previous run.
          */
-        FAILED("result-failed",Messages._CaseResult_Status_Failed(),false),
+        FAILED("result-failed", Messages._CaseResult_Status_Failed(), false),
         /**
          * This test has been failing, but now it runs OK.
          */
-        FIXED("result-fixed",Messages._CaseResult_Status_Fixed(),true),
+        FIXED("result-fixed", Messages._CaseResult_Status_Fixed(), true),
         /**
          * This test has been running OK, but now it failed.
          */
-        REGRESSION("result-regression",Messages._CaseResult_Status_Regression(),false);
+        REGRESSION("result-regression", Messages._CaseResult_Status_Regression(), false);
 
         private final String cssClass;
         private final Localizable message;
         public final boolean isOK;
 
         Status(String cssClass, Localizable message, boolean OK) {
-           this.cssClass = cssClass;
-           this.message = message;
-           isOK = OK;
-       }
+            this.cssClass = cssClass;
+            this.message = message;
+            isOK = OK;
+        }
 
         public String getCssClass() {
             return cssClass;
@@ -1005,7 +1058,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         }
 
         public boolean isRegression() {
-            return this==REGRESSION;
+            return this == REGRESSION;
         }
     }
 
@@ -1015,5 +1068,4 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     /*package*/ static final Comparator<CaseResult> BY_AGE = Comparator.comparingInt(CaseResult::getAge);
 
     private static final long serialVersionUID = 1L;
-
 }

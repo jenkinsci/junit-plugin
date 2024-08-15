@@ -30,19 +30,17 @@ import org.jvnet.hudson.test.recipes.LocalData;
 public class AggregatedTestResultPublisherTest {
     public static final String TEST_PROJECT_NAME = "junit";
     public static final String AGGREGATION_PROJECT_NAME = "aggregated";
+
     @Rule
     public JenkinsRule j = new JenkinsRule();
+
     private FreeStyleProject upstreamProject;
     private FreeStyleProject downstreamProject;
 
     private FreeStyleBuild build;
     private JenkinsRule.WebClient wc;
-    private static final String[] singleContents = {
-            "abcdef"
-    };
-    private static final String[] singleFiles = {
-            "test.txt"
-    };
+    private static final String[] singleContents = {"abcdef"};
+    private static final String[] singleFiles = {"test.txt"};
     private BuildPage buildPage;
     private ProjectPage projectPage;
 
@@ -59,17 +57,21 @@ public class AggregatedTestResultPublisherTest {
 
         buildAndSetupPageObjects();
 
-        projectPage.getLatestAggregatedTestReportLink()
+        projectPage
+                .getLatestAggregatedTestReportLink()
                 .assertHasLatestAggregatedTestResultText()
                 .assertHasTests()
-                .follow().hasLinkToTestResultOfBuild(TEST_PROJECT_NAME, 1);
+                .follow()
+                .hasLinkToTestResultOfBuild(TEST_PROJECT_NAME, 1);
 
         projectPage.assertNoTestReportLink();
 
-        buildPage.getAggregatedTestReportLink()
+        buildPage
+                .getAggregatedTestReportLink()
                 .assertHasAggregatedTestResultText()
                 .assertHasTests()
-                .follow().hasLinkToTestResultOfBuild(TEST_PROJECT_NAME, 1);
+                .follow()
+                .hasLinkToTestResultOfBuild(TEST_PROJECT_NAME, 1);
         buildPage.assertNoTestReportLink();
     }
 
@@ -81,20 +83,20 @@ public class AggregatedTestResultPublisherTest {
 
         buildAndSetupPageObjects();
 
-        projectPage.getLatestTestReportLink()
+        projectPage
+                .getLatestTestReportLink()
                 .assertHasLatestTestResultText()
                 .assertHasTests()
                 .follow();
-        projectPage.getLatestAggregatedTestReportLink()
+        projectPage
+                .getLatestAggregatedTestReportLink()
                 .assertHasLatestAggregatedTestResultText()
                 .assertNoTests()
                 .follow();
 
-        buildPage.getTestReportLink()
-                .assertHasTestResultText()
-                .assertHasTests()
-                .follow();
-        buildPage.getAggregatedTestReportLink()
+        buildPage.getTestReportLink().assertHasTestResultText().assertHasTests().follow();
+        buildPage
+                .getAggregatedTestReportLink()
                 .assertHasAggregatedTestResultText()
                 .assertNoTests()
                 .follow();
@@ -108,20 +110,20 @@ public class AggregatedTestResultPublisherTest {
 
         buildAndSetupPageObjects();
 
-        projectPage.getLatestTestReportLink()
+        projectPage
+                .getLatestTestReportLink()
                 .assertHasLatestTestResultText()
                 .assertHasTests()
                 .follow();
-        projectPage.getLatestAggregatedTestReportLink()
+        projectPage
+                .getLatestAggregatedTestReportLink()
                 .assertHasLatestAggregatedTestResultText()
                 .assertHasTests()
                 .follow();
 
-        buildPage.getTestReportLink()
-                .assertHasTestResultText()
-                .assertHasTests()
-                .follow();
-        buildPage.getAggregatedTestReportLink()
+        buildPage.getTestReportLink().assertHasTestResultText().assertHasTests().follow();
+        buildPage
+                .getAggregatedTestReportLink()
                 .assertHasAggregatedTestResultText()
                 .assertHasTests()
                 .follow()
@@ -143,10 +145,10 @@ public class AggregatedTestResultPublisherTest {
         j.waitUntilNoActivity();
 
         List<AbstractBuild<?, ?>> downstreamBuilds = StreamSupport.stream(
-                build.getDownstreamBuilds(downstreamProject).spliterator(), false).collect(Collectors.toList());
+                        build.getDownstreamBuilds(downstreamProject).spliterator(), false)
+                .collect(Collectors.toList());
         assertThat(downstreamBuilds, hasSize(numberOfDownstreamBuilds));
     }
-
 
     private void createUpstreamProjectWithTests() throws Exception {
         createUpstreamProjectWithNoTests();
@@ -171,7 +173,9 @@ public class AggregatedTestResultPublisherTest {
         downstreamProject.setQuietPeriod(0);
         addFingerprinterToProject(downstreamProject, singleContents, singleFiles);
 
-        upstreamProject.getPublishersList().add(new BuildTrigger(Collections.singletonList(downstreamProject), Result.SUCCESS));
+        upstreamProject
+                .getPublishersList()
+                .add(new BuildTrigger(Collections.singletonList(downstreamProject), Result.SUCCESS));
         upstreamProject.getPublishersList().add(new AggregatedTestResultPublisher(null));
 
         j.jenkins.rebuildDependencyGraph();
@@ -183,7 +187,8 @@ public class AggregatedTestResultPublisherTest {
         project.getBuildersList().add(new TouchBuilder());
     }
 
-    private void addFingerprinterToProject(FreeStyleProject project, String[] contents, String[] files) throws Exception {
+    private void addFingerprinterToProject(FreeStyleProject project, String[] contents, String[] files)
+            throws Exception {
         StringBuilder targets = new StringBuilder();
         for (int i = 0; i < contents.length; i++) {
             String command = "echo $BUILD_NUMBER " + contents[i] + " > " + files[i];

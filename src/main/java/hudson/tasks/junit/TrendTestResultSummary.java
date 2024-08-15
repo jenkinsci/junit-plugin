@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class TrendTestResultSummary implements Serializable {
-    
+
     private int buildNumber;
     private TestResultSummary testResultSummary;
 
@@ -30,7 +30,7 @@ public class TrendTestResultSummary implements Serializable {
     public int getBuildNumber() {
         return buildNumber;
     }
-    
+
     public String getDisplayName() {
         return "#" + buildNumber;
     }

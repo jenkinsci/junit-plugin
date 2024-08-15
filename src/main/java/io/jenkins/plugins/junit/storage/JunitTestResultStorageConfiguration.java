@@ -16,7 +16,7 @@ import org.kohsuke.stapler.StaplerRequest;
 @Restricted(Beta.class)
 @Symbol("junitTestResultStorage")
 public class JunitTestResultStorageConfiguration extends GlobalConfiguration {
-    
+
     private JunitTestResultStorage storage = new FileJunitTestResultStorage();
 
     @DataBoundConstructor

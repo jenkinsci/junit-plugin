@@ -59,6 +59,7 @@ public class JUnitResultsStep extends Step implements JUnitTask {
      * If true, don't throw exception on missing test results or no files found.
      */
     private boolean allowEmptyResults;
+
     private boolean skipPublishingChecks;
     private String checksName;
     /**
@@ -104,7 +105,8 @@ public class JUnitResultsStep extends Step implements JUnitTask {
      *
      * @since 1.2
      */
-    @DataBoundSetter public final void setTestDataPublishers(@NonNull List<TestDataPublisher> testDataPublishers) {
+    @DataBoundSetter
+    public final void setTestDataPublishers(@NonNull List<TestDataPublisher> testDataPublishers) {
         this.testDataPublishers = new DescribableList<>(Saveable.NOOP);
         this.testDataPublishers.addAll(testDataPublishers);
     }
@@ -115,10 +117,12 @@ public class JUnitResultsStep extends Step implements JUnitTask {
      * @since 1.2-beta-1
      */
     @Deprecated
-    @DataBoundSetter public final void setKeepLongStdio(boolean keepLongStdio) {
+    @DataBoundSetter
+    public final void setKeepLongStdio(boolean keepLongStdio) {
         this.stdioRetention = StdioRetention.fromKeepLongStdio(keepLongStdio).name();
     }
 
+    @Override
     @Deprecated
     public boolean isKeepLongStdio() {
         return StdioRetention.ALL == getParsedStdioRetention();
@@ -135,7 +139,8 @@ public class JUnitResultsStep extends Step implements JUnitTask {
     /**
      * @param stdioRetention How to keep long stdio.
      */
-    @DataBoundSetter public final void setStdioRetention(String stdioRetention) {
+    @DataBoundSetter
+    public final void setStdioRetention(String stdioRetention) {
         this.stdioRetention = stdioRetention;
     }
 
@@ -150,13 +155,15 @@ public class JUnitResultsStep extends Step implements JUnitTask {
     /**
      * @param keepProperties Whether to keep the properties
      */
-    @DataBoundSetter public final void setKeepProperties(boolean keepProperties) {
+    @DataBoundSetter
+    public final void setKeepProperties(boolean keepProperties) {
         this.keepProperties = keepProperties;
     }
 
     /**
      * @return the keepTestNames.
      */
+    @Override
     public boolean isKeepTestNames() {
         return keepTestNames;
     }
@@ -164,7 +171,8 @@ public class JUnitResultsStep extends Step implements JUnitTask {
     /**
      * @param keepTestNames Whether to avoid adding parallel stage name into test name.
      */
-    @DataBoundSetter public final void setKeepTestNames(boolean keepTestNames) {
+    @DataBoundSetter
+    public final void setKeepTestNames(boolean keepTestNames) {
         this.keepTestNames = keepTestNames;
     }
 
@@ -180,7 +188,7 @@ public class JUnitResultsStep extends Step implements JUnitTask {
     /**
      * Should we skip publishing checks to the checks API plugin.
      *
-     * @return if publishing checks should be skipped, {@code false} otherwise 
+     * @return if publishing checks should be skipped, {@code false} otherwise
      */
     @Override
     public boolean isSkipPublishingChecks() {
@@ -202,7 +210,8 @@ public class JUnitResultsStep extends Step implements JUnitTask {
         this.checksName = checksName;
     }
 
-    @DataBoundSetter public final void setAllowEmptyResults(boolean allowEmptyResults) {
+    @DataBoundSetter
+    public final void setAllowEmptyResults(boolean allowEmptyResults) {
         this.allowEmptyResults = allowEmptyResults;
     }
 
@@ -251,14 +260,12 @@ public class JUnitResultsStep extends Step implements JUnitTask {
         }
 
         public FormValidation doCheckHealthScaleFactor(@QueryParameter double value) {
-            if (value < 1e-7) return FormValidation.warning("Test health reporting disabled");
+            if (value < 1e-7) {
+                return FormValidation.warning("Test health reporting disabled");
+            }
             return FormValidation.ok(Messages.JUnitResultArchiver_HealthScaleFactorAnalysis(
-                    1,
-                    (int) (100.0 - Math.max(0.0, Math.min(100.0, 1 * value))),
-                    5,
-                    (int) (100.0 - Math.max(0.0, Math.min(100.0, 5 * value)))
-            ));
+                    1, (int) (100.0 - Math.max(0.0, Math.min(100.0, 1 * value))), 5, (int)
+                            (100.0 - Math.max(0.0, Math.min(100.0, 5 * value)))));
         }
-
     }
 }

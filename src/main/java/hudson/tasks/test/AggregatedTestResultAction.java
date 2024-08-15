@@ -1,18 +1,18 @@
 /*
  * The MIT License
- * 
+ *
  * Copyright (c) 2004-2009, Sun Microsystems, Inc., Kohsuke Kawaguchi, Daniel Dyer, Red Hat, Inc., Yahoo!, Inc.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -43,7 +43,7 @@ import org.kohsuke.stapler.export.ExportedBean;
  */
 @ExportedBean
 public abstract class AggregatedTestResultAction extends AbstractTestResultAction {
-    private int failCount,skipCount,totalCount;
+    private int failCount, skipCount, totalCount;
 
     public static final class Child {
         /**
@@ -53,6 +53,7 @@ public abstract class AggregatedTestResultAction extends AbstractTestResultActio
          * {@link AggregatedTestResultAction#resolveChild(Child)} and
          */
         public final String name;
+
         public final int build;
 
         public Child(String name, int build) {
@@ -77,15 +78,16 @@ public abstract class AggregatedTestResultAction extends AbstractTestResultActio
     protected void update(List<? extends AbstractTestResultAction> children) {
         failCount = skipCount = totalCount = 0;
         this.children.clear();
-        for (AbstractTestResultAction tr : children)
+        for (AbstractTestResultAction tr : children) {
             add(tr);
+        }
     }
 
     protected void add(AbstractTestResultAction child) {
         failCount += child.getFailCount();
         skipCount += child.getSkipCount();
         totalCount += child.getTotalCount();
-        this.children.add(new Child(getChildName(child),child.run.number));
+        this.children.add(new Child(getChildName(child), child.run.number));
     }
 
     @Override
@@ -102,7 +104,7 @@ public abstract class AggregatedTestResultAction extends AbstractTestResultActio
     public int getTotalCount() {
         return totalCount;
     }
-   
+
     @Override
     public List<ChildReport> getResult() {
         // I think this is a reasonable default.
@@ -123,15 +125,16 @@ public abstract class AggregatedTestResultAction extends AbstractTestResultActio
     /**
      * Data-binding bean for the remote API.
      */
-    @ExportedBean(defaultVisibility=2)
+    @ExportedBean(defaultVisibility = 2)
     public static final class ChildReport {
         @Deprecated
-        public final AbstractBuild<?,?> child;
+        public final AbstractBuild<?, ?> child;
         /**
          * @since 1.2-beta-1
          */
-        @Exported(name="child")
-        public final Run<?,?> run;
+        @Exported(name = "child")
+        public final Run<?, ?> run;
+
         @Exported
         public final Object result;
 
@@ -143,24 +146,22 @@ public abstract class AggregatedTestResultAction extends AbstractTestResultActio
         /**
          * @since 1.2-beta-1
          */
-        public ChildReport(Run<?,?> run, AbstractTestResultAction result) {
+        public ChildReport(Run<?, ?> run, AbstractTestResultAction result) {
             this.child = run instanceof AbstractBuild ? (AbstractBuild) run : null;
             this.run = run;
-            this.result = result!=null ? result.getResult() : null;
+            this.result = result != null ? result.getResult() : null;
         }
     }
 
     /**
      * Mainly for the remote API. Expose results from children.
      */
-    @Exported(inline=true)
+    @Exported(inline = true)
     public List<ChildReport> getChildReports() {
         return new AbstractList<ChildReport>() {
             @Override
             public ChildReport get(int index) {
-                return new ChildReport(
-                        resolveRun(children.get(index)),
-                        getChildReport(children.get(index)));
+                return new ChildReport(resolveRun(children.get(index)), getChildReport(children.get(index)));
             }
 
             @Override
@@ -175,14 +176,14 @@ public abstract class AggregatedTestResultAction extends AbstractTestResultActio
     /**
      * @since 1.2-beta-1
      */
-    public Run<?,?> resolveRun(Child child) {
+    public Run<?, ?> resolveRun(Child child) {
         return resolveChild(child);
     }
 
     @Deprecated
-    public AbstractBuild<?,?> resolveChild(Child child) {
+    public AbstractBuild<?, ?> resolveChild(Child child) {
         if (Util.isOverridden(AggregatedTestResultAction.class, getClass(), "resolveRun", Child.class)) {
-            Run<?,?> r = resolveRun(child);
+            Run<?, ?> r = resolveRun(child);
             return r instanceof AbstractBuild ? (AbstractBuild) r : null;
         } else {
             throw new AbstractMethodError("you must override resolveRun");
@@ -194,8 +195,10 @@ public abstract class AggregatedTestResultAction extends AbstractTestResultActio
      * {@link AbstractTestResultAction} object for the given child.
      */
     protected AbstractTestResultAction getChildReport(Child child) {
-        Run<?,?> b = resolveRun(child);
-        if(b==null) return null;
+        Run<?, ?> b = resolveRun(child);
+        if (b == null) {
+            return null;
+        }
         return b.getAction(AbstractTestResultAction.class);
     }
 
@@ -207,6 +210,7 @@ public abstract class AggregatedTestResultAction extends AbstractTestResultActio
      * @deprecated
      *      so that IDE warns you if you accidentally try to call it.
      */
+    @Deprecated
     @Override
     protected final String getDescription(TestObject object) {
         throw new AssertionError();
@@ -218,6 +222,7 @@ public abstract class AggregatedTestResultAction extends AbstractTestResultActio
      * @deprecated
      *      so that IDE warns you if you accidentally try to call it.
      */
+    @Deprecated
     @Override
     protected final void setDescription(TestObject object, String description) {
         throw new AssertionError();

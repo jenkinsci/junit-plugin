@@ -71,12 +71,20 @@ public abstract class DefaultTestResultParserImpl extends TestResultParser imple
      *      If you encounter an error that you handled gracefully, throw this exception and Hudson
      *      will not show a stack trace.
      */
-    protected abstract TestResult parse(List<File> reportFiles, Launcher launcher, TaskListener listener) throws InterruptedException, IOException;
+    protected abstract TestResult parse(List<File> reportFiles, Launcher launcher, TaskListener listener)
+            throws InterruptedException, IOException;
 
     @Override
-    public TestResult parseResult(final String testResultLocations, final Run<?,?> build, FilePath workspace, final Launcher launcher, final TaskListener listener) throws InterruptedException, IOException {
+    public TestResult parseResult(
+            final String testResultLocations,
+            final Run<?, ?> build,
+            FilePath workspace,
+            final Launcher launcher,
+            final TaskListener listener)
+            throws InterruptedException, IOException {
         return workspace.act(new MasterToSlaveFileCallable<TestResult>() {
-            final boolean ignoreTimestampCheck = IGNORE_TIMESTAMP_CHECK; // so that the property can be set on the controller
+            final boolean ignoreTimestampCheck =
+                    IGNORE_TIMESTAMP_CHECK; // so that the property can be set on the controller
             final long buildTime = build.getTimestamp().getTimeInMillis();
             final long nowMaster = System.currentTimeMillis();
 
@@ -88,14 +96,18 @@ public abstract class DefaultTestResultParserImpl extends TestResultParser imple
                 long localBuildTime = buildTime + (nowSlave - nowMaster);
 
                 FilePath[] paths = new FilePath(dir).list(testResultLocations);
-                if (paths.length==0)
-                    throw new AbortException("No test reports that matches "+testResultLocations+" found. Configuration error?");
+                if (paths.length == 0) {
+                    throw new AbortException(
+                            "No test reports that matches " + testResultLocations + " found. Configuration error?");
+                }
 
                 // since dir is local, paths all point to the local files
                 List<File> files = new ArrayList<>(paths.length);
                 for (FilePath path : paths) {
                     File report = new File(path.getRemote());
-                    if (ignoreTimestampCheck || localBuildTime - hudson.tasks.junit.TestResult.FILE_TIME_PRECISION_MARGIN < report.lastModified()) {
+                    if (ignoreTimestampCheck
+                            || localBuildTime - hudson.tasks.junit.TestResult.FILE_TIME_PRECISION_MARGIN
+                                    < report.lastModified()) {
                         // this file is created during this build
                         files.add(report);
                     }
@@ -103,19 +115,19 @@ public abstract class DefaultTestResultParserImpl extends TestResultParser imple
 
                 if (files.isEmpty()) {
                     // none of the files were new
-                    throw new AbortException(
-                        String.format(
-                        "Test reports were found but none of them are new. Did tests run? %n"+
-                        "For example, %s is %s old%n", paths[0].getRemote(),
-                        Util.getTimeSpanString(localBuildTime-paths[0].lastModified())));
+                    throw new AbortException(String.format(
+                            "Test reports were found but none of them are new. Did tests run? %n"
+                                    + "For example, %s is %s old%n",
+                            paths[0].getRemote(), Util.getTimeSpanString(localBuildTime - paths[0].lastModified())));
                 }
 
-                return parse(files,launcher,listener);
+                return parse(files, launcher, listener);
             }
         });
     }
 
     private static final long serialVersionUID = 1L;
 
-    public static final boolean IGNORE_TIMESTAMP_CHECK = Boolean.getBoolean(TestResultParser.class.getName()+".ignoreTimestampCheck");
+    public static final boolean IGNORE_TIMESTAMP_CHECK =
+            Boolean.getBoolean(TestResultParser.class.getName() + ".ignoreTimestampCheck");
 }

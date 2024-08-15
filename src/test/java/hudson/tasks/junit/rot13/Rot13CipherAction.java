@@ -28,5 +28,4 @@ public abstract class Rot13CipherAction extends TestAction {
     public String getCiphertext() {
         return ciphertext;
     }
-
 }

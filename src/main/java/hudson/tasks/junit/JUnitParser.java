@@ -71,7 +71,7 @@ public class JUnitParser extends TestResultParser {
      */
     @Deprecated
     public JUnitParser(boolean keepLongStdio) {
-        this(keepLongStdio , false, false, false);
+        this(keepLongStdio, false, false, false);
     }
 
     /**
@@ -85,16 +85,23 @@ public class JUnitParser extends TestResultParser {
     }
 
     @Deprecated
-    public JUnitParser(boolean keepLongStdio, boolean keepProperties, boolean allowEmptyResults, boolean skipOldReports) {
+    public JUnitParser(
+            boolean keepLongStdio, boolean keepProperties, boolean allowEmptyResults, boolean skipOldReports) {
         this(StdioRetention.fromKeepLongStdio(keepLongStdio), keepProperties, allowEmptyResults, skipOldReports, false);
     }
 
     @Deprecated
-    public JUnitParser(StdioRetention stdioRetention, boolean keepProperties, boolean allowEmptyResults, boolean skipOldReports) {
+    public JUnitParser(
+            StdioRetention stdioRetention, boolean keepProperties, boolean allowEmptyResults, boolean skipOldReports) {
         this(stdioRetention, keepProperties, allowEmptyResults, skipOldReports, false);
     }
 
-    public JUnitParser(StdioRetention stdioRetention, boolean keepProperties, boolean allowEmptyResults, boolean skipOldReports, boolean keepTestNames) {
+    public JUnitParser(
+            StdioRetention stdioRetention,
+            boolean keepProperties,
+            boolean allowEmptyResults,
+            boolean skipOldReports,
+            boolean keepTestNames) {
         this.stdioRetention = stdioRetention;
         this.keepProperties = keepProperties;
         this.allowEmptyResults = allowEmptyResults;
@@ -113,34 +120,64 @@ public class JUnitParser extends TestResultParser {
     }
 
     @Deprecated
-    @Override public TestResult parse(String testResultLocations, AbstractBuild build, Launcher launcher, TaskListener listener) throws InterruptedException, IOException {
+    @Override
+    public TestResult parse(String testResultLocations, AbstractBuild build, Launcher launcher, TaskListener listener)
+            throws InterruptedException, IOException {
         return (TestResult) super.parse(testResultLocations, build, launcher, listener);
     }
 
     @Deprecated
     @Override
-    public TestResult parseResult(String testResultLocations, Run<?,?> build, FilePath workspace,
-                                  Launcher launcher, TaskListener listener)
+    public TestResult parseResult(
+            String testResultLocations, Run<?, ?> build, FilePath workspace, Launcher launcher, TaskListener listener)
             throws InterruptedException, IOException {
         return parseResult(testResultLocations, build, null, workspace, launcher, listener);
     }
 
     @Override
-    public TestResult parseResult(String testResultLocations, Run<?,?> build, PipelineTestDetails pipelineTestDetails,
-                                  FilePath workspace, Launcher launcher, TaskListener listener)
+    public TestResult parseResult(
+            String testResultLocations,
+            Run<?, ?> build,
+            PipelineTestDetails pipelineTestDetails,
+            FilePath workspace,
+            Launcher launcher,
+            TaskListener listener)
             throws InterruptedException, IOException {
-        return workspace.act(new DirectParseResultCallable(testResultLocations, build, stdioRetention, keepProperties, allowEmptyResults, keepTestNames, 
-                pipelineTestDetails, listener, skipOldReports));
+        return workspace.act(new DirectParseResultCallable(
+                testResultLocations,
+                build,
+                stdioRetention,
+                keepProperties,
+                allowEmptyResults,
+                keepTestNames,
+                pipelineTestDetails,
+                listener,
+                skipOldReports));
     }
 
-    public TestResultSummary summarizeResult(String testResultLocations, Run<?,?> build, PipelineTestDetails pipelineTestDetails,
-                                  FilePath workspace, Launcher launcher, TaskListener listener, JunitTestResultStorage storage)
+    public TestResultSummary summarizeResult(
+            String testResultLocations,
+            Run<?, ?> build,
+            PipelineTestDetails pipelineTestDetails,
+            FilePath workspace,
+            Launcher launcher,
+            TaskListener listener,
+            JunitTestResultStorage storage)
             throws InterruptedException, IOException {
-        return workspace.act(new StorageParseResultCallable(testResultLocations, build, stdioRetention, keepProperties, allowEmptyResults, keepTestNames, 
-                pipelineTestDetails, listener, storage.createRemotePublisher(build), skipOldReports));
+        return workspace.act(new StorageParseResultCallable(
+                testResultLocations,
+                build,
+                stdioRetention,
+                keepProperties,
+                allowEmptyResults,
+                keepTestNames,
+                pipelineTestDetails,
+                listener,
+                storage.createRemotePublisher(build),
+                skipOldReports));
     }
 
-    private static abstract class ParseResultCallable<T> extends MasterToSlaveFileCallable<T> {
+    private abstract static class ParseResultCallable<T> extends MasterToSlaveFileCallable<T> {
 
         private static final Logger LOGGER = Logger.getLogger(ParseResultCallable.class.getName());
 
@@ -158,10 +195,16 @@ public class JUnitParser extends TestResultParser {
 
         private boolean skipOldReports;
 
-        private ParseResultCallable(String testResults, Run<?,?> build,
-                                    StdioRetention stdioRetention, boolean keepProperties, boolean allowEmptyResults, boolean keepTestNames,
-                                    PipelineTestDetails pipelineTestDetails, TaskListener listener,
-                                    boolean skipOldReports) {
+        private ParseResultCallable(
+                String testResults,
+                Run<?, ?> build,
+                StdioRetention stdioRetention,
+                boolean keepProperties,
+                boolean allowEmptyResults,
+                boolean keepTestNames,
+                PipelineTestDetails pipelineTestDetails,
+                TaskListener listener,
+                boolean skipOldReports) {
             this.buildStartTimeInMillis = build.getStartTimeInMillis();
             this.buildTimeInMillis = build.getTimeInMillis();
             this.testResults = testResults;
@@ -184,14 +227,22 @@ public class JUnitParser extends TestResultParser {
             String[] files = ds.getIncludedFiles();
             if (files.length > 0) {
                 // not sure we can rely seriously on those timestamp so let's take the smaller one...
-                long filesTimestamp = Math.min(buildStartTimeInMillis,buildTimeInMillis);
+                long filesTimestamp = Math.min(buildStartTimeInMillis, buildTimeInMillis);
                 // previous mode buildStartTimeInMillis + (nowSlave - nowMaster);
-                if(LOGGER.isLoggable(Level.FINE)) {
+                if (LOGGER.isLoggable(Level.FINE)) {
                     LOGGER.fine("buildStartTimeInMillis:" + buildStartTimeInMillis
-                            + ",buildTimeInMillis:" + buildTimeInMillis + ",filesTimestamp:" + filesTimestamp + ",nowSlave:"
+                            + ",buildTimeInMillis:" + buildTimeInMillis + ",filesTimestamp:" + filesTimestamp
+                            + ",nowSlave:"
                             + nowSlave + ",nowMaster:" + nowMaster);
                 }
-                result = new TestResult(filesTimestamp, ds, stdioRetention, keepProperties, keepTestNames, pipelineTestDetails, skipOldReports);
+                result = new TestResult(
+                        filesTimestamp,
+                        ds,
+                        stdioRetention,
+                        keepProperties,
+                        keepTestNames,
+                        pipelineTestDetails,
+                        skipOldReports);
                 result.tally();
             } else {
                 if (this.allowEmptyResults) {
@@ -206,30 +257,63 @@ public class JUnitParser extends TestResultParser {
         }
 
         protected abstract T handle(TestResult result) throws IOException;
-
     }
 
     private static final class DirectParseResultCallable extends ParseResultCallable<TestResult> {
 
-        DirectParseResultCallable(String testResults, Run<?,?> build, StdioRetention stdioRetention, boolean keepProperties, boolean allowEmptyResults, boolean keepTestNames, 
-                                  PipelineTestDetails pipelineTestDetails, TaskListener listener, boolean skipOldReports) {
-            super(testResults, build, stdioRetention, keepProperties, allowEmptyResults, keepTestNames, pipelineTestDetails, listener, skipOldReports);
+        DirectParseResultCallable(
+                String testResults,
+                Run<?, ?> build,
+                StdioRetention stdioRetention,
+                boolean keepProperties,
+                boolean allowEmptyResults,
+                boolean keepTestNames,
+                PipelineTestDetails pipelineTestDetails,
+                TaskListener listener,
+                boolean skipOldReports) {
+            super(
+                    testResults,
+                    build,
+                    stdioRetention,
+                    keepProperties,
+                    allowEmptyResults,
+                    keepTestNames,
+                    pipelineTestDetails,
+                    listener,
+                    skipOldReports);
         }
 
         @Override
         protected TestResult handle(TestResult result) throws IOException {
             return result;
         }
-
     }
 
     private static final class StorageParseResultCallable extends ParseResultCallable<TestResultSummary> {
 
         private final JunitTestResultStorage.RemotePublisher publisher;
 
-        StorageParseResultCallable(String testResults, Run<?,?> build, StdioRetention stdioRetention, boolean keepProperties, boolean allowEmptyResults, boolean keepTestNames, 
-                                   PipelineTestDetails pipelineTestDetails, TaskListener listener, JunitTestResultStorage.RemotePublisher publisher, boolean skipOldReports) {
-            super(testResults, build, stdioRetention, keepProperties, allowEmptyResults, keepTestNames, pipelineTestDetails, listener, skipOldReports);
+        StorageParseResultCallable(
+                String testResults,
+                Run<?, ?> build,
+                StdioRetention stdioRetention,
+                boolean keepProperties,
+                boolean allowEmptyResults,
+                boolean keepTestNames,
+                PipelineTestDetails pipelineTestDetails,
+                TaskListener listener,
+                JunitTestResultStorage.RemotePublisher publisher,
+                boolean skipOldReports) {
+            super(
+                    testResults,
+                    build,
+                    stdioRetention,
+                    keepProperties,
+                    allowEmptyResults,
+                    keepTestNames,
+                    pipelineTestDetails,
+                    listener,
+                    skipOldReports);
             this.publisher = publisher;
         }
 
@@ -238,7 +322,5 @@ public class JUnitParser extends TestResultParser {
             publisher.publish(result, super.listener);
             return new TestResultSummary(result);
         }
-
     }
-
 }

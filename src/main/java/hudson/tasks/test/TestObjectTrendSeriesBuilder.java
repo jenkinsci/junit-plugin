@@ -12,7 +12,7 @@ public class TestObjectTrendSeriesBuilder extends SeriesBuilder<TestObject> {
     @Override
     protected Map<String, Integer> computeSeries(TestObject testObject) {
         Map<String, Integer> series = new HashMap<>();
-        
+
         int totalCount = testObject.getTotalCount();
         int failCount = testObject.getFailCount();
         int skipCount = testObject.getSkipCount();

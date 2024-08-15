@@ -64,21 +64,21 @@ public class TestResultProjectAction implements Action, AsyncTrendChart, AsyncCo
      * Project that owns this action.
      * @since 1.2-beta-1
      */
-    public final Job<?,?> job;
+    public final Job<?, ?> job;
 
     @Deprecated
-    public final AbstractProject<?,?> project;
+    public final AbstractProject<?, ?> project;
 
     /**
      * @since 1.2-beta-1
      */
-    public TestResultProjectAction(final Job<?,?> job) {
+    public TestResultProjectAction(final Job<?, ?> job) {
         this.job = job;
         project = job instanceof AbstractProject ? (AbstractProject) job : null;
     }
 
     @Deprecated
-    public TestResultProjectAction(final AbstractProject<?,?> project) {
+    public TestResultProjectAction(final AbstractProject<?, ?> project) {
         this((Job) project);
     }
 
@@ -106,10 +106,12 @@ public class TestResultProjectAction implements Action, AsyncTrendChart, AsyncCo
         Nowadays pipeline builds can be failed, even though just a substage failed, whereas other stages do produce test results.
         Using UNSTABLE is not feasible for this, as that does not mark a build as containing a failure for other systems that list the Jenkins builds externally.
         */
-        Run<?,?> b = job.getLastBuild();
-        while(b!=null) {
+        Run<?, ?> b = job.getLastBuild();
+        while (b != null) {
             AbstractTestResultAction a = b.getAction(AbstractTestResultAction.class);
-            if(a!=null && (!b.isBuilding())) return a;
+            if (a != null && (!b.isBuilding())) {
+                return a;
+            }
             b = b.getPreviousBuild();
         }
 
@@ -121,12 +123,14 @@ public class TestResultProjectAction implements Action, AsyncTrendChart, AsyncCo
         return createChartModel(new ChartModelConfiguration(), TestResultTrendChart.PassedColor.BLUE);
     }
 
-    private LinesChartModel createChartModel(ChartModelConfiguration configuration, TestResultTrendChart.PassedColor passedColor) {
+    private LinesChartModel createChartModel(
+            ChartModelConfiguration configuration, TestResultTrendChart.PassedColor passedColor) {
         Run<?, ?> lastCompletedBuild = job.getLastCompletedBuild();
 
         JunitTestResultStorage storage = JunitTestResultStorage.find();
         if (!(storage instanceof FileJunitTestResultStorage)) {
-            TestResultImpl pluggableStorage = storage.load(lastCompletedBuild.getParent().getFullName(), lastCompletedBuild.getNumber());
+            TestResultImpl pluggableStorage =
+                    storage.load(lastCompletedBuild.getParent().getFullName(), lastCompletedBuild.getNumber());
             List<TrendTestResultSummary> summary = pluggableStorage.getTrendTestResultSummary();
             if (summary.isEmpty()) {
                 return new LinesChartModel();
@@ -168,12 +172,13 @@ public class TestResultProjectAction implements Action, AsyncTrendChart, AsyncCo
      * @deprecated Replaced by echarts in TODO
      */
     @Deprecated
-    public void doTrend( final StaplerRequest req, final StaplerResponse rsp ) throws IOException, ServletException {
+    public void doTrend(final StaplerRequest req, final StaplerResponse rsp) throws IOException, ServletException {
         AbstractTestResultAction a = getLastTestResultAction();
-        if(a!=null)
-            a.doGraph(req,rsp);
-        else
+        if (a != null) {
+            a.doGraph(req, rsp);
+        } else {
             rsp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        }
     }
 
     /**
@@ -182,26 +187,28 @@ public class TestResultProjectAction implements Action, AsyncTrendChart, AsyncCo
      * @deprecated Replaced by echarts in TODO
      */
     @Deprecated
-    public void doTrendMap( final StaplerRequest req, final StaplerResponse rsp ) throws IOException, ServletException {
+    public void doTrendMap(final StaplerRequest req, final StaplerResponse rsp) throws IOException, ServletException {
         AbstractTestResultAction a = getLastTestResultAction();
-        if(a!=null)
-            a.doGraphMap(req,rsp);
-        else
+        if (a != null) {
+            a.doGraphMap(req, rsp);
+        } else {
             rsp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        }
     }
 
     /**
      * Changes the test result report display mode.
      */
-    public void doFlipTrend( final StaplerRequest req, final StaplerResponse rsp ) throws IOException, ServletException {
+    public void doFlipTrend(final StaplerRequest req, final StaplerResponse rsp) throws IOException, ServletException {
         boolean failureOnly = false;
 
         // check the current preference value
         Cookie[] cookies = req.getCookies();
-        if(cookies!=null) {
+        if (cookies != null) {
             for (Cookie cookie : cookies) {
-                if(cookie.getName().equals(FAILURE_ONLY_COOKIE))
+                if (cookie.getName().equals(FAILURE_ONLY_COOKIE)) {
                     failureOnly = Boolean.parseBoolean(cookie.getValue());
+                }
             }
         }
 
@@ -209,11 +216,11 @@ public class TestResultProjectAction implements Action, AsyncTrendChart, AsyncCo
         failureOnly = !failureOnly;
 
         // set the updated value
-        Cookie cookie = new Cookie(FAILURE_ONLY_COOKIE,String.valueOf(failureOnly));
+        Cookie cookie = new Cookie(FAILURE_ONLY_COOKIE, String.valueOf(failureOnly));
         List<Ancestor> anc = req.getAncestors();
-        Ancestor a = anc.get(anc.size()-2);
+        Ancestor a = anc.get(anc.size() - 2);
         cookie.setPath(a.getUrl()); // just for this project
-        cookie.setMaxAge(60*60*24*365); // 1 year
+        cookie.setMaxAge(60 * 60 * 24 * 365); // 1 year
         rsp.addCookie(cookie);
 
         // back to the project page
@@ -222,7 +229,8 @@ public class TestResultProjectAction implements Action, AsyncTrendChart, AsyncCo
 
     private static final String FAILURE_ONLY_COOKIE = "TestResultAction_failureOnly";
 
-    @Override @Deprecated
+    @Override
+    @Deprecated
     public String getBuildTrendModel() {
         return new JacksonFacade().toJson(createChartModel());
     }
@@ -230,7 +238,9 @@ public class TestResultProjectAction implements Action, AsyncTrendChart, AsyncCo
     @JavaScriptMethod
     @Override
     public String getConfigurableBuildTrendModel(final String configuration) {
-        TestResultTrendChart.PassedColor useBlue = JACKSON_FACADE.getBoolean(configuration, "useBlue", false) ? TestResultTrendChart.PassedColor.BLUE : TestResultTrendChart.PassedColor.GREEN;
+        TestResultTrendChart.PassedColor useBlue = JACKSON_FACADE.getBoolean(configuration, "useBlue", false)
+                ? TestResultTrendChart.PassedColor.BLUE
+                : TestResultTrendChart.PassedColor.GREEN;
         return new JacksonFacade().toJson(createChartModel(ChartModelConfiguration.fromJson(configuration), useBlue));
     }
 

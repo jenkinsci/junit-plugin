@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class TestDurationResultSummary implements Serializable {
-    
+
     private final int buildNumber;
     private final int duration;
 
@@ -24,7 +24,7 @@ public class TestDurationResultSummary implements Serializable {
     public int getBuildNumber() {
         return buildNumber;
     }
-    
+
     public String getDisplayName() {
         return "#" + buildNumber;
     }
