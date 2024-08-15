@@ -32,10 +32,8 @@ import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
-
 import java.io.IOException;
 import java.io.Serializable;
-
 
 /**
  * A class to exercise the TestResult extension mechanism.

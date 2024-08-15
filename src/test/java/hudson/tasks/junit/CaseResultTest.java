@@ -25,41 +25,37 @@ package hudson.tasks.junit;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 import hudson.FilePath;
 import hudson.Functions;
-import hudson.model.FreeStyleProject;
+import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
-import hudson.model.Result;
 import hudson.model.FreeStyleBuild;
-import hudson.Launcher;
+import hudson.model.FreeStyleProject;
+import hudson.model.Result;
 import hudson.tasks.Shell;
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.Email;
-import org.jvnet.hudson.test.Issue;
-import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.JenkinsRule.WebClient;
-import org.jvnet.hudson.test.TestBuilder;
-import org.htmlunit.AlertHandler;
-import org.htmlunit.html.HtmlImage;
-import org.htmlunit.html.HtmlPage;
-import org.htmlunit.html.HtmlElement;
-import org.htmlunit.Page;
-import org.htmlunit.xml.XmlPage;
-import org.jvnet.hudson.test.TouchBuilder;
-import org.junit.Assume;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import org.htmlunit.AlertHandler;
+import org.htmlunit.Page;
+import org.htmlunit.html.HtmlElement;
+import org.htmlunit.html.HtmlPage;
+import org.htmlunit.xml.XmlPage;
+import org.junit.Assume;
+import org.junit.Rule;
+import org.junit.Test;
+import org.jvnet.hudson.test.Email;
+import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.TestBuilder;
+import org.jvnet.hudson.test.TouchBuilder;
 
 /**
  * @author Kohsuke Kawaguchi
@@ -267,7 +263,7 @@ public class CaseResultTest {
     @Test
     public void testContentType() throws Exception {
         configureTestBuild("foo");
-        WebClient wc = rule.createWebClient();
+        JenkinsRule.WebClient wc = rule.createWebClient();
         wc.goTo("job/foo/1/testReport/org.twia.vendor/VendorManagerTest/testCreateAdjustingFirm/","text/html");
 
         wc.goTo("job/foo/1/testReport/org.twia.vendor/VendorManagerTest/testCreateAdjustingFirm/summary","text/plain");

@@ -1,9 +1,9 @@
 package hudson.tasks.test.helper;
 
-import org.htmlunit.html.HtmlAnchor;
-
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+
+import org.htmlunit.html.HtmlAnchor;
 
 public class LatestTestResultLink extends AbstractTestResultLink<LatestTestResultLink> {
 

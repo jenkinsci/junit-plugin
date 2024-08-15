@@ -25,14 +25,11 @@ package hudson.tasks.test;
 
 import hudson.model.Run;
 import hudson.tasks.junit.TestAction;
-
-import java.util.Collection;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.logging.Logger;
-
-import static java.util.Collections.emptyList;
 
 /**
  * The simplest possible case result, with no language ties.
@@ -88,7 +85,7 @@ public class SimpleCaseResult extends TestResult {
      */
     @Override
     public Collection<? extends TestResult> getFailedTests() {
-        return emptyList();
+        return Collections.emptyList();
     }
 
     /**
@@ -108,7 +105,7 @@ public class SimpleCaseResult extends TestResult {
      */
     @Override
     public Collection<? extends TestResult> getSkippedTests() {
-        return emptyList();
+        return Collections.emptyList();
     }
 
     /**

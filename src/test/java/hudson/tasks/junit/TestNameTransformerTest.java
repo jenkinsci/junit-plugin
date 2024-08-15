@@ -1,13 +1,13 @@
 package hudson.tasks.junit;
 
+import static org.junit.Assert.assertEquals;
+
 import jenkins.security.MasterToSlaveCallable;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
-
-import static org.junit.Assert.assertEquals;
 
 public class TestNameTransformerTest {
 

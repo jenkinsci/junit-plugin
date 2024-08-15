@@ -14,14 +14,13 @@ import hudson.tasks.junit.TestDataPublisher;
 import hudson.tasks.junit.TestResult;
 import hudson.tasks.junit.TestResultAction;
 import hudson.tasks.test.TestObject;
-import org.jenkinsci.Symbol;
-import org.kohsuke.stapler.DataBoundConstructor;
-
 import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 /**
  * A TestDataPublisher that adds a custom column containing the ROT13-encoded name of each test case, class and package

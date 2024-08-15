@@ -1,5 +1,6 @@
 package hudson.tasks.junit.pipeline;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Util;
@@ -9,12 +10,11 @@ import hudson.model.TaskListener;
 import hudson.tasks.junit.JUnitResultArchiver;
 import hudson.tasks.junit.TestResultSummary;
 import hudson.tasks.test.PipelineTestDetails;
+import io.jenkins.plugins.checks.steps.ChecksInfo;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
-import edu.umd.cs.findbugs.annotations.NonNull;
-
-import io.jenkins.plugins.checks.steps.ChecksInfo;
 import org.jenkinsci.plugins.workflow.actions.LabelAction;
 import org.jenkinsci.plugins.workflow.actions.ThreadNameAction;
 import org.jenkinsci.plugins.workflow.actions.WarningAction;
@@ -23,8 +23,6 @@ import org.jenkinsci.plugins.workflow.graph.StepNode;
 import org.jenkinsci.plugins.workflow.steps.StepContext;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.jenkinsci.plugins.workflow.steps.SynchronousNonBlockingStepExecution;
-
-import static java.util.Objects.requireNonNull;
 
 public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecution<TestResultSummary> {
 
@@ -39,7 +37,7 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
     protected TestResultSummary run() throws Exception {
         FilePath workspace = getContext().get(FilePath.class);
         workspace.mkdirs();
-        Run<?,?> run = requireNonNull(getContext().get(Run.class));
+        Run<?,?> run = Objects.requireNonNull(getContext().get(Run.class));
         TaskListener listener = getContext().get(TaskListener.class);
         Launcher launcher = getContext().get(Launcher.class);
         FlowNode node = getContext().get(FlowNode.class);

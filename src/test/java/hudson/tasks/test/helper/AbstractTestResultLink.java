@@ -1,10 +1,10 @@
 package hudson.tasks.test.helper;
 
-import org.htmlunit.html.HtmlAnchor;
-import org.htmlunit.html.HtmlPage;
-
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+
+import org.htmlunit.html.HtmlAnchor;
+import org.htmlunit.html.HtmlPage;
 
 public class AbstractTestResultLink<T extends AbstractTestResultLink<T>> {
     protected HtmlAnchor testResultLink;

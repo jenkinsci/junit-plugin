@@ -1,9 +1,8 @@
 package hudson.tasks.test.helper;
 
+import java.io.IOException;
 import org.htmlunit.html.HtmlPage;
 import org.xml.sax.SAXException;
-
-import java.io.IOException;
 
 public class ProjectPage extends AbstractPage {
 

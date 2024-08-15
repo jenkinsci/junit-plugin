@@ -23,70 +23,6 @@
  */
 package hudson.tasks.junit;
 
-import hudson.Extension;
-import hudson.FilePath;
-import hudson.Functions;
-import hudson.matrix.AxisList;
-import hudson.matrix.MatrixBuild;
-import hudson.matrix.MatrixProject;
-import hudson.matrix.TextAxis;
-import hudson.model.FreeStyleBuild;
-import hudson.model.FreeStyleProject;
-import hudson.model.UnprotectedRootAction;
-import hudson.slaves.DumbSlave;
-import hudson.tasks.test.TestObject;
-
-import java.io.File;
-import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TreeMap;
-import java.util.concurrent.TimeUnit;
-
-import hudson.util.HttpResponses;
-import org.apache.commons.io.FileUtils;
-import org.jenkinsci.plugins.structs.describable.DescribableModel;
-import org.junit.Assume;
-import org.junit.ClassRule;
-import org.jvnet.hudson.test.BuildWatcher;
-import org.jvnet.hudson.test.Issue;
-import org.jvnet.hudson.test.LoggerRule;
-import org.jvnet.hudson.test.TouchBuilder;
-import org.jvnet.hudson.test.recipes.LocalData;
-
-import org.htmlunit.html.HtmlAnchor;
-import org.htmlunit.html.HtmlForm;
-import org.htmlunit.html.HtmlPage;
-
-import hudson.Launcher;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
-import hudson.model.BuildListener;
-import hudson.model.Descriptor;
-import hudson.model.Result;
-import hudson.model.Run;
-import hudson.model.TaskListener;
-import hudson.tasks.BuildStepDescriptor;
-import hudson.tasks.Builder;
-import hudson.tasks.test.helper.WebClientFactory;
-
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.util.Collections;
-import java.util.List;
-import java.util.logging.Level;
-
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.JenkinsRule.WebClient;
-import org.jvnet.hudson.test.SingleFileSCM;
-import org.jvnet.hudson.test.TestExtension;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.HttpResponse;
-
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
@@ -96,6 +32,63 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
+import hudson.Extension;
+import hudson.FilePath;
+import hudson.Functions;
+import hudson.Launcher;
+import hudson.matrix.AxisList;
+import hudson.matrix.MatrixBuild;
+import hudson.matrix.MatrixProject;
+import hudson.matrix.TextAxis;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.BuildListener;
+import hudson.model.Descriptor;
+import hudson.model.FreeStyleBuild;
+import hudson.model.FreeStyleProject;
+import hudson.model.Result;
+import hudson.model.Run;
+import hudson.model.TaskListener;
+import hudson.model.UnprotectedRootAction;
+import hudson.slaves.DumbSlave;
+import hudson.tasks.BuildStepDescriptor;
+import hudson.tasks.Builder;
+import hudson.tasks.test.TestObject;
+import hudson.tasks.test.helper.WebClientFactory;
+import hudson.util.HttpResponses;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import org.apache.commons.io.FileUtils;
+import org.htmlunit.html.HtmlAnchor;
+import org.htmlunit.html.HtmlForm;
+import org.htmlunit.html.HtmlPage;
+import org.jenkinsci.plugins.structs.describable.DescribableModel;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
+import org.jvnet.hudson.test.BuildWatcher;
+import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.LoggerRule;
+import org.jvnet.hudson.test.SingleFileSCM;
+import org.jvnet.hudson.test.TestExtension;
+import org.jvnet.hudson.test.TouchBuilder;
+import org.jvnet.hudson.test.recipes.LocalData;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.HttpResponse;
 
 public class JUnitResultArchiverTest {
 
@@ -124,7 +117,7 @@ public class JUnitResultArchiverTest {
 
         assertTestResults(build);
 
-        WebClient wc = WebClientFactory.createWebClientWithDisabledJavaScript(j);
+        JenkinsRule.WebClient wc = WebClientFactory.createWebClientWithDisabledJavaScript(j);
         wc.getPage(project); // project page
         wc.getPage(build); // build page
         wc.getPage(build, "testReport");  // test report
@@ -209,7 +202,7 @@ public class JUnitResultArchiverTest {
         object.doSubmitDescription("description");
 
         // test the roundtrip
-        final WebClient wc = j.createWebClient();
+        final JenkinsRule.WebClient wc = j.createWebClient();
         HtmlPage page = wc.goTo(url);
         page.getAnchorByHref("editDescription").click();
         wc.waitForBackgroundJavaScript(10000L);
@@ -393,7 +386,7 @@ public class JUnitResultArchiverTest {
         MatrixBuild b = p.scheduleBuild2(0).get();
         j.assertBuildStatus(Result.UNSTABLE, b);
 
-        WebClient wc = j.createWebClient();
+        JenkinsRule.WebClient wc = j.createWebClient();
         HtmlPage page = wc.getPage(b, "testReport");
 
         assertThat(page.asNormalizedText(), not(containsString(EXPECTED)));

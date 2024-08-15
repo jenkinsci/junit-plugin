@@ -30,7 +30,6 @@ import hudson.Util;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;

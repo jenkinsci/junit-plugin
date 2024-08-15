@@ -3,7 +3,6 @@ package hudson.tasks.junit;
 import hudson.Util;
 import hudson.model.Run;
 import hudson.tasks.test.AbstractTestResultAction;
-import hudson.tasks.test.TestResult;
 
 public class HistoryTestResultSummary {
 

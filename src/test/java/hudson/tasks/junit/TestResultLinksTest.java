@@ -23,33 +23,29 @@
  */
 package hudson.tasks.junit;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import hudson.model.FreeStyleBuild;
-import hudson.model.FreeStyleProject;
-import hudson.model.Result;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.util.concurrent.TimeUnit;
-
-import org.jvnet.hudson.test.Issue;
-import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.JenkinsRule.WebClient;
-import org.jvnet.hudson.test.TouchBuilder;
-import org.jvnet.hudson.test.recipes.LocalData;
-
-import org.htmlunit.html.HtmlPage;
-import org.htmlunit.html.HtmlAnchor;
-import org.htmlunit.Page;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
+import hudson.model.FreeStyleBuild;
+import hudson.model.FreeStyleProject;
+import hudson.model.Result;
+import java.io.File;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.concurrent.TimeUnit;
+import org.htmlunit.Page;
+import org.htmlunit.html.HtmlAnchor;
+import org.htmlunit.html.HtmlPage;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.jvnet.hudson.test.Issue;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.TouchBuilder;
+import org.jvnet.hudson.test.recipes.LocalData;
 
 /**
  * User: Benjamin Shine bshine@yahoo-inc.com
@@ -83,7 +79,7 @@ public class TestResultLinksTest {
         String relativePath = theFailedTestCase.getRelativePathFrom(theOverallTestResult);
         System.out.println("relative path seems to be: " + relativePath); 
 
-        WebClient wc = rule.createWebClient();
+        JenkinsRule.WebClient wc = rule.createWebClient();
 
         String testReportPageUrl =  project.getLastBuild().getUrl() + "/testReport";
         HtmlPage testReportPage = wc.goTo( testReportPageUrl );

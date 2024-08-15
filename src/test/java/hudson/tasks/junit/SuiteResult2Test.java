@@ -23,6 +23,8 @@
  */
 package hudson.tasks.junit;
 
+import static org.junit.Assert.assertEquals;
+
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.File;
 import java.io.FileWriter;
@@ -30,9 +32,7 @@ import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.List;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.jvnet.hudson.test.MemoryAssert.assertHeapUsage;
+import org.jvnet.hudson.test.MemoryAssert;
 
 public class SuiteResult2Test {
 
@@ -86,7 +86,7 @@ public class SuiteResult2Test {
                     w.close();
                 }
                 SuiteResult sr = parseOne(data);
-                assertHeapUsage(sr, 1100 + /* Unicode overhead */2 * (int) (/*259946*/data.length() + /*495600*/data2.length() + /* SuiteResult.file */data.getAbsolutePath().length()));
+                MemoryAssert.assertHeapUsage(sr, 1100 + /* Unicode overhead */2 * (int) (/*259946*/data.length() + /*495600*/data2.length() + /* SuiteResult.file */data.getAbsolutePath().length()));
                 // TODO serialize using TestResultAction.XSTREAM and verify that round-tripped object has same size
             } finally {
                 data2.delete();

@@ -23,19 +23,20 @@
  */
 package hudson.tasks.test;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import hudson.model.AbstractBuild;
-import hudson.model.AbstractProject;
-import hudson.model.AutoCompletionCandidates;
 import hudson.Extension;
 import hudson.Launcher;
 import hudson.Util;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
 import hudson.model.Action;
+import hudson.model.AutoCompletionCandidates;
 import hudson.model.BuildListener;
-import hudson.model.Fingerprint.RangeSet;
+import hudson.model.Fingerprint;
 import hudson.model.InvisibleAction;
-import hudson.model.ItemGroup;
 import hudson.model.Item;
+import hudson.model.ItemGroup;
 import hudson.model.Job;
 import hudson.model.Result;
 import hudson.model.Run;
@@ -43,26 +44,22 @@ import hudson.model.TaskListener;
 import hudson.model.listeners.RunListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
-import hudson.tasks.Fingerprinter.FingerprintAction;
+import hudson.tasks.Fingerprinter;
 import hudson.tasks.Publisher;
 import hudson.tasks.Recorder;
 import hudson.util.FormValidation;
-import jenkins.model.Jenkins;
-import net.sf.json.JSONObject;
-import org.kohsuke.stapler.AncestorInPath;
-import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import edu.umd.cs.findbugs.annotations.CheckForNull;
+import jenkins.model.Jenkins;
+import net.sf.json.JSONObject;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
-
-import static hudson.Util.fixNull;
+import org.kohsuke.stapler.AncestorInPath;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.StaplerRequest;
 
 /**
  * Aggregates downstream test reports into a single consolidated report,
@@ -274,7 +271,7 @@ public class AggregatedTestResultPublisher extends Recorder {
             List<AbstractProject> didntRun = new ArrayList<>();
             List<AbstractProject> noFingerprints = new ArrayList<>();
             for (AbstractProject job : getJobs()) {
-                RangeSet rs = owner.getDownstreamRelationship(job);
+                Fingerprint.RangeSet rs = owner.getDownstreamRelationship(job);
                 if(rs.isEmpty()) {
                     // is this job expected to produce a test result?
                     Run b;
@@ -284,7 +281,7 @@ public class AggregatedTestResultPublisher extends Recorder {
                         b = job.getLastSuccessfulBuild();
                     }
                     if(b!=null && b.getAction(AbstractTestResultAction.class)!=null) {
-                        if(b.getAction(FingerprintAction.class)!=null) {
+                        if(b.getAction(Fingerprinter.FingerprintAction.class)!=null) {
                             didntRun.add(job);
                         } else {
                             noFingerprints.add(job);
@@ -322,7 +319,7 @@ public class AggregatedTestResultPublisher extends Recorder {
         }
 
         public boolean getHasFingerprintAction() {
-            return this.owner.getAction(FingerprintAction.class)!=null;
+            return this.owner.getAction(Fingerprinter.FingerprintAction.class)!=null;
         }
 
         @Override
@@ -361,7 +358,7 @@ public class AggregatedTestResultPublisher extends Recorder {
             // Require CONFIGURE permission on this project
             if(!project.hasPermission(Item.CONFIGURE))  return FormValidation.ok();
 
-            for (String name : Util.tokenize(fixNull(value), ",")) {
+            for (String name : Util.tokenize(Util.fixNull(value), ",")) {
                 name = name.trim();
                 if (Jenkins.get().getItem(name,project) == null) {
                     final AbstractProject<?,?> nearest = AbstractProject.findNearest(name);

@@ -23,9 +23,6 @@
  */
 package hudson.tasks.test;
 
-import org.htmlunit.AlertHandler;
-import org.htmlunit.Page;
-import org.htmlunit.html.HtmlPage;
 import hudson.Launcher;
 import hudson.Util;
 import hudson.model.AbstractBuild;
@@ -35,6 +32,9 @@ import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import hudson.tasks.junit.JUnitResultArchiver;
 import java.io.IOException;
+import org.htmlunit.AlertHandler;
+import org.htmlunit.Page;
+import org.htmlunit.html.HtmlPage;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;

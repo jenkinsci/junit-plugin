@@ -1,8 +1,8 @@
 package hudson.tasks.junit;
 
-import org.htmlunit.html.HtmlPage;
-import org.htmlunit.html.HtmlTable;
-import org.htmlunit.html.HtmlTableCell;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.assertEquals;
+
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
@@ -11,21 +11,20 @@ import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import hudson.tasks.junit.rot13.Rot13Publisher;
 import hudson.tasks.test.helper.WebClientFactory;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.tuple.Pair;
 import org.hamcrest.CoreMatchers;
+import org.htmlunit.html.HtmlPage;
+import org.htmlunit.html.HtmlTable;
+import org.htmlunit.html.HtmlTableCell;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestBuilder;
-
-import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
 
 /**
  * Verifies that TestDataPublishers can contribute custom columns to html tables in result pages.

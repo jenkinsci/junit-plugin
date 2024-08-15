@@ -24,6 +24,16 @@
 
 package io.jenkins.plugins.junit.storage;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+
 import com.thoughtworks.xstream.XStream;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -37,6 +47,7 @@ import hudson.model.TaskListener;
 import hudson.slaves.DumbSlave;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.ClassResult;
+import hudson.tasks.junit.HistoryTestResultSummary;
 import hudson.tasks.junit.PackageResult;
 import hudson.tasks.junit.SuiteResult;
 import hudson.tasks.junit.TestDurationResultSummary;
@@ -68,8 +79,6 @@ import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.parsers.DocumentBuilderFactory;
-
-import hudson.tasks.junit.HistoryTestResultSummary;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.FileUtils;
 import org.jenkinsci.plugins.database.Database;
@@ -79,7 +88,6 @@ import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.remoting.SerializableOnlyOverRemoting;
-
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -91,17 +99,6 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
-import static java.util.Objects.requireNonNull;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 
 public class TestResultStorageJunitTest {
 
@@ -144,7 +141,7 @@ public class TestResultStorageJunitTest {
                 "  echo(/next summary: fail=$s.failCount skip=$s.skipCount pass=$s.passCount total=$s.totalCount/)\n" +
                 "}", true));
         WorkflowRun b = p.scheduleBuild2(0).get();
-        try (Connection connection = requireNonNull(GlobalDatabaseConfiguration.get().getDatabase()).getDataSource().getConnection();
+        try (Connection connection = Objects.requireNonNull(GlobalDatabaseConfiguration.get().getDatabase()).getDataSource().getConnection();
              PreparedStatement statement = connection.prepareStatement("SELECT * FROM " + Impl.CASE_RESULTS_TABLE);
              ResultSet result = statement.executeQuery()) {
             printResultSet(result);
@@ -220,7 +217,7 @@ public class TestResultStorageJunitTest {
             assertEquals(1, rootPassedTests.size());
             assertEquals("Klazz", rootPassedTests.get(0).getClassName());
 
-            TestResultImpl pluggableStorage = requireNonNull(a.getResult().getPluggableStorage());
+            TestResultImpl pluggableStorage = Objects.requireNonNull(a.getResult().getPluggableStorage());
             List<TrendTestResultSummary> trendTestResultSummary = pluggableStorage.getTrendTestResultSummary();
             assertThat(trendTestResultSummary, hasSize(1));
             TestResultSummary testResultSummary = trendTestResultSummary.get(0).getTestResultSummary();

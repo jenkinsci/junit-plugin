@@ -23,42 +23,35 @@
  */
 package hudson.tasks.junit;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import io.jenkins.plugins.junit.storage.FileJunitTestResultStorage;
-import io.jenkins.plugins.junit.storage.TestResultImpl;
-import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
-import hudson.util.TextFile;
-import org.apache.commons.io.FileUtils;
-import org.jvnet.localizer.Localizable;
-
-import hudson.model.Run;
-import hudson.tasks.test.TestResult;
-
-import org.dom4j.Element;
-import org.kohsuke.accmod.Restricted;
-import org.kohsuke.accmod.restrictions.Beta;
-import org.kohsuke.stapler.Stapler;
-import org.kohsuke.stapler.export.Exported;
-
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import hudson.model.Run;
+import hudson.tasks.test.TestResult;
+import hudson.util.TextFile;
+import io.jenkins.plugins.junit.storage.FileJunitTestResultStorage;
+import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
+import io.jenkins.plugins.junit.storage.TestResultImpl;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
-
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
+import org.apache.commons.io.FileUtils;
+import org.dom4j.Element;
+import org.jvnet.localizer.Localizable;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.Beta;
+import org.kohsuke.stapler.Stapler;
+import org.kohsuke.stapler.export.Exported;
 
 /**
  * One test result.
@@ -787,9 +780,9 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
 
     private Collection<? extends hudson.tasks.test.TestResult> singletonListOfThisOrEmptyList(boolean f) {
         if (f)
-            return singletonList(this);
+            return Collections.singletonList(this);
         else
-            return emptyList();
+            return Collections.emptyList();
     }
 
     /**

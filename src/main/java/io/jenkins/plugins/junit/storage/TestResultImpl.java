@@ -29,17 +29,15 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Job;
 import hudson.model.Run;
 import hudson.tasks.junit.CaseResult;
+import hudson.tasks.junit.HistoryTestResultSummary;
 import hudson.tasks.junit.PackageResult;
 import hudson.tasks.junit.SuiteResult;
 import hudson.tasks.junit.TestDurationResultSummary;
 import hudson.tasks.junit.TestResult;
 import hudson.tasks.junit.TrendTestResultSummary;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-
-import hudson.tasks.junit.HistoryTestResultSummary;
 import jenkins.model.Jenkins;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.Beta;

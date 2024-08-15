@@ -1,15 +1,14 @@
 package hudson.tasks.test;
 
-import edu.hm.hafner.echarts.LineSeries;
-import hudson.tasks.junit.TrendTestResultSummary;
-import org.junit.jupiter.api.Test;
-
-import java.util.List;
-import java.util.Map;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import edu.hm.hafner.echarts.LineSeries;
+import hudson.tasks.junit.TrendTestResultSummary;
+import java.util.List;
+import java.util.Map;
+import org.junit.jupiter.api.Test;
 
 class TestResultTrendChartTest {
     @Test

@@ -24,14 +24,18 @@
 package hudson.tasks.junit;
 
 import hudson.model.Run;
-import io.jenkins.plugins.junit.storage.TestResultImpl;
 import hudson.tasks.test.MetaTabulatedResult;
 import hudson.tasks.test.TestResult;
+import io.jenkins.plugins.junit.storage.TestResultImpl;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
-
-import java.util.*;
 
 /**
  * Cumulative test result for a package.

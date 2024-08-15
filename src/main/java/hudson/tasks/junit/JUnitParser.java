@@ -23,25 +23,25 @@
  */
 package hudson.tasks.junit;
 
-import hudson.model.TaskListener;
-import hudson.tasks.test.PipelineTestDetails;
-import hudson.tasks.test.TestResultParser;
-import hudson.*;
+import hudson.AbortException;
+import hudson.Extension;
+import hudson.FilePath;
+import hudson.Launcher;
+import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.Run;
+import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
+import hudson.tasks.test.PipelineTestDetails;
+import hudson.tasks.test.TestResultParser;
 import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
-
-import io.jenkins.plugins.junit.storage.JunitTestResultStorage.RemotePublisher;
-import java.io.IOException;
 import java.io.File;
+import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import jenkins.MasterToSlaveFileCallable;
-
-import org.apache.tools.ant.types.FileSet;
 import org.apache.tools.ant.DirectoryScanner;
+import org.apache.tools.ant.types.FileSet;
 
 /**
  * Parse some JUnit xml files and generate a TestResult containing all the
@@ -225,10 +225,10 @@ public class JUnitParser extends TestResultParser {
 
     private static final class StorageParseResultCallable extends ParseResultCallable<TestResultSummary> {
 
-        private final RemotePublisher publisher;
+        private final JunitTestResultStorage.RemotePublisher publisher;
 
         StorageParseResultCallable(String testResults, Run<?,?> build, StdioRetention stdioRetention, boolean keepProperties, boolean allowEmptyResults, boolean keepTestNames, 
-                                   PipelineTestDetails pipelineTestDetails, TaskListener listener, RemotePublisher publisher, boolean skipOldReports) {
+                                   PipelineTestDetails pipelineTestDetails, TaskListener listener, JunitTestResultStorage.RemotePublisher publisher, boolean skipOldReports) {
             super(testResults, build, stdioRetention, keepProperties, allowEmptyResults, keepTestNames, pipelineTestDetails, listener, skipOldReports);
             this.publisher = publisher;
         }

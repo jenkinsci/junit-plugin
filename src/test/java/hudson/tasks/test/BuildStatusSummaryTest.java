@@ -1,20 +1,18 @@
 package hudson.tasks.test;
 
-import hudson.model.AbstractBuild;
-import hudson.model.Run;
-import hudson.model.Result;
-import hudson.model.Run.Summary;
-
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsRule;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+
+import hudson.model.AbstractBuild;
+import hudson.model.Result;
+import hudson.model.Run;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.jvnet.hudson.test.JenkinsRule;
 
 /**
  * Tests {@link Run#getBuildStatusSummary()}.
@@ -53,7 +51,7 @@ public class BuildStatusSummaryTest {
         
         buildHasTestResult((AbstractBuild) this.build, 1);
         
-        Summary summary = this.build.getBuildStatusSummary();
+        Run.Summary summary = this.build.getBuildStatusSummary();
         
         assertTrue(summary.isWorse);
         assertEquals(Messages.Run_Summary_TestFailures(1), summary.message);
@@ -76,7 +74,7 @@ public class BuildStatusSummaryTest {
         // Null test result action recorded
         when(((AbstractBuild) this.build).getAction(AbstractTestResultAction.class)).thenReturn(null);
 
-        Summary summary = this.build.getBuildStatusSummary();
+        Run.Summary summary = this.build.getBuildStatusSummary();
 
         assertFalse(summary.isWorse);
         assertEquals(hudson.model.Messages.Run_Summary_Unstable(), summary.message);
@@ -98,7 +96,7 @@ public class BuildStatusSummaryTest {
         buildHasTestResult((AbstractBuild) this.prevBuild, 1);
         buildHasTestResult((AbstractBuild) this.build, 1);
         
-        Summary summary = this.build.getBuildStatusSummary();
+        Run.Summary summary = this.build.getBuildStatusSummary();
         
         assertFalse(summary.isWorse);
         assertEquals(Messages.Run_Summary_TestsStillFailing(1), summary.message);
@@ -114,7 +112,7 @@ public class BuildStatusSummaryTest {
         buildHasTestResult((AbstractBuild) this.prevBuild, 1);
         buildHasTestResult((AbstractBuild) this.build, 2);
         
-        Summary summary = this.build.getBuildStatusSummary();
+        Run.Summary summary = this.build.getBuildStatusSummary();
         
         assertTrue(summary.isWorse);
         assertEquals(Messages.Run_Summary_MoreTestsFailing(1, 2), summary.message);
@@ -130,7 +128,7 @@ public class BuildStatusSummaryTest {
         buildHasTestResult((AbstractBuild) this.prevBuild, 2);
         buildHasTestResult((AbstractBuild) this.build, 1);
         
-        Summary summary = this.build.getBuildStatusSummary();
+        Run.Summary summary = this.build.getBuildStatusSummary();
         
         assertFalse(summary.isWorse);
         assertEquals(Messages.Run_Summary_LessTestsFailing(1, 1), summary.message);

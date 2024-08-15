@@ -23,17 +23,18 @@
  */
 package hudson.tasks.junit;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.XmlFile;
 import hudson.model.Run;
-import io.jenkins.plugins.junit.storage.TestResultImpl;
 import hudson.tasks.test.AbstractTestResultAction;
-import hudson.tasks.test.PipelineTestDetails;
-import hudson.tasks.test.PipelineBlockWithTests;
 import hudson.tasks.test.MetaTabulatedResult;
+import hudson.tasks.test.PipelineBlockWithTests;
+import hudson.tasks.test.PipelineTestDetails;
 import hudson.tasks.test.TabulatedResult;
 import hudson.tasks.test.TestObject;
-
+import io.jenkins.plugins.junit.storage.TestResultImpl;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -49,27 +50,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
-
 import jenkins.util.SystemProperties;
 import org.apache.tools.ant.DirectoryScanner;
 import org.dom4j.DocumentException;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.StaplerResponse;
 import org.kohsuke.stapler.export.Exported;
-
-import com.thoughtworks.xstream.XStream;
-
-import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Root of all the test results for one build.

@@ -23,25 +23,14 @@
  */
 package hudson.tasks.junit;
 
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.tasks.test.PipelineTestDetails;
 import hudson.tasks.test.TestObject;
 import hudson.util.io.ParserConfigurator;
-import org.dom4j.Document;
-import org.dom4j.DocumentException;
-import org.dom4j.Element;
-import org.dom4j.io.SAXReader;
-import org.jenkinsci.plugins.workflow.graph.FlowNode;
-import org.jenkinsci.plugins.workflow.graph.FlowNode.*;
-import org.kohsuke.stapler.export.Exported;
-import org.kohsuke.stapler.export.ExportedBean;
-import org.xml.sax.SAXException;
-
-import edu.umd.cs.findbugs.annotations.CheckForNull;
-import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.Reader;
 import java.io.Serializable;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -55,9 +44,16 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
+import org.dom4j.Document;
+import org.dom4j.DocumentException;
+import org.dom4j.Element;
+import org.dom4j.io.SAXReader;
+import org.jenkinsci.plugins.workflow.graph.FlowNode;
+import org.kohsuke.stapler.export.Exported;
+import org.kohsuke.stapler.export.ExportedBean;
+import org.xml.sax.SAXException;
 
 /**
  * Result of one test suite.

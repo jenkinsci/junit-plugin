@@ -25,7 +25,6 @@ package hudson.tasks.test;
 
 import hudson.Extension;
 
-
 /**
  * A class to exercise the TestResult extension mechanism.
  */

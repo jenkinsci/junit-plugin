@@ -1,19 +1,13 @@
 package hudson.tasks.test;
 
-import java.util.List;
-
-
 import edu.hm.hafner.echarts.ChartModelConfiguration;
 import edu.hm.hafner.echarts.LineSeries;
 import edu.hm.hafner.echarts.LinesChartModel;
 import edu.hm.hafner.echarts.LinesDataSet;
-import edu.hm.hafner.echarts.SeriesBuilder;
 import edu.umd.cs.findbugs.annotations.NonNull;
-
 import hudson.tasks.junit.TrendTestResultSummary;
 import io.jenkins.plugins.echarts.JenkinsPalette;
-
-import static hudson.tasks.test.TestResultTrendSeriesBuilder.*;
+import java.util.List;
 
 public class TestResultTrendChart {
     enum PassedColor {GREEN, BLUE}
@@ -59,17 +53,17 @@ public class TestResultTrendChart {
         LineSeries passed = new LineSeries("Passed",
                 passedColor == PassedColor.BLUE ? JenkinsPalette.BLUE.normal() : JenkinsPalette.GREEN.normal(),
                 LineSeries.StackedMode.STACKED, LineSeries.FilledMode.FILLED);
-        passed.addAll(dataSet.getSeries(PASSED_KEY));
+        passed.addAll(dataSet.getSeries(TestResultTrendSeriesBuilder.PASSED_KEY));
         model.addSeries(passed);
 
         LineSeries skipped = new LineSeries("Skipped", JenkinsPalette.GREY.normal(),
                 LineSeries.StackedMode.STACKED, LineSeries.FilledMode.FILLED);
-        skipped.addAll(dataSet.getSeries(SKIPPED_KEY));
+        skipped.addAll(dataSet.getSeries(TestResultTrendSeriesBuilder.SKIPPED_KEY));
         model.addSeries(skipped);
 
         LineSeries failed = new LineSeries("Failed", JenkinsPalette.RED.normal(),
                 LineSeries.StackedMode.STACKED, LineSeries.FilledMode.FILLED);
-        failed.addAll(dataSet.getSeries(FAILED_KEY));
+        failed.addAll(dataSet.getSeries(TestResultTrendSeriesBuilder.FAILED_KEY));
         model.addSeries(failed);
 
         return model;

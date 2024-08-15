@@ -1,5 +1,8 @@
 package io.jenkins.plugins.junit.checks;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
+
 import hudson.FilePath;
 import hudson.model.Result;
 import hudson.tasks.junit.TestResultTest;
@@ -8,6 +11,8 @@ import io.jenkins.plugins.checks.api.ChecksDetails;
 import io.jenkins.plugins.checks.api.ChecksOutput;
 import io.jenkins.plugins.checks.api.ChecksStatus;
 import io.jenkins.plugins.checks.util.CapturingChecksPublisher;
+import java.util.List;
+import java.util.Objects;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.junit.After;
@@ -15,12 +20,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
-
-import java.util.List;
-
-import static java.util.Objects.requireNonNull;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
 
 public class JUnitChecksPublisherTest {
 
@@ -57,7 +56,7 @@ public class JUnitChecksPublisherTest {
                 "  }\n" +
                 "}\n", true));
         FilePath ws = rule.jenkins.getWorkspaceFor(j);
-        FilePath testFile = requireNonNull(ws).child("test-result.xml");
+        FilePath testFile = Objects.requireNonNull(ws).child("test-result.xml");
         testFile.copyFrom(TestResultTest.class.getResource("junit-report-1463.xml"));
 
         rule.buildAndAssertSuccess(j);
@@ -85,7 +84,7 @@ public class JUnitChecksPublisherTest {
                 "  }\n" +
                 "}\n", true));
         FilePath ws = rule.jenkins.getWorkspaceFor(j);
-        FilePath testFile = requireNonNull(ws).child("test-result.xml");
+        FilePath testFile = Objects.requireNonNull(ws).child("test-result.xml");
         testFile.copyFrom(TestResultTest.class.getResource("junit-report-errror-details.xml"));
 
         rule.buildAndAssertStatus(Result.FAILURE, j);
@@ -112,7 +111,7 @@ public class JUnitChecksPublisherTest {
                 "  }\n" +
                 "}\n", true));
         FilePath ws = rule.jenkins.getWorkspaceFor(j);
-        FilePath testFile = requireNonNull(ws).child("test-result.xml");
+        FilePath testFile = Objects.requireNonNull(ws).child("test-result.xml");
         testFile.copyFrom(TestResultTest.class.getResource("junit-report-20090516.xml"));
 
         rule.buildAndAssertStatus(Result.FAILURE, j);
@@ -140,7 +139,7 @@ public class JUnitChecksPublisherTest {
                 "  }\n" +
                 "}\n", true));
         FilePath ws = rule.jenkins.getWorkspaceFor(j);
-        FilePath testFile = requireNonNull(ws).child("test-result.xml");
+        FilePath testFile = Objects.requireNonNull(ws).child("test-result.xml");
         testFile.copyFrom(TestResultTest.class.getResource("junit-report-1463.xml"));
 
         rule.buildAndAssertSuccess(j);
@@ -163,7 +162,7 @@ public class JUnitChecksPublisherTest {
                 "  assert results.totalCount == 6\n" +
                 "}\n", true));
         FilePath ws = rule.jenkins.getWorkspaceFor(j);
-        FilePath testFile = requireNonNull(ws).child("test-result.xml");
+        FilePath testFile = Objects.requireNonNull(ws).child("test-result.xml");
         testFile.copyFrom(TestResultTest.class.getResource("junit-report-1463.xml"));
 
         rule.buildAndAssertSuccess(j);
@@ -184,7 +183,7 @@ public class JUnitChecksPublisherTest {
                 "  }\n" +
                 "}}\n", true));
         FilePath ws = rule.jenkins.getWorkspaceFor(j);
-        FilePath testFile = requireNonNull(ws).child("test-result.xml");
+        FilePath testFile = Objects.requireNonNull(ws).child("test-result.xml");
         testFile.copyFrom(TestResultTest.class.getResource("junit-report-1463.xml"));
 
         rule.buildAndAssertSuccess(j);
@@ -232,7 +231,7 @@ public class JUnitChecksPublisherTest {
                 "}\n", true));
 
         FilePath ws = rule.jenkins.getWorkspaceFor(j);
-        FilePath testFile = requireNonNull(ws).child("test-result.xml");
+        FilePath testFile = Objects.requireNonNull(ws).child("test-result.xml");
         testFile.copyFrom(TestResultTest.class.getResource("junit-report-1463.xml"));
 
         rule.buildAndAssertSuccess(j);
@@ -269,7 +268,7 @@ public class JUnitChecksPublisherTest {
                 "}", true));
 
         FilePath ws = rule.jenkins.getWorkspaceFor(j);
-        FilePath testFile = requireNonNull(ws).child("test-result.xml");
+        FilePath testFile = Objects.requireNonNull(ws).child("test-result.xml");
         testFile.copyFrom(TestResultTest.class.getResource("junit-report-1463.xml"));
 
         rule.buildAndAssertSuccess(j);
@@ -303,7 +302,7 @@ public class JUnitChecksPublisherTest {
                 "}\n", true));
 
         FilePath ws = rule.jenkins.getWorkspaceFor(j);
-        FilePath testFile = requireNonNull(ws).child("test-result.xml");
+        FilePath testFile = Objects.requireNonNull(ws).child("test-result.xml");
         testFile.copyFrom(TestResultTest.class.getResource("junit-report-1463.xml"));
 
         rule.buildAndAssertSuccess(j);

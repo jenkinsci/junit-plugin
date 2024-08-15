@@ -4,12 +4,11 @@ import edu.hm.hafner.echarts.Build;
 import edu.hm.hafner.echarts.BuildResult;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Run;
+import hudson.tasks.junit.HistoryTestResultSummary;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
-
-import hudson.tasks.junit.*;
 
 public class TestObjectIterable implements Iterable<BuildResult<TestObject>> {
     private final TestObject latestAction;
