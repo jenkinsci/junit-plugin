@@ -5,7 +5,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public enum StdioRetention {
-
     ALL(Messages.StdioRetention_All_DisplayName()),
     FAILED(Messages.StdioRetention_Failed_DisplayName()),
     NONE(Messages.StdioRetention_None_DisplayName());
@@ -35,10 +34,8 @@ public enum StdioRetention {
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException(
                     "Unrecognized value '" + value + "'; must be one of the following: "
-                        + Stream.of(values()).map(Enum::name).collect(Collectors.joining(", ")),
-                    e
-            );
+                            + Stream.of(values()).map(Enum::name).collect(Collectors.joining(", ")),
+                    e);
         }
     }
-
 }

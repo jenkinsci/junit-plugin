@@ -1,18 +1,18 @@
 /*
  * The MIT License
- * 
+ *
  * Copyright (c) 2004-2011, Sun Microsystems, Inc., Kohsuke Kawaguchi, Michael B. Donohue, Yahoo!, Inc., Andrew Bayer
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -83,14 +83,15 @@ public class AggregatedTestResultPublisher extends Recorder {
     public AggregatedTestResultPublisher(String jobs) {
         this(jobs, false);
     }
-    
+
     public AggregatedTestResultPublisher(String jobs, boolean includeFailedBuilds) {
         this.jobs = Util.fixEmptyAndTrim(jobs);
         this.includeFailedBuilds = includeFailedBuilds;
     }
 
     @Override
-    public boolean perform(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
+            throws InterruptedException, IOException {
         // add a TestResult just so that it can show up later.
         build.addAction(new TestResultAction(jobs, includeFailedBuilds, build));
         return true;
@@ -101,7 +102,8 @@ public class AggregatedTestResultPublisher extends Recorder {
         return BuildStepMonitor.NONE;
     }
 
-    @Override public Collection<? extends Action> getProjectActions(AbstractProject<?, ?> project) {
+    @Override
+    public Collection<? extends Action> getProjectActions(AbstractProject<?, ?> project) {
         return Collections.singleton(new TestResultProjectAction(project));
     }
 
@@ -122,7 +124,7 @@ public class AggregatedTestResultPublisher extends Recorder {
          * Should failed builds be included?
          */
         private final boolean includeFailedBuilds;
-        
+
         /**
          * The last time the fields of this object is computed from the rest.
          */
@@ -139,18 +141,21 @@ public class AggregatedTestResultPublisher extends Recorder {
          * Projects that haven't run yet.
          */
         private transient List<AbstractProject> didntRun;
+
         private transient List<AbstractProject> noFingerprints;
 
         @SuppressWarnings("deprecation") // calls getProject in constructor, so needs owner immediately
-        public TestResultAction(String jobs, boolean includeFailedBuilds, AbstractBuild<?,?> owner) {
+        public TestResultAction(String jobs, boolean includeFailedBuilds, AbstractBuild<?, ?> owner) {
             super(owner);
             this.includeFailedBuilds = includeFailedBuilds;
-            
-            if(jobs==null) {
+
+            if (jobs == null) {
                 // resolve null as the transitive downstream jobs
                 StringBuilder buf = new StringBuilder();
                 for (AbstractProject p : getProject().getTransitiveDownstreamProjects()) {
-                    if(buf.length()>0)  buf.append(',');
+                    if (buf.length() > 0) {
+                        buf.append(',');
+                    }
                     buf.append(p.getFullName());
                 }
                 jobs = buf.toString();
@@ -164,7 +169,7 @@ public class AggregatedTestResultPublisher extends Recorder {
         public Collection<AbstractProject> getJobs() {
             List<AbstractProject> r = new ArrayList<>();
             if (jobs != null) {
-                for (String job : Util.tokenize(jobs,",")) {
+                for (String job : Util.tokenize(jobs, ",")) {
                     try {
                         AbstractProject j = Jenkins.get().getItemByFullName(job.trim(), AbstractProject.class);
                         if (j != null) {
@@ -185,8 +190,8 @@ public class AggregatedTestResultPublisher extends Recorder {
         public boolean getIncludeFailedBuilds() {
             return includeFailedBuilds;
         }
-        
-        private AbstractProject<?,?> getProject() {
+
+        private AbstractProject<?, ?> getProject() {
             return owner.getProject();
         }
 
@@ -216,6 +221,7 @@ public class AggregatedTestResultPublisher extends Recorder {
          * @deprecated
          *      so that IDE warns you if you accidentally try to call it.
          */
+        @Deprecated
         @Override
         protected String getDescription(TestObject object) {
             throw new AssertionError();
@@ -227,6 +233,7 @@ public class AggregatedTestResultPublisher extends Recorder {
          * @deprecated
          *      so that IDE warns you if you accidentally try to call it.
          */
+        @Deprecated
         @Override
         protected void setDescription(TestObject object, String description) {
             throw new AssertionError();
@@ -248,8 +255,8 @@ public class AggregatedTestResultPublisher extends Recorder {
             return Collections.unmodifiableList(didntRun);
         }
 
-        /** 
-         * Gets the downstream projects that have available test results, but 
+        /**
+         * Gets the downstream projects that have available test results, but
          * do not appear to have fingerprinting enabled.
          */
         public List<AbstractProject> getNoFingerprints() {
@@ -259,11 +266,15 @@ public class AggregatedTestResultPublisher extends Recorder {
         /**
          * Makes sure that the data fields are up to date.
          */
-        @SuppressFBWarnings(value = "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification = "False positive. Short-circuited")
+        @SuppressFBWarnings(
+                value = "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE",
+                justification = "False positive. Short-circuited")
         private synchronized void upToDateCheck() {
             // up to date check
-            if(lastUpdated>lastChanged)     return;
-            lastUpdated = lastChanged+1;
+            if (lastUpdated > lastChanged) {
+                return;
+            }
+            lastUpdated = lastChanged + 1;
 
             int failCount = 0;
             int totalCount = 0;
@@ -272,7 +283,7 @@ public class AggregatedTestResultPublisher extends Recorder {
             List<AbstractProject> noFingerprints = new ArrayList<>();
             for (AbstractProject job : getJobs()) {
                 Fingerprint.RangeSet rs = owner.getDownstreamRelationship(job);
-                if(rs.isEmpty()) {
+                if (rs.isEmpty()) {
                     // is this job expected to produce a test result?
                     Run b;
                     if (includeFailedBuilds) {
@@ -280,8 +291,8 @@ public class AggregatedTestResultPublisher extends Recorder {
                     } else {
                         b = job.getLastSuccessfulBuild();
                     }
-                    if(b!=null && b.getAction(AbstractTestResultAction.class)!=null) {
-                        if(b.getAction(Fingerprinter.FingerprintAction.class)!=null) {
+                    if (b != null && b.getAction(AbstractTestResultAction.class) != null) {
+                        if (b.getAction(Fingerprinter.FingerprintAction.class) != null) {
                             didntRun.add(job);
                         } else {
                             noFingerprints.add(job);
@@ -290,18 +301,23 @@ public class AggregatedTestResultPublisher extends Recorder {
                 } else {
                     for (int n : rs.listNumbersReverse()) {
                         Run b = job.getBuildByNumber(n);
-                        if(b==null) continue;
+                        if (b == null) {
+                            continue;
+                        }
                         Result targetResult;
                         if (includeFailedBuilds) {
                             targetResult = Result.FAILURE;
                         } else {
                             targetResult = Result.UNSTABLE;
                         }
-                        
-                        if(b.isBuilding() || b.getResult() == null || b.getResult().isWorseThan(targetResult))
-                            continue;   // don't count them
 
-                        for( AbstractTestResultAction ta : b.getActions(AbstractTestResultAction.class)) {
+                        if (b.isBuilding()
+                                || b.getResult() == null
+                                || b.getResult().isWorseThan(targetResult)) {
+                            continue; // don't count them
+                        }
+
+                        for (AbstractTestResultAction ta : b.getActions(AbstractTestResultAction.class)) {
                             failCount += ta.getFailCount();
                             totalCount += ta.getTotalCount();
                             individuals.add(ta);
@@ -319,7 +335,7 @@ public class AggregatedTestResultPublisher extends Recorder {
         }
 
         public boolean getHasFingerprintAction() {
-            return this.owner.getAction(Fingerprinter.FingerprintAction.class)!=null;
+            return this.owner.getAction(Fingerprinter.FingerprintAction.class) != null;
         }
 
         @Override
@@ -346,7 +362,7 @@ public class AggregatedTestResultPublisher extends Recorder {
 
         @Override
         public boolean isApplicable(Class<? extends AbstractProject> jobType) {
-            return true;    // for all types
+            return true; // for all types
         }
 
         @Override
@@ -356,16 +372,19 @@ public class AggregatedTestResultPublisher extends Recorder {
 
         public FormValidation doCheck(@AncestorInPath AbstractProject project, @QueryParameter String value) {
             // Require CONFIGURE permission on this project
-            if(!project.hasPermission(Item.CONFIGURE))  return FormValidation.ok();
+            if (!project.hasPermission(Item.CONFIGURE)) {
+                return FormValidation.ok();
+            }
 
             for (String name : Util.tokenize(Util.fixNull(value), ",")) {
                 name = name.trim();
-                if (Jenkins.get().getItem(name,project) == null) {
-                    final AbstractProject<?,?> nearest = AbstractProject.findNearest(name);
-                    return FormValidation.error(Messages.BuildTrigger_NoSuchProject(name, nearest != null ? nearest.getName() : null));
+                if (Jenkins.get().getItem(name, project) == null) {
+                    final AbstractProject<?, ?> nearest = AbstractProject.findNearest(name);
+                    return FormValidation.error(
+                            Messages.BuildTrigger_NoSuchProject(name, nearest != null ? nearest.getName() : null));
                 }
             }
-            
+
             return FormValidation.ok();
         }
 
@@ -378,24 +397,28 @@ public class AggregatedTestResultPublisher extends Recorder {
                 throw new AssertionError("Null parameters to Descriptor#newInstance");
             }
             JSONObject s = formData.getJSONObject("specify");
-            if(s.isNullObject())
-                return new AggregatedTestResultPublisher(null, req != null && req.getParameter("includeFailedBuilds") != null);
-            else
-                return new AggregatedTestResultPublisher(s.getString("jobs"), req != null && req.getParameter("includeFailedBuilds") != null);
+            if (s.isNullObject()) {
+                return new AggregatedTestResultPublisher(
+                        null, req != null && req.getParameter("includeFailedBuilds") != null);
+            } else {
+                return new AggregatedTestResultPublisher(
+                        s.getString("jobs"), req != null && req.getParameter("includeFailedBuilds") != null);
+            }
         }
 
-        public AutoCompletionCandidates doAutoCompleteJobs(@QueryParameter String value, @AncestorInPath Item self, @AncestorInPath ItemGroup container) {
+        public AutoCompletionCandidates doAutoCompleteJobs(
+                @QueryParameter String value, @AncestorInPath Item self, @AncestorInPath ItemGroup container) {
             // Item.READ checked inside
-            return AutoCompletionCandidates.ofJobNames(Job.class,value,self,container);
+            return AutoCompletionCandidates.ofJobNames(Job.class, value, self, container);
         }
     }
 
     @Restricted(NoExternalUse.class)
     public static final class TestResultProjectAction extends InvisibleAction {
         public final AbstractProject<?, ?> project;
-        private TestResultProjectAction(AbstractProject<?,?> project) {
+
+        private TestResultProjectAction(AbstractProject<?, ?> project) {
             this.project = project;
         }
     }
-
 }

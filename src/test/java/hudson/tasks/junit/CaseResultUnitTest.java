@@ -35,10 +35,9 @@ import org.jvnet.localizer.LocaleProvider;
 
 @For(CaseResult.class)
 public class CaseResultUnitTest {
-    
-    public CaseResultUnitTest() {
-    }
-    
+
+    public CaseResultUnitTest() {}
+
     @Issue("JENKINS-6824")
     @Test
     public void testLocalizationOfStatus() throws Exception {
@@ -58,5 +57,4 @@ public class CaseResultUnitTest {
             LocaleProvider.setProvider(old);
         }
     }
-    
 }

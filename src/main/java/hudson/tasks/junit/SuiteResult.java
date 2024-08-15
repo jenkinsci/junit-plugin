@@ -107,6 +107,7 @@ public final class SuiteResult implements Serializable {
      * All test cases.
      */
     private List<CaseResult> cases = new ArrayList<>();
+
     private transient Map<String, CaseResult> casesByName;
     private transient hudson.tasks.junit.TestResult parent;
 
@@ -118,7 +119,8 @@ public final class SuiteResult implements Serializable {
     /**
      * @since 1.22
      */
-    public SuiteResult(String name, String stdout, String stderr, @CheckForNull PipelineTestDetails pipelineTestDetails) {
+    public SuiteResult(
+            String name, String stdout, String stderr, @CheckForNull PipelineTestDetails pipelineTestDetails) {
         this.name = name;
         this.stderr = CaseResult.fixNULs(stderr);
         this.stdout = CaseResult.fixNULs(stdout);
@@ -181,7 +183,8 @@ public final class SuiteResult implements Serializable {
                         r.id = reader.getElementText();
                         break;
                     case "duration":
-                        r.duration = Math.max(0.0f, Math.min(365 * 24 * 60 * 60, new TimeToFloat(reader.getElementText()).parse()));
+                        r.duration = Math.max(
+                                0.0f, Math.min(365 * 24 * 60 * 60, new TimeToFloat(reader.getElementText()).parse()));
                         break;
                     case "startTime":
                         r.startTime = Long.parseLong(reader.getElementText());
@@ -221,7 +224,8 @@ public final class SuiteResult implements Serializable {
         return r;
     }
 
-    public static void parseEnclosingBlocks(SuiteResult r, final XMLStreamReader reader, String ver) throws XMLStreamException {
+    public static void parseEnclosingBlocks(SuiteResult r, final XMLStreamReader reader, String ver)
+            throws XMLStreamException {
         while (reader.hasNext()) {
             final int event = reader.next();
             if (event == XMLStreamReader.END_ELEMENT && reader.getLocalName().equals("enclosingBlocks")) {
@@ -235,14 +239,16 @@ public final class SuiteResult implements Serializable {
                         break;
                     default:
                         if (LOGGER.isLoggable(Level.FINEST)) {
-                            LOGGER.finest("SuiteResult.parseEnclosingBlocks encountered an unknown field: " + elementName);
+                            LOGGER.finest(
+                                    "SuiteResult.parseEnclosingBlocks encountered an unknown field: " + elementName);
                         }
                 }
             }
         }
     }
 
-    public static void parseEnclosingBlockNames(SuiteResult r, final XMLStreamReader reader, String ver) throws XMLStreamException {
+    public static void parseEnclosingBlockNames(SuiteResult r, final XMLStreamReader reader, String ver)
+            throws XMLStreamException {
         while (reader.hasNext()) {
             final int event = reader.next();
             if (event == XMLStreamReader.END_ELEMENT && reader.getLocalName().equals("enclosingBlockNames")) {
@@ -256,13 +262,14 @@ public final class SuiteResult implements Serializable {
                         break;
                     default:
                         if (LOGGER.isLoggable(Level.FINEST)) {
-                            LOGGER.finest("SuiteResult.parseEnclosingBlockNames encountered an unknown field: " + elementName);
+                            LOGGER.finest("SuiteResult.parseEnclosingBlockNames encountered an unknown field: "
+                                    + elementName);
                         }
                 }
             }
         }
     }
-    
+
     public static void parseCases(SuiteResult r, final XMLStreamReader reader, String ver) throws XMLStreamException {
         while (reader.hasNext()) {
             final int event = reader.next();
@@ -282,7 +289,6 @@ public final class SuiteResult implements Serializable {
                 }
             }
         }
-
     }
 
     private synchronized Map<String, CaseResult> casesByName() {
@@ -317,15 +323,27 @@ public final class SuiteResult implements Serializable {
     }
 
     @Deprecated
-    static List<SuiteResult> parse(File xmlReport, boolean keepLongStdio, boolean keepProperties, PipelineTestDetails pipelineTestDetails)
+    static List<SuiteResult> parse(
+            File xmlReport, boolean keepLongStdio, boolean keepProperties, PipelineTestDetails pipelineTestDetails)
             throws DocumentException, IOException, InterruptedException {
-        return parse(xmlReport, StdioRetention.fromKeepLongStdio(keepLongStdio), keepProperties, false, pipelineTestDetails);
+        return parse(
+                xmlReport, StdioRetention.fromKeepLongStdio(keepLongStdio), keepProperties, false, pipelineTestDetails);
     }
 
     @Deprecated
-    static List<SuiteResult> parse(File xmlReport, boolean keepLongStdio, boolean keepProperties, boolean keepTestNames, PipelineTestDetails pipelineTestDetails)
+    static List<SuiteResult> parse(
+            File xmlReport,
+            boolean keepLongStdio,
+            boolean keepProperties,
+            boolean keepTestNames,
+            PipelineTestDetails pipelineTestDetails)
             throws DocumentException, IOException, InterruptedException {
-        return parse(xmlReport, StdioRetention.fromKeepLongStdio(keepLongStdio), keepProperties, keepTestNames, pipelineTestDetails);
+        return parse(
+                xmlReport,
+                StdioRetention.fromKeepLongStdio(keepLongStdio),
+                keepProperties,
+                keepTestNames,
+                pipelineTestDetails);
     }
 
     /**
@@ -333,14 +351,19 @@ public final class SuiteResult implements Serializable {
      * This method returns a collection, as a single XML may have multiple &lt;testsuite>
      * elements wrapped into the top-level &lt;testsuites>.
      */
-    static List<SuiteResult> parse(File xmlReport, StdioRetention stdioRetention, boolean keepProperties, boolean keepTestNames, PipelineTestDetails pipelineTestDetails)
+    static List<SuiteResult> parse(
+            File xmlReport,
+            StdioRetention stdioRetention,
+            boolean keepProperties,
+            boolean keepTestNames,
+            PipelineTestDetails pipelineTestDetails)
             throws DocumentException, IOException, InterruptedException {
         List<SuiteResult> r = new ArrayList<>();
 
         // parse into DOM
         SAXReader saxReader = new SAXReader();
 
-        //source: https://www.owasp.org/index.php/XML_External_Entity_(XXE)_Prevention_Cheat_Sheet => SAXReader
+        // source: https://www.owasp.org/index.php/XML_External_Entity_(XXE)_Prevention_Cheat_Sheet => SAXReader
         // setFeatureQuietly(saxReader, "http://apache.org/xml/features/disallow-doctype-decl", true);
         // setFeatureQuietly(saxReader, "http://xml.org/sax/features/external-parameter-entities", false);
 
@@ -362,44 +385,64 @@ public final class SuiteResult implements Serializable {
     private static void setFeatureQuietly(SAXReader reader, String feature, boolean value) {
         try {
             reader.setFeature(feature, value);
-        }
-        catch (SAXException ignored) {
+        } catch (SAXException ignored) {
             // ignore and continue in case the feature cannot be changed
         }
     }
 
-    private static void parseSuite(File xmlReport, StdioRetention stdioRetention, boolean keepProperties, boolean keepTestNames, List<SuiteResult> r, Element root,
-                                   PipelineTestDetails pipelineTestDetails) throws DocumentException, IOException {
+    private static void parseSuite(
+            File xmlReport,
+            StdioRetention stdioRetention,
+            boolean keepProperties,
+            boolean keepTestNames,
+            List<SuiteResult> r,
+            Element root,
+            PipelineTestDetails pipelineTestDetails)
+            throws DocumentException, IOException {
         // nested test suites
         List<Element> testSuites = root.elements("testsuite");
-        for (Element suite : testSuites)
+        for (Element suite : testSuites) {
             parseSuite(xmlReport, stdioRetention, keepProperties, keepTestNames, r, suite, pipelineTestDetails);
+        }
 
         // child test cases
         // FIXME: do this also if no testcases!
-        if (root.element("testcase") != null || root.element("error") != null)
+        if (root.element("testcase") != null || root.element("error") != null) {
             r.add(new SuiteResult(xmlReport, root, stdioRetention, keepProperties, keepTestNames, pipelineTestDetails));
+        }
     }
 
-    private SuiteResult(File xmlReport, Element suite, StdioRetention stdioRetention, @CheckForNull PipelineTestDetails pipelineTestDetails)
+    private SuiteResult(
+            File xmlReport,
+            Element suite,
+            StdioRetention stdioRetention,
+            @CheckForNull PipelineTestDetails pipelineTestDetails)
             throws DocumentException, IOException {
-            this(xmlReport, suite, stdioRetention, false, false, pipelineTestDetails);
+        this(xmlReport, suite, stdioRetention, false, false, pipelineTestDetails);
     }
     /**
      * @param xmlReport A JUnit XML report file whose top level element is 'testsuite'.
      * @param suite     The parsed result of {@code xmlReport}
      */
-    private SuiteResult(File xmlReport, Element suite, StdioRetention stdioRetention, boolean keepProperties, boolean keepTestNames, @CheckForNull PipelineTestDetails pipelineTestDetails)
+    private SuiteResult(
+            File xmlReport,
+            Element suite,
+            StdioRetention stdioRetention,
+            boolean keepProperties,
+            boolean keepTestNames,
+            @CheckForNull PipelineTestDetails pipelineTestDetails)
             throws DocumentException, IOException {
         this.file = xmlReport.getAbsolutePath();
         String name = suite.attributeValue("name");
-        if (name == null)
+        if (name == null) {
             // some user reported that name is null in their environment.
             // see http://www.nabble.com/Unexpected-Null-Pointer-Exception-in-Hudson-1.131-tf4314802.html
             name = '(' + xmlReport.getName() + ')';
-        else {
+        } else {
             String pkg = suite.attributeValue("package");
-            if (pkg != null && pkg.length() > 0) name = pkg + '.' + name;
+            if (pkg != null && pkg.length() > 0) {
+                name = pkg + '.' + name;
+            }
         }
         this.name = TestObject.safe(name);
         this.timestamp = suite.attributeValue("timestamp");
@@ -409,12 +452,11 @@ public final class SuiteResult implements Serializable {
             this.enclosingBlocks.addAll(pipelineTestDetails.getEnclosingBlocks());
             this.enclosingBlockNames.addAll(pipelineTestDetails.getEnclosingBlockNames());
         }
-        
+
         // check for timestamp attribute and set start time if present
         if (timestamp != null && !timestamp.equals("")) {
             this.startTime = parseTime(timestamp);
-        }
-        else {
+        } else {
             this.startTime = -1;
         }
 
@@ -451,7 +493,7 @@ public final class SuiteResult implements Serializable {
             // are at odds with each other --- when both are present,
             // one wants to use @name from <testsuite>,
             // the other wants to use @classname from <testcase>.
-            
+
             CaseResult caze = new CaseResult(this, e, classname, stdioRetention, keepProperties, keepTestNames);
 
             // If timestamp is present for <testcase> set startTime of new CaseResult.
@@ -462,7 +504,7 @@ public final class SuiteResult implements Serializable {
             // Else estimate start time using sum of previous case durations in suite
             else if (startTime != -1) {
                 caze.setStartTime(startTime + caseStartOffset);
-                caseStartOffset += (long)(caze.getDuration() * 1000);
+                caseStartOffset += (long) (caze.getDuration() * 1000);
             }
             addCase(caze);
         }
@@ -470,7 +512,8 @@ public final class SuiteResult implements Serializable {
         String stdout = CaseResult.possiblyTrimStdio(cases, stdioRetention, suite.elementText("system-out"));
         String stderr = CaseResult.possiblyTrimStdio(cases, stdioRetention, suite.elementText("system-err"));
         if (stdout == null && stderr == null) {
-            // Surefire never puts stdout/stderr in the XML. Instead, it goes to a separate file (when ${maven.test.redirectTestOutputToFile}).
+            // Surefire never puts stdout/stderr in the XML. Instead, it goes to a separate file (when
+            // ${maven.test.redirectTestOutputToFile}).
             Matcher m = SUREFIRE_FILENAME.matcher(xmlReport.getName());
             if (m.matches()) {
                 // look for ***-output.txt from TEST-***.xml
@@ -494,12 +537,13 @@ public final class SuiteResult implements Serializable {
             Element properties_element = suite.element("properties");
             if (properties_element != null) {
                 List<Element> property_elements = properties_element.elements("property");
-                for (Element prop : property_elements){
+                for (Element prop : property_elements) {
                     if (prop.attributeValue("name") != null) {
-                        if (prop.attributeValue("value") != null)
+                        if (prop.attributeValue("value") != null) {
                             properties.put(prop.attributeValue("name"), prop.attributeValue("value"));
-                        else
+                        } else {
                             properties.put(prop.attributeValue("name"), prop.getText());
+                        }
                     }
                 }
             }
@@ -511,8 +555,8 @@ public final class SuiteResult implements Serializable {
         cases.add(cr);
         casesByName().put(cr.getTransformedFullDisplayName(), cr);
 
-        //if suite time was not specified use sum of the cases' times
-        if( !hasTimeAttr() ){
+        // if suite time was not specified use sum of the cases' times
+        if (!hasTimeAttr()) {
             duration += cr.getDuration();
         }
     }
@@ -524,12 +568,12 @@ public final class SuiteResult implements Serializable {
         return time != null;
     }
 
-    @Exported(visibility=9)
+    @Exported(visibility = 9)
     public String getName() {
         return name;
     }
 
-    @Exported(visibility=9)
+    @Exported(visibility = 9)
     public float getDuration() {
         return duration;
     }
@@ -539,7 +583,7 @@ public final class SuiteResult implements Serializable {
      *
      * @since 1.22
      */
-    @Exported(visibility=9)
+    @Exported(visibility = 9)
     @CheckForNull
     public String getNodeId() {
         return nodeId;
@@ -550,7 +594,7 @@ public final class SuiteResult implements Serializable {
      *
      * @since 1.22
      */
-    @Exported(visibility=9)
+    @Exported(visibility = 9)
     @NonNull
     public List<String> getEnclosingBlocks() {
         if (enclosingBlocks != null) {
@@ -565,7 +609,7 @@ public final class SuiteResult implements Serializable {
      *
      * @since 1.22
      */
-    @Exported(visibility=9)
+    @Exported(visibility = 9)
     @NonNull
     public List<String> getEnclosingBlockNames() {
         if (enclosingBlockNames != null) {
@@ -622,34 +666,37 @@ public final class SuiteResult implements Serializable {
         return parent;
     }
 
-    @Exported(visibility=9)
+    @Exported(visibility = 9)
     public String getTimestamp() {
         return timestamp;
     }
-    
+
     public long getStartTime() {
-    	return startTime;
-    }
-    
-    public void setStartTime(long start) {
-    	this.startTime = start;
+        return startTime;
     }
 
-    @Exported(visibility=9)
+    public void setStartTime(long start) {
+        this.startTime = start;
+    }
+
+    @Exported(visibility = 9)
     public String getId() {
         return id;
     }
 
-    @Exported(inline=true,visibility=9)
+    @Exported(inline = true, visibility = 9)
     public List<CaseResult> getCases() {
         return cases;
     }
 
     public SuiteResult getPreviousResult() {
         hudson.tasks.test.TestResult pr = parent.getPreviousResult();
-        if(pr==null)    return null;
-        if(pr instanceof hudson.tasks.junit.TestResult)
-            return ((hudson.tasks.junit.TestResult)pr).getSuite(name);
+        if (pr == null) {
+            return null;
+        }
+        if (pr instanceof hudson.tasks.junit.TestResult) {
+            return ((hudson.tasks.junit.TestResult) pr).getSuite(name);
+        }
         return null;
     }
 
@@ -684,15 +731,17 @@ public final class SuiteResult implements Serializable {
     }
 
     /*package*/ boolean freeze(hudson.tasks.junit.TestResult owner) {
-        if(this.parent!=null)
-            return false;   // already frozen
+        if (this.parent != null) {
+            return false; // already frozen
+        }
 
         this.parent = owner;
-        for (CaseResult c : cases)
+        for (CaseResult c : cases) {
             c.freeze(this);
+        }
         return true;
     }
-    
+
     /**
      * Parses time as epoch milli from time string
      * @param time
@@ -701,9 +750,10 @@ public final class SuiteResult implements Serializable {
     public long parseTime(String time) {
         try {
             // if time is not in supported format due to missing zulu and offset
-            if (time.charAt(time.length() - 1) != 'Z' && !time.contains("+") && time.lastIndexOf("-") <= 7)
+            if (time.charAt(time.length() - 1) != 'Z' && !time.contains("+") && time.lastIndexOf("-") <= 7) {
                 time += 'Z';
-            OffsetDateTime odt = OffsetDateTime.parse(time.replace(" ", "")); 
+            }
+            OffsetDateTime odt = OffsetDateTime.parse(time.replace(" ", ""));
             return odt.toInstant().toEpochMilli();
         } catch (Exception e) {
             // If time format causes error in parsing print message and return -1
@@ -718,12 +768,14 @@ public final class SuiteResult implements Serializable {
 
     /**
      * Merges another SuiteResult into this one.
-     * 
+     *
      * @param sr the SuiteResult to merge into this one
      */
     public void merge(SuiteResult sr) {
-        if (sr.hasTimeAttr() ^ hasTimeAttr()){
-            LOGGER.warning("Merging of suiteresults with incompatible time attribute may lead to incorrect durations in reports.( "+getFile()+", "+sr.getFile()+")");
+        if (sr.hasTimeAttr() ^ hasTimeAttr()) {
+            LOGGER.warning(
+                    "Merging of suiteresults with incompatible time attribute may lead to incorrect durations in reports.( "
+                            + getFile() + ", " + sr.getFile() + ")");
         }
         if (hasTimeAttr()) {
             duration += sr.getDuration();

@@ -16,6 +16,7 @@ public class AbstractTestResultLink<T extends AbstractTestResultLink<T>> {
     public String getResultText() {
         return testResultLink.getNextSibling().asNormalizedText();
     }
+
     public T assertNoTests() {
         assertThat(getResultText(), containsString("no tests"));
         return castToConcreteType();
@@ -35,5 +36,4 @@ public class AbstractTestResultLink<T extends AbstractTestResultLink<T>> {
     private T castToConcreteType() {
         return (T) this;
     }
-
 }

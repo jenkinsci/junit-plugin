@@ -17,8 +17,7 @@ public class TestResultDurationChart {
         return getLinesChartModel(dataset);
     }
 
-    public LinesChartModel create(final Iterable results,
-                                  final ChartModelConfiguration configuration) {
+    public LinesChartModel create(final Iterable results, final ChartModelConfiguration configuration) {
         TestDurationTrendSeriesBuilder builder = new TestDurationTrendSeriesBuilder();
         LinesDataSet dataSet = builder.createDataSet(configuration, results);
 
@@ -28,8 +27,11 @@ public class TestResultDurationChart {
     private LinesChartModel getLinesChartModel(LinesDataSet dataSet) {
         LinesChartModel model = new LinesChartModel(dataSet);
 
-        LineSeries duration = new LineSeries(TestDurationTrendSeriesBuilder.SECONDS, JenkinsPalette.GREEN.normal(),
-                LineSeries.StackedMode.STACKED, LineSeries.FilledMode.FILLED);
+        LineSeries duration = new LineSeries(
+                TestDurationTrendSeriesBuilder.SECONDS,
+                JenkinsPalette.GREEN.normal(),
+                LineSeries.StackedMode.STACKED,
+                LineSeries.FilledMode.FILLED);
         duration.addAll(dataSet.getSeries(TestDurationTrendSeriesBuilder.SECONDS));
         model.addSeries(duration);
 

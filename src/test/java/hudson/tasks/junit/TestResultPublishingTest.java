@@ -68,13 +68,12 @@ public class TestResultPublishingTest {
     public final JenkinsRule rule = new JenkinsRule();
 
     @ClassRule
-    public final static BuildWatcher buildWatcher = new BuildWatcher();
+    public static final BuildWatcher buildWatcher = new BuildWatcher();
 
     private FreeStyleProject project;
     private JUnitResultArchiver archiver;
     private final String BASIC_TEST_PROJECT = "percival";
     private final String TEST_PROJECT_WITH_HISTORY = "wonky";
-
 
     @Before
     public void setUp() throws Exception {
@@ -93,12 +92,13 @@ public class TestResultPublishingTest {
         assertTestResults(build);
 
         JenkinsRule.WebClient wc = WebClientFactory.createWebClientWithDisabledJavaScript(rule);
-        wc.getPage(build, "testReport");  // test report
+        wc.getPage(build, "testReport"); // test report
         wc.getPage(build, "testReport/hudson.security"); // package
         wc.getPage(build, "testReport/hudson.security/HudsonPrivateSecurityRealmTest/"); // class
-        wc.getPage(build, "testReport/hudson.security/HudsonPrivateSecurityRealmTest/testDataCompatibilityWith1_282/"); // method
+        wc.getPage(
+                build,
+                "testReport/hudson.security/HudsonPrivateSecurityRealmTest/testDataCompatibilityWith1_282/"); // method
     }
-
 
     @LocalData
     @Test
@@ -115,7 +115,6 @@ public class TestResultPublishingTest {
         testBasic();
     }
 
-
     /**
      * Verify that we can successfully parse and display test results in the
      * open junit test result publishing toolchain. Ensure that we meet this
@@ -127,7 +126,7 @@ public class TestResultPublishingTest {
     @LocalData
     @Test
     public void testOpenJUnitPublishing() throws IOException, SAXException {
-        Project proj = (Project)rule.jenkins.getItem(TEST_PROJECT_WITH_HISTORY);
+        Project proj = (Project) rule.jenkins.getItem(TEST_PROJECT_WITH_HISTORY);
         assertNotNull("We should have a project named " + TEST_PROJECT_WITH_HISTORY, proj);
 
         // Validate that there are test results where I expect them to be:
@@ -143,10 +142,14 @@ public class TestResultPublishingTest {
         //      after "Latest Test Result" it should say "no failures"
         rule.assertXPathResultsContainText(projectPage, "//td", "(no failures)");
         //      there should be a test result trend graph
-        HtmlElement trendGraphCaption = (HtmlElement) projectPage.getByXPath( "//div[@class='test-trend-caption']").get(0);
+        HtmlElement trendGraphCaption = (HtmlElement)
+                projectPage.getByXPath("//div[@class='test-trend-caption']").get(0);
         assertThat(trendGraphCaption.getTextContent(), is("Test Result Trend"));
-        HtmlElement testCanvas = (HtmlElement) trendGraphCaption.getNextSibling().getFirstChild();
-        assertTrue("couldn't find test result trend graph", testCanvas.getAttribute("class").contains("echarts-trend"));
+        HtmlElement testCanvas =
+                (HtmlElement) trendGraphCaption.getNextSibling().getFirstChild();
+        assertTrue(
+                "couldn't find test result trend graph",
+                testCanvas.getAttribute("class").contains("echarts-trend"));
 
         XmlPage xmlProjectPage = wc.goToXml(proj.getUrl() + "/lastBuild/testReport/api/xml");
         rule.assertXPath(xmlProjectPage, "/testResult");
@@ -155,7 +158,11 @@ public class TestResultPublishingTest {
         rule.assertXPathValue(xmlProjectPage, "/testResult/failCount", "0");
         rule.assertXPathValue(xmlProjectPage, "/testResult/passCount", "4");
         rule.assertXPathValue(xmlProjectPage, "/testResult/skipCount", "0");
-        String[] packages = {"org.jvnet.hudson.examples.small.AppTest", "org.jvnet.hudson.examples.small.MiscTest", "org.jvnet.hudson.examples.small.deep.DeepTest"};
+        String[] packages = {
+            "org.jvnet.hudson.examples.small.AppTest",
+            "org.jvnet.hudson.examples.small.MiscTest",
+            "org.jvnet.hudson.examples.small.deep.DeepTest"
+        };
         for (String packageName : packages) {
             rule.assertXPath(xmlProjectPage, "/testResult/suite/case/className[text()='" + packageName + "']");
         }
@@ -164,7 +171,8 @@ public class TestResultPublishingTest {
         HtmlPage buildPage = wc.getPage(proj.getBuildByNumber(3));
         rule.assertGoodStatus(buildPage);
         // We expect to see one failure, for com.yahoo.breakable.misc.UglyTest.becomeUglier
-        // which should link to http://localhost:8080/job/wonky/3/testReport/org.jvnet.hudson.examples.small/MiscTest/testEleanor/
+        // which should link to
+        // http://localhost:8080/job/wonky/3/testReport/org.jvnet.hudson.examples.small/MiscTest/testEleanor/
         rule.assertXPathResultsContainText(buildPage, "//a", "org.jvnet.hudson.examples.small.MiscTest.testEleanor");
         HtmlAnchor failingTestLink = buildPage.getAnchorByText("org.jvnet.hudson.examples.small.MiscTest.testEleanor");
         assertNotNull(failingTestLink);
@@ -185,15 +193,18 @@ public class TestResultPublishingTest {
         rule.assertXPathValue(xmlTestReportPage, "/testResult/skipCount", "0");
 
         // Make sure the right tests passed and failed
-        rule.assertXPathValue(xmlTestReportPage, "/testResult/suite/case[className/text()='org.jvnet.hudson.examples.small.AppTest']/status", "PASSED");
+        rule.assertXPathValue(
+                xmlTestReportPage,
+                "/testResult/suite/case[className/text()='org.jvnet.hudson.examples.small.AppTest']/status",
+                "PASSED");
         rule.assertXPathValue(xmlTestReportPage, "/testResult/suite/case[name/text()='testEleanor']/status", "FAILED");
-
 
         // TODO: implement more of these tests
         // On the lastBuild/testReport page:
         //      Breadcrumbs should read #6 > Test Result  where Test Result is a link to this page
         //      inside of div id="main-panel" we should find the text "0 failures (-1)"
-        //      we should have a blue bar which is blue all the way across: div style="width: 100%; height: 1em; background-color: rgb(114, 159, 207);
+        //      we should have a blue bar which is blue all the way across: div style="width: 100%; height: 1em;
+        // background-color: rgb(114, 159, 207);
         //      we should find the words "7 tests (?0)"
         //      we should find the words "All Tests"
         //      we should find a table
@@ -202,17 +213,33 @@ public class TestResultPublishingTest {
         //           org.jvnet.hudson.examples.small 	0ms   0 -1 0   3
         //          org.jvnet.hudson.examples.small.deep 	4ms 0 0 0  1
         Run theRun = proj.getBuildByNumber(7);
-        assertTestResultsAsExpected(wc, theRun, "/testReport",
-                "org.jvnet.hudson.examples.small", "0 ms", "SUCCESS",
-                /* total tests expected, diff */ 3, 0,
-                /* fail count expected, diff */ 0, -1,
-                /* skip count expected, diff */ 0, 0);
+        assertTestResultsAsExpected(
+                wc,
+                theRun,
+                "/testReport",
+                "org.jvnet.hudson.examples.small",
+                "0 ms",
+                "SUCCESS",
+                /* total tests expected, diff */ 3,
+                0,
+                /* fail count expected, diff */ 0,
+                -1,
+                /* skip count expected, diff */ 0,
+                0);
 
-        assertTestResultsAsExpected(wc, theRun, "/testReport",
-                "org.jvnet.hudson.examples.small.deep", "4 ms", "SUCCESS",
-                /* total tests expected, diff */ 1, 0,
-                /* fail count expected, diff */ 0, 0,
-                /* skip count expected, diff */ 0, 0);
+        assertTestResultsAsExpected(
+                wc,
+                theRun,
+                "/testReport",
+                "org.jvnet.hudson.examples.small.deep",
+                "4 ms",
+                "SUCCESS",
+                /* total tests expected, diff */ 1,
+                0,
+                /* fail count expected, diff */ 0,
+                0,
+                /* skip count expected, diff */ 0,
+                0);
 
         // TODO: more, more, more.
         // TODO: test report history by package
@@ -226,19 +253,25 @@ public class TestResultPublishingTest {
     @LocalData
     @Test
     public void testInterBuildDiffs() throws IOException, SAXException {
-        Project proj = (Project)rule.jenkins.getItem(TEST_PROJECT_WITH_HISTORY);
+        Project proj = (Project) rule.jenkins.getItem(TEST_PROJECT_WITH_HISTORY);
         assertNotNull("We should have a project named " + TEST_PROJECT_WITH_HISTORY, proj);
 
         // Validate that there are test results where I expect them to be:
         JenkinsRule.WebClient wc = WebClientFactory.createWebClientWithDisabledJavaScript(rule);
         Run theRun = proj.getBuildByNumber(4);
-        assertTestResultsAsExpected(wc, theRun, "/testReport",
-                        "org.jvnet.hudson.examples.small", "12 ms", "FAILURE",
-                        /* total tests expected, diff */ 3, 0,
-                        /* fail count expected, diff */ 1, 0,
-                        /* skip count expected, diff */ 0, 0);
-
-
+        assertTestResultsAsExpected(
+                wc,
+                theRun,
+                "/testReport",
+                "org.jvnet.hudson.examples.small",
+                "12 ms",
+                "FAILURE",
+                /* total tests expected, diff */ 3,
+                0,
+                /* fail count expected, diff */ 1,
+                0,
+                /* skip count expected, diff */ 0,
+                0);
     }
 
     /**
@@ -249,15 +282,16 @@ public class TestResultPublishingTest {
     @LocalData
     @Test
     public void testHistoryPageOpenJunit() throws IOException, SAXException {
-        Project proj = (Project)rule.jenkins.getItem(TEST_PROJECT_WITH_HISTORY);
+        Project proj = (Project) rule.jenkins.getItem(TEST_PROJECT_WITH_HISTORY);
         assertNotNull("We should have a project named " + TEST_PROJECT_WITH_HISTORY, proj);
 
         // Validate that there are test results where I expect them to be:
         JenkinsRule.WebClient wc = WebClientFactory.createWebClientWithDisabledJavaScript(rule);
 
-        HtmlPage historyPage = wc.getPage(proj.getBuildByNumber(7),"/testReport/history/");
+        HtmlPage historyPage = wc.getPage(proj.getBuildByNumber(7), "/testReport/history/");
         rule.assertGoodStatus(historyPage);
-        HtmlElement historyCard = (HtmlElement) historyPage.getByXPath( "//div[@class='card ']").get(0);
+        HtmlElement historyCard =
+                (HtmlElement) historyPage.getByXPath("//div[@class='card ']").get(0);
         assertThat(historyCard.getTextContent(), containsString("History"));
         DomElement wholeTable = historyPage.getElementById("testresult");
         assertNotNull("table with id 'testresult' exists", wholeTable);
@@ -273,12 +307,9 @@ public class TestResultPublishingTest {
         // of detecting whether the history results are present.
 
         String tableText = table.getTextContent();
-        assertTrue("Table text is missing the project name",
-                tableText.contains(TEST_PROJECT_WITH_HISTORY));
-        assertTrue("Table text is missing the build number",
-                tableText.contains("7"));
-        assertTrue("Table text is missing the test duration",
-                tableText.contains("4 ms"));
+        assertTrue("Table text is missing the project name", tableText.contains(TEST_PROJECT_WITH_HISTORY));
+        assertTrue("Table text is missing the build number", tableText.contains("7"));
+        assertTrue("Table text is missing the test duration", tableText.contains("4 ms"));
     }
 
     @Issue("JENKINS-19186")
@@ -290,40 +321,51 @@ public class TestResultPublishingTest {
         p.getPublishersList().add(new JUnitResultArchiver("TEST-foo.xml", false, null));
         rule.assertBuildStatus(Result.UNSTABLE, p.scheduleBuild2(0).get());
     }
+
     private static final class TestBuilder extends Builder {
-        @Override public boolean perform(AbstractBuild<?,?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
+        @Override
+        public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
+                throws InterruptedException, IOException {
             build.getWorkspace().child("TEST-foo.xml").write("<bogus>", null);
             return true;
         }
     }
 
     void assertStringEmptyOrNull(String msg, String str) {
-        if (str==null)
+        if (str == null) {
             return;
-        if (str.equals(""))
+        }
+        if (str.equals("")) {
             return;
+        }
         fail(msg + "(should be empty or null) : '" + str + "'");
     }
 
     void assertPaneDiffText(String msg, int expectedValue, Object paneObj) {
-        assertTrue( "paneObj should be an HtmlElement, it was " + paneObj.getClass(), paneObj instanceof HtmlElement );
+        assertTrue("paneObj should be an HtmlElement, it was " + paneObj.getClass(), paneObj instanceof HtmlElement);
         String paneText = ((HtmlElement) paneObj).asNormalizedText();
-        if (expectedValue==0) {
+        if (expectedValue == 0) {
             assertStringEmptyOrNull(msg, paneText);
         } else {
-            String expectedString =
-             (expectedValue >= 1 ? "+" : "-")
-                    + Math.abs(expectedValue);
+            String expectedString = (expectedValue >= 1 ? "+" : "-") + Math.abs(expectedValue);
             assertEquals(msg, expectedString, paneText);
         }
     }
 
-    void assertTestResultsAsExpected(JenkinsRule.WebClient wc, Run run, String restOfUrl,
-                                     String packageName,
-                                     String expectedResult, String expectedDurationStr,
-                                     int expectedTotalTests, int expectedTotalDiff,
-                                     int expectedFailCount, int expectedFailDiff,
-                                     int expectedSkipCount, int expectedSkipDiff) throws IOException, SAXException {
+    void assertTestResultsAsExpected(
+            JenkinsRule.WebClient wc,
+            Run run,
+            String restOfUrl,
+            String packageName,
+            String expectedResult,
+            String expectedDurationStr,
+            int expectedTotalTests,
+            int expectedTotalDiff,
+            int expectedFailCount,
+            int expectedFailDiff,
+            int expectedSkipCount,
+            int expectedSkipDiff)
+            throws IOException, SAXException {
 
         // TODO: verify expectedResult
         // TODO: verify expectedDuration
@@ -337,11 +379,11 @@ public class TestResultPublishingTest {
         rule.assertXPathValue(xmlPage, "/packageResult/name", packageName);
 
         // TODO: verify html results
-        HtmlPage testResultPage =   wc.getPage(run, restOfUrl);
+        HtmlPage testResultPage = wc.getPage(run, restOfUrl);
 
         // Verify inter-build diffs in html table
-        String xpathToFailDiff =  "//table[@id='testresult']//tr[td//span[text()=\"" + packageName + "\"]]/td[4]";
-        String xpathToSkipDiff =  "//table[@id='testresult']//tr[td//span[text()=\"" + packageName + "\"]]/td[6]";
+        String xpathToFailDiff = "//table[@id='testresult']//tr[td//span[text()=\"" + packageName + "\"]]/td[4]";
+        String xpathToSkipDiff = "//table[@id='testresult']//tr[td//span[text()=\"" + packageName + "\"]]/td[6]";
         String xpathToTotalDiff = "//table[@id='testresult']//tr[td//span[text()=\"" + packageName + "\"]]/td[last()]";
 
         Object totalDiffObj = testResultPage.getFirstByXPath(xpathToTotalDiff);
@@ -353,7 +395,8 @@ public class TestResultPublishingTest {
         Object skipDiffObj = testResultPage.getFirstByXPath(xpathToSkipDiff);
         assertPaneDiffText("skip diff", expectedSkipDiff, skipDiffObj);
 
-        // TODO: The link in the table for each of the three packages in the testReport table should link to a by-package page,
+        // TODO: The link in the table for each of the three packages in the testReport table should link to a
+        // by-package page,
         // TODO: for example, http://localhost:8080/job/breakable/lastBuild/testReport/com.yahoo.breakable.misc/
 
     }
@@ -361,7 +404,6 @@ public class TestResultPublishingTest {
     // TODO: Make sure that we meet this compatibility requirement:
     // TODO: From users' point of view, Open Source  *Unit publishers should continue to work as if nothing has changed
     // TODO: * Old testReport URLs should still work
-
 
     private void assertTestResults(FreeStyleBuild build) {
         TestResultAction testResultAction = build.getAction(TestResultAction.class);
@@ -376,5 +418,4 @@ public class TestResultPublishingTest {
         assertEquals("should have 132 total tests", 132, testResultAction.getTotalCount());
         assertEquals("should have 132 total tests", 132, result.getTotalCount());
     }
-
 }

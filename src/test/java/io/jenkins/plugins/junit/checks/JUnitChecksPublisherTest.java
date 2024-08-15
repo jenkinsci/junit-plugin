@@ -27,7 +27,7 @@ public class JUnitChecksPublisherTest {
     public final JenkinsRule rule = new JenkinsRule();
 
     @TestExtension
-    public final static CapturingChecksPublisher.Factory PUBLISHER_FACTORY = new CapturingChecksPublisher.Factory();
+    public static final CapturingChecksPublisher.Factory PUBLISHER_FACTORY = new CapturingChecksPublisher.Factory();
 
     @After
     public void clearPublishedChecks() {
@@ -48,13 +48,14 @@ public class JUnitChecksPublisherTest {
     @SuppressWarnings("OptionalGetWithoutIsPresent")
     public void extractChecksDetailsPassingTestResults() throws Exception {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "singleStep");
-        j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
-                "  node {\n" +
-                "    touch 'test-result.xml'\n" +
-                "    def results = junit(testResults: '*.xml')\n" +
-                "    assert results.totalCount == 6\n" +
-                "  }\n" +
-                "}\n", true));
+        j.setDefinition(new CpsFlowDefinition(
+                "stage('first') {\n" + "  node {\n"
+                        + "    touch 'test-result.xml'\n"
+                        + "    def results = junit(testResults: '*.xml')\n"
+                        + "    assert results.totalCount == 6\n"
+                        + "  }\n"
+                        + "}\n",
+                true));
         FilePath ws = rule.jenkins.getWorkspaceFor(j);
         FilePath testFile = Objects.requireNonNull(ws).child("test-result.xml");
         testFile.copyFrom(TestResultTest.class.getResource("junit-report-1463.xml"));
@@ -70,19 +71,19 @@ public class JUnitChecksPublisherTest {
 
         assertThat(output.getTitle().get(), is("passed: 6"));
         assertThat(output.getText().get(), is(""));
-
     }
 
     @Test
     @SuppressWarnings("OptionalGetWithoutIsPresent")
     public void extractChecksDetailsFailingSingleTestResult() throws Exception {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "singleStep");
-        j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
-                "  node {\n" +
-                "    def results = junit(testResults: '*.xml')\n" +
-                "    assert results.totalCount == 6\n" +
-                "  }\n" +
-                "}\n", true));
+        j.setDefinition(new CpsFlowDefinition(
+                "stage('first') {\n" + "  node {\n"
+                        + "    def results = junit(testResults: '*.xml')\n"
+                        + "    assert results.totalCount == 6\n"
+                        + "  }\n"
+                        + "}\n",
+                true));
         FilePath ws = rule.jenkins.getWorkspaceFor(j);
         FilePath testFile = Objects.requireNonNull(ws).child("test-result.xml");
         testFile.copyFrom(TestResultTest.class.getResource("junit-report-errror-details.xml"));
@@ -97,19 +98,19 @@ public class JUnitChecksPublisherTest {
         ChecksOutput output = checksDetails.getOutput().get();
 
         assertThat(output.getTitle().get(), is("some.package.somewhere.WhooHoo.testHudsonReporting failed"));
-
     }
 
     @Test
     @SuppressWarnings("OptionalGetWithoutIsPresent")
     public void extractChecksDetailsFailingMultipleTests() throws Exception {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "singleStep");
-        j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
-                "  node {\n" +
-                "    def results = junit(testResults: '*.xml')\n" +
-                "    assert results.totalCount == 6\n" +
-                "  }\n" +
-                "}\n", true));
+        j.setDefinition(new CpsFlowDefinition(
+                "stage('first') {\n" + "  node {\n"
+                        + "    def results = junit(testResults: '*.xml')\n"
+                        + "    assert results.totalCount == 6\n"
+                        + "  }\n"
+                        + "}\n",
+                true));
         FilePath ws = rule.jenkins.getWorkspaceFor(j);
         FilePath testFile = Objects.requireNonNull(ws).child("test-result.xml");
         testFile.copyFrom(TestResultTest.class.getResource("junit-report-20090516.xml"));
@@ -124,20 +125,20 @@ public class JUnitChecksPublisherTest {
         ChecksOutput output = checksDetails.getOutput().get();
 
         assertThat(output.getTitle().get(), is("failed: 3, passed: 5"));
-
     }
 
     @Test
     @SuppressWarnings("OptionalGetWithoutIsPresent")
     public void extractChecksDetailsCustomCheckName() throws Exception {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "singleStep");
-        j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
-                "  node {\n" +
-                "    touch 'test-result.xml'\n" +
-                "    def results = junit(testResults: '*.xml', checksName: 'Custom Checks Name')\n" +
-                "    assert results.totalCount == 6\n" +
-                "  }\n" +
-                "}\n", true));
+        j.setDefinition(new CpsFlowDefinition(
+                "stage('first') {\n" + "  node {\n"
+                        + "    touch 'test-result.xml'\n"
+                        + "    def results = junit(testResults: '*.xml', checksName: 'Custom Checks Name')\n"
+                        + "    assert results.totalCount == 6\n"
+                        + "  }\n"
+                        + "}\n",
+                true));
         FilePath ws = rule.jenkins.getWorkspaceFor(j);
         FilePath testFile = Objects.requireNonNull(ws).child("test-result.xml");
         testFile.copyFrom(TestResultTest.class.getResource("junit-report-1463.xml"));
@@ -151,16 +152,16 @@ public class JUnitChecksPublisherTest {
         assertThat(checksDetails.getName().get(), is("Custom Checks Name"));
     }
 
-
     @Test
     @SuppressWarnings("OptionalGetWithoutIsPresent")
     public void extractChecksDetailsNoStageContext() throws Exception {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "singleStep");
-        j.setDefinition(new CpsFlowDefinition("node {\n" +
-                "  touch 'test-result.xml'\n" +
-                "  def results = junit(testResults: '*.xml')\n" +
-                "  assert results.totalCount == 6\n" +
-                "}\n", true));
+        j.setDefinition(new CpsFlowDefinition(
+                "node {\n" + "  touch 'test-result.xml'\n"
+                        + "  def results = junit(testResults: '*.xml')\n"
+                        + "  assert results.totalCount == 6\n"
+                        + "}\n",
+                true));
         FilePath ws = rule.jenkins.getWorkspaceFor(j);
         FilePath testFile = Objects.requireNonNull(ws).child("test-result.xml");
         testFile.copyFrom(TestResultTest.class.getResource("junit-report-1463.xml"));
@@ -176,12 +177,13 @@ public class JUnitChecksPublisherTest {
     @SuppressWarnings("OptionalGetWithoutIsPresent")
     public void extractChecksDetailsNestedStages() throws Exception {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "singleStep");
-        j.setDefinition(new CpsFlowDefinition("stage('first') { stage('second') {\n" +
-                "  node {\n" +
-                "    def results = junit(testResults: '*.xml')\n" +
-                "    assert results.totalCount == 6\n" +
-                "  }\n" +
-                "}}\n", true));
+        j.setDefinition(new CpsFlowDefinition(
+                "stage('first') { stage('second') {\n" + "  node {\n"
+                        + "    def results = junit(testResults: '*.xml')\n"
+                        + "    assert results.totalCount == 6\n"
+                        + "  }\n"
+                        + "}}\n",
+                true));
         FilePath ws = rule.jenkins.getWorkspaceFor(j);
         FilePath testFile = Objects.requireNonNull(ws).child("test-result.xml");
         testFile.copyFrom(TestResultTest.class.getResource("junit-report-1463.xml"));
@@ -197,12 +199,13 @@ public class JUnitChecksPublisherTest {
     @SuppressWarnings("OptionalGetWithoutIsPresent")
     public void extractChecksDetailsEmptySuite() throws Exception {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "singleStep");
-        j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
-                "  node {\n" +
-                "    def results = junit(testResults: '*.xml', allowEmptyResults: true)\n" +
-                "    assert results.totalCount == 0\n" +
-                "  }\n" +
-                "}\n", true));
+        j.setDefinition(new CpsFlowDefinition(
+                "stage('first') {\n" + "  node {\n"
+                        + "    def results = junit(testResults: '*.xml', allowEmptyResults: true)\n"
+                        + "    assert results.totalCount == 0\n"
+                        + "  }\n"
+                        + "}\n",
+                true));
 
         rule.buildAndAssertSuccess(j);
 
@@ -220,15 +223,16 @@ public class JUnitChecksPublisherTest {
     @SuppressWarnings("OptionalGetWithoutIsPresent")
     public void withChecksContext() throws Exception {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "singleStep");
-        j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
-                "  node {\n" +
-                "    touch 'test-result.xml'\n" +
-                "    withChecks('With Checks') {\n"+
-                "      def results = junit '*.xml'\n" +
-                "      assert results.totalCount == 6\n" +
-                "    }\n" +
-                "  }\n" +
-                "}\n", true));
+        j.setDefinition(new CpsFlowDefinition(
+                "stage('first') {\n" + "  node {\n"
+                        + "    touch 'test-result.xml'\n"
+                        + "    withChecks('With Checks') {\n"
+                        + "      def results = junit '*.xml'\n"
+                        + "      assert results.totalCount == 6\n"
+                        + "    }\n"
+                        + "  }\n"
+                        + "}\n",
+                true));
 
         FilePath ws = rule.jenkins.getWorkspaceFor(j);
         FilePath testFile = Objects.requireNonNull(ws).child("test-result.xml");
@@ -247,25 +251,25 @@ public class JUnitChecksPublisherTest {
         assertThat(checksDetails.get(1).getName().get(), is("With Checks"));
         assertThat(checksDetails.get(1).getStatus(), is(ChecksStatus.COMPLETED));
         assertThat(checksDetails.get(1).getConclusion(), is(ChecksConclusion.SUCCESS));
-
     }
 
     @Test
     @SuppressWarnings("OptionalGetWithoutIsPresent")
     public void withChecksContextDeclarative() throws Exception {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "singleStep");
-        j.setDefinition(new CpsFlowDefinition("pipeline {\n" +
-                "  agent any\n" +
-                "  stages {\n" +
-                "    stage('first') {\n" +
-                "      steps {\n" +
-                "        withChecks('With Checks') {\n" +
-                "          junit(testResults: '*.xml')\n" +
-                "        }\n" +
-                "      }\n" +
-                "    }\n" +
-                "  }\n" +
-                "}", true));
+        j.setDefinition(new CpsFlowDefinition(
+                "pipeline {\n" + "  agent any\n"
+                        + "  stages {\n"
+                        + "    stage('first') {\n"
+                        + "      steps {\n"
+                        + "        withChecks('With Checks') {\n"
+                        + "          junit(testResults: '*.xml')\n"
+                        + "        }\n"
+                        + "      }\n"
+                        + "    }\n"
+                        + "  }\n"
+                        + "}",
+                true));
 
         FilePath ws = rule.jenkins.getWorkspaceFor(j);
         FilePath testFile = Objects.requireNonNull(ws).child("test-result.xml");
@@ -284,22 +288,22 @@ public class JUnitChecksPublisherTest {
         assertThat(checksDetails.get(1).getName().get(), is("With Checks"));
         assertThat(checksDetails.get(1).getStatus(), is(ChecksStatus.COMPLETED));
         assertThat(checksDetails.get(1).getConclusion(), is(ChecksConclusion.SUCCESS));
-
     }
 
     @Test
     @SuppressWarnings("OptionalGetWithoutIsPresent")
     public void withChecksContextWithCustomName() throws Exception {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "singleStep");
-        j.setDefinition(new CpsFlowDefinition("stage('first') {\n" +
-                "  node {\n" +
-                "    touch 'test-result.xml'\n" +
-                "    withChecks('With Checks') {\n"+
-                "      def results = junit(testResults: '*.xml', checksName: 'Custom Checks Name')\n" +
-                "      assert results.totalCount == 6\n" +
-                "    }\n" +
-                "  }\n" +
-                "}\n", true));
+        j.setDefinition(new CpsFlowDefinition(
+                "stage('first') {\n" + "  node {\n"
+                        + "    touch 'test-result.xml'\n"
+                        + "    withChecks('With Checks') {\n"
+                        + "      def results = junit(testResults: '*.xml', checksName: 'Custom Checks Name')\n"
+                        + "      assert results.totalCount == 6\n"
+                        + "    }\n"
+                        + "  }\n"
+                        + "}\n",
+                true));
 
         FilePath ws = rule.jenkins.getWorkspaceFor(j);
         FilePath testFile = Objects.requireNonNull(ws).child("test-result.xml");
@@ -318,7 +322,5 @@ public class JUnitChecksPublisherTest {
         assertThat(checksDetails.get(1).getName().get(), is("Custom Checks Name"));
         assertThat(checksDetails.get(1).getStatus(), is(ChecksStatus.COMPLETED));
         assertThat(checksDetails.get(1).getConclusion(), is(ChecksConclusion.SUCCESS));
-
     }
-
 }

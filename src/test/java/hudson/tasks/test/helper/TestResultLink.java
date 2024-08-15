@@ -23,5 +23,4 @@ public class TestResultLink extends AbstractTestResultLink<TestResultLink> {
         assertThat(testResultLink.getTextContent(), containsString(AGGREGATED_TEST_RESULT_STRING));
         return this;
     }
-
 }

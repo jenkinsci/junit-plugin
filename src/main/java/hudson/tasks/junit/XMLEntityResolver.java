@@ -63,8 +63,9 @@ public class XMLEntityResolver implements EntityResolver {
                 String dtdFileName = systemId.substring(systemId.lastIndexOf("/") + 1);
 
                 URL url = getClass().getClassLoader().getResource(dtdFileName);
-                if (url != null)
+                if (url != null) {
                     return new InputSource(url.toString());
+                }
             }
         }
         // Default fallback

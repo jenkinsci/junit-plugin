@@ -28,7 +28,8 @@ public class JUnitChecksPublisher {
     private final TestResult result;
     private final TestResultSummary summary;
 
-    public JUnitChecksPublisher(final Run run, final String checksName, final TestResult result, final TestResultSummary summary) {
+    public JUnitChecksPublisher(
+            final Run run, final String checksName, final TestResult result, final TestResultSummary summary) {
         this.run = run;
         this.checksName = checksName;
         this.result = result;
@@ -63,14 +64,15 @@ public class JUnitChecksPublisher {
         if (summary.getFailCount() > 0) {
             List<CaseResult> failedTests = result.getFailedTests();
 
-            for (CaseResult failedTest: failedTests) {
+            for (CaseResult failedTest : failedTests) {
                 String testReport = mapFailedTestToTestReport(failedTest);
                 int messageSize = testReport.length() + builder.toString().length();
                 // to ensure text size is withing check API message limit
-                if (messageSize > (MAX_MSG_SIZE_TO_CHECKS_API - 1024)){
+                if (messageSize > (MAX_MSG_SIZE_TO_CHECKS_API - 1024)) {
                     builder.append("\n")
                             .append("more test results are not shown here, view them on [Jenkins](")
-                            .append(testsURL).append(")");
+                            .append(testsURL)
+                            .append(")");
                     break;
                 }
                 builder.append(testReport);
@@ -82,14 +84,17 @@ public class JUnitChecksPublisher {
 
     private String mapFailedTestToTestReport(CaseResult failedTest) {
         StringBuilder builder = new StringBuilder();
-        builder.append("## `").append(failedTest.getTransformedFullDisplayName().trim()).append("`")
+        builder.append("## `")
+                .append(failedTest.getTransformedFullDisplayName().trim())
+                .append("`")
                 .append("\n");
 
-        if (failedTest.getErrorDetails() != null && !failedTest.getErrorDetails().trim().isEmpty()) {
-            builder.append(codeTextFencedBlock(failedTest.getErrorDetails()))
-                    .append("\n");
+        if (failedTest.getErrorDetails() != null
+                && !failedTest.getErrorDetails().trim().isEmpty()) {
+            builder.append(codeTextFencedBlock(failedTest.getErrorDetails())).append("\n");
         }
-        if (failedTest.getErrorStackTrace() != null && !failedTest.getErrorStackTrace().trim().isEmpty()) {
+        if (failedTest.getErrorStackTrace() != null
+                && !failedTest.getErrorStackTrace().trim().isEmpty()) {
             builder.append("<details><summary>Stack trace</summary>\n")
                     .append(codeTextFencedBlock(failedTest.getErrorStackTrace()))
                     .append("</details>\n");
@@ -109,7 +114,7 @@ public class JUnitChecksPublisher {
         builder.append("\n");
         return builder.toString();
     }
-    
+
     private String codeTextFencedBlock(String body) {
         return "\n```text\n" + body.trim() + "\n```\n";
     }
@@ -146,7 +151,6 @@ public class JUnitChecksPublisher {
         if (summary.getPassCount() > 0) {
             builder.append("passed: ").append(summary.getPassCount());
         }
-
 
         return builder.toString();
     }

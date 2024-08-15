@@ -13,12 +13,12 @@ public class HistoryTestResultSummary {
     private final int passCount;
     private final String description;
 
-    public HistoryTestResultSummary(Run<?, ?> run,
-    float duration, int failCount, int skipCount, int passCount) {
+    public HistoryTestResultSummary(Run<?, ?> run, float duration, int failCount, int skipCount, int passCount) {
         this(run, duration, failCount, skipCount, passCount, null);
     }
 
-    public HistoryTestResultSummary(Run<?, ?> run, float duration, int failCount, int skipCount, int passCount, String description) {
+    public HistoryTestResultSummary(
+            Run<?, ?> run, float duration, int failCount, int skipCount, int passCount, String description) {
         this.run = run;
         this.duration = duration;
         this.failCount = failCount;
@@ -60,7 +60,7 @@ public class HistoryTestResultSummary {
     }
 
     public float getBadness() {
-        return (float)Math.min(1.0, failCount / (getTotalCount() * 0.02));
+        return (float) Math.min(1.0, failCount / (getTotalCount() * 0.02));
     }
 
     public String getFullDisplayName() {

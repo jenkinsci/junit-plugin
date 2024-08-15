@@ -23,6 +23,7 @@ public abstract class AbstractPage {
     public HtmlAnchor getTestReportAnchor(String testUrl) throws IOException, SAXException {
         return htmlPage.getAnchorByHref(getHrefFromTestUrl(testUrl));
     }
+
     public void assertNoLink(String url) {
         List<HtmlAnchor> anchors = htmlPage.getAnchors();
         boolean found = false;

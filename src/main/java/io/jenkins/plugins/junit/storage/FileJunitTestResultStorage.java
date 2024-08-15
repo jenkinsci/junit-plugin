@@ -13,8 +13,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 public class FileJunitTestResultStorage extends JunitTestResultStorage {
 
     @DataBoundConstructor
-    public FileJunitTestResultStorage() {
-    }
+    public FileJunitTestResultStorage() {}
 
     @Override
     public RemotePublisher createRemotePublisher(Run<?, ?> build) throws IOException {
@@ -34,6 +33,5 @@ public class FileJunitTestResultStorage extends JunitTestResultStorage {
         public String getDisplayName() {
             return Messages.FileJunitTestResultStorage_displayName();
         }
-
     }
 }

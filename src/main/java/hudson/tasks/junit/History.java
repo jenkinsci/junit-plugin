@@ -81,7 +81,8 @@ public class History {
     @JavaScriptMethod
     @SuppressWarnings("unused") // Called by jelly view
     public String getTestResultTrend(int start, int end, String configuration) {
-        return JACKSON_FACADE.toJson(createTestResultTrend(start, end, ChartModelConfiguration.fromJson(configuration)));
+        return JACKSON_FACADE.toJson(
+                createTestResultTrend(start, end, ChartModelConfiguration.fromJson(configuration)));
     }
 
     private LinesChartModel createTestResultTrend(int start, int end, ChartModelConfiguration chartModelConfiguration) {
@@ -89,7 +90,8 @@ public class History {
         if (pluggableStorage != null) {
             return new TestResultTrendChart().create(pluggableStorage.getTrendTestResultSummary());
         }
-        return new TestResultTrendChart().createFromTestObject(createBuildHistory(testObject, start, end), chartModelConfiguration);
+        return new TestResultTrendChart()
+                .createFromTestObject(createBuildHistory(testObject, start, end), chartModelConfiguration);
     }
 
     private ObjectNode computeDurationTrendJson(List<HistoryTestResultSummary> history) {
@@ -122,7 +124,7 @@ public class History {
         dashLineStyle.put("color", "rgba(128, 128, 128, 0.1)");
         ArrayNode lightDashType = MAPPER.createArrayNode();
         lightDashType.add(5);
-        lightDashType.add(10);        
+        lightDashType.add(10);
         dashLineStyle.set("type", lightDashType);
         durationAvgMark.put("type", "average");
         durationAvgMark.put("name", "Avg");
@@ -130,7 +132,7 @@ public class History {
         durationAvgMark.set("lineStyle", dashLineStyle);
         durationMarkData.add(durationAvgMark);
 
-        float maxDuration = (float)0.0;
+        float maxDuration = (float) 0.0;
         for (HistoryTestResultSummary h : history) {
             if (maxDuration < h.getDuration()) {
                 maxDuration = h.getDuration();
@@ -172,12 +174,12 @@ public class History {
         double[] lrY = new double[history.size()];
         for (HistoryTestResultSummary h : history) {
             lrX[index] = index;
-            Run<?,?> r = h.getRun();
+            Run<?, ?> r = h.getRun();
             String fdn = r.getDisplayName();
             domainAxisLabels.add(fdn);
             ObjectNode durationColor = MAPPER.createObjectNode();
             double duration = Math.round(mul * h.getDuration() * roundMul) / roundMul;
-            tmpMax = Math.max((float)duration, tmpMax);
+            tmpMax = Math.max((float) duration, tmpMax);
             lrY[index] = duration;
             durationColor.put("value", duration);
             if (h.getPassCount() > 0 && h.getFailCount() == 0 && h.getSkipCount() == 0) {
@@ -186,7 +188,7 @@ public class History {
                 if (h.getFailCount() > 0) {
                     ObjectNode failedStyle = MAPPER.createObjectNode();
                     double k = Math.min(1.0, h.getFailCount() / (h.getTotalCount() * 0.02));
-                    failedStyle.put("color", "rgba(255, 100, 100, " + (0.5 + 0.5 * k) +")");
+                    failedStyle.put("color", "rgba(255, 100, 100, " + (0.5 + 0.5 * k) + ")");
                     durationColor.set("itemStyle", failedStyle);
                 } else {
                     durationColor.set("itemStyle", skippedStyle);
@@ -197,24 +199,52 @@ public class History {
         }
 
         if (EXTRA_GRAPH_MATH_ENABLED) {
-            createLinearTrend(series, history, lrX, lrY, "Trend of " + durationStr, "rgba(0, 120, 255, 0.5)", 0, 0, roundMul); // "--blue"
-            createSplineTrend(series, history, lrX, lrY, "Smooth of " + durationStr, "rgba(120, 50, 255, 0.5)", 0, 0, roundMul); // "--indigo"
+            createLinearTrend(
+                    series,
+                    history,
+                    lrX,
+                    lrY,
+                    "Trend of " + durationStr,
+                    "rgba(0, 120, 255, 0.5)",
+                    0,
+                    0,
+                    roundMul); // "--blue"
+            createSplineTrend(
+                    series,
+                    history,
+                    lrX,
+                    lrY,
+                    "Smooth of " + durationStr,
+                    "rgba(120, 50, 255, 0.5)",
+                    0,
+                    0,
+                    roundMul); // "--indigo"
         }
         root.set("series", series);
         root.set("domainAxisLabels", domainAxisLabels);
         root.put("integerRangeAxis", true);
         root.put("domainAxisItemName", "Build");
         if (tmpMax > 50) {
-           root.put("rangeMax", (int)Math.ceil(tmpMax));
+            root.put("rangeMax", (int) Math.ceil(tmpMax));
         } else if (tmpMax > 0.0) {
-           root.put("rangeMax", tmpMax);
-        } else
-        root.put("rangeMin", 0);
+            root.put("rangeMax", tmpMax);
+        } else {
+            root.put("rangeMin", 0);
+        }
         root.set("yAxis", yAxis);
         return root;
     }
 
-    private void createLinearTrend(ArrayNode series, List<HistoryTestResultSummary> history, double[] lrX, double[] lrY, String title, String color, int xAxisIndex, int yAxisIndex, double roundMul) {
+    private void createLinearTrend(
+            ArrayNode series,
+            List<HistoryTestResultSummary> history,
+            double[] lrX,
+            double[] lrY,
+            String title,
+            String color,
+            int xAxisIndex,
+            int yAxisIndex,
+            double roundMul) {
         if (history.size() < 3) {
             return;
         }
@@ -243,11 +273,20 @@ public class History {
         }
         for (int index = 0; index < history.size(); ++index) {
             // Use float to reduce JSON size.
-            lrData.add((float)(Math.round((cs[0] + index * cs[1]) * roundMul) / roundMul));
+            lrData.add((float) (Math.round((cs[0] + index * cs[1]) * roundMul) / roundMul));
         }
     }
 
-    private void createSplineTrend(ArrayNode series, List<HistoryTestResultSummary> history, double[] lrX, double[] lrY, String title, String color, int xAxisIndex, int yAxisIndex, double roundMul) {
+    private void createSplineTrend(
+            ArrayNode series,
+            List<HistoryTestResultSummary> history,
+            double[] lrX,
+            double[] lrY,
+            String title,
+            String color,
+            int xAxisIndex,
+            int yAxisIndex,
+            double roundMul) {
         if (history.size() < 200) {
             return;
         }
@@ -279,12 +318,12 @@ public class History {
         }
         for (int index = 0; index < history.size(); ++index) {
             // Use float to reduce JSON size.
-            lrData.add((float)(Math.round(scs.evaluate(index) * roundMul) / roundMul));
+            lrData.add((float) (Math.round(scs.evaluate(index) * roundMul) / roundMul));
         }
     }
 
     static boolean EXTRA_GRAPH_MATH_ENABLED =
-        Boolean.parseBoolean(System.getProperty(History.class.getName() + ".EXTRA_GRAPH_MATH_ENABLED","true"));
+            Boolean.parseBoolean(System.getProperty(History.class.getName() + ".EXTRA_GRAPH_MATH_ENABLED", "true"));
 
     private ObjectNode computeResultTrendJson(List<HistoryTestResultSummary> history) {
         ObjectNode root = MAPPER.createObjectNode();
@@ -308,7 +347,7 @@ public class History {
         ObjectNode okAreaStyle = MAPPER.createObjectNode();
         okSeries.set("areaStyle", okAreaStyle);
         okAreaStyle.put("normal", true);
-        
+
         ObjectNode okMarkLine = MAPPER.createObjectNode();
         okSeries.set("markLine", okMarkLine);
         ArrayNode okMarkData = MAPPER.createArrayNode();
@@ -321,7 +360,7 @@ public class History {
         dashLineStyle.put("color", "rgba(128, 128, 128, 0.1)");
         ArrayNode lightDashType = MAPPER.createArrayNode();
         lightDashType.add(5);
-        lightDashType.add(10);        
+        lightDashType.add(10);
         dashLineStyle.set("type", lightDashType);
         avgMark.put("type", "average");
         avgMark.put("name", "Avg");
@@ -341,7 +380,7 @@ public class History {
         failSeries.set("data", failData);
         ObjectNode failStyle = MAPPER.createObjectNode();
         failSeries.set("itemStyle", failStyle);
-        failStyle.put("color", "--light-red"); //"rgba(200, 50, 50, 0.8)");
+        failStyle.put("color", "--light-red"); // "rgba(200, 50, 50, 0.8)");
         failSeries.put("stack", "stacked");
         ObjectNode failAreaStyle = MAPPER.createObjectNode();
         failSeries.set("areaStyle", failAreaStyle);
@@ -381,7 +420,7 @@ public class History {
         lineStyle.put("type", "dashed");
         ObjectNode totalStyle = MAPPER.createObjectNode();
         totalSeries.set("itemStyle", totalStyle);
-        totalStyle.put("color", "--light-blue"); //"rgba(0, 255, 255, 0.6)");
+        totalStyle.put("color", "--light-blue"); // "rgba(0, 255, 255, 0.6)");
 
         ObjectNode totalAreaStyle = MAPPER.createObjectNode();
         totalSeries.set("areaStyle", totalAreaStyle);
@@ -391,14 +430,14 @@ public class History {
         series.add(failSeries);
         series.add(okSeries);
         series.add(totalSeries);
-        
+
         int maxTotalCount = 0;
         int index = 0;
         double[] lrX = new double[history.size()];
         double[] lrY = new double[history.size()];
         for (HistoryTestResultSummary h : history) {
             lrX[index] = index;
-            Run<?,?> r = h.getRun();
+            Run<?, ?> r = h.getRun();
             String fdn = r.getDisplayName();
             domainAxisLabels.add(fdn);
             lrY[index] = h.getPassCount();
@@ -413,8 +452,18 @@ public class History {
         }
 
         if (EXTRA_GRAPH_MATH_ENABLED) {
-            createLinearTrend(series, history, lrX, lrY, "Trend of Passed", "rgba(50, 50, 255, 0.5)" , 1, 1, 10.0); // "--dark-blue"
-            createSplineTrend(series, history, lrX, lrY, "Smooth of Passed", "rgba(255, 50, 255, 0.5)", 1, 1, 10.0); // "--purple"
+            createLinearTrend(
+                    series,
+                    history,
+                    lrX,
+                    lrY,
+                    "Trend of Passed",
+                    "rgba(50, 50, 255, 0.5)",
+                    1,
+                    1,
+                    10.0); // "--dark-blue"
+            createSplineTrend(
+                    series, history, lrX, lrY, "Smooth of Passed", "rgba(255, 50, 255, 0.5)", 1, 1, 10.0); // "--purple"
         }
 
         root.set("series", series);
@@ -440,14 +489,14 @@ public class History {
         durationSeries.set("data", durationData);
         ObjectNode durationStyle = MAPPER.createObjectNode();
         durationSeries.set("itemStyle", durationStyle);
-        durationStyle.put("color", "--success-color");//"rgba(50, 200, 50, 0.8)");
+        durationStyle.put("color", "--success-color"); // "rgba(50, 200, 50, 0.8)");
         durationSeries.put("stack", "stacked");
         ObjectNode durAreaStyle = MAPPER.createObjectNode();
         durationSeries.set("areaStyle", durAreaStyle);
         durAreaStyle.put("color", "rgba(0,0,0,0)");
         durationSeries.put("smooth", true);
         series.add(durationSeries);
-        
+
         double maxDuration = 0, minDuration = Double.MAX_VALUE;
         for (HistoryTestResultSummary h : history) {
             if (maxDuration < h.getDuration()) {
@@ -467,7 +516,7 @@ public class History {
         double scale = maxDuration - minDuration;
         double step = scale / counts.length;
         for (HistoryTestResultSummary h : history) {
-            int idx = smoothBuffer + (int)Math.round((h.getDuration() - minDuration) / step);
+            int idx = smoothBuffer + (int) Math.round((h.getDuration() - minDuration) / step);
             int idx2 = Math.max(0, Math.min(idx, lrY.length - 1));
             lrY[idx2]++;
         }
@@ -484,7 +533,7 @@ public class History {
         } else if (maxDuration < 1) {
             xAxis.put("name", "Duration (milliseconds)");
             mul = 1e3;
-       } else if (maxDuration < 90) {
+        } else if (maxDuration < 90) {
             xAxis.put("name", "Duration (seconds)");
             mul = 1.0;
         } else if (maxDuration < 90 * 60) {
@@ -500,14 +549,14 @@ public class History {
         int maxBuilds = 0;
         SmoothingCubicSpline scs = new SmoothingCubicSpline(lrX, lrY, 0.1);
         int smoothPts = counts.length * 4;
-        double k = (double)counts.length / smoothPts;
+        double k = (double) counts.length / smoothPts;
         final double splineRoundMul = 1000.0;
         for (double z = minDuration; z < maxDuration; z += step * k) {
             double v = Math.round(splineRoundMul * Math.max(0.0, scs.evaluate(z / scale * 100.0))) / splineRoundMul;
-            durationData.add((float)v);
-            maxBuilds = Math.max(maxBuilds, (int)Math.ceil(v));
+            durationData.add((float) v);
+            maxBuilds = Math.max(maxBuilds, (int) Math.ceil(v));
             // Use float for smaller JSONs.
-            domainAxisLabels.add((float)(Math.round(mul * z * roundMul) / roundMul));
+            domainAxisLabels.add((float) (Math.round(mul * z * roundMul) / roundMul));
         }
 
         root.set("series", series);
@@ -524,7 +573,7 @@ public class History {
     private ObjectNode computeBuildMapJson(List<HistoryTestResultSummary> history) {
         ObjectNode buildMap = MAPPER.createObjectNode();
         for (HistoryTestResultSummary h : history) {
-            Run<?,?> r = h.getRun();
+            Run<?, ?> r = h.getRun();
             String fdn = r.getDisplayName();
             ObjectNode buildObj = MAPPER.createObjectNode();
             buildObj.put("url", h.getUrl());
@@ -543,7 +592,11 @@ public class History {
         root.set("buildMap", computeBuildMapJson(history));
         ObjectNode saveAsImage = MAPPER.createObjectNode();
         if (!history.isEmpty()) {
-            saveAsImage.put("name", "test-history-" + history.get(0).getRun().getParent().getFullName() + "-" + history.get(0).getRun().getNumber() + "-" + history.get(history.size() - 1).getRun().getNumber());
+            saveAsImage.put(
+                    "name",
+                    "test-history-" + history.get(0).getRun().getParent().getFullName() + "-"
+                            + history.get(0).getRun().getNumber() + "-"
+                            + history.get(history.size() - 1).getRun().getNumber());
         } else {
             saveAsImage.put("name", "test-history");
         }
@@ -572,9 +625,14 @@ public class History {
         } else if (testObject instanceof PackageResult) {
             pluggableStorage = ((PackageResult) testObject).getParent().getPluggableStorage();
         } else if (testObject instanceof ClassResult) {
-            pluggableStorage = ((ClassResult) testObject).getParent().getParent().getPluggableStorage();
+            pluggableStorage =
+                    ((ClassResult) testObject).getParent().getParent().getPluggableStorage();
         } else if (testObject instanceof CaseResult) {
-            pluggableStorage = ((CaseResult) testObject).getParent().getParent().getParent().getPluggableStorage();
+            pluggableStorage = ((CaseResult) testObject)
+                    .getParent()
+                    .getParent()
+                    .getParent()
+                    .getPluggableStorage();
         }
         return pluggableStorage;
     }
@@ -587,7 +645,8 @@ public class History {
 
         public HistoryTableResult(HistoryParseResult parseResult, ObjectNode json) {
             this.historySummaries = parseResult.historySummaries;
-            this.descriptionAvailable = this.historySummaries.stream().anyMatch(summary -> summary.getDescription() != null);
+            this.descriptionAvailable =
+                    this.historySummaries.stream().anyMatch(summary -> summary.getDescription() != null);
             this.trendChartJson = json.toString();
             this.parseResult = parseResult;
         }
@@ -614,7 +673,16 @@ public class History {
         int end;
         int interval;
         boolean hasTimedOut;
-        public HistoryParseResult(List<HistoryTestResultSummary> historySummaries, int buildsRequested, int buildsParsed, int buildsWithTestResult, boolean hasTimedOut, int start, int end, int interval) {
+
+        public HistoryParseResult(
+                List<HistoryTestResultSummary> historySummaries,
+                int buildsRequested,
+                int buildsParsed,
+                int buildsWithTestResult,
+                boolean hasTimedOut,
+                int start,
+                int end,
+                int interval) {
             this.buildsRequested = buildsRequested;
             this.historySummaries = historySummaries;
             this.buildsParsed = buildsParsed;
@@ -624,7 +692,9 @@ public class History {
             this.end = end;
             this.interval = interval;
         }
-        public HistoryParseResult(List<HistoryTestResultSummary> historySummaries, int buildsRequested, int start, int end) {
+
+        public HistoryParseResult(
+                List<HistoryTestResultSummary> historySummaries, int buildsRequested, int start, int end) {
             this(historySummaries, buildsRequested, -1, -1, false, start, end, 1);
         }
     }
@@ -640,7 +710,10 @@ public class History {
     public HistoryTableResult retrieveHistorySummary(int start, int end, int interval) {
         synchronized (cachedResultLock) {
             HistoryTableResult result = cachedResult.get();
-            if (result != null && result.parseResult.start == start && result.parseResult.end == end && result.parseResult.interval == interval) {
+            if (result != null
+                    && result.parseResult.start == start
+                    && result.parseResult.end == end
+                    && result.parseResult.interval == interval) {
                 return result;
             }
             TestResultImpl pluggableStorage = getPluggableStorage();
@@ -662,12 +735,15 @@ public class History {
         }
     }
 
-    static int parallelism = Math.min(Runtime.getRuntime().availableProcessors(), Math.max(4, (int)(Runtime.getRuntime().availableProcessors() * 0.75 * 0.75)));
-    static ExecutorService executor = Executors.newFixedThreadPool(Math.max(4, (int)(Runtime.getRuntime().availableProcessors() * 0.75 * 0.75)));
+    static int parallelism = Math.min(Runtime.getRuntime().availableProcessors(), Math.max(4, (int)
+            (Runtime.getRuntime().availableProcessors() * 0.75 * 0.75)));
+    static ExecutorService executor =
+            Executors.newFixedThreadPool(Math.max(4, (int) (Runtime.getRuntime().availableProcessors() * 0.75 * 0.75)));
     static long MAX_TIME_ELAPSED_RETRIEVING_HISTORY_NS =
-        SystemProperties.getLong(History.class.getName() + ".MAX_TIME_ELAPSED_RETRIEVING_HISTORY_MS", 15000L) * 1000000L;
+            SystemProperties.getLong(History.class.getName() + ".MAX_TIME_ELAPSED_RETRIEVING_HISTORY_MS", 15000L)
+                    * 1000000L;
     static int MAX_THREADS_RETRIEVING_HISTORY =
-        SystemProperties.getInteger(History.class.getName() + ".MAX_THREADS_RETRIEVING_HISTORY",-1);
+            SystemProperties.getInteger(History.class.getName() + ".MAX_THREADS_RETRIEVING_HISTORY", -1);
 
     private HistoryParseResult getHistoryFromFileStorage(int start, int end, int interval) {
         TestObject testObject = getTestObject();
@@ -678,43 +754,53 @@ public class History {
         final long startedNs = java.lang.System.nanoTime();
         final AtomicInteger orderedCount = new AtomicInteger(0);
         List<HistoryTestResultSummary> history = builds.stream()
-            .skip(start)
-            .limit(requestedCount)
-            .filter(build -> {
-                if (interval == 1) {
-                    return true;
-                }
-                int n = orderedCount.getAndIncrement();
-                return (n % interval) == 0;
-            })
-            .collect(ParallelCollectors.parallel(build -> {
-                // Do not navigate too far or for too long, we need to finish the request this year and have to think about RAM
-                if ((java.lang.System.nanoTime() - startedNs) > MAX_TIME_ELAPSED_RETRIEVING_HISTORY_NS) {
-                    hasTimedOut.set(true);
-                    return null;
-                }
-                parsedCount.incrementAndGet();
-                hudson.tasks.test.TestResult resultInRun = testObject.getResultInRun(build);
-                if (resultInRun == null) {
-                    return null;
-                }
+                .skip(start)
+                .limit(requestedCount)
+                .filter(build -> {
+                    if (interval == 1) {
+                        return true;
+                    }
+                    int n = orderedCount.getAndIncrement();
+                    return (n % interval) == 0;
+                })
+                .collect(ParallelCollectors.parallel(
+                        build -> {
+                            // Do not navigate too far or for too long, we need to finish the request this year and have
+                            // to think about RAM
+                            if ((java.lang.System.nanoTime() - startedNs) > MAX_TIME_ELAPSED_RETRIEVING_HISTORY_NS) {
+                                hasTimedOut.set(true);
+                                return null;
+                            }
+                            parsedCount.incrementAndGet();
+                            hudson.tasks.test.TestResult resultInRun = testObject.getResultInRun(build);
+                            if (resultInRun == null) {
+                                return null;
+                            }
 
-                return new HistoryTestResultSummary(build, resultInRun.getDuration(),
-                        resultInRun.getFailCount(),
-                        resultInRun.getSkipCount(),
-                        resultInRun.getPassCount(),
-                        resultInRun.getDescription()
-                );
-            }, executor, MAX_THREADS_RETRIEVING_HISTORY < 1 ? parallelism : Math.min(parallelism, MAX_THREADS_RETRIEVING_HISTORY)))
-            .join()
-            .filter(Objects::nonNull)
-            .collect(Collectors.toList());
-        return new HistoryParseResult(history, requestedCount, parsedCount.get(), history.size(), hasTimedOut.get(), start, end, interval);
+                            return new HistoryTestResultSummary(
+                                    build,
+                                    resultInRun.getDuration(),
+                                    resultInRun.getFailCount(),
+                                    resultInRun.getSkipCount(),
+                                    resultInRun.getPassCount(),
+                                    resultInRun.getDescription());
+                        },
+                        executor,
+                        MAX_THREADS_RETRIEVING_HISTORY < 1
+                                ? parallelism
+                                : Math.min(parallelism, MAX_THREADS_RETRIEVING_HISTORY)))
+                .join()
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+        return new HistoryParseResult(
+                history, requestedCount, parsedCount.get(), history.size(), hasTimedOut.get(), start, end, interval);
     }
 
     @SuppressWarnings("unused") // Called by jelly view
     public static int asInt(String s, int defaultValue) {
-        if (s == null) return defaultValue;
+        if (s == null) {
+            return defaultValue;
+        }
         try {
             return Integer.parseInt(s);
         } catch (NumberFormatException e) {

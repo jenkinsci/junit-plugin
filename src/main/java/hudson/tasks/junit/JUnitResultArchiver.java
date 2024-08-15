@@ -102,6 +102,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
      * If true, don't throw exception on missing test results or no files found.
      */
     private boolean allowEmptyResults;
+
     private boolean skipPublishingChecks;
     private String checksName;
     /**
@@ -119,8 +120,8 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     }
 
     @Deprecated
-    public JUnitResultArchiver(String testResults,
-            DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> testDataPublishers) {
+    public JUnitResultArchiver(
+            String testResults, DescribableList<TestDataPublisher, Descriptor<TestDataPublisher>> testDataPublishers) {
         this(testResults, false, testDataPublishers);
     }
 
@@ -148,25 +149,38 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     }
 
     @Deprecated
-    private TestResult parse(String expandedTestResults, Run<?,?> run, @NonNull FilePath workspace, Launcher launcher, TaskListener listener)
-            throws IOException, InterruptedException
-    {
+    private TestResult parse(
+            String expandedTestResults,
+            Run<?, ?> run,
+            @NonNull FilePath workspace,
+            Launcher launcher,
+            TaskListener listener)
+            throws IOException, InterruptedException {
         return parse(this, null, expandedTestResults, run, workspace, launcher, listener);
-
     }
 
-    private static TestResult parse(@NonNull JUnitTask task, PipelineTestDetails pipelineTestDetails,
-                                    String expandedTestResults, Run<?,?> run, @NonNull FilePath workspace,
-                                    Launcher launcher, TaskListener listener)
+    private static TestResult parse(
+            @NonNull JUnitTask task,
+            PipelineTestDetails pipelineTestDetails,
+            String expandedTestResults,
+            Run<?, ?> run,
+            @NonNull FilePath workspace,
+            Launcher launcher,
+            TaskListener listener)
             throws IOException, InterruptedException {
-        return new JUnitParser(task.getParsedStdioRetention(), task.isKeepProperties(), task.isAllowEmptyResults(), task.isSkipOldReports(), task.isKeepTestNames())
+        return new JUnitParser(
+                        task.getParsedStdioRetention(),
+                        task.isKeepProperties(),
+                        task.isAllowEmptyResults(),
+                        task.isSkipOldReports(),
+                        task.isKeepTestNames())
                 .parseResult(expandedTestResults, run, pipelineTestDetails, workspace, launcher, listener);
     }
 
     @Deprecated
-    protected TestResult parse(String expandedTestResults, AbstractBuild build, Launcher launcher, BuildListener listener)
-            throws IOException, InterruptedException
-    {
+    protected TestResult parse(
+            String expandedTestResults, AbstractBuild build, Launcher launcher, BuildListener listener)
+            throws IOException, InterruptedException {
         final FilePath workspace = build.getWorkspace();
         if (workspace == null) {
             throw new IllegalArgumentException("The provided build has no workspace");
@@ -175,17 +189,23 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     }
 
     @Override
-    public void perform(Run build, FilePath workspace, Launcher launcher,
-            TaskListener listener) throws InterruptedException, IOException {
-        if (parseAndSummarize(this, null, build, workspace, launcher, listener).getFailCount() > 0 && !skipMarkingBuildUnstable) {
+    public void perform(Run build, FilePath workspace, Launcher launcher, TaskListener listener)
+            throws InterruptedException, IOException {
+        if (parseAndSummarize(this, null, build, workspace, launcher, listener).getFailCount() > 0
+                && !skipMarkingBuildUnstable) {
             build.setResult(Result.UNSTABLE);
         }
     }
 
     /** @deprecated use {@link #parseAndSummarize} instead */
     @Deprecated
-    public static TestResultAction parseAndAttach(@NonNull JUnitTask task, PipelineTestDetails pipelineTestDetails,
-                                                  Run build, FilePath workspace, Launcher launcher, TaskListener listener)
+    public static TestResultAction parseAndAttach(
+            @NonNull JUnitTask task,
+            PipelineTestDetails pipelineTestDetails,
+            Run build,
+            FilePath workspace,
+            Launcher launcher,
+            TaskListener listener)
             throws InterruptedException, IOException {
         listener.getLogger().println(Messages.JUnitResultArchiver_Recording());
 
@@ -241,8 +261,13 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
         }
     }
 
-    public static TestResultSummary parseAndSummarize(@NonNull JUnitTask task, PipelineTestDetails pipelineTestDetails,
-                                                  Run<?, ?> build, FilePath workspace, Launcher launcher, TaskListener listener)
+    public static TestResultSummary parseAndSummarize(
+            @NonNull JUnitTask task,
+            PipelineTestDetails pipelineTestDetails,
+            Run<?, ?> build,
+            FilePath workspace,
+            Launcher launcher,
+            TaskListener listener)
             throws InterruptedException, IOException {
         JunitTestResultStorage storage = JunitTestResultStorage.find();
         if (storage instanceof FileJunitTestResultStorage) {
@@ -258,7 +283,12 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
             summary = null; // see below
         } else {
             result = new TestResult(storage.load(build.getParent().getFullName(), build.getNumber())); // irrelevant
-            summary = new JUnitParser(task.getParsedStdioRetention(), task.isKeepProperties(), task.isAllowEmptyResults(), task.isSkipOldReports(), task.isKeepTestNames())
+            summary = new JUnitParser(
+                            task.getParsedStdioRetention(),
+                            task.isKeepProperties(),
+                            task.isAllowEmptyResults(),
+                            task.isSkipOldReports(),
+                            task.isKeepTestNames())
                     .summarizeResult(testResults, build, pipelineTestDetails, workspace, launcher, listener, storage);
         }
 
@@ -306,7 +336,8 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
             }
 
             if (!task.isSkipPublishingChecks()) {
-                // If we haven't been provided with a checks name, and we have pipeline test details, set the checks name
+                // If we haven't been provided with a checks name, and we have pipeline test details, set the checks
+                // name
                 // to be a ' / '-joined string of the enclosing blocks names, plus 'Tests' at the start. If there are no
                 // enclosing blocks, you'll end up with just 'Tests'.
                 String checksName = task.getChecksName();
@@ -339,8 +370,8 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
      * @throws IOException if an error occurs.
      * @deprecated since 2009-08-10.
      */
-    protected TestResult parseResult(DirectoryScanner ds, long buildTime)
-            throws IOException {
+    @Deprecated
+    protected TestResult parseResult(DirectoryScanner ds, long buildTime) throws IOException {
         return new TestResult(buildTime, ds);
     }
 
@@ -364,7 +395,8 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
      *
      * @since 1.2-beta-1
      */
-    @DataBoundSetter public final void setHealthScaleFactor(double healthScaleFactor) {
+    @DataBoundSetter
+    public final void setHealthScaleFactor(double healthScaleFactor) {
         this.healthScaleFactor = Math.max(0.0, healthScaleFactor);
     }
 
@@ -379,7 +411,8 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
      *
      * @since 1.2
      */
-    @DataBoundSetter public final void setTestDataPublishers(@NonNull List<TestDataPublisher> testDataPublishers) {
+    @DataBoundSetter
+    public final void setTestDataPublishers(@NonNull List<TestDataPublisher> testDataPublishers) {
         this.testDataPublishers = new DescribableList<>(Saveable.NOOP);
         this.testDataPublishers.addAll(testDataPublishers);
     }
@@ -390,10 +423,12 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
      * @since 1.2-beta-1
      */
     @Deprecated
-    @DataBoundSetter public final void setKeepLongStdio(boolean keepLongStdio) {
+    @DataBoundSetter
+    public final void setKeepLongStdio(boolean keepLongStdio) {
         this.stdioRetention = StdioRetention.fromKeepLongStdio(keepLongStdio).name();
     }
 
+    @Override
     @Deprecated
     public boolean isKeepLongStdio() {
         return StdioRetention.ALL == getParsedStdioRetention();
@@ -410,7 +445,8 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     /**
      * @param stdioRetention How to keep long stdio.
      */
-    @DataBoundSetter public final void setStdioRetention(String stdioRetention) {
+    @DataBoundSetter
+    public final void setStdioRetention(String stdioRetention) {
         this.stdioRetention = stdioRetention;
     }
 
@@ -422,13 +458,15 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
         return keepProperties;
     }
 
-    @DataBoundSetter public final void setKeepProperties(boolean keepProperties) {
+    @DataBoundSetter
+    public final void setKeepProperties(boolean keepProperties) {
         this.keepProperties = keepProperties;
     }
 
     /**
      * @return the keepTestNames
      */
+    @Override
     public boolean isKeepTestNames() {
         return keepTestNames;
     }
@@ -436,7 +474,8 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     /**
      * @param keepTestNames Whether to avoid prepending the parallel stage name to test name.
      */
-    @DataBoundSetter public final void setKeepTestNames(boolean keepTestNames) {
+    @DataBoundSetter
+    public final void setKeepTestNames(boolean keepTestNames) {
         this.keepTestNames = keepTestNames;
     }
 
@@ -474,7 +513,8 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
         this.checksName = checksName;
     }
 
-    @DataBoundSetter public final void setAllowEmptyResults(boolean allowEmptyResults) {
+    @DataBoundSetter
+    public final void setAllowEmptyResults(boolean allowEmptyResults) {
         this.allowEmptyResults = allowEmptyResults;
     }
 
@@ -514,9 +554,8 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
          * @return the validation result.
          * @throws IOException if an error occurs.
          */
-        public FormValidation doCheckTestResults(
-                @AncestorInPath AbstractProject project,
-                @QueryParameter String value) throws IOException {
+        public FormValidation doCheckTestResults(@AncestorInPath AbstractProject project, @QueryParameter String value)
+                throws IOException {
             if (project == null || !project.hasPermission(Item.WORKSPACE)) {
                 return FormValidation.ok();
             }
@@ -529,13 +568,12 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
         }
 
         public FormValidation doCheckHealthScaleFactor(@QueryParameter double value) {
-            if (value < 1e-7) return FormValidation.warning("Test health reporting disabled");
+            if (value < 1e-7) {
+                return FormValidation.warning("Test health reporting disabled");
+            }
             return FormValidation.ok(Messages.JUnitResultArchiver_HealthScaleFactorAnalysis(
-                    1,
-                    (int) (100.0 - Math.max(0.0, Math.min(100.0, 1 * value))),
-                    5,
-                    (int) (100.0 - Math.max(0.0, Math.min(100.0, 5 * value)))
-            ));
+                    1, (int) (100.0 - Math.max(0.0, Math.min(100.0, 1 * value))), 5, (int)
+                            (100.0 - Math.max(0.0, Math.min(100.0, 5 * value)))));
         }
 
         public ListBoxModel doFillStdioRetentionItems(@QueryParameter("stdioRetention") String value) {
@@ -545,15 +583,11 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
             try {
                 selectedOption = StdioRetention.parse(value);
             } catch (IllegalArgumentException e) {
-                selectedOption  = StdioRetention.DEFAULT;
+                selectedOption = StdioRetention.DEFAULT;
             }
 
             for (StdioRetention option : StdioRetention.values()) {
-                result.add(new ListBoxModel.Option(
-                        option.getDisplayName(),
-                        option.name(),
-                        option == selectedOption
-                ));
+                result.add(new ListBoxModel.Option(option.getDisplayName(), option.name(), option == selectedOption));
             }
 
             return result;

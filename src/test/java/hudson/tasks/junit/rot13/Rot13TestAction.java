@@ -4,8 +4,7 @@ import hudson.tasks.junit.TestAction;
 
 public class Rot13TestAction extends TestAction {
 
-    public Rot13TestAction() {
-    }
+    public Rot13TestAction() {}
 
     @Override
     public final String getIconFileName() {
@@ -21,5 +20,4 @@ public class Rot13TestAction extends TestAction {
     public String getUrlName() {
         return null;
     }
-
 }

@@ -1,18 +1,18 @@
 /*
  * The MIT License
- * 
+ *
  * Copyright (c) 2009, Yahoo!, Inc.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -41,11 +41,10 @@ public abstract class TestResult extends TestObject {
 
     /**
      * If the concept of a parent action is important to a subclass, then it should
-     * provide a non-noop implementation of this method. 
+     * provide a non-noop implementation of this method.
      * @param action Action that points to the top level test result.
      */
-    public void setParentAction(AbstractTestResultAction action) {
-    }
+    public void setParentAction(AbstractTestResultAction action) {}
 
     /**
      * Returns the action that points to the top level test result includes
@@ -56,28 +55,26 @@ public abstract class TestResult extends TestObject {
     public AbstractTestResultAction getParentAction() {
         return getRun().getAction(AbstractTestResultAction.class);
     }
-    
+
     /**
      * Request that the result update its counts of its children. Does not
      * require a parent action or owner or siblings. Subclasses should
-     * implement this, unless they are *always* in a tallied state.  
+     * implement this, unless they are *always* in a tallied state.
      */
-    public void tally() {
-    }
-    
+    public void tally() {}
+
     /**
      * Sets the parent test result
      * @param parent Parent test result.
      */
-    public void setParent(TestObject parent) {
-    }
+    public void setParent(TestObject parent) {}
 
     /**
      * Gets the human readable title of this result object.
      *
      * @return the human readable title of this result object.
      */
-    public /* abstract */ String getTitle(){
+    public /* abstract */ String getTitle() {
         return "";
     }
 
@@ -120,7 +117,6 @@ public abstract class TestResult extends TestObject {
         return 0;
     }
 
-
     /**
      * Gets the total number of skipped tests.
      */
@@ -128,7 +124,7 @@ public abstract class TestResult extends TestObject {
     public /* abstract */ int getSkipCount() {
         return 0;
     }
-    
+
     /**
      * Gets the counter part of this {@link TestResult} in the previous run.
      *
@@ -136,19 +132,21 @@ public abstract class TestResult extends TestObject {
      */
     @Override
     public TestResult getPreviousResult() {
-        Run<?,?> b = getRun();
+        Run<?, ?> b = getRun();
         if (b == null) {
             return null;
         }
-        while(true) {
+        while (true) {
             b = b.getPreviousBuild();
-            if(b==null)
+            if (b == null) {
                 return null;
+            }
             AbstractTestResultAction r = b.getAction(getParentAction().getClass());
-            if(r!=null) {
+            if (r != null) {
                 TestResult result = r.findCorrespondingResult(this.getId());
-                if (result!=null)
+                if (result != null) {
                     return result;
+                }
             }
         }
     }
@@ -158,7 +156,8 @@ public abstract class TestResult extends TestObject {
      *
      * @return null if no such counter part exists.
      */
-    @Override public TestResult getResultInRun(Run<?,?> build) {
+    @Override
+    public TestResult getResultInRun(Run<?, ?> build) {
         AbstractTestResultAction tra = build.getAction(getParentAction().getClass());
         if (tra == null) {
             tra = build.getAction(AbstractTestResultAction.class);
@@ -173,7 +172,6 @@ public abstract class TestResult extends TestObject {
     public Collection<? extends TestResult> getFailedTests() {
         return Collections.emptyList();
     }
-
 
     /**
      * Gets the "children" of this test result that passed
@@ -207,7 +205,7 @@ public abstract class TestResult extends TestObject {
      *
      * @return the run when this test started failing.
      */
-    public Run<?,?> getFailedSinceRun() {
+    public Run<?, ?> getFailedSinceRun() {
         return null;
     }
 
@@ -244,7 +242,7 @@ public abstract class TestResult extends TestObject {
      * @return the message of the error or failure.
      */
     public String getErrorDetails() {
-        return ""; 
+        return "";
     }
 
     public Map<String, String> getProperties() {
@@ -267,23 +265,24 @@ public abstract class TestResult extends TestObject {
         sb.append("Fail: ").append(this.getFailCount()).append(", ");
         sb.append("Skipt: ").append(this.getSkipCount()).append(", ");
         sb.append("Pass: ").append(this.getPassCount()).append(",\n");
-        sb.append("Test Result Class: " ).append(this.getClass().getName()).append(" }\n");
-        return sb.toString(); 
+        sb.append("Test Result Class: ").append(this.getClass().getName()).append(" }\n");
+        return sb.toString();
     }
 
     /**
-     * Annotate some text -- what does this do? 
+     * Annotate some text -- what does this do?
      * @param text Text to use to annotate the actions.
      *
      * @return the provided text HTML-escaped.
      */
     public String annotate(String text) {
-        if (text == null)
-                return null;
+        if (text == null) {
+            return null;
+        }
         text = text.replace("&", "&amp;").replace("<", "&lt;");
 
-        for (TestAction action: getTestActions()) {
-                text = action.annotate(text);
+        for (TestAction action : getTestActions()) {
+            text = action.annotate(text);
         }
         return text;
     }

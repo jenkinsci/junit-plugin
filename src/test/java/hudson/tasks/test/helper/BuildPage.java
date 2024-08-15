@@ -15,7 +15,6 @@ public class BuildPage extends AbstractPage {
         return testUrl + "/";
     }
 
-
     public TestResultLink getAggregatedTestReportLink() throws IOException, SAXException {
         return new TestResultLink(getTestReportAnchor(AGGREGATED_TEST_REPORT_URL));
     }

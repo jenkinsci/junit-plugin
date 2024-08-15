@@ -48,16 +48,27 @@ import org.kohsuke.accmod.restrictions.Beta;
 @Restricted(Beta.class)
 public interface TestResultImpl {
     int getFailCount();
+
     int getSkipCount();
+
     int getPassCount();
+
     int getTotalCount();
+
     List<CaseResult> getFailedTests();
+
     List<CaseResult> getFailedTestsByPackage(String packageName);
+
     List<CaseResult> getSkippedTests();
+
     List<CaseResult> getSkippedTestsByPackage(String packageName);
+
     List<CaseResult> getPassedTests();
+
     List<CaseResult> getPassedTestsByPackage(String packageName);
+
     PackageResult getPackageResult(String packageName);
+
     List<PackageResult> getAllPackageResults();
 
     /**
@@ -80,7 +91,7 @@ public interface TestResultImpl {
      * @return count of builds with tests results
      */
     int getCountOfBuildsWithTestResults();
-    
+
     Run<?, ?> getFailedSinceRun(CaseResult caseResult);
 
     @CheckForNull
@@ -108,13 +119,13 @@ public interface TestResultImpl {
      */
     @CheckForNull
     TestResult getPreviousResult();
-    SuiteResult getSuite(String name);
 
+    SuiteResult getSuite(String name);
 
     default Collection<SuiteResult> getSuites() {
         return Collections.emptyList();
-    };
-
+    }
+    ;
 
     float getTotalTestDuration();
 }

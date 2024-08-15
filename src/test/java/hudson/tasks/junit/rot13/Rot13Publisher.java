@@ -34,12 +34,12 @@ import org.kohsuke.stapler.DataBoundConstructor;
 public class Rot13Publisher extends TestDataPublisher {
 
     @DataBoundConstructor
-    public Rot13Publisher() {
-    }
+    public Rot13Publisher() {}
 
     @Override
-    public Data contributeTestData(Run<?, ?> build, FilePath workspace, Launcher launcher, TaskListener listener,
-                                   TestResult testResult) throws IOException, InterruptedException {
+    public Data contributeTestData(
+            Run<?, ?> build, FilePath workspace, Launcher launcher, TaskListener listener, TestResult testResult)
+            throws IOException, InterruptedException {
         Map<String, String> ciphertextMap = new HashMap<>();
         for (PackageResult packageResult : testResult.getChildren()) {
             ciphertextMap.put(packageResult.getName(), rot13(packageResult.getName()));
@@ -87,23 +87,22 @@ public class Rot13Publisher extends TestDataPublisher {
             TestObject testObject = (TestObject) t;
 
             if (testObject instanceof CaseResult) {
-                return Collections.<TestAction>singletonList(new Rot13CaseAction(ciphertextMap.get(
-                        ((CaseResult) testObject).getFullName())));
+                return Collections.<TestAction>singletonList(
+                        new Rot13CaseAction(ciphertextMap.get(((CaseResult) testObject).getFullName())));
             }
             if (testObject instanceof ClassResult) {
-                return Collections.<TestAction>singletonList(new Rot13ClassAction(ciphertextMap.get(
-                        ((ClassResult) testObject).getFullName())));
+                return Collections.<TestAction>singletonList(
+                        new Rot13ClassAction(ciphertextMap.get(((ClassResult) testObject).getFullName())));
             }
             if (testObject instanceof PackageResult) {
-                return Collections.<TestAction>singletonList(new Rot13PackageAction(ciphertextMap.get(
-                        ((PackageResult) testObject).getName())));
+                return Collections.<TestAction>singletonList(
+                        new Rot13PackageAction(ciphertextMap.get(((PackageResult) testObject).getName())));
             }
             if (testObject instanceof TestResult) {
                 return Collections.<TestAction>singletonList(new Rot13TestAction());
             }
             return Collections.emptyList();
         }
-
     }
 
     @Extension
@@ -114,7 +113,5 @@ public class Rot13Publisher extends TestDataPublisher {
         public String getDisplayName() {
             return "ROT13-encoded test case, class and package names";
         }
-
     }
-
 }
