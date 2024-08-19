@@ -63,19 +63,11 @@
       <groupId>ca.umontreal.iro.simul</groupId>
       <artifactId>ssj</artifactId>
       <version>3.3.2</version>
+      <!-- Dependencies are unused, provided by Jenkins core, have unusual licenses, unclear artifact ownership, and/or are obsolete. We only use SmoothingCubicSpline, which does not require dependencies. -->
       <exclusions>
         <exclusion>
-          <groupId>com.google.code.gson</groupId>
-          <artifactId>gson</artifactId>
-        </exclusion>
-        <!-- Provided by Jenkins core -->
-        <exclusion>
-          <groupId>org.jfree</groupId>
-          <artifactId>jcommon</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.jfree</groupId>
-          <artifactId>jfreechart</artifactId>
+          <groupId>*</groupId>
+          <artifactId>*</artifactId>
         </exclusion>
       </exclusions>
     </dependency>
@@ -103,6 +95,11 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>plugin-util-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-math3</artifactId>
+      <version>3.6.1</version>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
