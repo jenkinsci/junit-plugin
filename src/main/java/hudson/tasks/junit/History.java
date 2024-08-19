@@ -46,10 +46,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import jenkins.util.SystemProperties;
+import org.apache.commons.math3.stat.regression.SimpleRegression;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
-import umontreal.ssj.functionfit.LeastSquares;
 import umontreal.ssj.functionfit.SmoothingCubicSpline;
 
 /**
@@ -248,7 +248,13 @@ public class History {
         if (history.size() < 3) {
             return;
         }
-        double[] cs = LeastSquares.calcCoefficients(lrX, lrY);
+
+        SimpleRegression sr = new SimpleRegression(true);
+        for (int i = 0; i < lrX.length; i++) {
+            sr.addData(lrX[i], lrY[i]);
+        }
+        double intercept = sr.getIntercept();
+        double slope = sr.getSlope();
 
         ObjectNode lrSeries = MAPPER.createObjectNode();
         series.add(lrSeries);
@@ -273,7 +279,7 @@ public class History {
         }
         for (int index = 0; index < history.size(); ++index) {
             // Use float to reduce JSON size.
-            lrData.add((float) (Math.round((cs[0] + index * cs[1]) * roundMul) / roundMul));
+            lrData.add((float) (Math.round((intercept + index * slope) * roundMul) / roundMul));
         }
     }
 
