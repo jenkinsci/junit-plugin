@@ -442,7 +442,6 @@ public class History {
                 minDuration = h.getDuration();
             }
         }
-        // double extraDuration = Math.max(0.001, (maxDuration - minDuration) * 0.05);
         minDuration = Math.max(0.0, minDuration);
         int buckets = 50;
         double[] lrX = new double[buckets];
