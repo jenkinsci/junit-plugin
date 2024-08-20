@@ -46,7 +46,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import jenkins.util.SystemProperties;
-import org.apache.commons.math3.stat.regression.SimpleRegression;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
@@ -249,12 +248,9 @@ public class History {
             return;
         }
 
-        SimpleRegression sr = new SimpleRegression(true);
-        for (int i = 0; i < lrX.length; i++) {
-            sr.addData(lrX[i], lrY[i]);
-        }
-        double intercept = sr.getIntercept();
-        double slope = sr.getSlope();
+        double[] cs = SimpleLinearRegression.coefficients(lrX, lrY);
+        double intercept = cs[0];
+        double slope = cs[1];
 
         ObjectNode lrSeries = MAPPER.createObjectNode();
         series.add(lrSeries);
@@ -811,6 +807,38 @@ public class History {
             return Integer.parseInt(s);
         } catch (NumberFormatException e) {
             return defaultValue;
+        }
+    }
+
+    // https://en.wikipedia.org/wiki/Simple_linear_regression
+    static class SimpleLinearRegression {
+        static double[] coefficients(double[] xs, double[] ys) {
+            int n = xs.length;
+            if (n < 2) {
+                throw new IllegalArgumentException("At least two data points are required, but got: " + xs.length);
+            }
+            if (xs.length != ys.length) {
+                throw new IllegalArgumentException("Array lengths do not match:" + xs.length + " vs " + ys.length);
+            }
+            double sumX = 0;
+            double sumY = 0;
+            double sumXX = 0;
+            double sumXY = 0;
+            for (int i = 0; i < n; i++) {
+                double x = xs[i];
+                double y = ys[i];
+                sumX += x;
+                sumY += y;
+                sumXX += x * x;
+                sumXY += x * y;
+            }
+            if (Math.abs(sumXX) < 10 * Double.MIN_VALUE) {
+                // Avoid returning +/- infinity in case the x values are too close together.
+                return new double[] {Double.NaN, Double.NaN};
+            }
+            double slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+            double intercept = sumY / n - slope / n * sumX;
+            return new double[] {intercept, slope};
         }
     }
 }
