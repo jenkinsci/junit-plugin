@@ -479,24 +479,16 @@ public class History {
     private ObjectNode computeDistributionJson(List<HistoryTestResultSummary> history) {
         ObjectNode root = MAPPER.createObjectNode();
         ArrayNode series = MAPPER.createArrayNode();
-        ArrayNode domainAxisLabels = MAPPER.createArrayNode();
 
         ObjectNode durationSeries = MAPPER.createObjectNode();
         durationSeries.put("name", "Build Count");
-        durationSeries.put("type", "line");
-        durationSeries.put("symbol", "circle");
-        durationSeries.put("symbolSize", "0");
-        durationSeries.put("sampling", "lttb");
+        durationSeries.put("type", "bar");
+        durationSeries.put("barWidth", "99%");
         ArrayNode durationData = MAPPER.createArrayNode();
         durationSeries.set("data", durationData);
         ObjectNode durationStyle = MAPPER.createObjectNode();
         durationSeries.set("itemStyle", durationStyle);
         durationStyle.put("color", "--success-color"); // "rgba(50, 200, 50, 0.8)");
-        durationSeries.put("stack", "stacked");
-        ObjectNode durAreaStyle = MAPPER.createObjectNode();
-        durationSeries.set("areaStyle", durAreaStyle);
-        durAreaStyle.put("color", "rgba(0,0,0,0)");
-        durationSeries.put("smooth", true);
         series.add(durationSeries);
 
         double maxDuration = 0, minDuration = Double.MAX_VALUE;
@@ -508,22 +500,20 @@ public class History {
                 minDuration = h.getDuration();
             }
         }
-        double extraDuration = Math.max(0.001, (maxDuration - minDuration) * 0.05);
-        minDuration = Math.max(0.0, minDuration - extraDuration);
-        maxDuration = maxDuration + extraDuration;
-        int[] counts = new int[100];
-        int smoothBuffer = 2;
-        double[] lrX = new double[counts.length + smoothBuffer * 2 + 1];
-        double[] lrY = new double[counts.length + smoothBuffer * 2 + 1];
-        double scale = maxDuration - minDuration;
-        double step = scale / counts.length;
+        // double extraDuration = Math.max(0.001, (maxDuration - minDuration) * 0.05);
+        minDuration = Math.max(0.0, minDuration);
+        int buckets = 50;
+        double[] lrX = new double[buckets];
+        double[] lrY = new double[buckets];
+        double domain = maxDuration - minDuration;
+        double step = domain / buckets;
         for (HistoryTestResultSummary h : history) {
-            int idx = smoothBuffer + (int) Math.round((h.getDuration() - minDuration) / step);
+            int idx = (int) Math.round((h.getDuration() - minDuration) / step);
             int idx2 = Math.max(0, Math.min(idx, lrY.length - 1));
             lrY[idx2]++;
         }
         for (int i = 0; i < lrY.length; ++i) {
-            lrX[i] = ((minDuration + (maxDuration - minDuration) / lrY.length * i) / scale * 100.0);
+            lrX[i] = minDuration + step * (i + 0.5);
         }
 
         ObjectNode xAxis = MAPPER.createObjectNode();
@@ -547,24 +537,25 @@ public class History {
             mul = 1.0d / 3600.0d;
             roundMul = 100.0;
         }
+        xAxis.put("min", (float) (mul * lrX[0] - (step * mul * 0.5)));
+        xAxis.put("max", (float) (mul * lrX[lrX.length - 1] + (step * mul * 0.5)));
+        xAxis.put("interval", (float) (step * mul));
+        xAxis.put("roundingFactor", (float) roundMul);
 
         int maxBuilds = 0;
-        SmoothingCubicSpline scs = new SmoothingCubicSpline(lrX, lrY, 0.1);
-        int smoothPts = counts.length * 4;
-        double k = (double) counts.length / smoothPts;
-        final double splineRoundMul = 1000.0;
-        for (double z = minDuration; z < maxDuration; z += step * k) {
-            double v = Math.round(splineRoundMul * Math.max(0.0, scs.evaluate(z / scale * 100.0))) / splineRoundMul;
-            durationData.add((float) v);
-            maxBuilds = Math.max(maxBuilds, (int) Math.ceil(v));
-            // Use float for smaller JSONs.
-            domainAxisLabels.add((float) (Math.round(mul * z * roundMul) / roundMul));
+        for (int i = 0; i < lrY.length; i++) {
+            double scaledX = mul * lrX[i];
+            double y = lrY[i];
+            ArrayNode data = MAPPER.createArrayNode();
+            data.add((float) scaledX);
+            data.add((float) y);
+            durationData.add(data);
+            maxBuilds = Math.max(maxBuilds, (int) Math.ceil(y));
         }
 
         root.set("series", series);
         root.put("integerRangeAxis", true);
         root.put("domainAxisItemName", "Number of Builds");
-        root.set("domainAxisLabels", domainAxisLabels);
         root.set("xAxis", xAxis);
         if (maxBuilds >= 10) {
             root.put("rangeMax", maxBuilds);
