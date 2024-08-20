@@ -323,12 +323,16 @@ function onBuildIntervalChange(selectObj) {
                     top: '20%',
                 },
                 xAxis: {
-                    type: 'category',
-                    boundaryGap: false,
+                    type: 'value',
                     axisLabel: {
-                        color: textColor
+                        color: textColor,
+                        formatter: function(value) {
+                            return Math.round(value * model.distribution.xAxis.roundingFactor) / model.distribution.xAxis.roundingFactor;
+                        }
                     },
-                    data: model.distribution.domainAxisLabels,
+                    min: model.distribution.xAxis.min,
+                    max: model.distribution.xAxis.max,
+                    minInterval: model.distribution.xAxis.interval,
                     name: model.distribution.xAxis.name,
                     nameLocation: 'middle',
                     nameGap: 26,
@@ -343,6 +347,7 @@ function onBuildIntervalChange(selectObj) {
                     axisLabel: {
                         color: textColor
                     },
+                    minInterval: model.result.integerRangeAxis ? 1 : null,
                     name: 'Build Count',
                     nameLocation: 'middle',
                     nameGap: 60,
