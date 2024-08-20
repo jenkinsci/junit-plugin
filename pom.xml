@@ -60,18 +60,6 @@
 
   <dependencies>
     <dependency>
-      <groupId>ca.umontreal.iro.simul</groupId>
-      <artifactId>ssj</artifactId>
-      <version>3.3.2</version>
-      <!-- Dependencies are unused, provided by Jenkins core, have unusual licenses, unclear artifact ownership, and/or are obsolete. We only use SmoothingCubicSpline, which does not require dependencies. -->
-      <exclusions>
-        <exclusion>
-          <groupId>*</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
       <groupId>com.pivovarit</groupId>
       <artifactId>parallel-collectors</artifactId>
       <version>2.6.1</version>

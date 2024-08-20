@@ -49,7 +49,6 @@ import jenkins.util.SystemProperties;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
-import umontreal.ssj.functionfit.SmoothingCubicSpline;
 
 /**
  * History of {@link hudson.tasks.test.TestObject} over time.
@@ -208,16 +207,6 @@ public class History {
                     0,
                     0,
                     roundMul); // "--blue"
-            createSplineTrend(
-                    series,
-                    history,
-                    lrX,
-                    lrY,
-                    "Smooth of " + durationStr,
-                    "rgba(120, 50, 255, 0.5)",
-                    0,
-                    0,
-                    roundMul); // "--indigo"
         }
         root.set("series", series);
         root.set("domainAxisLabels", domainAxisLabels);
@@ -276,51 +265,6 @@ public class History {
         for (int index = 0; index < history.size(); ++index) {
             // Use float to reduce JSON size.
             lrData.add((float) (Math.round((intercept + index * slope) * roundMul) / roundMul));
-        }
-    }
-
-    private void createSplineTrend(
-            ArrayNode series,
-            List<HistoryTestResultSummary> history,
-            double[] lrX,
-            double[] lrY,
-            String title,
-            String color,
-            int xAxisIndex,
-            int yAxisIndex,
-            double roundMul) {
-        if (history.size() < 200) {
-            return;
-        }
-        double rho = Math.min(1.0, 1.0 / Math.max(1, (history.size() / 2)));
-        if (rho > 0.75) {
-            return; // Too close to linear
-        }
-        SmoothingCubicSpline scs = new SmoothingCubicSpline(lrX, lrY, 0.001);
-        ObjectNode lrSeries = MAPPER.createObjectNode();
-        series.add(lrSeries);
-        lrSeries.put("name", title);
-        lrSeries.put("preferScreenOrient", "landscape");
-        lrSeries.put("type", "line");
-        lrSeries.put("symbol", "circle");
-        lrSeries.put("symbolSize", 0);
-        lrSeries.put("xAxisIndex", xAxisIndex);
-        lrSeries.put("yAxisIndex", yAxisIndex);
-        ArrayNode lrData = MAPPER.createArrayNode();
-        lrSeries.set("data", lrData);
-        ObjectNode lrStyle = MAPPER.createObjectNode();
-        lrSeries.set("itemStyle", lrStyle);
-        lrStyle.put("color", color);
-        ObjectNode lrAreaStyle = MAPPER.createObjectNode();
-        lrSeries.set("areaStyle", lrAreaStyle);
-        lrAreaStyle.put("color", "rgba(0, 0, 0, 0)");
-
-        if (roundMul < 10.0) {
-            roundMul = 10.0;
-        }
-        for (int index = 0; index < history.size(); ++index) {
-            // Use float to reduce JSON size.
-            lrData.add((float) (Math.round(scs.evaluate(index) * roundMul) / roundMul));
         }
     }
 
@@ -464,8 +408,6 @@ public class History {
                     1,
                     1,
                     10.0); // "--dark-blue"
-            createSplineTrend(
-                    series, history, lrX, lrY, "Smooth of Passed", "rgba(255, 50, 255, 0.5)", 1, 1, 10.0); // "--purple"
         }
 
         root.set("series", series);
