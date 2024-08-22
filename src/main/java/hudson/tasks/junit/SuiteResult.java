@@ -40,7 +40,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -160,7 +159,7 @@ public final class SuiteResult implements Serializable {
         this.properties.putAll(src.properties);
     }
 
-    public static SuiteResult parse(final XMLStreamReader reader, String ver) throws XMLStreamException {
+    static SuiteResult parse(final XMLStreamReader reader, String context, String ver) throws XMLStreamException {
         SuiteResult r = new SuiteResult("", null, null, null);
         while (reader.hasNext()) {
             final int event = reader.next();
@@ -171,7 +170,7 @@ public final class SuiteResult implements Serializable {
                 final String elementName = reader.getLocalName();
                 switch (elementName) {
                     case "cases":
-                        parseCases(r, reader, ver);
+                        parseCases(r, reader, context, ver);
                         break;
                     case "file":
                         r.file = reader.getElementText();
@@ -199,10 +198,10 @@ public final class SuiteResult implements Serializable {
                         r.nodeId = reader.getElementText();
                         break;
                     case "enclosingBlocks":
-                        parseEnclosingBlocks(r, reader, ver);
+                        parseEnclosingBlocks(r, reader, context, ver);
                         break;
                     case "enclosingBlockNames":
-                        parseEnclosingBlockNames(r, reader, ver);
+                        parseEnclosingBlockNames(r, reader, context, ver);
                         break;
                     case "stdout":
                         r.stdout = reader.getElementText();
@@ -212,19 +211,17 @@ public final class SuiteResult implements Serializable {
                         break;
                     case "properties":
                         r.properties = new HashMap<>();
-                        CaseResult.parseProperties(r.properties, reader, ver);
+                        CaseResult.parseProperties(r.properties, reader, context, ver);
                         break;
                     default:
-                        if (LOGGER.isLoggable(Level.FINEST)) {
-                            LOGGER.finest("SuiteResult.parse encountered an unknown field: " + elementName);
-                        }
+                        LOGGER.finest(() -> "Unknown field in " + context + ": " + elementName);
                 }
             }
         }
         return r;
     }
 
-    public static void parseEnclosingBlocks(SuiteResult r, final XMLStreamReader reader, String ver)
+    static void parseEnclosingBlocks(SuiteResult r, final XMLStreamReader reader, String context, String ver)
             throws XMLStreamException {
         while (reader.hasNext()) {
             final int event = reader.next();
@@ -238,16 +235,13 @@ public final class SuiteResult implements Serializable {
                         r.enclosingBlocks.add(reader.getElementText());
                         break;
                     default:
-                        if (LOGGER.isLoggable(Level.FINEST)) {
-                            LOGGER.finest(
-                                    "SuiteResult.parseEnclosingBlocks encountered an unknown field: " + elementName);
-                        }
+                        LOGGER.finest(() -> "Unknown field in " + context + ": " + elementName);
                 }
             }
         }
     }
 
-    public static void parseEnclosingBlockNames(SuiteResult r, final XMLStreamReader reader, String ver)
+    static void parseEnclosingBlockNames(SuiteResult r, final XMLStreamReader reader, String context, String ver)
             throws XMLStreamException {
         while (reader.hasNext()) {
             final int event = reader.next();
@@ -261,16 +255,13 @@ public final class SuiteResult implements Serializable {
                         r.enclosingBlockNames.add(reader.getElementText());
                         break;
                     default:
-                        if (LOGGER.isLoggable(Level.FINEST)) {
-                            LOGGER.finest("SuiteResult.parseEnclosingBlockNames encountered an unknown field: "
-                                    + elementName);
-                        }
+                        LOGGER.finest(() -> "Unknown field in " + context + ": " + elementName);
                 }
             }
         }
     }
 
-    public static void parseCases(SuiteResult r, final XMLStreamReader reader, String ver) throws XMLStreamException {
+    static void parseCases(SuiteResult r, final XMLStreamReader reader, String context, String ver) throws XMLStreamException {
         while (reader.hasNext()) {
             final int event = reader.next();
             if (event == XMLStreamReader.END_ELEMENT && reader.getLocalName().equals("cases")) {
@@ -280,12 +271,10 @@ public final class SuiteResult implements Serializable {
                 final String elementName = reader.getLocalName();
                 switch (elementName) {
                     case "case":
-                        r.cases.add(CaseResult.parse(r, reader, ver));
+                        r.cases.add(CaseResult.parse(r, reader, context, ver));
                         break;
                     default:
-                        if (LOGGER.isLoggable(Level.FINEST)) {
-                            LOGGER.finest("SuiteResult.parseCases encountered an unknown field: " + elementName);
-                        }
+                        LOGGER.finest(() -> "Unknown field in " + context + ": " + elementName);
                 }
             }
         }

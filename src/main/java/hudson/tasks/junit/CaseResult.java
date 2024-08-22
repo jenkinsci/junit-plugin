@@ -41,7 +41,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
@@ -269,7 +268,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         return Math.min(365.0f * 24 * 60 * 60, Math.max(0.0f, d));
     }
 
-    public static CaseResult parse(SuiteResult parent, final XMLStreamReader reader, String ver)
+    static CaseResult parse(SuiteResult parent, final XMLStreamReader reader, String context, String ver)
             throws XMLStreamException {
         CaseResult r = new CaseResult(parent, null, null, null);
         while (reader.hasNext()) {
@@ -318,19 +317,17 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
                         break;
                     case "properties":
                         r.properties = new HashMap<>();
-                        parseProperties(r.properties, reader, ver);
+                        parseProperties(r.properties, reader, context, ver);
                         break;
                     default:
-                        if (LOGGER.isLoggable(Level.FINEST)) {
-                            LOGGER.finest("CaseResult.parse encountered an unknown field: " + elementName);
-                        }
+                        LOGGER.finest(() -> "Unknown field in " + context + ": " + elementName);
                 }
             }
         }
         return r;
     }
 
-    public static void parseProperties(Map<String, String> r, final XMLStreamReader reader, String ver)
+    static void parseProperties(Map<String, String> r, final XMLStreamReader reader, String context, String ver)
             throws XMLStreamException {
         while (reader.hasNext()) {
             final int event = reader.next();
@@ -341,18 +338,16 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
                 final String elementName = reader.getLocalName();
                 switch (elementName) {
                     case "entry":
-                        parseProperty(r, reader, ver);
+                        parseProperty(r, reader, context, ver);
                         break;
                     default:
-                        if (LOGGER.isLoggable(Level.FINEST)) {
-                            LOGGER.finest("CaseResult.parseProperties encountered an unknown field: " + elementName);
-                        }
+                        LOGGER.finest(() -> "Unknown field in " + context + ": " + elementName);
                 }
             }
         }
     }
 
-    public static void parseProperty(Map<String, String> r, final XMLStreamReader reader, String ver)
+    static void parseProperty(Map<String, String> r, final XMLStreamReader reader, String context, String ver)
             throws XMLStreamException {
         String name = null, value = null;
         while (reader.hasNext()) {
@@ -374,9 +369,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
                         }
                         break;
                     default:
-                        if (LOGGER.isLoggable(Level.FINEST)) {
-                            LOGGER.finest("CaseResult.parseProperty encountered an unknown field: " + elementName);
-                        }
+                        LOGGER.finest(() -> "Unknown field in " + context + ": " + elementName);
                 }
             }
         }
