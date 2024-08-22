@@ -261,7 +261,8 @@ public final class SuiteResult implements Serializable {
         }
     }
 
-    static void parseCases(SuiteResult r, final XMLStreamReader reader, String context, String ver) throws XMLStreamException {
+    static void parseCases(SuiteResult r, final XMLStreamReader reader, String context, String ver)
+            throws XMLStreamException {
         while (reader.hasNext()) {
             final int event = reader.next();
             if (event == XMLStreamReader.END_ELEMENT && reader.getLocalName().equals("cases")) {
