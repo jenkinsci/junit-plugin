@@ -312,25 +312,25 @@ public final class TestResult extends MetaTabulatedResult {
         }
     }
 
-    public static XMLInputFactory getXmlFactory() {
+    static XMLInputFactory getXmlFactory() {
         return xmlFactory;
     }
 
-    public void parse(XmlFile f) throws XMLStreamException, IOException {
+    void parse(XmlFile f) throws XMLStreamException, IOException {
         try (Reader r = f.readRaw()) {
             final XMLStreamReader reader = getXmlFactory().createXMLStreamReader(r);
             while (reader.hasNext()) {
                 final int event = reader.next();
                 if (event == XMLStreamReader.START_ELEMENT
                         && reader.getName().getLocalPart().equals("result")) {
-                    parseXmlResult(reader);
+                    parseXmlResult(reader, f.getFile().toString());
                 }
             }
             r.close();
         }
     }
 
-    private void parseXmlResult(final XMLStreamReader reader) throws XMLStreamException {
+    private void parseXmlResult(final XMLStreamReader reader, String context) throws XMLStreamException {
         String ver = reader.getAttributeValue(null, "plugin");
         while (reader.hasNext()) {
             int event = reader.next();
@@ -341,7 +341,7 @@ public final class TestResult extends MetaTabulatedResult {
                 final String elementName = reader.getLocalName();
                 switch (elementName) {
                     case "suites":
-                        parseXmlSuites(reader, ver);
+                        parseXmlSuites(reader, context, ver);
                         break;
                     case "duration":
                         duration = CaseResult.clampDuration(new TimeToFloat(reader.getElementText()).parse());
@@ -366,15 +366,13 @@ public final class TestResult extends MetaTabulatedResult {
                         startTime = Long.parseLong(reader.getElementText());
                         break;
                     default:
-                        if (LOGGER.isLoggable(Level.FINEST)) {
-                            LOGGER.finest("TestResult.parseXmlResult encountered an unknown field: " + elementName);
-                        }
+                        LOGGER.finest(() -> "Unknown field in " + context + ": " + elementName);
                 }
             }
         }
     }
 
-    private void parseXmlSuites(final XMLStreamReader reader, String ver) throws XMLStreamException {
+    private void parseXmlSuites(final XMLStreamReader reader, String context, String ver) throws XMLStreamException {
         while (reader.hasNext()) {
             final int event = reader.next();
             if (event == XMLStreamReader.END_ELEMENT && reader.getLocalName().equals("suites")) {
@@ -384,12 +382,10 @@ public final class TestResult extends MetaTabulatedResult {
                 final String elementName = reader.getLocalName();
                 switch (elementName) {
                     case "suite":
-                        suites.add(SuiteResult.parse(reader, ver));
+                        suites.add(SuiteResult.parse(reader, context, ver));
                         break;
                     default:
-                        if (LOGGER.isLoggable(Level.FINEST)) {
-                            LOGGER.finest("TestResult.parseXmlSuites encountered an unknown field: " + elementName);
-                        }
+                        LOGGER.finest(() -> "Unknown field in " + context + ": " + elementName);
                 }
             }
         }

@@ -51,6 +51,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.tasks.SimpleBuildStep;
@@ -69,7 +70,6 @@ import org.kohsuke.stapler.StaplerProxy;
 @SuppressFBWarnings(value = "UG_SYNC_SET_UNSYNC_GET", justification = "False positive")
 public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         implements StaplerProxy, SimpleBuildStep.LastBuildAction {
-    private static final Logger LOGGER = Logger.getLogger(TestResultAction.class.getName());
     private transient WeakReference<TestResult> result;
 
     /** null only if there is a {@link JunitTestResultStorage} */
@@ -179,8 +179,8 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
             skipCount = r.getSkipCount();
         }
         long d = System.nanoTime() - started;
-        if (d > 500000000L && LOGGER.isLoggable(Level.WARNING)) {
-            LOGGER.warning("TestResultAction.load took " + d / 1000000L + " ms.");
+        if (d > TimeUnit.MILLISECONDS.toNanos(500)) {
+            logger.warning(() -> "Took " + TimeUnit.NANOSECONDS.toMillis(d) + " ms to load test results for " + run);
         }
         return r;
     }
