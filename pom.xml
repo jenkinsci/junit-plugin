@@ -123,7 +123,7 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>github-checks</artifactId>
-      <version>581.va_9669c91d6cb_</version>
+      <version>583.v9c7da_3c0a_6d5</version>
       <scope>test</scope>
     </dependency>
     <dependency>
