@@ -187,12 +187,4 @@ public abstract class TestObject extends AbstractModelObject implements Serializ
     public abstract int getTotalCount();
 
     public abstract History getHistory();
-
-    //    public abstract Object getDynamic(String token, StaplerRequest req,
-    //			StaplerResponse rsp);
-    //
-    //    public abstract  HttpResponse doSubmitDescription(
-    //			@QueryParameter String description) throws IOException,
-    //			ServletException;
-
 }
