@@ -955,9 +955,13 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         if (this == that) {
             return 0;
         }
-        int r = this.getFullName().compareTo(that.getFullName());
-        if (r != 0) {
-            return r;
+        int r1 = this.className.compareTo(that.className);
+        if (r1 != 0) {
+            return r1;
+        }
+        int r2 = this.getName().compareTo(that.getName());
+        if (r2 != 0) {
+            return r2;
         }
         // Only equals is exact reference
         return System.identityHashCode(this) >= System.identityHashCode(that) ? 1 : -1;
