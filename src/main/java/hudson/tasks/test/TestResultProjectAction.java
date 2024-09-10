@@ -40,7 +40,6 @@ import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
 import io.jenkins.plugins.junit.storage.TestResultImpl;
 import java.io.IOException;
 import java.util.List;
-import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletResponse;
 import org.kohsuke.stapler.Ancestor;
@@ -172,7 +171,7 @@ public class TestResultProjectAction implements Action, AsyncTrendChart, AsyncCo
      * @deprecated Replaced by echarts in TODO
      */
     @Deprecated
-    public void doTrend(final StaplerRequest req, final StaplerResponse rsp) throws IOException, ServletException {
+    public void doTrend(final StaplerRequest req, final StaplerResponse rsp) throws IOException {
         AbstractTestResultAction a = getLastTestResultAction();
         if (a != null) {
             a.doGraph(req, rsp);
@@ -187,7 +186,7 @@ public class TestResultProjectAction implements Action, AsyncTrendChart, AsyncCo
      * @deprecated Replaced by echarts in TODO
      */
     @Deprecated
-    public void doTrendMap(final StaplerRequest req, final StaplerResponse rsp) throws IOException, ServletException {
+    public void doTrendMap(final StaplerRequest req, final StaplerResponse rsp) throws IOException {
         AbstractTestResultAction a = getLastTestResultAction();
         if (a != null) {
             a.doGraphMap(req, rsp);
@@ -199,7 +198,7 @@ public class TestResultProjectAction implements Action, AsyncTrendChart, AsyncCo
     /**
      * Changes the test result report display mode.
      */
-    public void doFlipTrend(final StaplerRequest req, final StaplerResponse rsp) throws IOException, ServletException {
+    public void doFlipTrend(final StaplerRequest req, final StaplerResponse rsp) throws IOException {
         boolean failureOnly = false;
 
         // check the current preference value

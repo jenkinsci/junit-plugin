@@ -46,7 +46,6 @@ import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.servlet.ServletException;
 import jenkins.model.Jenkins;
 import org.kohsuke.stapler.HttpRedirect;
 import org.kohsuke.stapler.HttpResponse;
@@ -480,8 +479,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
     }
 
     @RequirePOST
-    public synchronized HttpResponse doSubmitDescription(@QueryParameter String description)
-            throws IOException, ServletException {
+    public synchronized HttpResponse doSubmitDescription(@QueryParameter String description) throws IOException {
         Run<?, ?> run = getRun();
         if (run == null) {
             LOGGER.severe("getRun() is null, can't save description.");
