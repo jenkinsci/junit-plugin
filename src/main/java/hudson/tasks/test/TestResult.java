@@ -23,12 +23,15 @@
  */
 package hudson.tasks.test;
 
+import hudson.model.Job;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.tasks.junit.TestAction;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * A class that represents a general concept of a test result, without any
@@ -38,6 +41,7 @@ import java.util.Map;
  * @since 1.343
  */
 public abstract class TestResult extends TestObject {
+    private static final Logger LOGGER = Logger.getLogger(TestResult.class.getName());
 
     /**
      * If the concept of a parent action is important to a subclass, then it should
@@ -136,17 +140,27 @@ public abstract class TestResult extends TestObject {
         if (b == null) {
             return null;
         }
+        Job<?, ?> job = b.getParent();
         while (true) {
             b = b.getPreviousBuild();
             if (b == null) {
                 return null;
             }
-            AbstractTestResultAction r = b.getAction(getParentAction().getClass());
-            if (r != null) {
-                TestResult result = r.findCorrespondingResult(this.getId());
-                if (result != null) {
-                    return result;
+            try {
+                AbstractTestResultAction r = b.getAction(getParentAction().getClass());
+                if (r != null) {
+                    TestResult result = r.findCorrespondingResult(this.getId());
+                    if (result != null) {
+                        return result;
+                    }
                 }
+            } catch (RuntimeException e) {
+                Run<?, ?> loggedBuild = b;
+                LOGGER.log(
+                        Level.WARNING,
+                        e,
+                        () -> "Failed to load (corrupt?) build " + job.getFullName() + " #" + loggedBuild.getNumber()
+                                + ", skipping");
             }
         }
     }
