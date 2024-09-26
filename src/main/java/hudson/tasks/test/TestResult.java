@@ -136,11 +136,11 @@ public abstract class TestResult extends TestObject {
      */
     @Override
     public TestResult getPreviousResult() {
-        Run<?, ?> originBuild = getRun();
-        Run<?, ?> b = originBuild;
+        Run<?, ?> b = getRun();
         if (b == null) {
             return null;
         }
+        Job<?, ?> job = b.getParent();
         while (true) {
             b = b.getPreviousBuild();
             if (b == null) {
@@ -155,7 +155,6 @@ public abstract class TestResult extends TestObject {
                     }
                 }
             } catch (RuntimeException e) {
-                Job<?, ?> job = originBuild.getParent();
                 Run<?, ?> loggedBuild = b;
                 LOGGER.log(
                         Level.WARNING,
