@@ -1,18 +1,18 @@
 /*
  * The MIT License
- * 
+ *
  * Copyright (c) 2009, Yahoo!, Inc.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,6 +23,7 @@
  */
 package hudson.tasks.test;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.AbortException;
 import hudson.ExtensionList;
 import hudson.ExtensionPoint;
@@ -32,9 +33,7 @@ import hudson.Util;
 import hudson.model.AbstractBuild;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-
 import java.io.IOException;
-import edu.umd.cs.findbugs.annotations.NonNull;
 
 /**
  * Parses test result files and builds in-memory representation of it as {@link TestResult}.
@@ -56,7 +55,7 @@ public abstract class TestResultParser {
      */
     @Deprecated
     public String getDisplayName() {
-        return "Unknown Parser"; 
+        return "Unknown Parser";
     }
 
     /**
@@ -83,9 +82,12 @@ public abstract class TestResultParser {
     }
 
     @Deprecated
-    public TestResult parseResult(String testResultLocations,
-                                  Run<?,?> run, @NonNull FilePath workspace, Launcher launcher,
-                                  TaskListener listener)
+    public TestResult parseResult(
+            String testResultLocations,
+            Run<?, ?> run,
+            @NonNull FilePath workspace,
+            Launcher launcher,
+            TaskListener listener)
             throws InterruptedException, IOException {
         return parseResult(testResultLocations, run, null, workspace, launcher, listener);
     }
@@ -133,9 +135,13 @@ public abstract class TestResultParser {
      *      will not show a stack trace.
      * @since 1.22
      */
-    public TestResult parseResult(String testResultLocations,
-                                  Run<?,?> run, PipelineTestDetails pipelineTestDetails,
-                                  @NonNull FilePath workspace, Launcher launcher, TaskListener listener)
+    public TestResult parseResult(
+            String testResultLocations,
+            Run<?, ?> run,
+            PipelineTestDetails pipelineTestDetails,
+            @NonNull FilePath workspace,
+            Launcher launcher,
+            TaskListener listener)
             throws InterruptedException, IOException {
         if (run instanceof AbstractBuild) {
             return parse(testResultLocations, (AbstractBuild) run, launcher, listener);
@@ -145,11 +151,17 @@ public abstract class TestResultParser {
     }
 
     @Deprecated
-    public TestResult parse(String testResultLocations,
-                                       AbstractBuild build, Launcher launcher,
-                                       TaskListener listener)
+    public TestResult parse(String testResultLocations, AbstractBuild build, Launcher launcher, TaskListener listener)
             throws InterruptedException, IOException {
-        if (Util.isOverridden(TestResultParser.class, getClass(), "parseResult", String.class, Run.class, FilePath.class, Launcher.class, TaskListener.class)) {
+        if (Util.isOverridden(
+                TestResultParser.class,
+                getClass(),
+                "parseResult",
+                String.class,
+                Run.class,
+                FilePath.class,
+                Launcher.class,
+                TaskListener.class)) {
             FilePath workspace = build.getWorkspace();
             if (workspace == null) {
                 throw new AbortException("no workspace in " + build);

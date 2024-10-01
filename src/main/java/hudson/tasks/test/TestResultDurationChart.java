@@ -4,11 +4,9 @@ import edu.hm.hafner.echarts.ChartModelConfiguration;
 import edu.hm.hafner.echarts.LineSeries;
 import edu.hm.hafner.echarts.LinesChartModel;
 import edu.hm.hafner.echarts.LinesDataSet;
-import edu.hm.hafner.echarts.Palette;
 import hudson.tasks.junit.TestDurationResultSummary;
+import io.jenkins.plugins.echarts.JenkinsPalette;
 import java.util.List;
-
-import static hudson.tasks.test.TestDurationTrendSeriesBuilder.SECONDS;
 
 public class TestResultDurationChart {
 
@@ -19,8 +17,7 @@ public class TestResultDurationChart {
         return getLinesChartModel(dataset);
     }
 
-    public LinesChartModel create(final Iterable results,
-                                  final ChartModelConfiguration configuration) {
+    public LinesChartModel create(final Iterable results, final ChartModelConfiguration configuration) {
         TestDurationTrendSeriesBuilder builder = new TestDurationTrendSeriesBuilder();
         LinesDataSet dataSet = builder.createDataSet(configuration, results);
 
@@ -30,9 +27,12 @@ public class TestResultDurationChart {
     private LinesChartModel getLinesChartModel(LinesDataSet dataSet) {
         LinesChartModel model = new LinesChartModel(dataSet);
 
-        LineSeries duration = new LineSeries(SECONDS, Palette.GREEN.getNormal(),
-                LineSeries.StackedMode.STACKED, LineSeries.FilledMode.FILLED);
-        duration.addAll(dataSet.getSeries(SECONDS));
+        LineSeries duration = new LineSeries(
+                TestDurationTrendSeriesBuilder.SECONDS,
+                JenkinsPalette.GREEN.normal(),
+                LineSeries.StackedMode.STACKED,
+                LineSeries.FilledMode.FILLED);
+        duration.addAll(dataSet.getSeries(TestDurationTrendSeriesBuilder.SECONDS));
         model.addSeries(duration);
 
         return model;

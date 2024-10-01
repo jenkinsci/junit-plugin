@@ -1,18 +1,18 @@
 /*
  * The MIT License
- * 
+ *
  * Copyright (c) 2009, Yahoo!, Inc.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,25 +23,23 @@
  */
 package hudson.tasks.test;
 
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import hudson.model.Run;
+import java.util.concurrent.TimeUnit;
+import org.htmlunit.html.HtmlPage;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TouchBuilder;
 
-import java.util.concurrent.TimeUnit;
-
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-
 /**
  * A test case to make sure that the TestResult extension mechanism
- * is working properly. 
+ * is working properly.
  */
 public class TestResultExtensionTest {
 
@@ -62,10 +60,9 @@ public class TestResultExtensionTest {
         assertNotNull("parent action should have an owner", action.run);
         Object resultObject = action.getResult();
         assertNotNull("we should have a result");
-        assertTrue("result should be an TestResult",
-                resultObject instanceof TestResult);
+        assertTrue("result should be an TestResult", resultObject instanceof TestResult);
         TestResult result = (TestResult) resultObject;
-        Run<?,?> ownerBuild = result.getRun();
+        Run<?, ?> ownerBuild = result.getRun();
         assertNotNull("we should have an owner", ownerBuild);
         assertNotNull("we should have a list of test actions", result.getTestActions());
 
@@ -75,9 +72,5 @@ public class TestResultExtensionTest {
         j.assertGoodStatus(projectPage);
         HtmlPage testReportPage = wc.getPage(project, "/lastBuild/testReport/");
         j.assertGoodStatus(testReportPage);
-
-
     }
 }
-
-

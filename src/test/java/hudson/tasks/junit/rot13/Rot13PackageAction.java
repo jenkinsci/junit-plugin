@@ -5,5 +5,4 @@ public class Rot13PackageAction extends Rot13CipherAction {
     public Rot13PackageAction(String ciphertext) {
         super(ciphertext);
     }
-
 }

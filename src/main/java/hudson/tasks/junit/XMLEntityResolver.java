@@ -23,14 +23,13 @@
  */
 package hudson.tasks.junit;
 
-import org.xml.sax.EntityResolver;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
-
 import java.io.IOException;
 import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.xml.sax.EntityResolver;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 /**
  * As the name suggest: a resolver for XML entities.
@@ -64,8 +63,9 @@ public class XMLEntityResolver implements EntityResolver {
                 String dtdFileName = systemId.substring(systemId.lastIndexOf("/") + 1);
 
                 URL url = getClass().getClassLoader().getResource(dtdFileName);
-                if (url != null)
+                if (url != null) {
                     return new InputSource(url.toString());
+                }
             }
         }
         // Default fallback

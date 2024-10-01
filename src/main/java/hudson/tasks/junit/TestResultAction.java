@@ -1,18 +1,18 @@
 /*
  * The MIT License
- * 
+ *
  * Copyright (c) 2004-2009, Sun Microsystems, Inc., Kohsuke Kawaguchi, Daniel Dyer, Red Hat, Inc., Tom Huybrechts, Yahoo!, Inc.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -24,6 +24,7 @@
 package hudson.tasks.junit;
 
 import com.thoughtworks.xstream.XStream;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Util;
 import hudson.XmlFile;
@@ -33,26 +34,29 @@ import hudson.model.BuildListener;
 import hudson.model.Job;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import io.jenkins.plugins.junit.storage.FileJunitTestResultStorage;
-import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
 import hudson.tasks.test.AbstractTestResultAction;
 import hudson.tasks.test.TestObject;
 import hudson.tasks.test.TestResultProjectAction;
 import hudson.util.HeapSpaceStringConverter;
 import hudson.util.XStream2;
-import org.kohsuke.stapler.StaplerProxy;
-
+import io.jenkins.plugins.junit.storage.FileJunitTestResultStorage;
+import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
 import java.io.File;
 import java.io.IOException;
+import java.lang.ref.SoftReference;
 import java.lang.ref.WeakReference;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import edu.umd.cs.findbugs.annotations.Nullable;
 import jenkins.tasks.SimpleBuildStep;
+import jenkins.util.SystemProperties;
+import org.kohsuke.stapler.StaplerProxy;
 
 /**
  * {@link Action} that displays the JUnit test result.
@@ -64,11 +68,13 @@ import jenkins.tasks.SimpleBuildStep;
  * @author Kohsuke Kawaguchi
  */
 @SuppressFBWarnings(value = "UG_SYNC_SET_UNSYNC_GET", justification = "False positive")
-public class TestResultAction extends AbstractTestResultAction<TestResultAction> implements StaplerProxy, SimpleBuildStep.LastBuildAction {
+public class TestResultAction extends AbstractTestResultAction<TestResultAction>
+        implements StaplerProxy, SimpleBuildStep.LastBuildAction {
     private transient WeakReference<TestResult> result;
 
     /** null only if there is a {@link JunitTestResultStorage} */
     private @Nullable Integer failCount;
+
     private @Nullable Integer skipCount;
     // Hudson < 1.25 didn't set these fields, so use Integer
     // so that we can distinguish between 0 tests vs not-computed-yet.
@@ -97,9 +103,13 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
     }
 
     @SuppressWarnings("deprecation")
-    @Override public Collection<? extends Action> getProjectActions() {
-        Job<?,?> job = run.getParent();
-        if (/* getAction(Class) produces a StackOverflowError */!Util.filter(job.getActions(), TestResultProjectAction.class).isEmpty()) {
+    @Override
+    public Collection<? extends Action> getProjectActions() {
+        Job<?, ?> job = run.getParent();
+        if (
+        /* getAction(Class) produces a StackOverflowError */ !Util.filter(
+                        job.getActions(), TestResultProjectAction.class)
+                .isEmpty()) {
             // JENKINS-26077: someone like XUnitPublisher already added one
             return Collections.emptySet();
         }
@@ -119,12 +129,13 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         skipCount = result.getSkipCount();
 
         if (run != null) {
-        // persist the data
-        try {
-            getDataFile().write(result);
-        } catch (IOException e) {
-            e.printStackTrace(listener.fatalError("Failed to save the JUnit test result"));
-        }
+            // persist the data
+            try {
+                resultCache.put(getDataFilePath(), new SoftReference<TestResult>(result));
+                getDataFile().write(result);
+            } catch (IOException e) {
+                e.printStackTrace(listener.fatalError("Failed to save the JUnit test result"));
+            }
         }
 
         this.result = new WeakReference<>(result);
@@ -139,28 +150,37 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         return new XmlFile(XSTREAM, new File(run.getRootDir(), "junitResult.xml"));
     }
 
+    private String getDataFilePath() {
+        return Paths.get(run.getRootDir().getAbsolutePath(), "junitResult.xml").toString();
+    }
+
     @Override
     public synchronized TestResult getResult() {
+        long started = System.nanoTime();
         JunitTestResultStorage storage = JunitTestResultStorage.find();
         if (!(storage instanceof FileJunitTestResultStorage)) {
             return new TestResult(storage.load(run.getParent().getFullName(), run.getNumber()));
         }
         TestResult r;
-        if(result==null) {
+        if (result == null) {
             r = load();
             result = new WeakReference<>(r);
         } else {
             r = result.get();
         }
 
-        if(r==null) {
+        if (r == null) {
             r = load();
             result = new WeakReference<>(r);
         }
-        if(totalCount==null) {
+        if (totalCount == null) {
             totalCount = r.getTotalCount();
             failCount = r.getFailCount();
             skipCount = r.getSkipCount();
+        }
+        long d = System.nanoTime() - started;
+        if (d > TimeUnit.MILLISECONDS.toNanos(500)) {
+            logger.warning(() -> "Took " + TimeUnit.NANOSECONDS.toMillis(d) + " ms to load test results for " + run);
         }
         return r;
     }
@@ -171,8 +191,9 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         if (!(storage instanceof FileJunitTestResultStorage)) {
             return new TestResult(storage.load(run.getParent().getFullName(), run.getNumber())).getFailCount();
         }
-        if(totalCount==null)
-            getResult();    // this will compute the result
+        if (totalCount == null) {
+            getResult(); // this will compute the result
+        }
         return failCount;
     }
 
@@ -182,8 +203,9 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         if (!(storage instanceof FileJunitTestResultStorage)) {
             return new TestResult(storage.load(run.getParent().getFullName(), run.getNumber())).getSkipCount();
         }
-        if(totalCount==null)
-            getResult();    // this will compute the result
+        if (totalCount == null) {
+            getResult(); // this will compute the result
+        }
         return skipCount;
     }
 
@@ -193,8 +215,9 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         if (!(storage instanceof FileJunitTestResultStorage)) {
             return new TestResult(storage.load(run.getParent().getFullName(), run.getNumber())).getTotalCount();
         }
-        if(totalCount==null)
-            getResult();    // this will compute the result
+        if (totalCount == null) {
+            getResult(); // this will compute the result
+        }
         return totalCount;
     }
 
@@ -204,14 +227,14 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
     }
 
     public void setHealthScaleFactor(double healthScaleFactor) {
-        this.healthScaleFactor = Math.max(0.0,healthScaleFactor);
+        this.healthScaleFactor = Math.max(0.0, healthScaleFactor);
     }
 
     @Override
-     public List<CaseResult> getFailedTests() {
+    public List<CaseResult> getFailedTests() {
         TestResult result = getResult();
         return result.getFailedTests();
-     }
+    }
 
     @Override
     public List<CaseResult> getPassedTests() {
@@ -223,18 +246,83 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         return getResult().getSkippedTests();
     }
 
-
-    /**
-     * Loads a {@link TestResult} from disk.
-     */
-    private TestResult load() {
+    private TestResult parseOnly() {
+        XmlFile df = getDataFile();
         TestResult r;
         try {
-            r = (TestResult)getDataFile().read();
-        } catch (IOException e) {
-            logger.log(Level.WARNING, "Failed to load "+getDataFile(),e);
-            r = new TestResult();   // return a dummy
+            r = new TestResult();
+            r.parse(df);
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "Failed to load " + df, e);
+            r = new TestResult(); // return a dummy
         }
+        return r;
+    }
+
+    static ConcurrentHashMap<String, SoftReference<TestResult>> resultCache = new ConcurrentHashMap<>();
+    static Object syncObj = new Object();
+    static long lastCleanupNs = 0;
+
+    static long LARGE_RESULT_CACHE_CLEANUP_INTERVAL_NS =
+            SystemProperties.getLong(TestResultAction.class.getName() + ".LARGE_RESULT_CACHE_CLEANUP_INTERVAL_MS", 500L)
+                    * 1000000L;
+    static int LARGE_RESULT_CACHE_THRESHOLD =
+            SystemProperties.getInteger(TestResultAction.class.getName() + ".LARGE_RESULT_CACHE_THRESHOLD", 1000);
+    static boolean RESULT_CACHE_ENABLED =
+            SystemProperties.getBoolean(TestResultAction.class.getName() + ".RESULT_CACHE_ENABLED", true);
+
+    /**
+     * Loads a {@link TestResult} from cache or disk.
+     */
+    private TestResult load() {
+        if (RESULT_CACHE_ENABLED) {
+            return loadCached();
+        }
+        return loadFallback();
+    }
+
+    /**
+     * Loads a {@link TestResult} from disk, fallback.
+     */
+    private TestResult loadFallback() {
+        TestResult r;
+        try {
+            r = (TestResult) getDataFile().read();
+        } catch (IOException e) {
+            logger.log(Level.WARNING, "Failed to load " + getDataFile(), e);
+            r = new TestResult(); // return a dummy
+        }
+        r.freeze(this);
+        return r;
+    }
+
+    /**
+     * Loads a {@link TestResult} from cache or disk, optimized.
+     */
+    private TestResult loadCached() {
+        if (resultCache.size() > LARGE_RESULT_CACHE_THRESHOLD) {
+            synchronized (syncObj) {
+                if (resultCache.size() > LARGE_RESULT_CACHE_THRESHOLD
+                        && (System.nanoTime() - lastCleanupNs) > LARGE_RESULT_CACHE_CLEANUP_INTERVAL_NS) {
+                    lastCleanupNs = System.nanoTime();
+                    resultCache.forEach((String k, SoftReference<TestResult> v) -> {
+                        if (v.get() == null) {
+                            resultCache.remove(k);
+                        }
+                    });
+                }
+            }
+        }
+        TestResult r;
+        String k = getDataFilePath();
+        r = resultCache
+                .computeIfAbsent(k, path -> new SoftReference<TestResult>(parseOnly()))
+                .get();
+        if (r == null) {
+            r = parseOnly();
+            resultCache.replace(k, new SoftReference<TestResult>(r));
+        }
+        r = new TestResult(r);
         r.freeze(this);
         return r;
     }
@@ -249,10 +337,13 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         // Added check for null testData to avoid NPE from issue 4257.
         if (testData != null) {
             synchronized (testData) {
-                for (Data data : testData)
-                    for (TestAction ta : data.getTestAction(object))
-                        if (ta != null)
+                for (Data data : testData) {
+                    for (TestAction ta : data.getTestAction(object)) {
+                        if (ta != null) {
                             result.add(ta);
+                        }
+                    }
+                }
             }
         }
         return Collections.unmodifiableList(result);
@@ -270,7 +361,7 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
      *
      */
     public void setData(List<Data> testData) {
-	      this.testData = testData;
+        this.testData = testData;
     }
 
     /**
@@ -304,24 +395,24 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
      *
      * @see TestDataPublisher
      */
-    public static abstract class Data {
-    	/**
-    	 * Returns all TestActions for the testObject.
+    public abstract static class Data {
+        /**
+         * Returns all TestActions for the testObject.
          *
          * @return
          *      Can be empty but never null. The caller must assume that the returned list is read-only.
-    	 */
-    	public abstract List<? extends TestAction> getTestAction(hudson.tasks.junit.TestObject testObject);
+         */
+        public abstract List<? extends TestAction> getTestAction(hudson.tasks.junit.TestObject testObject);
     }
 
     @Override
     public Object readResolve() {
         super.readResolve(); // let it do the post-deserialization work
-    	if (testData == null) {
-    		testData = new ArrayList<>(0);
-    	}
+        if (testData == null) {
+            testData = new ArrayList<>(0);
+        }
 
-    	return this;
+        return this;
     }
 
     private static final Logger logger = Logger.getLogger(TestResultAction.class.getName());
@@ -329,10 +420,9 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
     static final XStream XSTREAM = new XStream2();
 
     static {
-        XSTREAM.alias("result",TestResult.class);
-        XSTREAM.alias("suite",SuiteResult.class);
-        XSTREAM.alias("case",CaseResult.class);
-        XSTREAM.registerConverter(new HeapSpaceStringConverter(),100);
+        XSTREAM.alias("result", TestResult.class);
+        XSTREAM.alias("suite", SuiteResult.class);
+        XSTREAM.alias("case", CaseResult.class);
+        XSTREAM.registerConverter(new HeapSpaceStringConverter(), 100);
     }
-
 }

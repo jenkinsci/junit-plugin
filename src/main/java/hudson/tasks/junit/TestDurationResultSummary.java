@@ -1,13 +1,12 @@
 package hudson.tasks.junit;
 
+import hudson.tasks.test.TestDurationTrendSeriesBuilder;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-import static hudson.tasks.test.TestDurationTrendSeriesBuilder.SECONDS;
-
 public class TestDurationResultSummary implements Serializable {
-    
+
     private final int buildNumber;
     private final int duration;
 
@@ -18,14 +17,14 @@ public class TestDurationResultSummary implements Serializable {
 
     public Map<String, Integer> toMap() {
         Map<String, Integer> series = new HashMap<>();
-        series.put(SECONDS, duration);
+        series.put(TestDurationTrendSeriesBuilder.SECONDS, duration);
         return series;
     }
 
     public int getBuildNumber() {
         return buildNumber;
     }
-    
+
     public String getDisplayName() {
         return "#" + buildNumber;
     }

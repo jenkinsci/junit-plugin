@@ -39,12 +39,13 @@ import org.kohsuke.accmod.restrictions.Beta;
  * Allows test results to be saved and loaded from an external storage service.
  */
 @Restricted(Beta.class)
-public abstract class JunitTestResultStorage extends AbstractDescribableImpl<JunitTestResultStorage> implements ExtensionPoint {
+public abstract class JunitTestResultStorage extends AbstractDescribableImpl<JunitTestResultStorage>
+        implements ExtensionPoint {
 
     /**
      * Runs during {@link JUnitParser#summarizeResult}.
      */
-    public abstract RemotePublisher createRemotePublisher(Run<?,?> build) throws IOException;
+    public abstract RemotePublisher createRemotePublisher(Run<?, ?> build) throws IOException;
 
     /**
      * Remotable hook to perform test result publishing.
@@ -60,5 +61,4 @@ public abstract class JunitTestResultStorage extends AbstractDescribableImpl<Jun
     public static JunitTestResultStorage find() {
         return JunitTestResultStorageConfiguration.get().getStorage();
     }
-
 }

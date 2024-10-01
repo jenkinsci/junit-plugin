@@ -1,9 +1,9 @@
 package hudson.tasks.test.helper;
 
-import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
-
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+
+import org.htmlunit.html.HtmlAnchor;
 
 public class TestResultLink extends AbstractTestResultLink<TestResultLink> {
 
@@ -23,5 +23,4 @@ public class TestResultLink extends AbstractTestResultLink<TestResultLink> {
         assertThat(testResultLink.getTextContent(), containsString(AGGREGATED_TEST_RESULT_STRING));
         return this;
     }
-
 }

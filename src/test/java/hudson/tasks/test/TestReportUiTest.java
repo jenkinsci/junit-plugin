@@ -23,9 +23,6 @@
  */
 package hudson.tasks.test;
 
-import com.gargoylesoftware.htmlunit.AlertHandler;
-import com.gargoylesoftware.htmlunit.Page;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import hudson.Launcher;
 import hudson.Util;
 import hudson.model.AbstractBuild;
@@ -35,6 +32,9 @@ import hudson.model.FreeStyleProject;
 import hudson.model.Result;
 import hudson.tasks.junit.JUnitResultArchiver;
 import java.io.IOException;
+import org.htmlunit.AlertHandler;
+import org.htmlunit.Page;
+import org.htmlunit.html.HtmlPage;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -76,16 +76,20 @@ public class TestReportUiTest {
         String duration3_3sec = Util.getTimeSpanString((long) (3.377 * 1000));
         String duration2_5sec = Util.getTimeSpanString((long) (2.502 * 1000));
 
-        Assert.assertNotNull(pg.getFirstByXPath("//td[contains(text(),'" + duration3_3sec + "')][contains(@class,'no-wrap')]"));
+        Assert.assertNotNull(
+                pg.getFirstByXPath("//td[contains(text(),'" + duration3_3sec + "')][contains(@class,'no-wrap')]"));
 
         pg = wc.getPage(b, "testReport/org.twia.vendor");
 
-        Assert.assertNotNull(pg.getFirstByXPath("//td[contains(text(),'" + duration3_3sec + "')][contains(@class,'no-wrap')]"));
-        Assert.assertNotNull(pg.getFirstByXPath("//td[contains(text(),'" + duration14sec + "')][contains(@class,'no-wrap')]"));
+        Assert.assertNotNull(
+                pg.getFirstByXPath("//td[contains(text(),'" + duration3_3sec + "')][contains(@class,'no-wrap')]"));
+        Assert.assertNotNull(
+                pg.getFirstByXPath("//td[contains(text(),'" + duration14sec + "')][contains(@class,'no-wrap')]"));
 
         pg = wc.getPage(b, "testReport/org.twia.vendor/VendorManagerTest");
 
-        Assert.assertNotNull(pg.getFirstByXPath("//td[contains(text(),'" + duration2_5sec + "')][contains(@class,'no-wrap')]"));
+        Assert.assertNotNull(
+                pg.getFirstByXPath("//td[contains(text(),'" + duration2_5sec + "')][contains(@class,'no-wrap')]"));
     }
 
     /**
@@ -97,9 +101,11 @@ public class TestReportUiTest {
         p.getBuildersList().add(new TestBuilder() {
             @Override
             @SuppressWarnings("null")
-            public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-                build.getWorkspace().child("junit.xml").copyFrom(
-                        getClass().getResource("/hudson/tasks/junit/junit-report-20090516.xml"));
+            public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
+                    throws InterruptedException, IOException {
+                build.getWorkspace()
+                        .child("junit.xml")
+                        .copyFrom(getClass().getResource("/hudson/tasks/junit/junit-report-20090516.xml"));
                 return true;
             }
         });

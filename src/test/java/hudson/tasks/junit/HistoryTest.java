@@ -23,29 +23,28 @@
  */
 package hudson.tasks.junit;
 
-import com.gargoylesoftware.htmlunit.AlertHandler;
-import com.gargoylesoftware.htmlunit.Page;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import com.gargoylesoftware.htmlunit.html.HtmlTable;
-import com.gargoylesoftware.htmlunit.html.HtmlTableCell;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Project;
 import hudson.model.Result;
+import java.util.List;
+import java.util.Optional;
+import org.htmlunit.AlertHandler;
+import org.htmlunit.Page;
+import org.htmlunit.html.HtmlPage;
+import org.htmlunit.html.HtmlTable;
+import org.htmlunit.html.HtmlTableCell;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.recipes.LocalData;
-
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 public class HistoryTest {
     @Rule
@@ -60,12 +59,13 @@ public class HistoryTest {
         List<FreeStyleProject> projects = rule.jenkins.getAllItems(FreeStyleProject.class);
         Project theProject = null;
         for (Project p : projects) {
-            if (p.getName().equals(PROJECT_NAME)) theProject = p;
+            if (p.getName().equals(PROJECT_NAME)) {
+                theProject = p;
+            }
         }
         assertNotNull("We should have a project named " + PROJECT_NAME, theProject);
         project = (FreeStyleProject) theProject;
     }
-
 
     @LocalData
     @Test
@@ -82,7 +82,7 @@ public class HistoryTest {
         rule.assertBuildStatus(Result.SUCCESS, build7);
 
         TestResult tr = build4.getAction(TestResultAction.class).getResult();
-        assertEquals(2,tr.getFailedTests().size());
+        assertEquals(2, tr.getFailedTests().size());
 
         // In build 4, we expect these tests to have failed since these builds
         // org.jvnet.hudson.examples.small.deep.DeepTest.testScubaGear failed since 3
@@ -100,10 +100,10 @@ public class HistoryTest {
         int scubaFailedSince = scubaCase.getFailedSince();
         assertEquals("scubaCase should have failed since build 3", 3, scubaFailedSince);
 
-
         // In build 5 the scuba test begins to pass
-        TestResult tr5 = project.getBuildByNumber(5).getAction(TestResultAction.class).getResult();
-        assertEquals(1,tr5.getFailedTests().size());
+        TestResult tr5 =
+                project.getBuildByNumber(5).getAction(TestResultAction.class).getResult();
+        assertEquals(1, tr5.getFailedTests().size());
         deepPackage = tr5.byPackage("org.jvnet.hudson.examples.small.deep");
         assertNotNull("deepPackage", deepPackage);
         assertTrue("package is passed", deepPackage.isPassed());
@@ -119,11 +119,12 @@ public class HistoryTest {
         ClassResult miscClass = smallPackage.getClassResult("MiscTest");
         CaseResult eleanorCase = miscClass.getCaseResult("testEleanor");
         assertTrue("eleanor failed", !eleanorCase.isPassed());
-        assertEquals("eleanor has failed since build 3", 3, eleanorCase.getFailedSince()); 
+        assertEquals("eleanor has failed since build 3", 3, eleanorCase.getFailedSince());
     }
 
     @LocalData
-    @Test @Issue("SECURITY-2760")
+    @Test
+    @Issue("SECURITY-2760")
     public void testXSS() throws Exception {
         assertNotNull("project should exist", project);
 
@@ -131,20 +132,25 @@ public class HistoryTest {
         TestResult tr = build4.getAction(TestResultAction.class).getResult();
 
         tr.setDescription("<script>alert(\"<XSS>\")</script>");
-        build4.save(); //Might be unnecessary
+        build4.save(); // Might be unnecessary
 
         try (final JenkinsRule.WebClient webClient = rule.createWebClient()) {
             Alerter alerter = new Alerter();
             webClient.setJavaScriptEnabled(true);
-            webClient.getOptions().setThrowExceptionOnScriptError(false); //HtmlUnit finds a syntax error in bootstrap 5
-            webClient.setAlertHandler(alerter); //This catches any alert dialog popup
+            webClient
+                    .getOptions()
+                    .setThrowExceptionOnScriptError(false); // HtmlUnit finds a syntax error in bootstrap 5
+            webClient.setAlertHandler(alerter); // This catches any alert dialog popup
 
             final HtmlPage page = webClient.getPage(build4, "testReport/history/");
-            assertNull(alerter.message); //No alert dialog popped up
+            assertNull(alerter.message); // No alert dialog popped up
             assertNull(alerter.page);
             final HtmlTable table = (HtmlTable) page.getElementById("testresult");
-            final Optional<HtmlTableCell> descr = table.getRows().stream().flatMap(row -> row.getCells().stream())
-                    .filter(cell -> cell.getTextContent().equals("<script>alert(\"<XSS>\")</script>")) //cell.getTextContent() seems to translate back from &gt; to < etc.
+            final Optional<HtmlTableCell> descr = table.getRows().stream()
+                    .flatMap(row -> row.getCells().stream())
+                    .filter(cell -> cell.getTextContent()
+                            .equals("<script>alert(\"<XSS>\")</script>")) // cell.getTextContent() seems to
+                    // translate back from &gt; to < etc.
                     .findFirst();
             assertTrue("Should have found the description", descr.isPresent());
         }

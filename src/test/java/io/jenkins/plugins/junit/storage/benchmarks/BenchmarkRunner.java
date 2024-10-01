@@ -12,10 +12,10 @@ public class BenchmarkRunner {
     @Test
     public void runJmhBenchmarks() throws Exception {
         ChainedOptionsBuilder options = new OptionsBuilder()
-            .mode(Mode.AverageTime)
-            .forks(2)
-            .resultFormat(ResultFormatType.JSON)
-            .result("jmh-report.json");
+                .mode(Mode.AverageTime)
+                .forks(2)
+                .resultFormat(ResultFormatType.JSON)
+                .result("jmh-report.json");
 
         // Automatically detect benchmark classes annotated with @JmhBenchmark
         new BenchmarkFinder(getClass()).findBenchmarks(options);

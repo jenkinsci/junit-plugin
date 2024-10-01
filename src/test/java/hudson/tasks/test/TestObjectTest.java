@@ -1,22 +1,24 @@
 package hudson.tasks.test;
 
-import hudson.model.Run;
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.doCallRealMethod;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 
+import hudson.model.Run;
 import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.*;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class TestObjectTest {
 
     public static class TestObjectImpl extends TestObject {
-        public TestObjectImpl() {
-        }
+        public TestObjectImpl() {}
 
         @Override
         public TestObject getParent() {
@@ -68,7 +70,7 @@ public class TestObjectTest {
     public void testSafe() {
         String name = "Foo#approve! is <called> by approve_on_foo?xyz/\\: 50%";
         String encoded = TestObject.safe(name);
-        
+
         Assert.assertFalse(encoded.contains("#"));
         Assert.assertFalse(encoded.contains("?"));
         Assert.assertFalse(encoded.contains("\\"));
@@ -79,13 +81,15 @@ public class TestObjectTest {
         Assert.assertFalse(encoded.contains(">"));
     }
 
-    @Test public void uniquifyName() {
+    @Test
+    public void uniquifyName() {
         for (int i = 0; i < 2; i++) { // different parents
             final List<TestObject> ts = new ArrayList<>();
             for (int j = 0; j < 10; j++) {
                 final String name = "t" + (int) Math.sqrt(j); // partly unique names
                 ts.add(new SimpleCaseResult() {
-                    @Override public String getSafeName() {
+                    @Override
+                    public String getSafeName() {
                         return uniquifyName(ts, name);
                     }
                 });
@@ -113,5 +117,4 @@ public class TestObjectTest {
         doReturn(run).when(testObject).getRun();
         assertEquals("job/abc/123/testReport/dummy", testObject.getUrl());
     }
-    
 }

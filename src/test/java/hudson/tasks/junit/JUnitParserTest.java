@@ -1,18 +1,18 @@
 /*
  * The MIT License
- * 
+ *
  * Copyright (c) 2009, Yahoo!, Inc.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,31 +23,30 @@
  */
 package hudson.tasks.junit;
 
-import hudson.Launcher;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import hudson.FilePath;
+import hudson.Launcher;
 import hudson.model.AbstractBuild;
 import hudson.model.BuildListener;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.tasks.Builder;
 import hudson.tasks.test.TestResult;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.recipes.LocalData;
-
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.recipes.LocalData;
 
 /**
  * Test the mechanism for calling a JUnitParser separately
@@ -57,18 +56,19 @@ import static org.junit.Assert.assertTrue;
 public class JUnitParserTest {
     @Rule
     public final JenkinsRule rule = new JenkinsRule();
+
     static hudson.tasks.junit.TestResult theResult = null;
 
     public static final class JUnitParserTestBuilder extends Builder implements Serializable {
         private static final long serialVersionUID = 1L;
         private String testResultLocation;
+
         public JUnitParserTestBuilder(String testResultLocation) {
             this.testResultLocation = testResultLocation;
         }
 
         @Override
-        public boolean perform(AbstractBuild<?, ?> build,
-                               Launcher launcher, BuildListener listener)
+        public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
                 throws InterruptedException, IOException {
             System.out.println("in perform...");
 
@@ -78,8 +78,8 @@ public class JUnitParserTest {
             }
 
             System.out.println("...touched everything");
-            hudson.tasks.junit.TestResult result = (new JUnitParser()).parseResult(testResultLocation, build,
-                    null, build.getWorkspace(), launcher, listener);
+            hudson.tasks.junit.TestResult result = (new JUnitParser())
+                    .parseResult(testResultLocation, build, null, build.getWorkspace(), launcher, listener);
 
             System.out.println("back from parse");
             assertNotNull("we should have a non-null result", result);
@@ -90,9 +90,8 @@ public class JUnitParserTest {
         }
     }
 
-
     private FreeStyleProject project;
-    private String projectName =  "junit_parser_test";
+    private String projectName = "junit_parser_test";
 
     @Before
     public void setUp() throws Exception {
@@ -106,7 +105,7 @@ public class JUnitParserTest {
     public void testJustParsing() throws Exception {
         FreeStyleBuild build = project.scheduleBuild2(0).get(100, TimeUnit.MINUTES);
         assertNotNull(build);
-        
+
         // Now let's examine the result. We know lots of stuff about it because
         // we've analyzed the xml source files by hand.
         assertNotNull("we should have a result in the static member", theResult);
@@ -114,37 +113,33 @@ public class JUnitParserTest {
         // Check the overall counts. We should have 1 failure, 0 skips, and 132 passes.
         Collection<? extends TestResult> children = theResult.getChildren();
         assertFalse("Should have several packages", children.isEmpty());
-        assertTrue("Should have several pacakges", children.size() > 3); 
+        assertTrue("Should have several pacakges", children.size() > 3);
         int passCount = theResult.getPassCount();
         assertEquals("expecting many passes", 131, passCount);
         int failCount = theResult.getFailCount();
         assertEquals("we should have one failure", 1, failCount);
         assertEquals("expected 0 skips", 0, theResult.getSkipCount());
-        assertEquals("expected 132 total tests", 132, theResult.getTotalCount()); 
+        assertEquals("expected 132 total tests", 132, theResult.getTotalCount());
 
-        // Dig in to the failed test 
+        // Dig in to the failed test
         final String EXPECTED_FAILING_TEST_NAME = "testDataCompatibilityWith1_282";
         final String EXPECTED_FAILING_TEST_CLASSNAME = "hudson.security.HudsonPrivateSecurityRealmTest";
 
         Collection<? extends TestResult> failingTests = theResult.getFailedTests();
         assertEquals("should have one failed test", 1, failingTests.size());
         Map<String, TestResult> failedTestsByName = new HashMap<>();
-        for (TestResult r: failingTests) {
-            failedTestsByName.put(r.getName(), r);  
+        for (TestResult r : failingTests) {
+            failedTestsByName.put(r.getName(), r);
         }
         assertTrue("we've got the expected failed test", failedTestsByName.containsKey(EXPECTED_FAILING_TEST_NAME));
         TestResult firstFailedTest = failedTestsByName.get(EXPECTED_FAILING_TEST_NAME);
         assertFalse("should not have passed this test", firstFailedTest.isPassed());
-        
+
         assertTrue(firstFailedTest instanceof CaseResult);
-        CaseResult firstFailedTestJunit = (CaseResult)firstFailedTest;
+        CaseResult firstFailedTestJunit = (CaseResult) firstFailedTest;
         assertEquals(EXPECTED_FAILING_TEST_CLASSNAME, firstFailedTestJunit.getClassName());
 
         // TODO: Dig in to the passed tests, too
 
-
-
     }
-
-
 }

@@ -9,7 +9,7 @@ import java.util.TreeSet;
 
 public class PipelineBlockWithTests implements Serializable {
     private final String blockId;
-    private final Map<String,PipelineBlockWithTests> childBlocks = new TreeMap<>();
+    private final Map<String, PipelineBlockWithTests> childBlocks = new TreeMap<>();
     private final Set<String> leafNodes = new TreeSet<>();
 
     public PipelineBlockWithTests(@NonNull String blockId) {
@@ -22,7 +22,7 @@ public class PipelineBlockWithTests implements Serializable {
     }
 
     @NonNull
-    public Map<String,PipelineBlockWithTests> getChildBlocks() {
+    public Map<String, PipelineBlockWithTests> getChildBlocks() {
         return childBlocks;
     }
 
@@ -35,7 +35,7 @@ public class PipelineBlockWithTests implements Serializable {
         childBlocks.put(child.getBlockId(), child);
     }
 
-    public void addLeafNode(@NonNull String leafNode)  {
+    public void addLeafNode(@NonNull String leafNode) {
         leafNodes.add(leafNode);
     }
 
@@ -67,9 +67,9 @@ public class PipelineBlockWithTests implements Serializable {
         }
         PipelineBlockWithTests that = (PipelineBlockWithTests) o;
 
-        return that.getBlockId().equals(getBlockId()) &&
-                that.getChildBlocks().equals(getChildBlocks()) &&
-                that.getLeafNodes().equals(getLeafNodes());
+        return that.getBlockId().equals(getBlockId())
+                && that.getChildBlocks().equals(getChildBlocks())
+                && that.getLeafNodes().equals(getLeafNodes());
     }
 
     @Override

@@ -1,8 +1,7 @@
 package hudson.tasks.junit;
 
-import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
-
 import java.io.Serializable;
+import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.DoNotUse;
 
@@ -17,8 +16,7 @@ public class TestResultSummary implements Serializable {
 
     @Deprecated
     @Restricted(DoNotUse.class)
-    public TestResultSummary() {
-    }
+    public TestResultSummary() {}
 
     public TestResultSummary(int failCount, int skipCount, int passCount, int totalCount) {
         this.failCount = failCount;
@@ -35,7 +33,8 @@ public class TestResultSummary implements Serializable {
         if (totalCount == 0) {
             for (SuiteResult suite : result.getSuites()) {
                 if (!suite.getCases().isEmpty()) {
-                    throw new IllegalArgumentException("Attempt to construct TestResultSummary from TestResult without calling tally/freeze");
+                    throw new IllegalArgumentException(
+                            "Attempt to construct TestResultSummary from TestResult without calling tally/freeze");
                 }
             }
         }
@@ -61,4 +60,3 @@ public class TestResultSummary implements Serializable {
         return totalCount;
     }
 }
-

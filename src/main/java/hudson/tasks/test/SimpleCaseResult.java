@@ -1,18 +1,18 @@
 /*
  * The MIT License
- * 
+ *
  * Copyright (c) 2009, Yahoo!, Inc.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,14 +25,11 @@ package hudson.tasks.test;
 
 import hudson.model.Run;
 import hudson.tasks.junit.TestAction;
-
-import java.util.Collection;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.logging.Logger;
-
-import static java.util.Collections.emptyList;
 
 /**
  * The simplest possible case result, with no language ties.
@@ -45,16 +42,16 @@ public class SimpleCaseResult extends TestResult {
     private static final Logger LOGGER = Logger.getLogger(SimpleCaseResult.class.getName());
 
     public SimpleCaseResult(float duration) {
-        listOnlyContainingThisObject.add(this); 
+        listOnlyContainingThisObject.add(this);
     }
-        
+
     public SimpleCaseResult() {
         this(1.0f);
     }
 
     /**
      * Sets the parent action, which means the action that binds
-     * this particular case result to a build. Should not be null. 
+     * this particular case result to a build. Should not be null.
      * @param parentAction
      */
     @Override
@@ -71,7 +68,7 @@ public class SimpleCaseResult extends TestResult {
     public TestObject getParent() {
         return null;
     }
-    
+
     @Override
     public TestResult findCorrespondingResult(String id) {
         if (id.equals(getId())) {
@@ -80,7 +77,7 @@ public class SimpleCaseResult extends TestResult {
 
         return null;
     }
-    
+
     /**
      * Gets the "children" of this test result that failed
      *
@@ -88,7 +85,7 @@ public class SimpleCaseResult extends TestResult {
      */
     @Override
     public Collection<? extends TestResult> getFailedTests() {
-        return emptyList();
+        return Collections.emptyList();
     }
 
     /**
@@ -108,7 +105,7 @@ public class SimpleCaseResult extends TestResult {
      */
     @Override
     public Collection<? extends TestResult> getSkippedTests() {
-        return emptyList();
+        return Collections.emptyList();
     }
 
     /**
@@ -133,11 +130,11 @@ public class SimpleCaseResult extends TestResult {
      * Returns true iff this test failed.
      */
     public boolean isFailed() {
-        return false; 
+        return false;
     }
 
     /**
-     * Time took to run this test. In seconds. 
+     * Time took to run this test. In seconds.
      */
     @Override
     public float getDuration() {
@@ -181,7 +178,7 @@ public class SimpleCaseResult extends TestResult {
      */
     @Override
     public String getTitle() {
-        return "Simple Case Result";  //
+        return "Simple Case Result"; //
     }
 
     @Override
@@ -190,10 +187,10 @@ public class SimpleCaseResult extends TestResult {
     }
 
     @Override
-    public Run<?,?> getRun() {
+    public Run<?, ?> getRun() {
         if (parentAction == null) {
             LOGGER.warning("in Trivial Test Result, parentAction is null, but getRun() called");
-            return null; 
+            return null;
         }
         return parentAction.run;
     }
@@ -203,13 +200,8 @@ public class SimpleCaseResult extends TestResult {
         return SimpleCaseResult.EMPTY_ACTION_LIST;
     }
 
-
     /**
      * An empty list of actions, useful for tests
      */
     public static final List<TestAction> EMPTY_ACTION_LIST = Collections.unmodifiableList(new ArrayList<>());
-
-
-
-
 }

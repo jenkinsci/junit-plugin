@@ -23,17 +23,21 @@
  */
 package hudson.tasks.junit;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.DescriptorExtensionList;
 import hudson.Extension;
 import hudson.ExtensionPoint;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Util;
-import hudson.model.*;
-import jenkins.model.Jenkins;
-
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractDescribableImpl;
+import hudson.model.BuildListener;
+import hudson.model.Descriptor;
+import hudson.model.Run;
+import hudson.model.TaskListener;
 import java.io.IOException;
-import edu.umd.cs.findbugs.annotations.NonNull;
+import jenkins.model.Jenkins;
 
 /**
  * Contributes {@link TestAction}s to test results.
@@ -42,7 +46,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
  * claim test failures, allowing people to file bugs, or more generally, additional actions, views, etc.
  *
  * <p>
- * To register your implementation, put {@link Extension} on your descriptor implementation. 
+ * To register your implementation, put {@link Extension} on your descriptor implementation.
  *
  * @since 1.320
  */
@@ -68,9 +72,9 @@ public abstract class TestDataPublisher extends AbstractDescribableImpl<TestData
      * @throws InterruptedException if any thread interrupts this thread.
      * @since 1.2-beta-1
      */
-	public TestResultAction.Data contributeTestData(
-			Run<?,?> run, @NonNull FilePath workspace, Launcher launcher,
-			TaskListener listener, TestResult testResult) throws IOException, InterruptedException {
+    public TestResultAction.Data contributeTestData(
+            Run<?, ?> run, @NonNull FilePath workspace, Launcher launcher, TaskListener listener, TestResult testResult)
+            throws IOException, InterruptedException {
         if (run instanceof AbstractBuild && listener instanceof BuildListener) {
             return getTestData((AbstractBuild) run, launcher, (BuildListener) listener, testResult);
         } else {
@@ -79,10 +83,18 @@ public abstract class TestDataPublisher extends AbstractDescribableImpl<TestData
     }
 
     @Deprecated
-	public TestResultAction.Data getTestData(
-			AbstractBuild<?, ?> build, Launcher launcher,
-			BuildListener listener, TestResult testResult) throws IOException, InterruptedException {
-        if (Util.isOverridden(TestDataPublisher.class, getClass(), "contributeTestData", Run.class, FilePath.class, Launcher.class, TaskListener.class, TestResult.class)) {
+    public TestResultAction.Data getTestData(
+            AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener, TestResult testResult)
+            throws IOException, InterruptedException {
+        if (Util.isOverridden(
+                TestDataPublisher.class,
+                getClass(),
+                "contributeTestData",
+                Run.class,
+                FilePath.class,
+                Launcher.class,
+                TaskListener.class,
+                TestResult.class)) {
             FilePath workspace = build.getWorkspace();
             if (workspace == null) {
                 throw new IOException("no workspace in " + build);
@@ -93,8 +105,7 @@ public abstract class TestDataPublisher extends AbstractDescribableImpl<TestData
         }
     }
 
-	public static DescriptorExtensionList<TestDataPublisher, Descriptor<TestDataPublisher>> all() {
-		return Jenkins.get().getDescriptorList(TestDataPublisher.class);
-	}
-
+    public static DescriptorExtensionList<TestDataPublisher, Descriptor<TestDataPublisher>> all() {
+        return Jenkins.get().getDescriptorList(TestDataPublisher.class);
+    }
 }
