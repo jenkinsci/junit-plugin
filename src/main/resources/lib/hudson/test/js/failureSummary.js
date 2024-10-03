@@ -26,30 +26,22 @@ function hideFailureSummary(summaryId) {
 
 
 document.addEventListener('DOMContentLoaded', () => {
-
-    // add the onclick behavior for all the "showlinks"
     const testShowlinks = document.querySelectorAll("a[id*=test-][id*=-showlink]");
     testShowlinks.forEach((element) => {
-        element.onclick = (_) => {
-            console.log("testShowlinks clicked");
+        element.addEventListener('click', (event) => {
             const id = element.id.replace(PREFIX, '').replace(SHOWLINK_SUFFIX, '');
             const summaryId = PREFIX + id;
-            console.log(`testShowlinks url ${document.URL + id + 'summary'}`);
             showFailureSummary(summaryId, document.URL + id + "summary");
-        }
+        })
     });
 
     // add the onclick behavior for all the "hidelinks"
     const testHidelinks = document.querySelectorAll("a[id*=test-][id*=-hidelink]");
     testHidelinks.forEach((element) => {
-        element.onclick = (_) => {
-            console.log("testHidelinks clicked");
+        element.addEventListener('click', (event) => {
             const id = element.id.replace(PREFIX, '').replace(HIDELINK_SUFFIX, '');
             const summaryId = PREFIX + id;
             hideFailureSummary(summaryId);
-        }
+        })
     });
-
-    console.log("listeners added");
-
 });
