@@ -13,13 +13,12 @@ function showFailureSummary(summaryId, query) {
         let rqo = new XMLHttpRequest();
         rqo.open('GET', query, true);
         rqo.onreadystatechange = function() {
-            if (rqo.readyState === 4 && rqo.status === 200) {
-                element.innerHTML = rqo.responseText;
-                initializeShowHideLinks(element);
-            }
+            element.innerHTML = rqo.responseText;
+            initializeShowHideLinks(element);
         }
         rqo.send(null);
     }
+
 }
 
 function hideFailureSummary(summaryId) {
@@ -54,7 +53,5 @@ function handleShowHideClick(event) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-
     initializeShowHideLinks();
-
 });
