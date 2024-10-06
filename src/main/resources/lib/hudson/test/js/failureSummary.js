@@ -15,7 +15,6 @@ function showFailureSummary(summaryId, query) {
         rqo.onreadystatechange = function() {
             if (rqo.readyState === 4 && rqo.status === 200) {
                 element.innerHTML = rqo.responseText;
-                // After loading content, initialize any new show/hide links
                 initializeShowHideLinks(element);
             }
         }
@@ -35,6 +34,7 @@ function initializeShowHideLinks(container) {
     container.querySelectorAll('a[id$="-showlink"], a[id$="-hidelink"]').forEach(link => {
         if (!link.hasAttribute('data-initialized')) {
             link.addEventListener('click', handleShowHideClick);
+            link.style.cursor = 'pointer';
             link.setAttribute('data-initialized', 'true');
         }
     });
@@ -42,7 +42,8 @@ function initializeShowHideLinks(container) {
 
 function handleShowHideClick(event) {
     event.preventDefault();
-    const link = event.currentTarget;
+
+    let link = event.target.closest('a[id$="-showlink"], a[id$="-hidelink"]');
     const id = link.id.replace(/-showlink$/, '').replace(/-hidelink$/, '');
 
     if (link.id.endsWith('-showlink')) {
