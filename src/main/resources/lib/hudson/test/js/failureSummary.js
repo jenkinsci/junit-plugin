@@ -1,4 +1,3 @@
-
 const PREFIX = "test-";
 const SHOWLINK_SUFFIX = "-showlink";
 const HIDELINK_SUFFIX = "-hidelink";
@@ -10,10 +9,16 @@ function showFailureSummary(summaryId, query) {
     document.getElementById(summaryId + SHOWLINK_SUFFIX).style.display = "none";
     document.getElementById(summaryId + HIDELINK_SUFFIX).style.display = "";
 
-    if (typeof query !== 'undefined') {
+    if (typeof query !== 'undefined' && element.innerHTML.trim() === 'Loading...') {
         let rqo = new XMLHttpRequest();
         rqo.open('GET', query, true);
-        rqo.onreadystatechange = function() { element.innerHTML = rqo.responseText; }
+        rqo.onreadystatechange = function() {
+            if (rqo.readyState === 4 && rqo.status === 200) {
+                element.innerHTML = rqo.responseText;
+                // After loading content, initialize any new show/hide links
+                initializeShowHideLinks(element);
+            }
+        }
         rqo.send(null);
     }
 }
@@ -24,32 +29,36 @@ function hideFailureSummary(summaryId) {
     document.getElementById(summaryId + HIDELINK_SUFFIX).style.display = "none";
 }
 
+function initializeShowHideLinks(container) {
+    container = container || document;
+
+    container.querySelectorAll('a[id$="-showlink"], a[id$="-hidelink"]').forEach(link => {
+        if (!link.hasAttribute('data-initialized')) {
+            link.addEventListener('click', handleShowHideClick);
+            link.setAttribute('data-initialized', 'true');
+        }
+    });
+}
+
+function handleShowHideClick(event) {
+    event.preventDefault();
+    const link = event.currentTarget;
+    const id = link.id.replace(/-showlink$/, '').replace(/-hidelink$/, '');
+
+    if (link.id.endsWith('-showlink')) {
+        showFailureSummary(id, document.URL + id.replace(PREFIX, '') + "summary");
+    } else {
+        hideFailureSummary(id);
+    }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    // add the onclick behavior for all the "showlinks"
-    const testShowlinks = document.querySelectorAll("a[id*=test-][id*=-showlink]");
-    testShowlinks.forEach((element) => {
-        element.onclick = (_) => {
-            console.log("testShowlinks clicked");
-            const id = element.id.replace(PREFIX, '').replace(SHOWLINK_SUFFIX, '');
-            const summaryId = PREFIX + id;
-            console.log(`testShowlinks url ${document.URL + id + 'summary'}`);
-            showFailureSummary(summaryId, document.URL + id + "summary");
+    initializeShowHideLinks();
+
+    document.body.addEventListener('click', (event) => {
+        if (event.target.matches('a[id$="-showlink"], a[id$="-hidelink"]')) {
+            handleShowHideClick(event);
         }
     });
-
-    // add the onclick behavior for all the "hidelinks"
-    const testHidelinks = document.querySelectorAll("a[id*=test-][id*=-hidelink]");
-    testHidelinks.forEach((element) => {
-        element.onclick = (_) => {
-            console.log("testHidelinks clicked");
-            const id = element.id.replace(PREFIX, '').replace(HIDELINK_SUFFIX, '');
-            const summaryId = PREFIX + id;
-            hideFailureSummary(summaryId);
-        }
-    });
-
-    console.log("listeners added");
-
 });
