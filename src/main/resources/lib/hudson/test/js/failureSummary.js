@@ -57,9 +57,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initializeShowHideLinks();
 
-    document.body.addEventListener('click', (event) => {
-        if (event.target.matches('a[id$="-showlink"], a[id$="-hidelink"]')) {
-            handleShowHideClick(event);
-        }
-    });
 });
