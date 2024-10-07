@@ -31,10 +31,8 @@ function initializeShowHideLinks(container) {
     container = container || document;
 
     container.querySelectorAll('a[id$="-showlink"], a[id$="-hidelink"]').forEach(link => {
-        if (!link.onclick) {
-            link.onclick = handleShowHideClick;
-            link.style.cursor = 'pointer';
-        }
+        link.addEventListener('click', handleShowHideClick);
+        link.style.cursor = 'pointer';
     });
 }
 
