@@ -1,4 +1,3 @@
-
 const PREFIX = "test-";
 const SHOWLINK_SUFFIX = "-showlink";
 const HIDELINK_SUFFIX = "-hidelink";
@@ -10,12 +9,16 @@ function showFailureSummary(summaryId, query) {
     document.getElementById(summaryId + SHOWLINK_SUFFIX).style.display = "none";
     document.getElementById(summaryId + HIDELINK_SUFFIX).style.display = "";
 
-    if (typeof query !== 'undefined') {
+    if (typeof query !== 'undefined' && element.innerHTML.trim() === 'Loading...') {
         let rqo = new XMLHttpRequest();
         rqo.open('GET', query, true);
-        rqo.onreadystatechange = function() { element.innerHTML = rqo.responseText; }
+        rqo.onreadystatechange = function() {
+            element.innerHTML = rqo.responseText;
+            initializeShowHideLinks(element);
+        }
         rqo.send(null);
     }
+
 }
 
 function hideFailureSummary(summaryId) {
@@ -24,24 +27,28 @@ function hideFailureSummary(summaryId) {
     document.getElementById(summaryId + HIDELINK_SUFFIX).style.display = "none";
 }
 
+function initializeShowHideLinks(container) {
+    container = container || document;
+
+    container.querySelectorAll('a[id$="-showlink"], a[id$="-hidelink"]').forEach(link => {
+        link.addEventListener('click', handleShowHideClick);
+        link.style.cursor = 'pointer';
+    });
+}
+
+function handleShowHideClick(event) {
+    event.preventDefault();
+
+    let link = event.target.closest('a[id$="-showlink"], a[id$="-hidelink"]');
+    const id = link.id.replace(/-showlink$/, '').replace(/-hidelink$/, '');
+
+    if (link.id.endsWith('-showlink')) {
+        showFailureSummary(id, document.URL + id.replace(PREFIX, '') + "summary");
+    } else {
+        hideFailureSummary(id);
+    }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
-    const testShowlinks = document.querySelectorAll("a[id*=test-][id*=-showlink]");
-    testShowlinks.forEach((element) => {
-        element.addEventListener('click', (event) => {
-            const id = element.id.replace(PREFIX, '').replace(SHOWLINK_SUFFIX, '');
-            const summaryId = PREFIX + id;
-            showFailureSummary(summaryId, document.URL + id + "summary");
-        })
-    });
-
-    // add the onclick behavior for all the "hidelinks"
-    const testHidelinks = document.querySelectorAll("a[id*=test-][id*=-hidelink]");
-    testHidelinks.forEach((element) => {
-        element.addEventListener('click', (event) => {
-            const id = element.id.replace(PREFIX, '').replace(HIDELINK_SUFFIX, '');
-            const summaryId = PREFIX + id;
-            hideFailureSummary(summaryId);
-        })
-    });
+    initializeShowHideLinks();
 });

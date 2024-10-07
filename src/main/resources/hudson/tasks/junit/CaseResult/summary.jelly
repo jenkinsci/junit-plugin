@@ -31,13 +31,12 @@ THE SOFTWARE.
         <j:set var="id" value="${attrs.id}-${attrs.name}"/>
         <j:set var="display" value="${attrs.opened ? '' : 'none'}"/>
         <j:set var="idisplay" value="${attrs.opened ? 'none' : ''}"/>
-        <j:set var="open" value="javascript:showFailureSummary('${id}')"/>
-        <j:set var="close" value="javascript:hideFailureSummary('${id}')"/>
+        <st:adjunct includes="lib.hudson.test.js.failureSummary" />
         <h4>
-          <a id="${id}-showlink" href="${open}" title="Show ${title}" style="display: ${idisplay}">
+          <a id="${id}-showlink" title="Show ${title}" style="display: ${idisplay}">
             <l:icon src="symbol-add-outline plugin-ionicons-api" class="icon-sm"/><st:nbsp/>${title}
           </a>
-          <a id="${id}-hidelink" href="${close}" title="Hide ${title}" style="display: ${display}">
+          <a id="${id}-hidelink" title="Hide ${title}" style="display: ${display}">
             <l:icon src="symbol-remove-outline plugin-ionicons-api" class="icon-sm"/><st:nbsp/>${title}
           </a>
         </h4>
