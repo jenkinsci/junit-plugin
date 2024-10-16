@@ -34,7 +34,6 @@ THE SOFTWARE.
         <f:entry title="${%Jobs to aggregate}"
                  help="/descriptorByName/hudson.tasks.test.AggregatedTestResultPublisher/help/manual-list">
           <f:textbox name="aggregatedTestResult.jobs" value="${instance.jobs}"
-                     checkUrl="'descriptorByName/hudson.tasks.test.AggregatedTestResultPublisher/check?value='+encodeURIComponent(this.value)"
                      field="jobs"
                      autoCompleteDelimChar="," />
         </f:entry>        

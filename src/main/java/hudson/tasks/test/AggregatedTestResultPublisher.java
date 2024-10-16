@@ -370,7 +370,7 @@ public class AggregatedTestResultPublisher extends Recorder {
             return Messages.AggregatedTestResultPublisher_DisplayName();
         }
 
-        public FormValidation doCheck(@AncestorInPath AbstractProject project, @QueryParameter String value) {
+        public FormValidation doCheckJobs(@AncestorInPath AbstractProject project, @QueryParameter String value) {
             // Require CONFIGURE permission on this project
             if (!project.hasPermission(Item.CONFIGURE)) {
                 return FormValidation.ok();
