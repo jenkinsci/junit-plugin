@@ -39,13 +39,15 @@ THE SOFTWARE.
 
     <st:once>
       <c:chart-setup id="test-history"/>
-      <span id="history-data"
+      <script id="history-data"
         data-start="${start}"
         data-end="${end}"
         data-count="${count}"
         data-interval="${interval}"
         data-testObjectUrl="${it.testObject.url}"
-        data-trend-chart-json="${historySummary.trendChartJson}" />
+        type="application/json"
+      >${historySummary.trendChartJson}</script>
+
     </st:once>
 
     <st:include from="${it.testObject}" it="${it.testObject}" page="sidepanel.jelly"/>

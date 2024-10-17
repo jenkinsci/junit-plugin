@@ -28,13 +28,12 @@ function onBuildIntervalChange(changeEvent) {
     $(document).ready(function ($) {
         document.querySelector("#history-window").addEventListener("change", onBuildWindowChange);
         document.querySelector("#history-interval").addEventListener("change", onBuildIntervalChange);
-
         let dataEl = document.getElementById("history-data");
         start = dataEl.getAttribute("data-start")
         end = dataEl.getAttribute("data-end")
         count = dataEl.getAttribute("data-count")
         interval = dataEl.getAttribute("data-interval")
-        let trendChartJsonStr = dataEl.getAttribute("data-trend-chart-json");
+        let trendChartJsonStr = dataEl.innerHTML
         trendChartJson = JSON.parse(trendChartJsonStr)
         const rootUrl = document.head.dataset.rooturl
         if (!rootUrl.endsWith("/")) {
