@@ -39,15 +39,13 @@ THE SOFTWARE.
 
     <st:once>
       <c:chart-setup id="test-history"/>
-      <script id="history-data"
+      <span id="history-data"
         data-start="${start}"
         data-end="${end}"
         data-count="${count}"
         data-interval="${interval}"
         data-testObjectUrl="${it.testObject.url}"
-        type="application/json"
-      >${historySummary.trendChartJson}</script>
-
+        data-trend-chart-json="${historySummary.trendChartJson}" />
     </st:once>
 
     <st:include from="${it.testObject}" it="${it.testObject}" page="sidepanel.jelly"/>
@@ -70,7 +68,7 @@ THE SOFTWARE.
         <div style="flex-grow: 1"/>
         <div style="display: flex; flex-basis: auto; justify-content: space-between; align-items: center" tooltip="The history window size. Out of N builds, every Mth build with test results is shown, where M is the interval.">
           <div id="history-info" class="jenkins-!-margin-right-1" style="text-wrap: nowrap"></div>
-          <select name="history-window" id="history-window" onchange="onBuildWindowChange(this);" class="jenkins-!-margin-left-0 jenkins-!-margin-right-1 jenkins-select__input " style="min-width: fit-content;">
+          <select name="history-window" id="history-window" class="jenkins-!-margin-left-0 jenkins-!-margin-right-1 jenkins-select__input " style="min-width: fit-content;">
             <option value="100">100</option>
             <option value="200">200</option>
             <option value="500">500</option>
@@ -82,7 +80,7 @@ THE SOFTWARE.
         </div>
         <div style="display: flex; flex-basis: auto; justify-content: space-between; align-items: center" tooltip="Every Mth build will be taken into account.">
           <div class="jenkins-!-margin-right-1" style="text-wrap: nowrap">Sample interval:</div>
-          <select name="history-interval" id="history-interval" onchange="onBuildIntervalChange(this);" class="jenkins-!-margin-left-0 jenkins-!-margin-right-0 jenkins-select__input " style="min-width: fit-content;">
+          <select name="history-interval" id="history-interval" class="jenkins-!-margin-left-0 jenkins-!-margin-right-0 jenkins-select__input " style="min-width: fit-content;">
             <option value="1">1</option>
             <option value="2">2</option>
             <option value="5">5</option>

@@ -10,13 +10,15 @@ var resultSeries
 var durationSeries
 var trendChartId = 'test-trend-chart'
 
-function onBuildWindowChange(selectObj) {
+function onBuildWindowChange(changeEvent) {
+    let selectObj = changeEvent.target;
     let idx = selectObj.selectedIndex;
     let c = selectObj.options[idx].value
     document.location = `${appRootUrl}${testObjectUrl}/history?start=${start}&count=${c}&interval=${interval}`
 }
 
-function onBuildIntervalChange(selectObj) {
+function onBuildIntervalChange(changeEvent) {
+    let selectObj = changeEvent.target;
     let idx = selectObj.selectedIndex;
     let i = selectObj.options[idx].value
     document.location = `${appRootUrl}${testObjectUrl}/history?start=${start}&count=${count}&interval=${i}`
@@ -24,12 +26,15 @@ function onBuildIntervalChange(selectObj) {
 
 (function ($) {
     $(document).ready(function ($) {
+        document.querySelector("#history-window").addEventListener("change", onBuildWindowChange);
+        document.querySelector("#history-interval").addEventListener("change", onBuildIntervalChange);
+
         let dataEl = document.getElementById("history-data");
         start = dataEl.getAttribute("data-start")
         end = dataEl.getAttribute("data-end")
         count = dataEl.getAttribute("data-count")
         interval = dataEl.getAttribute("data-interval")
-        let trendChartJsonStr = dataEl.innerHTML
+        let trendChartJsonStr = dataEl.getAttribute("data-trend-chart-json");
         trendChartJson = JSON.parse(trendChartJsonStr)
         const rootUrl = document.head.dataset.rooturl
         if (!rootUrl.endsWith("/")) {
