@@ -85,7 +85,7 @@ THE SOFTWARE.
           <j:set var="prev" value="${p.previousResult}" />
           <tr>
             <td class="pane">
-	            <a href="${p.safeName}/"><span style='${prev==null?"font-weight:bold":""}'>${p.name}</span></a>
+	            <a href="${h.urlEncode(p.safeName)}/"><span style='${prev==null?"font-weight:bold":""}'>${p.name}</span></a>
 	          	<st:nbsp/>
 		        <j:forEach var="badge" items="${p.testActions}">
 		          <st:include it="${badge}" page="badge.jelly" optional="true"/>
