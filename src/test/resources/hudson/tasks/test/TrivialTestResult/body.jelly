@@ -85,7 +85,10 @@ THE SOFTWARE.
           <j:set var="prev" value="${p.previousResult}" />
           <tr>
             <td class="pane">
-	            <a href="${h.urlEncode(p.safeName)}/"><span style='${prev==null?"font-weight:bold":""}'>${p.name}</span></a>
+                    <j:invokeStatic var="encodedSafeName" className="hudson.Util" method="rawEncode">
+                      <j:arg value="${p.safeName}" />
+                    </j:invokeStatic>
+	            <a href="${encodedSafeName}/"><span style='${prev==null?"font-weight:bold":""}'>${p.name}</span></a>
 	          	<st:nbsp/>
 		        <j:forEach var="badge" items="${p.testActions}">
 		          <st:include it="${badge}" page="badge.jelly" optional="true"/>
