@@ -45,6 +45,9 @@ THE SOFTWARE.
 			<a id="test-${f.fullName}-hidelink" href="#" style="display:none"
 				onclick='javascript:hideStackTrace("test-${f.fullName}")'>&lt;&lt;&lt;</a>
           	<st:nbsp/>
+	    <j:invokeStatic var="encodedRelativePath" className="hudson.Util" method="rawEncode">
+	      <j:arg value="${f.getRelativePathFrom(it)}" />
+	    </j:invokeStatic>
             <a href="${encodedRelativePath}"><st:out value="${f.fullName}"/></a>
           	<st:nbsp/>
 	        <j:forEach var="badge" items="${f.testActions}">
