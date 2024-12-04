@@ -37,17 +37,47 @@ THE SOFTWARE.
       <j:forEach var="f" items="${it.failedTests}" varStatus="i">
         <tr>
           <td class="pane">
-		<j:invokeStatic var="encodedRelativePath" className="hudson.Util" method="rawEncode">
-		  <j:arg value="${f.getRelativePathFrom(it)}" />
-		</j:invokeStatic>
+			<j:choose>
+			    <j:when test="${f.getRelativePathFrom(it).contains('/')}">
+			        <j:set var="rawPath" value="${f.getRelativePathFrom(it)}"/>
+			        <j:set var="encodedRelativePath">
+			            <j:forEach items="${rawPath.split('/')}" var="component" varStatus="i">
+			                <j:invokeStatic var="encodedComponent" className="hudson.Util" method="rawEncode">
+			                    <j:arg value="${component}" />
+			                </j:invokeStatic>
+			                <j:if test="${i.index > 0}">/</j:if>${encodedComponent}
+			            </j:forEach>
+			        </j:set>
+			    </j:when>
+			    <j:otherwise>
+			        <j:invokeStatic var="encodedRelativePath" className="hudson.Util" method="rawEncode">
+			            <j:arg value="${f.getRelativePathFrom(it)}" />
+			        </j:invokeStatic>
+			    </j:otherwise>
+			</j:choose>
 			<a id="test-${f.fullName}-showlink" href="#"
 				onclick='javascript:showStackTrace("test-${f.fullName}","${encodedRelativePath}/summary")'>&gt;&gt;&gt;</a>
 			<a id="test-${f.fullName}-hidelink" href="#" style="display:none"
 				onclick='javascript:hideStackTrace("test-${f.fullName}")'>&lt;&lt;&lt;</a>
           	<st:nbsp/>
-	    <j:invokeStatic var="encodedRelativePath" className="hudson.Util" method="rawEncode">
-	      <j:arg value="${f.getRelativePathFrom(it)}" />
-	    </j:invokeStatic>
+		<j:choose>
+		    <j:when test="${f.getRelativePathFrom(it).contains('/')}">
+		        <j:set var="rawPath" value="${f.getRelativePathFrom(it)}"/>
+		        <j:set var="encodedRelativePath">
+		            <j:forEach items="${rawPath.split('/')}" var="component" varStatus="i">
+		                <j:invokeStatic var="encodedComponent" className="hudson.Util" method="rawEncode">
+		                    <j:arg value="${component}" />
+		                </j:invokeStatic>
+		                <j:if test="${i.index > 0}">/</j:if>${encodedComponent}
+		            </j:forEach>
+		        </j:set>
+		    </j:when>
+		    <j:otherwise>
+		        <j:invokeStatic var="encodedRelativePath" className="hudson.Util" method="rawEncode">
+		            <j:arg value="${f.getRelativePathFrom(it)}" />
+		        </j:invokeStatic>
+		    </j:otherwise>
+		</j:choose>
             <a href="${encodedRelativePath}"><st:out value="${f.fullName}"/></a>
           	<st:nbsp/>
 	        <j:forEach var="badge" items="${f.testActions}">
