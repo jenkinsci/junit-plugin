@@ -40,7 +40,16 @@ THE SOFTWARE.
       </thead>
       <j:forEach var="f" items="${it.failedTests}" varStatus="i">
         <tr>
-          <td class="pane no-wrap"><t:failed-test result="${f}" url="${f.getRelativePathFrom(it)}"/></td>
+          <j:set var="encodedRelativePath">
+              <j:forEach items="${f.getRelativePathFrom(it).split('/')}" var="component" varStatus="i">
+                  <j:invokeStatic var="encodedComponent" className="java.net.URLEncoder" method="encode">
+                      <j:arg value="${component}" />
+                      <j:arg value="UTF-8" />
+                  </j:invokeStatic>
+                  <j:if test="${i.index > 0}">/</j:if>${encodedComponent}
+              </j:forEach>
+          </j:set>
+          <td class="pane no-wrap"><t:failed-test result="${f}" url="${encodedRelativePath}"/></td>
           <td class="pane no-wrap" style="text-align:right;" data="${f.duration}">
             ${f.durationString}
           </td>
