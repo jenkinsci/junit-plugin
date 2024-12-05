@@ -44,8 +44,9 @@ THE SOFTWARE.
           <j:set var="encodedRelativePath">
               <j:forEach items="${rawPath.split('/')}" var="component" varStatus="i">
                   <j:trim var="trimmedComponent" value="${component}" />
-                  <j:invokeStatic var="encodedComponent" className="hudson.Util" method="rawEncode">
+                  <j:invokeStatic var="encodedComponent" className="java.net.URLEncoder" method="encode">
                       <j:arg value="${trimmedComponent.toString()}" />
+                      <j:arg value="UTF-8" />
                   </j:invokeStatic>
                   <j:if test="${i.index > 0}">/</j:if>${encodedComponent}
               </j:forEach>
