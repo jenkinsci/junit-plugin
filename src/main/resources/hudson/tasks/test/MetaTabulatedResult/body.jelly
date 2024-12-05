@@ -40,11 +40,12 @@ THE SOFTWARE.
       </thead>
       <j:forEach var="f" items="${it.failedTests}" varStatus="i">
         <tr>
+          <j:set var="rawPath" value="${f.getRelativePathFrom(it)}" />
           <j:set var="encodedRelativePath">
-              <j:forEach items="${f.getRelativePathFrom(it).split('/')}" var="component" varStatus="i">
-                  <j:invokeStatic var="encodedComponent" className="java.net.URLEncoder" method="encode">
-                      <j:arg value="${component}" />
-                      <j:arg value="UTF-8" />
+              <j:forEach items="${rawPath.split('/')}" var="component" varStatus="i">
+                  <j:trim var="trimmedComponent" value="${component}" />
+                  <j:invokeStatic var="encodedComponent" className="hudson.Util" method="rawEncode">
+                      <j:arg value="${trimmedComponent.toString()}" />
                   </j:invokeStatic>
                   <j:if test="${i.index > 0}">/</j:if>${encodedComponent}
               </j:forEach>
