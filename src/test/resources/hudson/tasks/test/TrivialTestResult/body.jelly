@@ -38,11 +38,19 @@ THE SOFTWARE.
         <tr>
           <td class="pane">
 			<a id="test-${f.fullName}-showlink" href="#"
-				onclick='javascript:showStackTrace("test-${f.fullName}","${f.getRelativePathFrom(it)}/summary")'>&gt;&gt;&gt;</a>
+        <j:set var="rawPath" value="${f.getRelativePathFrom(it)}" />
+        <j:set var="encodedRelativePath">
+            ${rawPath.replace('[', '%5B').replace(']', '%5D')}
+        </j:set>
+				onclick='javascript:showStackTrace("test-${f.fullName}","${encodedRelativePath}/summary")'>&gt;&gt;&gt;</a>
 			<a id="test-${f.fullName}-hidelink" href="#" style="display:none"
 				onclick='javascript:hideStackTrace("test-${f.fullName}")'>&lt;&lt;&lt;</a>
           	<st:nbsp/>
-            <a href="${f.getRelativePathFrom(it)}"><st:out value="${f.fullName}"/></a>
+            <j:set var="rawPath" value="${f.getRelativePathFrom(it)}" />
+            <j:set var="encodedRelativePath">
+                ${rawPath.replace('[', '%5B').replace(']', '%5D')}
+            </j:set>
+            <a href="${encodedRelativePath}"><st:out value="${f.fullName}"/></a>
           	<st:nbsp/>
 	        <j:forEach var="badge" items="${f.testActions}">
 	          <st:include it="${badge}" page="badge.jelly" optional="true"/>
