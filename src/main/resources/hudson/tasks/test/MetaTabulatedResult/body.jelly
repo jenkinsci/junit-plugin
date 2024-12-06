@@ -42,12 +42,7 @@ THE SOFTWARE.
         <tr>
           <j:set var="rawPath" value="${f.getRelativePathFrom(it)}" />
           <j:set var="encodedRelativePath">
-              <j:forEach items="${rawPath.split('/')}" var="component" varStatus="i">
-                  <j:set var="encodedComponent">
-                      ${groovy:URLEncoder.encode(component, 'UTF-8')}
-                  </j:set>
-                  <j:if test="${i.index > 0}">/</j:if>${encodedComponent}
-              </j:forEach>
+              ${rawPath.replace('[', '%5B').replace(']', '%5D')}
           </j:set>
           <td class="pane no-wrap"><t:failed-test result="${f}" url="${encodedRelativePath}"/></td>
           <td class="pane no-wrap" style="text-align:right;" data="${f.duration}">
