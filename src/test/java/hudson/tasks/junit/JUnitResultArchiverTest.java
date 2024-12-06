@@ -58,9 +58,11 @@ import hudson.tasks.test.TestObject;
 import hudson.tasks.test.helper.WebClientFactory;
 import hudson.util.HttpResponses;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
@@ -482,16 +484,24 @@ public class JUnitResultArchiverTest {
         String oobInUserContentLink = j.getURL() + "userContent/oob.xml";
         String triggerLink = j.getURL() + "triggerMe";
 
-        String xxeFile = this.getClass().getResource("testXxe-xxe.xml").getFile();
-        String xxeFileContent = FileUtils.readFileToString(new File(xxeFile), StandardCharsets.UTF_8);
+        URL xxeResourceUrl = this.getClass().getResource("testXxe-xxe.xml");
+        if (xxeResourceUrl == null) {
+            throw new FileNotFoundException("Resource 'testXxe-xxe.xml' not found");
+        }
+        File xxeFile = new File(xxeResourceUrl.toURI());
+        String xxeFileContent = FileUtils.readFileToString(xxeFile, StandardCharsets.UTF_8);
         String adaptedXxeFileContent = xxeFileContent.replace("$OOB_LINK$", oobInUserContentLink);
 
-        String oobFile = this.getClass().getResource("testXxe-oob.xml").getFile();
-        String oobFileContent = FileUtils.readFileToString(new File(oobFile), StandardCharsets.UTF_8);
+        URL oobResourceUrl = this.getClass().getResource("testXxe-oob.xml");
+        if (oobResourceUrl == null) {
+            throw new FileNotFoundException("Resource 'testXxe-oob.xml' not found");
+        }
+        File oobFile = new File(oobResourceUrl.toURI());
+        String oobFileContent = FileUtils.readFileToString(oobFile, StandardCharsets.UTF_8);
         String adaptedOobFileContent = oobFileContent.replace("$TARGET_URL$", triggerLink);
 
         File userContentDir = new File(j.jenkins.getRootDir(), "userContent");
-        FileUtils.writeStringToFile(new File(userContentDir, "oob.xml"), adaptedOobFileContent);
+        FileUtils.writeStringToFile(new File(userContentDir, "oob.xml"), adaptedOobFileContent, StandardCharsets.UTF_8);
 
         FreeStyleProject project = j.createFreeStyleProject();
         DownloadBuilder builder = new DownloadBuilder();
