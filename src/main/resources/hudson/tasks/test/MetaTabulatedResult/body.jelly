@@ -43,11 +43,9 @@ THE SOFTWARE.
           <j:set var="rawPath" value="${f.getRelativePathFrom(it)}" />
           <j:set var="encodedRelativePath">
               <j:forEach items="${rawPath.split('/')}" var="component" varStatus="i">
-                  <j:trim var="trimmedComponent" value="${component}" />
-                  <j:invokeStatic var="encodedComponent" className="java.net.URLEncoder" method="encode">
-                      <j:arg value="${trimmedComponent.toString()}" />
-                      <j:arg value="UTF-8" />
-                  </j:invokeStatic>
+                  <j:set var="encodedComponent">
+                      ${groovy:URLEncoder.encode(component, 'UTF-8')}
+                  </j:set>
                   <j:if test="${i.index > 0}">/</j:if>${encodedComponent}
               </j:forEach>
           </j:set>
