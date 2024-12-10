@@ -40,7 +40,11 @@ THE SOFTWARE.
       </thead>
       <j:forEach var="f" items="${it.failedTests}" varStatus="i">
         <tr>
-          <td class="pane no-wrap"><t:failed-test result="${f}" url="${f.getRelativePathFrom(it)}"/></td>
+          <j:set var="rawPath" value="${f.getRelativePathFrom(it)}" />
+          <j:set var="encodedRelativePath">
+              ${rawPath.replace('[', '%5B').replace(']', '%5D')}
+          </j:set>
+          <td class="pane no-wrap"><t:failed-test result="${f}" url="${encodedRelativePath}"/></td>
           <td class="pane no-wrap" style="text-align:right;" data="${f.duration}">
             ${f.durationString}
           </td>
