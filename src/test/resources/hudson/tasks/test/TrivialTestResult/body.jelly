@@ -37,27 +37,22 @@ THE SOFTWARE.
       <j:forEach var="f" items="${it.failedTests}" varStatus="i">
         <tr>
           <td class="pane">
-          <j:set var="rawPath" value="${f.getRelativePathFrom(it)}" />
-          <j:set var="encodedRelativePath">
-              ${rawPath.replace('[', '%5B').replace(']', '%5D')}
-          </j:set>
-			<a id="test-${f.fullName}-showlink" href="#"
-				onclick='javascript:showStackTrace("test-${f.fullName}","${encodedRelativePath}/summary")'>&gt;&gt;&gt;</a>
-			<a id="test-${f.fullName}-hidelink" href="#" style="display:none"
-				onclick='javascript:hideStackTrace("test-${f.fullName}")'>&lt;&lt;&lt;</a>
-          	<st:nbsp/>
-            <j:set var="rawPath" value="${f.getRelativePathFrom(it)}" />
-            <j:set var="encodedRelativePath">
-                ${rawPath.replace('[', '%5B').replace(']', '%5D')}
-            </j:set>
+            <j:invokeStatic var="encodedRelativePath" className="hudson.Util" method="encodeEachPathComponent">
+              <j:arg value="${f.getRelativePathFrom(it)}" />
+            </j:invokeStatic>
+            <a id="test-${f.fullName}-showlink" href="#"
+              onclick='javascript:showStackTrace("test-${f.fullName}","${encodedRelativePath}/summary")'>&gt;&gt;&gt;</a>
+            <a id="test-${f.fullName}-hidelink" href="#" style="display:none"
+              onclick='javascript:hideStackTrace("test-${f.fullName}")'>&lt;&lt;&lt;</a>
+            <st:nbsp/>
             <a href="${encodedRelativePath}"><st:out value="${f.fullName}"/></a>
-          	<st:nbsp/>
-	        <j:forEach var="badge" items="${f.testActions}">
-	          <st:include it="${badge}" page="badge.jelly" optional="true"/>
-	        </j:forEach>
-			<div id="test-${f.fullName}" class="hidden" style="display:none">
-			${%Loading...}
-			</div>
+            <st:nbsp/>
+            <j:forEach var="badge" items="${f.testActions}">
+              <st:include it="${badge}" page="badge.jelly" optional="true"/>
+            </j:forEach>
+            <div id="test-${f.fullName}" class="hidden" style="display:none">
+              ${%Loading...}
+            </div>
           </td>
 
           <td class="pane" style="text-align:right;">
