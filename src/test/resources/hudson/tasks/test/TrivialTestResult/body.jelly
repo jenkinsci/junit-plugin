@@ -37,7 +37,7 @@ THE SOFTWARE.
       <j:forEach var="f" items="${it.failedTests}" varStatus="i">
         <tr>
           <td class="pane">
-            <j:invokeStatic var="encodedRelativePath" className="hudson.Util" method="encodeEachPathComponent">
+            <j:invokeStatic var="encodedRelativePath" className="hudson.Util" method="rawEncode">
               <j:arg value="${f.getRelativePathFrom(it)}" />
             </j:invokeStatic>
             <a id="test-${f.fullName}-showlink" href="#"
