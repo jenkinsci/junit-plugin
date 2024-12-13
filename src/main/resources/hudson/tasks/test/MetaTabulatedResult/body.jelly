@@ -40,14 +40,15 @@ THE SOFTWARE.
       </thead>
       <j:forEach var="f" items="${it.failedTests}" varStatus="i">
         <tr>
-          <td class="pane no-wrap">
-            <t:failed-test result="${f}">
-              <j:invokeStatic var="encodedRelativePath" className="hudson.Util" method="rawEncode">
-                <j:arg value="${f.getRelativePathFrom(it)}" />
-              </j:invokeStatic>
-              <a href="${encodedRelativePath}">${f.name}</a>
-            </t:failed-test>
-          </td>
+          <!-- Temporarily replace slashes to prevent rawEncode from encoding them. -->
+          <j:set var="tempPath" value="${f.getRelativePathFrom(it).replace('/', '__SLASH__')}" />
+          <j:set var="rawEncodedPath">
+            <j:invokeStatic className="hudson.Util" method="rawEncode">
+              <j:arg value="${tempPath}" />
+            </j:invokeStatic>
+          </j:set>
+          <j:set var="encodedRelativePath" value="${rawEncodedPath.replace('__SLASH__', '/')}" />        
+          <td class="pane no-wrap"><t:failed-test result="${f}" url="${encodedRelativePath}"/></td>
           <td class="pane no-wrap" style="text-align:right;" data="${f.duration}">
             ${f.durationString}
           </td>
