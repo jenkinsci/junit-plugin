@@ -161,7 +161,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
         while (next != null && it != next) {
             cur = next;
             buf.insert(0, '/');
-            buf.insert(0, cur.getSafeName());
+            buf.insert(0, Util.rawEncode(cur.getSafeName()));
             next = cur.getParent();
         }
         if (it == next) {
