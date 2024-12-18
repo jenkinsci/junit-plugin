@@ -34,7 +34,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
 import org.owasp.html.HtmlPolicyBuilder;
 import org.owasp.html.PolicyFactory;
 
@@ -52,7 +51,8 @@ public abstract class TestResult extends TestObject {
             .allowElements("a")
             .allowUrlProtocols("https")
             .allowUrlProtocols("http")
-            .allowAttributes("href").onElements("a")
+            .allowAttributes("href")
+            .onElements("a")
             .toFactory();
 
     private static final Pattern LINK_REGEX_PATTERN = Pattern.compile("\\b(https?://[^\\s)<>\"]+)");
@@ -326,8 +326,8 @@ public abstract class TestResult extends TestObject {
             String linkUrl = linkMatcher.group(1);
 
             // Sanitize the final HTML tag we produce to make sure there's nothing malicious in there
-            String sanitizedLinkHtmlTag = POLICY_DEFINITION.sanitize(
-                    String.format("<a href=\"%s\">%s</a>", linkUrl, linkUrl));
+            String sanitizedLinkHtmlTag =
+                    POLICY_DEFINITION.sanitize(String.format("<a href=\"%s\">%s</a>", linkUrl, linkUrl));
 
             annotatedTxtBuilder
                     // Append all the chars in-between the last link and this current one, and run that substring
