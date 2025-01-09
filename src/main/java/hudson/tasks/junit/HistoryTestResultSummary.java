@@ -12,19 +12,29 @@ public class HistoryTestResultSummary {
     private final int skipCount;
     private final int passCount;
     private final String description;
-
-    public HistoryTestResultSummary(Run<?, ?> run, float duration, int failCount, int skipCount, int passCount) {
-        this(run, duration, failCount, skipCount, passCount, null);
+    private final hudson.tasks.test.TestResult resultInRun;
+    public HistoryTestResultSummary(Run<?, ?> run, hudson.tasks.test.TestResult resultInRun, float duration, int failCount, int skipCount, int passCount) {
+        this(run, resultInRun, duration, failCount, skipCount, passCount, null);
     }
 
     public HistoryTestResultSummary(
-            Run<?, ?> run, float duration, int failCount, int skipCount, int passCount, String description) {
+            Run<?, ?> run, hudson.tasks.test.TestResult resultInRun, float duration, int failCount, int skipCount, int passCount, String description) {
         this.run = run;
         this.duration = duration;
         this.failCount = failCount;
         this.skipCount = skipCount;
         this.passCount = passCount;
         this.description = description;
+        this.resultInRun = resultInRun;
+    }
+    @Deprecated
+    public HistoryTestResultSummary(Run<?, ?> run, float duration, int failCount, int skipCount, int passCount) {
+        this(run, null, duration, failCount, skipCount, passCount, null);
+    }
+    @Deprecated
+    public HistoryTestResultSummary(
+            Run<?, ?> run, float duration, int failCount, int skipCount, int passCount, String description) {
+        this(run, null, duration, failCount, skipCount, passCount, description);
     }
 
     public String getDescription() {
@@ -66,8 +76,13 @@ public class HistoryTestResultSummary {
     public String getFullDisplayName() {
         return run.getFullDisplayName();
     }
-
+    public hudson.tasks.test.TestResult getResultInRun() {
+        return resultInRun;
+    }
     public String getUrl() {
+        if (resultInRun != null) {
+            return resultInRun.getUrl();
+        }
         AbstractTestResultAction<?> action = run.getAction(AbstractTestResultAction.class);
 
         // TODO pass id to end of url
