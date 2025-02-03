@@ -32,7 +32,7 @@
   <properties>
     <changelist>999999-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
-    <jenkins.baseline>2.414</jenkins.baseline>
+    <jenkins.baseline>2.440</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
     <no-test-jar>false</no-test-jar>
     <spotless.check.skip>false</spotless.check.skip>
@@ -123,7 +123,7 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>github-checks</artifactId>
-      <version>581.va_9669c91d6cb_</version>
+      <version>583.v9c7da_3c0a_6d5</version>
       <scope>test</scope>
     </dependency>
     <dependency>
