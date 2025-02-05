@@ -31,7 +31,7 @@ THE SOFTWARE.
   <l:side-panel>
     <l:tasks>
       <j:set var="buildUrl" value="${h.decompose(request)}" />
-      <j:set var="baseUrl" value="${request.findAncestor(it).relativePath}"/>
+      <j:set var="baseUrl" value="${request2.findAncestor(it).relativePath}"/>
       <st:include it="${it.run}" page="tasks.jelly" optional="true"/>
       <l:task href="${baseUrl}/history" icon="symbol-bar-chart-outline plugin-ionicons-api" title="${%History}"/>
       <st:include it="${it.run}" page="actions.jelly" optional="true" />

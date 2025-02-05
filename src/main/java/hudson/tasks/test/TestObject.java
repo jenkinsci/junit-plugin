@@ -51,8 +51,8 @@ import org.kohsuke.stapler.HttpRedirect;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.Stapler;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
 import org.kohsuke.stapler.interceptor.RequirePOST;
@@ -188,7 +188,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
             buf.insert(0, myBuild.getUrl());
 
             // If we're inside a stapler request, just delegate to Hudson.Functions to get the relative path!
-            StaplerRequest req = Stapler.getCurrentRequest();
+            StaplerRequest2 req = Stapler.getCurrentRequest2();
             if (req != null && myBuild instanceof Item) {
                 buf.insert(0, '/');
                 // Ugly but I don't see how else to convince the compiler that myBuild is an Item
@@ -227,7 +227,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
         if (owner != null) {
             return owner.getAction(AbstractTestResultAction.class);
         } else {
-            Run<?, ?> run = Stapler.getCurrentRequest().findAncestorObject(Run.class);
+            Run<?, ?> run = Stapler.getCurrentRequest2().findAncestorObject(Run.class);
             if (run != null) {
                 return run.getAction(AbstractTestResultAction.class);
             }
@@ -462,7 +462,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
         return new History(this);
     }
 
-    public Object getDynamic(String token, StaplerRequest req, StaplerResponse rsp) {
+    public Object getDynamic(String token, StaplerRequest2 req, StaplerResponse2 rsp) {
         for (Action a : getTestActions()) {
             if (a == null) {
                 continue; // be defensive

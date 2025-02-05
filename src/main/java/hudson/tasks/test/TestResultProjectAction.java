@@ -38,13 +38,15 @@ import io.jenkins.plugins.echarts.AsyncTrendChart;
 import io.jenkins.plugins.junit.storage.FileJunitTestResultStorage;
 import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
 import io.jenkins.plugins.junit.storage.TestResultImpl;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletResponse;
 import org.kohsuke.stapler.Ancestor;
 import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
 
 /**
@@ -198,7 +200,7 @@ public class TestResultProjectAction implements Action, AsyncTrendChart, AsyncCo
     /**
      * Changes the test result report display mode.
      */
-    public void doFlipTrend(final StaplerRequest req, final StaplerResponse rsp) throws IOException {
+    public void doFlipTrend(final StaplerRequest2 req, final StaplerResponse2 rsp) throws IOException {
         boolean failureOnly = false;
 
         // check the current preference value
