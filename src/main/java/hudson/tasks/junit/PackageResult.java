@@ -33,8 +33,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.export.Exported;
 
 /**
@@ -162,7 +162,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
     }
 
     @Override
-    public Object getDynamic(String name, StaplerRequest req, StaplerResponse rsp) {
+    public Object getDynamic(String name, StaplerRequest2 req, StaplerResponse2 rsp) {
         ClassResult result = getClassResult(name);
         if (result != null) {
             return result;

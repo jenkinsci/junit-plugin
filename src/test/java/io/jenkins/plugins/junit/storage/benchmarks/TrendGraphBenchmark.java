@@ -49,8 +49,7 @@ public class TrendGraphBenchmark {
             System.out.println("Next build number: " + lastJob.getNextBuildNumber());
         }
 
-        private void createLotsOfRuns(String jobName, int runCount)
-                throws java.io.IOException, InterruptedException, ExecutionException {
+        private void createLotsOfRuns(String jobName, int runCount) throws Exception {
             Jenkins jenkins = Jenkins.get();
             lastJob = jenkins.createProject(WorkflowJob.class, jobName);
             lastJob.setDefinition(new CpsFlowDefinition(SIMPLE_TEST_RESULT, true));

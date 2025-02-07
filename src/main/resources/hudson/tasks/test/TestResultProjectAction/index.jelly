@@ -28,7 +28,7 @@ THE SOFTWARE.
     <st:include page="sidepanel.jelly" it="${it.job}" />
     <l:main-panel>
       <div>
-        <img src="trend?${request.queryString}" lazymap="trendMap?rel=../&amp;${request.queryString}" alt="[Test result trend chart]"/>
+        <img src="trend?${request2.queryString}" lazymap="trendMap?rel=../&amp;${request2.queryString}" alt="[Test result trend chart]"/>
       </div>
     </l:main-panel>
   </l:layout>

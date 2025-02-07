@@ -59,7 +59,7 @@ import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 /**
  * Aggregates downstream test reports into a single consolidated report,
@@ -389,9 +389,10 @@ public class AggregatedTestResultPublisher extends Recorder {
         }
 
         @Override
-        public AggregatedTestResultPublisher newInstance(StaplerRequest req, JSONObject formData) throws FormException {
+        public AggregatedTestResultPublisher newInstance(StaplerRequest2 req, JSONObject formData)
+                throws FormException {
             // Starting in 1.640, Descriptor#newInstance is
-            // newInstance(@CheckForNull StaplerRequest req, @NonNull JSONObject formData)
+            // newInstance(@CheckForNull StaplerRequest2 req, @NonNull JSONObject formData)
             if (formData == null) {
                 // Should not happen. See above
                 throw new AssertionError("Null parameters to Descriptor#newInstance");
