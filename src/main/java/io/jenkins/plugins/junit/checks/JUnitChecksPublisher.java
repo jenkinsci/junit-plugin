@@ -44,9 +44,10 @@ public class JUnitChecksPublisher {
     @VisibleForTesting
     ChecksDetails extractChecksDetails() {
         String testsURL = DisplayURLProvider.get().getTestsURL(run);
+        String resultDetails = extractChecksTitle()
         ChecksOutput output = new ChecksOutput.ChecksOutputBuilder()
-                .withTitle(extractChecksTitle())
-                .withSummary(extractChecksTitle())
+                .withTitle(resultDetails)
+                .withSummary(resultDetails)
                 .withText(extractChecksText(testsURL))
                 .build();
 
