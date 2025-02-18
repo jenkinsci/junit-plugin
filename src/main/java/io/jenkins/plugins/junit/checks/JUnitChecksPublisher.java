@@ -46,7 +46,7 @@ public class JUnitChecksPublisher {
         String testsURL = DisplayURLProvider.get().getTestsURL(run);
         ChecksOutput output = new ChecksOutput.ChecksOutputBuilder()
                 .withTitle(extractChecksTitle())
-                .withSummary("<sub>Send us [feedback](https://github.com/jenkinsci/junit-plugin/issues)")
+                .withSummary(extractChecksTitle())
                 .withText(extractChecksText(testsURL))
                 .build();
 
