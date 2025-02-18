@@ -70,6 +70,7 @@ public class JUnitChecksPublisherTest {
         ChecksOutput output = checksDetails.getOutput().get();
 
         assertThat(output.getTitle().get(), is("passed: 6"));
+        assertThat(output.getSummary().get(), is("passed: 6"));
         assertThat(output.getText().get(), is(""));
     }
 
@@ -98,6 +99,7 @@ public class JUnitChecksPublisherTest {
         ChecksOutput output = checksDetails.getOutput().get();
 
         assertThat(output.getTitle().get(), is("some.package.somewhere.WhooHoo.testHudsonReporting failed"));
+        assertThat(output.getSummary().get(), is("some.package.somewhere.WhooHoo.testHudsonReporting failed"));
     }
 
     @Test
@@ -125,6 +127,7 @@ public class JUnitChecksPublisherTest {
         ChecksOutput output = checksDetails.getOutput().get();
 
         assertThat(output.getTitle().get(), is("failed: 3, passed: 5"));
+        assertThat(output.getSummary().get(), is("failed: 3, passed: 5"));
     }
 
     @Test
