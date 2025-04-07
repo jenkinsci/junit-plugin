@@ -29,9 +29,9 @@ THE SOFTWARE.
     <table class="jenkins-table sortable" id="testresult">
       <thead>
         <tr>
-          <th class="pane-header">${%Test name}</th>
-          <th class="pane-header" style="width:6em">${%Duration}</th>
-          <th class="pane-header" style="width:6em">${%Status}</th>
+          <th>${%Test name}</th>
+          <th style="width:6em">${%Duration}</th>
+          <th style="width:6em">${%Status}</th>
           <j:forEach var="tableheader" items="${it.testActions}">
             <st:include it="${tableheader}" page="${it.childType}tableheader.jelly" optional="true"/>
           </j:forEach>

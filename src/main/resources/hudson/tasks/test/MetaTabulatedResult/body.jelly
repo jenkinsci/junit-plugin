@@ -30,9 +30,9 @@ THE SOFTWARE.
     <table class="jenkins-table sortable" id="failedtestresult">
       <thead>
         <tr>
-          <th class="pane-header">${%Test Name}</th>
-          <th class="pane-header" style="width:4em">${%Duration}</th>
-          <th class="pane-header" style="width:3em">${%Age}</th>
+          <th>${%Test Name}</th>
+          <th style="width:4em">${%Duration}</th>
+          <th style="width:3em">${%Age}</th>
           <j:forEach var="tableheader" items="${it.testActions}">
             <st:include it="${tableheader}" page="casetableheader.jelly" optional="true"/>
           </j:forEach>
@@ -60,16 +60,16 @@ THE SOFTWARE.
     <table class="jenkins-table sortable" id="testresult">
       <thead>
         <tr>
-          <th class="pane-header">${it.childTitle}</th>
-          <th class="pane-header" style="width:5em; text-align:right">${%Duration}</th>
-          <th class="pane-header" style="width:5em; text-align:right">${%Fail}</th>
-          <th class="pane-header" style="width:3em; text-align:right; white-space:nowrap;">(${%diff})</th>
-          <th class="pane-header" style="width:5em; text-align:right">${%Skip}</th>
-          <th class="pane-header" style="width:3em; text-align:right; white-space:nowrap;">(${%diff})</th>
-          <th class="pane-header" style="width:5em; text-align:right">${%Pass}</th>
-          <th class="pane-header" style="width:3em; text-align:right; white-space:nowrap;">(${%diff})</th>
-          <th class="pane-header" style="width:5em; text-align:right">${%Total}</th>
-          <th class="pane-header" style="width:3em; text-align:right; white-space:nowrap;">(${%diff})</th>
+          <th>${it.childTitle}</th>
+          <th style="width:5em; text-align:right">${%Duration}</th>
+          <th style="width:5em; text-align:right">${%Fail}</th>
+          <th style="width:3em; text-align:right; white-space:nowrap;">(${%diff})</th>
+          <th style="width:5em; text-align:right">${%Skip}</th>
+          <th style="width:3em; text-align:right; white-space:nowrap;">(${%diff})</th>
+          <th style="width:5em; text-align:right">${%Pass}</th>
+          <th style="width:3em; text-align:right; white-space:nowrap;">(${%diff})</th>
+          <th style="width:5em; text-align:right">${%Total}</th>
+          <th style="width:3em; text-align:right; white-space:nowrap;">(${%diff})</th>
           <j:forEach var="tableheader" items="${it.testActions}">
             <st:include it="${tableheader}" page="${it.childType}tableheader.jelly" optional="true"/>
           </j:forEach>
