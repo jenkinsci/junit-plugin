@@ -47,9 +47,9 @@ THE SOFTWARE.
         <table class="jenkins-table sortable">
           <thead>
             <tr>
-              <th class="pane-header">Test Name</th>
-              <th class="pane-header" style="width:4em; text-align:right;">Duration</th>
-              <th class="pane-header" style="width:4em; text-align:right;">Age</th>
+              <th>Test Name</th>
+              <th style="width:4em; text-align:right;">Duration</th>
+              <th style="width:4em; text-align:right;">Age</th>
             </tr>
           </thead>
           <j:forEach var="f" items="${report.result.failedTests}" varStatus="i">

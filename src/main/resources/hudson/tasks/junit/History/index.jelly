@@ -135,14 +135,14 @@ THE SOFTWARE.
       <table class="jenkins-table sortable" style="--table-padding: 5px;" id="testresult">
         <thead>
           <tr>
-            <th class="pane-header" style="text-align:center">${%Build}</th>
+            <th style="text-align:center">${%Build}</th>
             <j:if test="${historySummary.descriptionAvailable}">
-              <th class="pane-header" style="text-align:center">${%Description}</th>
+              <th style="text-align:center">${%Description}</th>
             </j:if>
-            <th class="pane-header" style="text-align:center">${%Duration}</th>
-            <th class="pane-header" style="text-align:center">${%Fail}</th>
-            <th class="pane-header" style="text-align:center">${%Skip}</th>
-            <th class="pane-header" style="text-align:center">${%Total}</th>
+            <th style="text-align:center">${%Duration}</th>
+            <th style="text-align:center">${%Fail}</th>
+            <th style="text-align:center">${%Skip}</th>
+            <th style="text-align:center">${%Total}</th>
           </tr>
         </thead>
         <tbody>

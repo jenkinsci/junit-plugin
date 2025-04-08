@@ -30,10 +30,10 @@ THE SOFTWARE.
   <table class="jenkins-table sortable" id="testresult">
     <thead>
       <tr>
-        <th class="pane-header" style="width:10em">${%Build}</th>
-        <th class="pane-header" style="width:10em">${%Test Description}</th>
-        <th class="pane-header" style="width:5em">${%Test Duration}</th>
-        <th class="pane-header" style="width:5em">${%Test Result}</th>
+        <th style="width:10em">${%Build}</th>
+        <th style="width:10em">${%Test Description}</th>
+        <th style="width:5em">${%Test Duration}</th>
+        <th style="width:5em">${%Test Result}</th>
       </tr>
     </thead>
     <tbody>
