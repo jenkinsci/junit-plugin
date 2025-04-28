@@ -1,6 +1,8 @@
 package hudson.tasks.test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.doCallRealMethod;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.eq;
@@ -12,10 +14,9 @@ import java.lang.ref.Reference;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class TestObjectTest {
+class TestObjectTest {
 
     public static class TestObjectImpl extends TestObject {
         public TestObjectImpl() {}
@@ -67,22 +68,22 @@ public class TestObjectTest {
     }
 
     @Test
-    public void testSafe() {
+    void testSafe() {
         String name = "Foo#approve! is <called> by approve_on_foo?xyz/\\: 50%";
         String encoded = TestObject.safe(name);
 
-        Assert.assertFalse(encoded.contains("#"));
-        Assert.assertFalse(encoded.contains("?"));
-        Assert.assertFalse(encoded.contains("\\"));
-        Assert.assertFalse(encoded.contains("/"));
-        Assert.assertFalse(encoded.contains(":"));
-        Assert.assertFalse(encoded.contains("%"));
-        Assert.assertFalse(encoded.contains("<"));
-        Assert.assertFalse(encoded.contains(">"));
+        assertFalse(encoded.contains("#"));
+        assertFalse(encoded.contains("?"));
+        assertFalse(encoded.contains("\\"));
+        assertFalse(encoded.contains("/"));
+        assertFalse(encoded.contains(":"));
+        assertFalse(encoded.contains("%"));
+        assertFalse(encoded.contains("<"));
+        assertFalse(encoded.contains(">"));
     }
 
     @Test
-    public void uniquifyName() {
+    void uniquifyName() {
         for (int i = 0; i < 2; i++) { // different parents
             final List<TestObject> ts = new ArrayList<>();
             for (int j = 0; j < 10; j++) {
@@ -102,12 +103,12 @@ public class TestObjectTest {
             Reference<?> r = new WeakReference<Object>(ts.get(4)); // arbitrarily
             ts.clear();
             System.gc();
-            Assert.assertNull(r.get());
+            assertNull(r.get());
         }
     }
 
     @Test
-    public void getUrlShouldBeRelativeToContextRoot() {
+    void getUrlShouldBeRelativeToContextRoot() {
         TestObject testObject = spy(new TestObjectImpl());
         Run run = mock(Run.class);
         AbstractTestResultAction testResultAction = mock(AbstractTestResultAction.class);

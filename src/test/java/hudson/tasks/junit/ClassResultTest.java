@@ -1,14 +1,14 @@
 package hudson.tasks.junit;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import hudson.tasks.test.TestResult;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class ClassResultTest {
+class ClassResultTest {
 
     @Test
-    public void testFindCorrespondingResult() {
+    void testFindCorrespondingResult() {
         ClassResult classResult = new ClassResult(null, "com.example.ExampleTest");
 
         CaseResult caseResult = new CaseResult(null, "testCase", null);
@@ -20,7 +20,7 @@ public class ClassResultTest {
     }
 
     @Test
-    public void testFindCorrespondingResultWhereClassResultNameIsNotSubstring() {
+    void testFindCorrespondingResultWhereClassResultNameIsNotSubstring() {
         ClassResult classResult = new ClassResult(null, "aaaa");
 
         CaseResult caseResult = new CaseResult(null, "tc_bbbb", null);
@@ -32,7 +32,7 @@ public class ClassResultTest {
     }
 
     @Test
-    public void testFindCorrespondingResultWhereClassResultNameIsLastInCaseResultName() {
+    void testFindCorrespondingResultWhereClassResultNameIsLastInCaseResultName() {
         ClassResult classResult = new ClassResult(null, "aaaa");
 
         CaseResult caseResult = new CaseResult(null, "tc_aaaa", null);

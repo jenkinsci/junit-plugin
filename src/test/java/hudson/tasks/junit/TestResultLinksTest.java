@@ -23,11 +23,11 @@
  */
 package hudson.tasks.junit;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
@@ -39,12 +39,12 @@ import java.util.concurrent.TimeUnit;
 import org.htmlunit.Page;
 import org.htmlunit.html.HtmlAnchor;
 import org.htmlunit.html.HtmlPage;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TouchBuilder;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.jvnet.hudson.test.recipes.LocalData;
 
 /**
@@ -52,15 +52,17 @@ import org.jvnet.hudson.test.recipes.LocalData;
  * Date: Dec 7, 2009
  * Time: 7:52:55 PM
  */
-public class TestResultLinksTest {
-    @Rule
-    public final JenkinsRule rule = new JenkinsRule();
+@WithJenkins
+class TestResultLinksTest {
 
     private FreeStyleProject project;
     private JUnitResultArchiver archiver;
 
-    @Before
-    public void setUp() throws Exception {
+    private JenkinsRule rule;
+
+    @BeforeEach
+    void setUp(JenkinsRule rule) throws Exception {
+        this.rule = rule;
         project = rule.createFreeStyleProject("taqueria");
         archiver = new JUnitResultArchiver("*.xml");
         project.getPublishersList().add(archiver);
@@ -69,7 +71,7 @@ public class TestResultLinksTest {
 
     @LocalData
     @Test
-    public void testFailureLinks() throws Exception {
+    void testFailureLinks() throws Exception {
         FreeStyleBuild build = project.scheduleBuild2(0).get(10, TimeUnit.SECONDS);
         rule.assertBuildStatus(Result.UNSTABLE, build);
 
@@ -102,7 +104,7 @@ public class TestResultLinksTest {
     // Exercises the b-is-not-a-descendant-of-a path.
     @LocalData
     @Test
-    public void testNonDescendantRelativePath() throws Exception {
+    void testNonDescendantRelativePath() throws Exception {
         FreeStyleBuild build =
                 project.scheduleBuild2(0).get(10, TimeUnit.MINUTES); // leave time for interactive debugging
         rule.assertBuildStatus(Result.UNSTABLE, build);
@@ -111,8 +113,8 @@ public class TestResultLinksTest {
         CaseResult theFailedTestCase = theOverallTestResult.getFailedTests().get(0);
         String relativePath = theFailedTestCase.getRelativePathFrom(theOverallTestResult);
         System.out.println("relative path seems to be: " + relativePath);
-        assertNotNull("relative path exists", relativePath);
-        assertFalse("relative path doesn't start with a slash", relativePath.startsWith("/"));
+        assertNotNull(relativePath, "relative path exists");
+        assertFalse(relativePath.startsWith("/"), "relative path doesn't start with a slash");
 
         // Now ask for the relative path from the child to the parent -- we should get an absolute path
         String relativePath2 = theOverallTestResult.getRelativePathFrom(theFailedTestCase);
@@ -121,12 +123,12 @@ public class TestResultLinksTest {
         // If somehow we start being able to produce a root url, then I'll also tolerate a url that starts with that.
         boolean pathIsEmptyOrNull = relativePath2 == null || relativePath2.isEmpty();
         boolean pathStartsWithRootUrl = !pathIsEmptyOrNull && relativePath2.startsWith(rule.jenkins.getRootUrl());
-        assertTrue("relative path is empty OR begins with the app root", pathIsEmptyOrNull || pathStartsWithRootUrl);
+        assertTrue(pathIsEmptyOrNull || pathStartsWithRootUrl, "relative path is empty OR begins with the app root");
     }
 
     @Issue("JENKINS-31660")
     @Test
-    public void testPreviousBuildNotLoaded() throws IOException, URISyntaxException {
+    void testPreviousBuildNotLoaded() throws IOException, URISyntaxException {
         TestResult testResult = new TestResult();
         File dataFile = TestResultTest.getDataFile("SKIPPED_MESSAGE/skippedTestResult.xml");
         testResult.parse(dataFile, null);
@@ -141,7 +143,7 @@ public class TestResultLinksTest {
     }
 
     @Test
-    public void testFailedSinceAfterSkip() throws IOException, URISyntaxException {
+    void testFailedSinceAfterSkip() throws IOException, URISyntaxException {
         TestResult testResult = new TestResult();
         File dataFile = TestResultTest.getDataFile("SKIPPED_MESSAGE/skippedTestResult.xml");
         testResult.parse(dataFile, null);

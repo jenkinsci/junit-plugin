@@ -1,7 +1,7 @@
 package hudson.tasks.junit;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import hudson.Launcher;
 import hudson.model.AbstractBuild;
@@ -20,26 +20,28 @@ import org.hamcrest.CoreMatchers;
 import org.htmlunit.html.HtmlPage;
 import org.htmlunit.html.HtmlTable;
 import org.htmlunit.html.HtmlTableCell;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestBuilder;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 /**
  * Verifies that TestDataPublishers can contribute custom columns to html tables in result pages.
  */
-public class CustomColumnsTest {
-
-    @Rule
-    public JenkinsRule jenkins = new JenkinsRule();
+@WithJenkins
+class CustomColumnsTest {
 
     private FreeStyleProject project;
 
     private static final String reportFileName = "junit-report-494.xml";
 
-    @Before
-    public void setUp() throws Exception {
+    private JenkinsRule jenkins;
+
+    @BeforeEach
+    void setUp(JenkinsRule rule) throws Exception {
+        jenkins = rule;
+
         project = jenkins.createFreeStyleProject("customcolumns");
         JUnitResultArchiver archiver = new JUnitResultArchiver("*.xml");
         archiver.setTestDataPublishers(Collections.singletonList(new Rot13Publisher()));
@@ -67,7 +69,7 @@ public class CustomColumnsTest {
         HtmlPage classReportPage = wc.getPage(project, pathToPage);
         jenkins.assertGoodStatus(classReportPage);
 
-        HtmlTable testResultTable = (HtmlTable) classReportPage.getFirstByXPath("//table[@id='" + tableId + "']");
+        HtmlTable testResultTable = classReportPage.getFirstByXPath("//table[@id='" + tableId + "']");
         List<HtmlTableCell> headerRowCells =
                 testResultTable.getHeader().getRows().get(0).getCells();
         int numberOfColumns = headerRowCells.size();
@@ -84,7 +86,7 @@ public class CustomColumnsTest {
     }
 
     @Test
-    public void verifyThatCustomColumnIsAddedToTheTestsTableOnTheClassResultPage() throws Exception {
+    void verifyThatCustomColumnIsAddedToTheTestsTableOnTheClassResultPage() throws Exception {
         verifyThatTableContainsExpectedValues(
                 "/lastBuild/testReport/junit/io.jenkins.example/AnExampleTestClass/",
                 "testresult",
@@ -94,7 +96,7 @@ public class CustomColumnsTest {
     }
 
     @Test
-    public void verifyThatCustomColumnIsAddedToTheFailedTestsTableOnThePackageResultPage() throws Exception {
+    void verifyThatCustomColumnIsAddedToTheFailedTestsTableOnThePackageResultPage() throws Exception {
         verifyThatTableContainsExpectedValues(
                 "/lastBuild/testReport/junit/io.jenkins.example/",
                 "failedtestresult",
@@ -103,7 +105,7 @@ public class CustomColumnsTest {
     }
 
     @Test
-    public void verifyThatCustomColumnIsAddedToTheClassesTableOnThePackageResultPage() throws Exception {
+    void verifyThatCustomColumnIsAddedToTheClassesTableOnThePackageResultPage() throws Exception {
         verifyThatTableContainsExpectedValues(
                 "/lastBuild/testReport/junit/io.jenkins.example/",
                 "testresult",
@@ -112,7 +114,7 @@ public class CustomColumnsTest {
     }
 
     @Test
-    public void verifyThatCustomColumnIsAddedToTheFailedTestsTableOnTheTestResultPage() throws Exception {
+    void verifyThatCustomColumnIsAddedToTheFailedTestsTableOnTheTestResultPage() throws Exception {
         verifyThatTableContainsExpectedValues(
                 "/lastBuild/testReport/",
                 "failedtestresult",
@@ -121,7 +123,7 @@ public class CustomColumnsTest {
     }
 
     @Test
-    public void verifyThatCustomColumnIsAddedToTheClassesTableOnTheTestResultPage() throws Exception {
+    void verifyThatCustomColumnIsAddedToTheClassesTableOnTheTestResultPage() throws Exception {
         verifyThatTableContainsExpectedValues(
                 "/lastBuild/testReport/",
                 "testresult",

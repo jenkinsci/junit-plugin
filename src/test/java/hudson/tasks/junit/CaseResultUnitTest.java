@@ -24,23 +24,21 @@
 
 package hudson.tasks.junit;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicReference;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.For;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.localizer.LocaleProvider;
 
 @For(CaseResult.class)
-public class CaseResultUnitTest {
-
-    public CaseResultUnitTest() {}
+class CaseResultUnitTest {
 
     @Issue("JENKINS-6824")
     @Test
-    public void testLocalizationOfStatus() throws Exception {
+    void testLocalizationOfStatus() {
         LocaleProvider old = LocaleProvider.getProvider();
         try {
             final AtomicReference<Locale> locale = new AtomicReference<>();

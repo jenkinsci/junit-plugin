@@ -1,6 +1,6 @@
 package hudson.tasks.test.helper;
 
-import static org.junit.Assert.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 import java.io.IOException;
 import java.util.List;
@@ -34,6 +34,6 @@ public abstract class AbstractPage {
                 break;
             }
         }
-        assertFalse("Link to " + fullUrl + " found, but should not be present", found);
+        assertFalse(found, "Link to " + fullUrl + " found, but should not be present");
     }
 }
