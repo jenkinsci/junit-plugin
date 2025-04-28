@@ -26,10 +26,11 @@ package hudson.tasks.junit;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 import hudson.FilePath;
 import hudson.Launcher;
@@ -52,31 +53,28 @@ import org.htmlunit.html.HtmlElement;
 import org.htmlunit.html.HtmlPage;
 import org.htmlunit.html.HtmlTable;
 import org.htmlunit.xml.XmlPage;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.BuildWatcher;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TouchBuilder;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.jvnet.hudson.test.recipes.LocalData;
 import org.xml.sax.SAXException;
 
-public class TestResultPublishingTest {
-    @Rule
-    public final JenkinsRule rule = new JenkinsRule();
-
-    @ClassRule
-    public static final BuildWatcher buildWatcher = new BuildWatcher();
+@WithJenkins
+class TestResultPublishingTest {
 
     private FreeStyleProject project;
     private JUnitResultArchiver archiver;
     private final String BASIC_TEST_PROJECT = "percival";
     private final String TEST_PROJECT_WITH_HISTORY = "wonky";
 
-    @Before
-    public void setUp() throws Exception {
+    private JenkinsRule rule;
+
+    @BeforeEach
+    void setUp(JenkinsRule rule) throws Exception {
+        this.rule = rule;
         project = rule.createFreeStyleProject(BASIC_TEST_PROJECT);
         project.getBuildersList().add(new TouchBuilder());
         archiver = new JUnitResultArchiver("*.xml");
@@ -86,7 +84,7 @@ public class TestResultPublishingTest {
 
     @LocalData
     @Test
-    public void testBasic() throws Exception {
+    void testBasic() throws Exception {
         FreeStyleBuild build = project.scheduleBuild2(0).get(30, TimeUnit.SECONDS);
 
         assertTestResults(build);
@@ -102,7 +100,7 @@ public class TestResultPublishingTest {
 
     @LocalData
     @Test
-    public void testSlave() throws Exception {
+    void testSlave() throws Exception {
         DumbSlave s = rule.createOnlineSlave();
         project.setAssignedLabel(s.getSelfLabel());
 
@@ -125,9 +123,9 @@ public class TestResultPublishingTest {
      */
     @LocalData
     @Test
-    public void testOpenJUnitPublishing() throws IOException, SAXException {
+    void testOpenJUnitPublishing() throws IOException, SAXException {
         Project proj = (Project) rule.jenkins.getItem(TEST_PROJECT_WITH_HISTORY);
-        assertNotNull("We should have a project named " + TEST_PROJECT_WITH_HISTORY, proj);
+        assertNotNull(proj, "We should have a project named " + TEST_PROJECT_WITH_HISTORY);
 
         // Validate that there are test results where I expect them to be:
         JenkinsRule.WebClient wc = WebClientFactory.createWebClientWithDisabledJavaScript(rule);
@@ -147,9 +145,7 @@ public class TestResultPublishingTest {
         assertThat(trendGraphCaption.getTextContent(), is("Test Result Trend"));
         HtmlElement testCanvas =
                 (HtmlElement) trendGraphCaption.getNextSibling().getFirstChild();
-        assertTrue(
-                "couldn't find test result trend graph",
-                testCanvas.getAttribute("class").contains("echarts-trend"));
+        assertTrue(testCanvas.getAttribute("class").contains("echarts-trend"), "couldn't find test result trend graph");
 
         XmlPage xmlProjectPage = wc.goToXml(proj.getUrl() + "/lastBuild/testReport/api/xml");
         rule.assertXPath(xmlProjectPage, "/testResult");
@@ -252,9 +248,9 @@ public class TestResultPublishingTest {
     @Issue("JENKINS-5246")
     @LocalData
     @Test
-    public void testInterBuildDiffs() throws IOException, SAXException {
+    void testInterBuildDiffs() throws IOException, SAXException {
         Project proj = (Project) rule.jenkins.getItem(TEST_PROJECT_WITH_HISTORY);
-        assertNotNull("We should have a project named " + TEST_PROJECT_WITH_HISTORY, proj);
+        assertNotNull(proj, "We should have a project named " + TEST_PROJECT_WITH_HISTORY);
 
         // Validate that there are test results where I expect them to be:
         JenkinsRule.WebClient wc = WebClientFactory.createWebClientWithDisabledJavaScript(rule);
@@ -281,9 +277,9 @@ public class TestResultPublishingTest {
      */
     @LocalData
     @Test
-    public void testHistoryPageOpenJunit() throws IOException, SAXException {
+    void testHistoryPageOpenJunit() throws IOException, SAXException {
         Project proj = (Project) rule.jenkins.getItem(TEST_PROJECT_WITH_HISTORY);
-        assertNotNull("We should have a project named " + TEST_PROJECT_WITH_HISTORY, proj);
+        assertNotNull(proj, "We should have a project named " + TEST_PROJECT_WITH_HISTORY);
 
         // Validate that there are test results where I expect them to be:
         JenkinsRule.WebClient wc = WebClientFactory.createWebClientWithDisabledJavaScript(rule);
@@ -294,8 +290,8 @@ public class TestResultPublishingTest {
                 (HtmlElement) historyPage.getByXPath("//div[@class='card ']").get(0);
         assertThat(historyCard.getTextContent(), containsString("History"));
         DomElement wholeTable = historyPage.getElementById("testresult");
-        assertNotNull("table with id 'testresult' exists", wholeTable);
-        assertTrue("wholeTable is a table", wholeTable instanceof HtmlTable);
+        assertNotNull(wholeTable, "table with id 'testresult' exists");
+        assertInstanceOf(HtmlTable.class, wholeTable, "wholeTable is a table");
         HtmlTable table = (HtmlTable) wholeTable;
 
         // We really want to call table.getRowCount(), but
@@ -307,14 +303,14 @@ public class TestResultPublishingTest {
         // of detecting whether the history results are present.
 
         String tableText = table.getTextContent();
-        assertTrue("Table text is missing the project name", tableText.contains(TEST_PROJECT_WITH_HISTORY));
-        assertTrue("Table text is missing the build number", tableText.contains("7"));
-        assertTrue("Table text is missing the test duration", tableText.contains("4 ms"));
+        assertTrue(tableText.contains(TEST_PROJECT_WITH_HISTORY), "Table text is missing the project name");
+        assertTrue(tableText.contains("7"), "Table text is missing the build number");
+        assertTrue(tableText.contains("4 ms"), "Table text is missing the test duration");
     }
 
     @Issue("JENKINS-19186")
     @Test
-    public void testBrokenResultFile() throws Exception {
+    void testBrokenResultFile() throws Exception {
         FreeStyleProject p = rule.createFreeStyleProject();
         p.getBuildersList().add(new TestBuilder());
         p.getBuildersList().add(new TouchBuilder());
@@ -335,20 +331,20 @@ public class TestResultPublishingTest {
         if (str == null) {
             return;
         }
-        if (str.equals("")) {
+        if (str.isEmpty()) {
             return;
         }
         fail(msg + "(should be empty or null) : '" + str + "'");
     }
 
     void assertPaneDiffText(String msg, int expectedValue, Object paneObj) {
-        assertTrue("paneObj should be an HtmlElement, it was " + paneObj.getClass(), paneObj instanceof HtmlElement);
+        assertInstanceOf(HtmlElement.class, paneObj, "paneObj should be an HtmlElement, it was " + paneObj.getClass());
         String paneText = ((HtmlElement) paneObj).asNormalizedText();
         if (expectedValue == 0) {
             assertStringEmptyOrNull(msg, paneText);
         } else {
             String expectedString = (expectedValue >= 1 ? "+" : "-") + Math.abs(expectedValue);
-            assertEquals(msg, expectedString, paneText);
+            assertEquals(expectedString, paneText, msg);
         }
     }
 
@@ -407,15 +403,15 @@ public class TestResultPublishingTest {
 
     private void assertTestResults(FreeStyleBuild build) {
         TestResultAction testResultAction = build.getAction(TestResultAction.class);
-        assertNotNull("no TestResultAction", testResultAction);
+        assertNotNull(testResultAction, "no TestResultAction");
 
         TestResult result = testResultAction.getResult();
-        assertNotNull("no TestResult", result);
+        assertNotNull(result, "no TestResult");
 
-        assertEquals("should have 1 failing test", 1, testResultAction.getFailCount());
-        assertEquals("should have 1 failing test", 1, result.getFailCount());
+        assertEquals(1, testResultAction.getFailCount(), "should have 1 failing test");
+        assertEquals(1, result.getFailCount(), "should have 1 failing test");
 
-        assertEquals("should have 132 total tests", 132, testResultAction.getTotalCount());
-        assertEquals("should have 132 total tests", 132, result.getTotalCount());
+        assertEquals(132, testResultAction.getTotalCount(), "should have 132 total tests");
+        assertEquals(132, result.getTotalCount(), "should have 132 total tests");
     }
 }

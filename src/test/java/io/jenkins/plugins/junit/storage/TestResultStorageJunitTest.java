@@ -30,9 +30,9 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasProperty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.thoughtworks.xstream.XStream;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
@@ -88,34 +88,30 @@ import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.remoting.SerializableOnlyOverRemoting;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.BuildWatcher;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-public class TestResultStorageJunitTest {
+@WithJenkins
+class TestResultStorageJunitTest {
 
     private static final Logger LOGGER = Logger.getLogger(TestResultStorageJunitTest.class.getName());
 
-    @ClassRule
-    public static BuildWatcher buildWatcher = new BuildWatcher();
-
-    @Rule
-    public JenkinsRule r = new JenkinsRule();
+    private JenkinsRule r;
 
     /**
      * Need {@link LocalH2Database#getAutoServer} so that {@link Impl} can make connections from an agent JVM.
      * @see <a href="http://www.h2database.com/html/features.html#auto_mixed_mode">Automatic Mixed Mode</a>
      */
-    @Before
-    public void autoServer() throws Exception {
+    @BeforeEach
+    void setUp(JenkinsRule rule) {
+        r = rule;
         GlobalDatabaseConfiguration gdc = GlobalDatabaseConfiguration.get();
         gdc.setDatabase(null);
         LocalH2Database.setDefaultGlobalDatabase();
@@ -125,25 +121,27 @@ public class TestResultStorageJunitTest {
     }
 
     @Test
-    public void smokes() throws Exception {
+    void smokes() throws Exception {
         DumbSlave remote = r.createOnlineSlave(Label.get("remote"));
         // ((Channel) remote.getChannel()).addListener(new
         // LoggingChannelListener(Logger.getLogger(TestResultStorageTest.class.getName()), Level.INFO));
         WorkflowJob p = r.createProject(WorkflowJob.class, "p");
         p.setDefinition(new CpsFlowDefinition(
-                "node('remote') {\n" + "  writeFile file: 'x.xml', text: '''<testsuite name='sweet' time='200.0'>"
-                        + "<testcase classname='Klazz' name='test1' time='198.0'><error message='failure'/></testcase>"
-                        + "<testcase classname='Klazz' name='test2' time='2.0'/>"
-                        + "<testcase classname='other.Klazz' name='test3'><skipped message='Not actually run.'/></testcase>"
-                        + "</testsuite>'''\n"
-                        + "  def s = junit testResults: 'x.xml', skipPublishingChecks: true\n"
-                        + "  echo(/summary: fail=$s.failCount skip=$s.skipCount pass=$s.passCount total=$s.totalCount/)\n"
-                        + "  writeFile file: 'x.xml', text: '''<testsuite name='supersweet'>"
-                        + "<testcase classname='another.Klazz' name='test1'><error message='another failure'/></testcase>"
-                        + "</testsuite>'''\n"
-                        + "  s = junit testResults: 'x.xml', skipPublishingChecks: true\n"
-                        + "  echo(/next summary: fail=$s.failCount skip=$s.skipCount pass=$s.passCount total=$s.totalCount/)\n"
-                        + "}",
+                """
+                        node('remote') {
+                          writeFile file: 'x.xml', text: '''<testsuite name='sweet' time='200.0'>
+                        <testcase classname='Klazz' name='test1' time='198.0'><error message='failure'/></testcase>
+                        <testcase classname='Klazz' name='test2' time='2.0'/>
+                        <testcase classname='other.Klazz' name='test3'><skipped message='Not actually run.'/></testcase>
+                        </testsuite>'''
+                          def s = junit testResults: 'x.xml', skipPublishingChecks: true
+                          echo(/summary: fail=$s.failCount skip=$s.skipCount pass=$s.passCount total=$s.totalCount/)
+                          writeFile file: 'x.xml', text: '''<testsuite name='supersweet'>\
+                        <testcase classname='another.Klazz' name='test1'><error message='another failure'/></testcase>
+                        </testsuite>'''
+                          s = junit testResults: 'x.xml', skipPublishingChecks: true
+                          echo(/next summary: fail=$s.failCount skip=$s.skipCount pass=$s.passCount total=$s.totalCount/)
+                        }""",
                 true));
         WorkflowRun b = p.scheduleBuild2(0).get();
         try (Connection connection = Objects.requireNonNull(
@@ -165,7 +163,7 @@ public class TestResultStorageJunitTest {
                     .newDocumentBuilder()
                     .parse(new ByteArrayInputStream(buildXml.getBytes(StandardCharsets.UTF_8)));
             NodeList testResultActionList = doc.getElementsByTagName("hudson.tasks.junit.TestResultAction");
-            assertEquals(buildXml, 1, testResultActionList.getLength());
+            assertEquals(1, testResultActionList.getLength(), buildXml);
             Element testResultAction = (Element) testResultActionList.item(0);
             NodeList childNodes = testResultAction.getChildNodes();
             Set<String> childNames = new TreeSet<>();
@@ -257,7 +255,7 @@ public class TestResultStorageJunitTest {
             SuiteResult supersweetSuite = suiteResults.stream()
                     .filter(suite -> suite.getName().equals("supersweet"))
                     .findFirst()
-                    .get();
+                    .orElseThrow();
             assertThat(supersweetSuite.getCases(), hasSize(1));
             assertThat(supersweetSuite.getCases().get(0).getName(), equalTo("test1"));
             assertThat(supersweetSuite.getCases().get(0).getClassName(), equalTo("another.Klazz"));
@@ -781,7 +779,7 @@ public class TestResultStorageJunitTest {
                                 SuiteResult suiteResult = null;
                                 TestResult parent = new TestResult(this);
                                 boolean isFirst = true;
-                                List<SuiteResult> suites = new ArrayList<SuiteResult>();
+                                List<SuiteResult> suites = new ArrayList<>();
                                 while (result.next()) {
                                     String suiteName = result.getString("suite");
                                     if (isFirst || !suiteResult.getName().equals(suiteName)) {
@@ -822,7 +820,6 @@ public class TestResultStorageJunitTest {
                         }
                     });
                 }
-                ;
 
                 @Override
                 public float getTotalTestDuration() {

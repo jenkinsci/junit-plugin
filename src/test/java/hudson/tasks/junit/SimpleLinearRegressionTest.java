@@ -4,15 +4,15 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.closeTo;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.notANumber;
-import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import hudson.tasks.junit.History.SimpleLinearRegression;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class SimpleLinearRegressionTest {
+class SimpleLinearRegressionTest {
 
     @Test
-    public void smokes() {
+    void smokes() {
         // Results checked in Excel.
         double[] xs = {2, 3, 4, 5, 6, 8, 10, 11};
         double[] ys = {21.05, 23.51, 24.23, 27.71, 30.86, 45.85, 52.12, 55.98};
@@ -30,7 +30,7 @@ public class SimpleLinearRegressionTest {
     }
 
     @Test
-    public void requires2DataPoints() {
+    void requires2DataPoints() {
         var t = assertThrows(
                 IllegalArgumentException.class,
                 () -> SimpleLinearRegression.coefficients(new double[0], new double[0]));
@@ -45,7 +45,7 @@ public class SimpleLinearRegressionTest {
     }
 
     @Test
-    public void requiresArraysWithSameLength() {
+    void requiresArraysWithSameLength() {
         var t = assertThrows(
                 IllegalArgumentException.class,
                 () -> SimpleLinearRegression.coefficients(new double[3], new double[4]));
@@ -57,7 +57,7 @@ public class SimpleLinearRegressionTest {
     }
 
     @Test
-    public void returnsNanIfXValuesDoNotVaryEnough() {
+    void returnsNanIfXValuesDoNotVaryEnough() {
         double[] xs = {Double.MIN_VALUE, 1e162 * Double.MIN_VALUE};
         double[] ys = {0.0, 1.0};
         double[] cs = SimpleLinearRegression.coefficients(xs, ys);

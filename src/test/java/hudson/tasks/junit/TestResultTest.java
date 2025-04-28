@@ -23,10 +23,10 @@
  */
 package hudson.tasks.junit;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import hudson.XmlFile;
 import hudson.tasks.test.PipelineTestDetails;
@@ -40,9 +40,8 @@ import java.util.Collection;
 import java.util.List;
 import org.apache.commons.io.FileUtils;
 import org.apache.tools.ant.DirectoryScanner;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.jvnet.hudson.test.Issue;
 
 /**
@@ -51,8 +50,9 @@ import org.jvnet.hudson.test.Issue;
  * @author dty
  */
 public class TestResultTest {
-    @Rule
-    public TemporaryFolder tmp = new TemporaryFolder();
+
+    @TempDir
+    private File tmp;
 
     protected static File getDataFile(String name) throws URISyntaxException {
         return new File(TestResultTest.class.getResource(name).toURI());
@@ -63,17 +63,17 @@ public class TestResultTest {
      * These suites don't differ by name (and timestamp), the y differ by 'id'.
      */
     @Test
-    public void testIpsTests() throws Exception {
+    void testIpsTests() throws Exception {
         TestResult testResult = new TestResult();
         testResult.parse(getDataFile("eclipse-plugin-test-report.xml"), new PipelineTestDetails());
 
         Collection<SuiteResult> suites = testResult.getSuites();
-        assertEquals("Wrong number of test suites", 16, suites.size());
+        assertEquals(16, suites.size(), "Wrong number of test suites");
         int testCaseCount = 0;
         for (SuiteResult suite : suites) {
             testCaseCount += suite.getCases().size();
         }
-        assertEquals("Wrong number of test cases", 3366, testCaseCount);
+        assertEquals(3366, testCaseCount, "Wrong number of test cases");
     }
 
     /**
@@ -83,7 +83,7 @@ public class TestResultTest {
      * @throws Exception
      */
     @Test
-    public void testXmlCompatibility() throws Exception {
+    void testXmlCompatibility() throws Exception {
         XmlFile xmlFile = new XmlFile(TestResultAction.XSTREAM, getDataFile("junitResult.xml"));
         TestResult result = (TestResult) xmlFile.read();
 
@@ -115,7 +115,7 @@ public class TestResultTest {
      * When  skipped test case result does not contain message attribute then the skipped xml element text is retrieved
      */
     @Test
-    public void testSkippedMessageIsAddedWhenTheMessageAttributeIsNull() throws IOException, URISyntaxException {
+    void testSkippedMessageIsAddedWhenTheMessageAttributeIsNull() throws IOException, URISyntaxException {
         TestResult testResult = new TestResult();
         testResult.parse(getDataFile("SKIPPED_MESSAGE/skippedTestResult.xml"), null);
         List<SuiteResult> suiteResults = new ArrayList<>(testResult.getSuites());
@@ -131,56 +131,56 @@ public class TestResultTest {
      */
     @Issue("JENKINS-13214")
     @Test
-    public void testDuplicateTestMethods() throws IOException, URISyntaxException {
+    void testDuplicateTestMethods() throws IOException, URISyntaxException {
         TestResult testResult = new TestResult();
         testResult.parse(getDataFile("JENKINS-13214/27449.xml"), null);
         testResult.parse(getDataFile("JENKINS-13214/27540.xml"), null);
         testResult.parse(getDataFile("JENKINS-13214/29734.xml"), null);
         testResult.tally();
 
-        assertEquals("Wrong number of test suites", 1, testResult.getSuites().size());
-        assertEquals("Wrong number of test cases", 3, testResult.getTotalCount());
+        assertEquals(1, testResult.getSuites().size(), "Wrong number of test suites");
+        assertEquals(3, testResult.getTotalCount(), "Wrong number of test cases");
     }
 
     @Issue("JENKINS-12457")
     @Test
-    public void testTestSuiteDistributedOverMultipleFilesIsCountedAsOne() throws IOException, URISyntaxException {
+    void testTestSuiteDistributedOverMultipleFilesIsCountedAsOne() throws IOException, URISyntaxException {
         TestResult testResult = new TestResult();
         testResult.parse(getDataFile("JENKINS-12457/TestSuite_a1.xml"), null);
         testResult.parse(getDataFile("JENKINS-12457/TestSuite_a2.xml"), null);
         testResult.tally();
 
-        assertEquals("Wrong number of testsuites", 1, testResult.getSuites().size());
-        assertEquals("Wrong number of test cases", 2, testResult.getTotalCount());
+        assertEquals(1, testResult.getSuites().size(), "Wrong number of testsuites");
+        assertEquals(2, testResult.getTotalCount(), "Wrong number of test cases");
 
         // check duration: 157.980 (TestSuite_a1.xml) and 15.000 (TestSuite_a2.xml) = 172.98
-        assertEquals("Wrong duration for test result", 172.98, testResult.getDuration(), 0.1);
+        assertEquals(172.98, testResult.getDuration(), 0.1, "Wrong duration for test result");
     }
 
     @Issue("JENKINS-41134")
     @Test
-    public void testMerge() throws IOException, URISyntaxException {
+    void testMerge() throws IOException, URISyntaxException {
         TestResult first = new TestResult();
         TestResult second = new TestResult();
 
         first.parse(getDataFile("JENKINS-41134/TestSuite_first.xml"), null);
         second.parse(getDataFile("JENKINS-41134/TestSuite_second.xml"), null);
-        assertEquals("Fail count should be 0", 0, first.getFailCount());
+        assertEquals(0, first.getFailCount(), "Fail count should be 0");
         first.merge(second);
-        assertEquals("Fail count should now be 1", 1, first.getFailCount());
+        assertEquals(1, first.getFailCount(), "Fail count should now be 1");
 
         first = new TestResult();
         second = new TestResult();
         first.parse(getDataFile("JENKINS-41134/TestSuite_first.xml"), null);
         second.parse(getDataFile("JENKINS-41134/TestSuite_second_dup_first.xml"), null);
-        assertEquals("Fail count should be 0", 0, first.getFailCount());
+        assertEquals(0, first.getFailCount(), "Fail count should be 0");
         first.merge(second);
-        assertEquals("Fail count should now be 1", 1, first.getFailCount());
+        assertEquals(1, first.getFailCount(), "Fail count should now be 1");
     }
 
     @Issue("JENKINS-37598")
     @Test
-    public void testMergeWithTime() throws Exception {
+    void testMergeWithTime() throws Exception {
         TestResult testResult = new TestResult();
         testResult.parse(getDataFile("junit-report-time-aggregation.xml"));
         testResult.tally();
@@ -193,7 +193,7 @@ public class TestResultTest {
 
     @Issue("JENKINS-37598")
     @Test
-    public void testMergeWithoutTime() throws Exception {
+    void testMergeWithoutTime() throws Exception {
         TestResult testResult = new TestResult();
         testResult.parse(getDataFile("junit-report-time-aggregation2.xml"));
         testResult.tally();
@@ -206,23 +206,23 @@ public class TestResultTest {
 
     @Issue("JENKINS-42438")
     @Test
-    public void testSuiteWithMultipleClasses() throws IOException, URISyntaxException {
+    void testSuiteWithMultipleClasses() throws IOException, URISyntaxException {
         TestResult testResult = new TestResult();
         testResult.parse(getDataFile("JENKINS-42438/junit-report-1.xml"));
         testResult.tally();
 
-        assertEquals("Wrong number of testsuites", 1, testResult.getSuites().size());
-        assertEquals("Wrong number of test cases", 11, testResult.getTotalCount());
+        assertEquals(1, testResult.getSuites().size(), "Wrong number of testsuites");
+        assertEquals(11, testResult.getTotalCount(), "Wrong number of test cases");
 
         // The suite duration is non-sensical for Android tests.
         // This looks like a bug in the JUnit runner used by Android tests.
-        assertEquals("Wrong duration for test result", 2.0, testResult.getDuration(), 0.1);
+        assertEquals(2.0, testResult.getDuration(), 0.1, "Wrong duration for test result");
 
         SuiteResult suite =
                 testResult.getSuite("org.catrobat.paintroid.test.integration.ActivityOpenedFromPocketCodeNewImageTest");
         assertNotNull(suite);
 
-        assertEquals("Wrong number of test classes", 2, suite.getClassNames().size());
+        assertEquals(2, suite.getClassNames().size(), "Wrong number of test classes");
 
         CaseResult case1 = suite.getCase(
                 "org.catrobat.paintroid.test.integration.BitmapIntegrationTest.testDrawingSurfaceBitmapIsScreenSize");
@@ -230,7 +230,7 @@ public class TestResultTest {
         ClassResult class1 = case1.getParent();
         assertNotNull(class1);
         assertEquals("org.catrobat.paintroid.test.integration.BitmapIntegrationTest", class1.getFullName());
-        assertEquals("Wrong duration for test class", 5.0, class1.getDuration(), 0.1);
+        assertEquals(5.0, class1.getDuration(), 0.1, "Wrong duration for test class");
 
         CaseResult case2 = suite.getCase(
                 "org.catrobat.paintroid.test.integration.LandscapeTest.testColorPickerDialogSwitchTabsInLandscape");
@@ -238,12 +238,12 @@ public class TestResultTest {
         ClassResult class2 = case2.getParent();
         assertNotNull(class2);
         assertEquals("org.catrobat.paintroid.test.integration.LandscapeTest", class2.getFullName());
-        assertEquals("Wrong duration for test class", 93.0, class2.getDuration(), 0.1);
+        assertEquals(93.0, class2.getDuration(), 0.1, "Wrong duration for test class");
     }
 
     @Issue("JENKINS-48583")
     @Test
-    public void testMergeOriginalAntOutput() throws IOException, URISyntaxException {
+    void testMergeOriginalAntOutput() throws IOException, URISyntaxException {
         TestResult testResult = new TestResult();
         testResult.parse(getDataFile("JENKINS-48583/TEST-com.sample.test.TestMessage.xml"), null);
         testResult.parse(getDataFile("JENKINS-48583/TEST-com.sample.test.TestMessage2.xml"), null);
@@ -251,8 +251,8 @@ public class TestResultTest {
         testResult.parse(getDataFile("JENKINS-48583/TEST-com.sample.test.TestMessage.xml"), null);
         testResult.tally();
 
-        assertEquals("Wrong number of testsuites", 2, testResult.getSuites().size());
-        assertEquals("Wrong number of test cases", 7, testResult.getTotalCount());
+        assertEquals(2, testResult.getSuites().size(), "Wrong number of testsuites");
+        assertEquals(7, testResult.getTotalCount(), "Wrong number of test cases");
     }
 
     /**
@@ -260,31 +260,31 @@ public class TestResultTest {
      */
     @Issue("JENKINS-48583")
     @Test
-    public void testNonDuplicatedTestSuiteIsCounted() throws IOException, URISyntaxException {
+    void testNonDuplicatedTestSuiteIsCounted() throws IOException, URISyntaxException {
         TestResult testResult = new TestResult();
         testResult.parse(getDataFile("JENKINS-12457/TestSuite_b.xml"), null);
         testResult.parse(getDataFile("JENKINS-12457/TestSuite_b_duplicate.xml"), null);
         testResult.parse(getDataFile("JENKINS-12457/TestSuite_b_nonduplicate.xml"), null);
         testResult.tally();
 
-        assertEquals("Wrong number of testsuites", 1, testResult.getSuites().size());
-        assertEquals("Wrong number of test cases", 3, testResult.getTotalCount());
+        assertEquals(1, testResult.getSuites().size(), "Wrong number of testsuites");
+        assertEquals(3, testResult.getTotalCount(), "Wrong number of test cases");
     }
 
     @Issue("JENKINS-63113")
     @Test
-    public void testTestcaseWithEmptyName() throws Exception {
+    void testTestcaseWithEmptyName() throws Exception {
         TestResult testResult = new TestResult();
         testResult.parse(getDataFile("junit-report-empty-testcasename.xml"));
         testResult.tally();
 
-        assertEquals("Wrong number of testsuites", 1, testResult.getSuites().size());
-        assertEquals("Wrong number of test cases", 1, testResult.getTotalCount());
+        assertEquals(1, testResult.getSuites().size(), "Wrong number of testsuites");
+        assertEquals(1, testResult.getTotalCount(), "Wrong number of test cases");
 
         SuiteResult suite = testResult.getSuite("test.TestJUnit5FailingInBeforeAll");
         assertNotNull(suite);
 
-        assertEquals("Wrong number of test classes", 1, suite.getClassNames().size());
+        assertEquals(1, suite.getClassNames().size(), "Wrong number of test classes");
         CaseResult case1 = suite.getCases().get(0);
 
         assertEquals("test.TestJUnit5FailingInBeforeAll.(?)", case1.getFullName());
@@ -293,7 +293,7 @@ public class TestResultTest {
     }
 
     @Test
-    public void skipOldReports() throws Exception {
+    void skipOldReports() throws Exception {
         long start = System.currentTimeMillis();
         File testResultFile1 = new File("src/test/resources/hudson/tasks/junit/old-reports/junit-report-1.xml");
         Files.setLastModifiedTime(testResultFile1.toPath(), FileTime.fromMillis(start + 10));
@@ -303,17 +303,17 @@ public class TestResultTest {
         directoryScanner.setBasedir(new File("src/test/resources/hudson/tasks/junit/old-reports/"));
         directoryScanner.setIncludes(new String[] {"*.xml"});
         directoryScanner.scan();
-        assertEquals("directory scanner must find 2 files", 2, directoryScanner.getIncludedFiles().length);
+        assertEquals(2, directoryScanner.getIncludedFiles().length, "directory scanner must find 2 files");
         TestResult testResult =
                 new TestResult(start, directoryScanner, true, false, false, new PipelineTestDetails(), true);
         testResult.tally();
 
-        assertEquals("Wrong number of testsuites", 2, testResult.getSuites().size());
-        assertEquals("Wrong number of test cases", 3, testResult.getTotalCount());
+        assertEquals(2, testResult.getSuites().size(), "Wrong number of testsuites");
+        assertEquals(3, testResult.getTotalCount(), "Wrong number of test cases");
     }
 
     @Test
-    public void parseOldReports() throws Exception {
+    void parseOldReports() throws Exception {
         long start = System.currentTimeMillis();
         File testResultFile1 = new File("src/test/resources/hudson/tasks/junit/old-reports/junit-report-1.xml");
         Files.setLastModifiedTime(testResultFile1.toPath(), FileTime.fromMillis(start + 10));
@@ -323,32 +323,32 @@ public class TestResultTest {
         directoryScanner.setBasedir(new File("src/test/resources/hudson/tasks/junit/old-reports/"));
         directoryScanner.setIncludes(new String[] {"*.xml"});
         directoryScanner.scan();
-        assertEquals("directory scanner must find 2 files", 2, directoryScanner.getIncludedFiles().length);
+        assertEquals(2, directoryScanner.getIncludedFiles().length, "directory scanner must find 2 files");
         TestResult testResult = new TestResult(start, directoryScanner, true, false, new PipelineTestDetails(), false);
         testResult.tally();
 
-        assertEquals("Wrong number of testsuites", 4, testResult.getSuites().size());
-        assertEquals("Wrong number of test cases", 6, testResult.getTotalCount());
+        assertEquals(4, testResult.getSuites().size(), "Wrong number of testsuites");
+        assertEquals(6, testResult.getTotalCount(), "Wrong number of test cases");
     }
 
     @Test
-    public void clampDuration() throws Exception {
+    void clampDuration() throws Exception {
         long start = System.currentTimeMillis();
         File testResultFile1 = new File("src/test/resources/hudson/tasks/junit/junit-report-bad-duration.xml");
         DirectoryScanner directoryScanner = new DirectoryScanner();
         directoryScanner.setBasedir(new File("src/test/resources/hudson/tasks/junit/"));
         directoryScanner.setIncludes(new String[] {"*-bad-duration.xml"});
         directoryScanner.scan();
-        assertEquals("directory scanner must find 1 files", 1, directoryScanner.getIncludedFiles().length);
+        assertEquals(1, directoryScanner.getIncludedFiles().length, "directory scanner must find 1 files");
         TestResult testResult = new TestResult(start, directoryScanner, true, false, new PipelineTestDetails(), false);
         testResult.tally();
-        assertEquals("Negative duration is invalid", 100, testResult.getDuration(), 0.00001);
-        assertEquals("Wrong number of testsuites", 1, testResult.getSuites().size());
-        assertEquals("Wrong number of test cases", 2, testResult.getTotalCount());
+        assertEquals(100, testResult.getDuration(), 0.00001, "Negative duration is invalid");
+        assertEquals(1, testResult.getSuites().size(), "Wrong number of testsuites");
+        assertEquals(2, testResult.getTotalCount(), "Wrong number of test cases");
     }
 
     @Test
-    public void testStartTimes() throws Exception {
+    void testStartTimes() throws Exception {
         // Tests that start times are as expected for file with a mix of valid,
         // invalid, and unspecified timestamps.
         TestResult testResult = new TestResult();
@@ -429,7 +429,7 @@ public class TestResultTest {
     Make sure parser handles all the fields.
      */
     @Test
-    public void bigResultReadWrite() throws Exception {
+    void bigResultReadWrite() throws Exception {
         List<SuiteResult> results =
                 SuiteResult.parse(getDataFile("junit-report-huge.xml"), StdioRetention.ALL, true, true, null);
         assertEquals(1, results.size());
@@ -437,20 +437,30 @@ public class TestResultTest {
 
         TestResult tr = new TestResult();
         tr.getSuites().add(sr);
-        XmlFile f = new XmlFile(TestResultAction.XSTREAM, tmp.newFile("junitResult.xml"));
+        XmlFile f = new XmlFile(TestResultAction.XSTREAM, File.createTempFile("junitResult.xml", null, tmp));
         f.write(tr);
 
         TestResult tr2 = new TestResult();
         tr2.parse(f);
-        XmlFile f2 = new XmlFile(TestResultAction.XSTREAM, tmp.newFile("junitResult2.xml"));
+        XmlFile f2 = new XmlFile(TestResultAction.XSTREAM, File.createTempFile("junitResult2.xml", null, tmp));
         f2.write(tr2);
 
         assertEquals(
-                2, tr.getSuites().stream().findFirst().get().getProperties().size());
+                2,
+                tr.getSuites().stream()
+                        .findFirst()
+                        .orElseThrow()
+                        .getProperties()
+                        .size());
         assertEquals(
-                2, tr2.getSuites().stream().findFirst().get().getProperties().size());
+                2,
+                tr2.getSuites().stream()
+                        .findFirst()
+                        .orElseThrow()
+                        .getProperties()
+                        .size());
 
         boolean isTwoEqual = FileUtils.contentEquals(f.getFile(), f2.getFile());
-        assertTrue("Forgot to implement XML parsing for something?", isTwoEqual);
+        assertTrue(isTwoEqual, "Forgot to implement XML parsing for something?");
     }
 }

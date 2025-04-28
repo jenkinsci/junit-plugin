@@ -26,12 +26,13 @@ package hudson.tasks.junit;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 import hudson.Extension;
 import hudson.FilePath;
@@ -70,42 +71,35 @@ import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import org.apache.commons.io.FileUtils;
-import org.htmlunit.html.HtmlAnchor;
 import org.htmlunit.html.HtmlForm;
 import org.htmlunit.html.HtmlPage;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.BuildWatcher;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
-import org.jvnet.hudson.test.LoggerRule;
+import org.jvnet.hudson.test.LogRecorder;
 import org.jvnet.hudson.test.SingleFileSCM;
 import org.jvnet.hudson.test.TestExtension;
 import org.jvnet.hudson.test.TouchBuilder;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.jvnet.hudson.test.recipes.LocalData;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.HttpResponse;
 
-public class JUnitResultArchiverTest {
+@WithJenkins
+class JUnitResultArchiverTest {
 
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
-
-    @Rule
-    public LoggerRule logRule = new LoggerRule().recordPackage(JUnitResultArchiver.class, Level.FINE);
-
-    @ClassRule
-    public static final BuildWatcher buildWatcher = new BuildWatcher();
+    private final LogRecorder logging = new LogRecorder().recordPackage(JUnitResultArchiver.class, Level.FINE);
 
     private FreeStyleProject project;
     private JUnitResultArchiver archiver;
 
-    @Before
-    public void setUp() throws Exception {
+    private JenkinsRule j;
+
+    @BeforeEach
+    void setUp(JenkinsRule rule) throws Exception {
+        j = rule;
         project = j.createFreeStyleProject("junit");
         archiver = new JUnitResultArchiver("*.xml");
         project.getPublishersList().add(archiver);
@@ -114,7 +108,7 @@ public class JUnitResultArchiverTest {
 
     @LocalData("All")
     @Test
-    public void basic() throws Exception {
+    void basic() throws Exception {
         FreeStyleBuild build = j.assertBuildStatus(
                 Result.UNSTABLE, j.waitForCompletion(project.scheduleBuild2(0).waitForStart()));
 
@@ -133,12 +127,12 @@ public class JUnitResultArchiverTest {
 
     @LocalData("All")
     @Test
-    public void slave() throws Exception {
-        Assume.assumeFalse("TODO frequent TimeoutException from basic", Functions.isWindows());
+    void slave() throws Exception {
+        assumeFalse(Functions.isWindows(), "TODO frequent TimeoutException from basic");
         DumbSlave node = j.createSlave("label1 label2", null);
         // the node needs to be online before showAgentLogs
         j.waitOnline(node);
-        j.showAgentLogs(node, logRule);
+        j.showAgentLogs(node, Map.of(JUnitResultArchiver.class.getPackageName(), Level.FINE));
         project.setAssignedLabel(j.jenkins.getLabel("label1"));
 
         FilePath src = new FilePath(j.jenkins.getRootPath(), "jobs/junit/workspace/");
@@ -153,25 +147,25 @@ public class JUnitResultArchiverTest {
     private void assertTestResults(FreeStyleBuild build) throws Exception {
         j.assertBuildStatus(Result.UNSTABLE, build);
         TestResultAction testResultAction = build.getAction(TestResultAction.class);
-        assertNotNull("no TestResultAction", testResultAction);
+        assertNotNull(testResultAction, "no TestResultAction");
 
         TestResult result = testResultAction.getResult();
-        assertNotNull("no TestResult", result);
+        assertNotNull(result, "no TestResult");
 
-        assertEquals("should have 1 failing test", 1, testResultAction.getFailCount());
-        assertEquals("should have 1 failing test", 1, result.getFailCount());
+        assertEquals(1, testResultAction.getFailCount(), "should have 1 failing test");
+        assertEquals(1, result.getFailCount(), "should have 1 failing test");
 
-        assertEquals("should have 132 total tests", 132, testResultAction.getTotalCount());
-        assertEquals("should have 132 total tests", 132, result.getTotalCount());
+        assertEquals(132, testResultAction.getTotalCount(), "should have 132 total tests");
+        assertEquals(132, result.getTotalCount(), "should have 132 total tests");
 
         for (SuiteResult suite : result.getSuites()) {
-            assertNull("No nodeId should be present on the SuiteResult", suite.getNodeId());
+            assertNull(suite.getNodeId(), "No nodeId should be present on the SuiteResult");
         }
     }
 
     @LocalData("All")
     @Test
-    public void persistence() throws Exception {
+    void persistence() throws Exception {
         project.scheduleBuild2(0).get(60, TimeUnit.SECONDS);
 
         reloadJenkins();
@@ -188,7 +182,7 @@ public class JUnitResultArchiverTest {
 
     @LocalData("All")
     @Test
-    public void setDescription() throws Exception {
+    void setDescription() throws Exception {
         FreeStyleBuild build = project.scheduleBuild2(0).get(10, TimeUnit.SECONDS);
 
         CaseResult caseResult =
@@ -231,12 +225,12 @@ public class JUnitResultArchiverTest {
     }
 
     @Test
-    public void repeatedArchiving() throws Exception {
+    void repeatedArchiving() throws Exception {
         doRepeatedArchiving(false);
     }
 
     @Test
-    public void repeatedArchivingSlave() throws Exception {
+    void repeatedArchivingSlave() throws Exception {
         doRepeatedArchiving(true);
     }
 
@@ -255,11 +249,11 @@ public class JUnitResultArchiverTest {
         assertEquals(1, actions.size());
         TestResultAction testResultAction = actions.get(0);
         TestResult result = testResultAction.getResult();
-        assertNotNull("no TestResult", result);
-        assertEquals("should have 1 failing test", 1, testResultAction.getFailCount());
-        assertEquals("should have 1 failing test", 1, result.getFailCount());
-        assertEquals("should have 8 total tests", 8, testResultAction.getTotalCount());
-        assertEquals("should have 8 total tests", 8, result.getTotalCount());
+        assertNotNull(result, "no TestResult");
+        assertEquals(1, testResultAction.getFailCount(), "should have 1 failing test");
+        assertEquals(1, result.getFailCount(), "should have 1 failing test");
+        assertEquals(8, testResultAction.getTotalCount(), "should have 8 total tests");
+        assertEquals(8, result.getTotalCount(), "should have 8 total tests");
         assertEquals(/* ⅞ = 87.5% */ 87, testResultAction.getBuildHealth().getScore());
     }
 
@@ -312,7 +306,7 @@ public class JUnitResultArchiverTest {
     }
 
     @Test
-    public void configRoundTrip() throws Exception {
+    void configRoundTrip() throws Exception {
         JUnitResultArchiver a = new JUnitResultArchiver("TEST-*.xml");
         a.setStdioRetention(StdioRetention.ALL.name());
         a.setTestDataPublishers(Collections.singletonList(new MockTestDataPublisher("testing")));
@@ -341,8 +335,7 @@ public class JUnitResultArchiverTest {
 
         @Override
         public TestResultAction.Data contributeTestData(
-                Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener, TestResult testResult)
-                throws IOException, InterruptedException {
+                Run<?, ?> run, FilePath workspace, Launcher launcher, TaskListener listener, TestResult testResult) {
             return null;
         }
 
@@ -357,7 +350,7 @@ public class JUnitResultArchiverTest {
     }
 
     @Test
-    public void noTestResultFilesAllowEmptyResult() throws Exception {
+    void noTestResultFilesAllowEmptyResult() throws Exception {
         JUnitResultArchiver a = new JUnitResultArchiver("TEST-*.xml");
         a.setAllowEmptyResults(true);
         FreeStyleProject freeStyleProject = j.createFreeStyleProject();
@@ -368,7 +361,7 @@ public class JUnitResultArchiverTest {
     }
 
     @Test
-    public void noTestResultFilesDisallowEmptyResult() throws Exception {
+    void noTestResultFilesDisallowEmptyResult() throws Exception {
         JUnitResultArchiver a = new JUnitResultArchiver("TEST-*.xml");
         a.setAllowEmptyResults(false);
         FreeStyleProject freeStyleProject = j.createFreeStyleProject();
@@ -379,7 +372,7 @@ public class JUnitResultArchiverTest {
     }
 
     @Test
-    public void noResultsInTestResultFilesAllowEmptyResult() throws Exception {
+    void noResultsInTestResultFilesAllowEmptyResult() throws Exception {
         JUnitResultArchiver a = new JUnitResultArchiver("TEST-*.xml");
         a.setAllowEmptyResults(true);
         FreeStyleProject freeStyleProject = j.createFreeStyleProject();
@@ -391,7 +384,7 @@ public class JUnitResultArchiverTest {
     }
 
     @Test
-    public void noResultsInTestResultFilesDisallowEmptyResult() throws Exception {
+    void noResultsInTestResultFilesDisallowEmptyResult() throws Exception {
         JUnitResultArchiver a = new JUnitResultArchiver("TEST-*.xml");
         a.setAllowEmptyResults(false);
         FreeStyleProject freeStyleProject = j.createFreeStyleProject();
@@ -414,8 +407,8 @@ public class JUnitResultArchiverTest {
     }
 
     @Test
-    public void specialCharsInRelativePath() throws Exception {
-        Assume.assumeFalse(Functions.isWindows());
+    void specialCharsInRelativePath() throws Exception {
+        assumeFalse(Functions.isWindows());
         final String ID_PREFIX =
                 "test-../a=%3C%7C%23)/testReport/org.twia.vendor/VendorManagerTest/testCreateAdjustingFirm/";
         final String EXPECTED =
@@ -435,18 +428,18 @@ public class JUnitResultArchiverTest {
 
         assertThat(page.asNormalizedText(), not(containsString(EXPECTED)));
 
-        ((HtmlAnchor) page.getElementById(ID_PREFIX + "-showlink")).click();
+        page.getElementById(ID_PREFIX + "-showlink").click();
         wc.waitForBackgroundJavaScript(10000L);
         assertThat(page.asNormalizedText(), containsString(EXPECTED));
 
-        ((HtmlAnchor) page.getElementById(ID_PREFIX + "-hidelink")).click();
+        page.getElementById(ID_PREFIX + "-hidelink").click();
         wc.waitForBackgroundJavaScript(10000L);
         assertThat(page.asNormalizedText(), not(containsString(EXPECTED)));
     }
 
     @Issue("JENKINS-26535")
     @Test
-    public void testDescribableRoundTrip() throws Exception {
+    void testDescribableRoundTrip() {
         DescribableModel<JUnitResultArchiver> model = new DescribableModel<>(JUnitResultArchiver.class);
         Map<String, Object> args = new TreeMap<>();
 
@@ -478,7 +471,7 @@ public class JUnitResultArchiverTest {
 
     @Test
     @Issue("SECURITY-521")
-    public void testXxe() throws Exception {
+    void testXxe() throws Exception {
         String oobInUserContentLink = j.getURL() + "userContent/oob.xml";
         String triggerLink = j.getURL() + "triggerMe";
 
