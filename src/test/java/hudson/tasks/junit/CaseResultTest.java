@@ -442,6 +442,23 @@ class CaseResultTest {
         assertEquals(0, cr.getProperties().size());
     }
 
+    /**
+     * Test truncation works along unicode codepoint boundaries.
+     */
+    @Test
+    void testCleanupTruncated() throws Exception {
+        // empty
+        assertEquals("", CaseResult.cleanupTruncated("").toString());
+        // ordinary
+        assertEquals("abc", CaseResult.cleanupTruncated("abc").toString());
+        // starts with a trail surrogate.
+        assertEquals("abc", CaseResult.cleanupTruncated("\uDC00abc").toString());
+        // ends with a lead surrogate.
+        assertEquals("abc", CaseResult.cleanupTruncated("abc\uD800").toString());
+        // starts with trail surrogate and ends with lead surrogate
+        assertEquals("abc", CaseResult.cleanupTruncated("\uDC00abc\uD800").toString());
+    }
+
     private String composeXPath(String[] fields) {
         StringBuilder tmp = new StringBuilder(100);
         for (String f : fields) {

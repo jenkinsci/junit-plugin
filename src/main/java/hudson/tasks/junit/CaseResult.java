@@ -375,6 +375,23 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         }
     }
 
+    /**
+     * Cleans up a truncated string, that might contain unpaired surrogates
+     * @param str input string
+     * @return input string, possibly truncated to avoid unpaired surrogates
+     */
+    static CharSequence cleanupTruncated(CharSequence str) {
+        // remove unpaired trailing surrogates at the start
+        if (str.length() > 0 && Character.isLowSurrogate(str.charAt(0))) {
+            str = str.subSequence(1, str.length());
+        }
+        // remove unpaired leading surrogates at the end
+        if (str.length() > 0 && Character.isHighSurrogate(str.charAt(str.length() - 1))) {
+            str = str.subSequence(0, str.length() - 1);
+        }
+        return str;
+    }
+
     static String possiblyTrimStdio(
             Collection<CaseResult> results, StdioRetention stdioRetention, String stdio) { // HUDSON-6516
         if (stdio == null) {
@@ -391,8 +408,8 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         if (middle <= 0) {
             return stdio;
         }
-        return stdio.subSequence(0, halfMaxSize) + "\n...[truncated " + middle + " chars]...\n"
-                + stdio.subSequence(len - halfMaxSize, len);
+        return cleanupTruncated(stdio.subSequence(0, halfMaxSize)) + "\n...[truncated " + middle + " chars]...\n"
+                + cleanupTruncated(stdio.subSequence(len - halfMaxSize, len));
     }
 
     static String fixNULs(String stdio) { // JENKINS-71139
@@ -432,7 +449,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
             return FileUtils.readFileToString(stdio);
         }
 
-        return head + "\n...[truncated " + middle + " bytes]...\n" + tail;
+        return cleanupTruncated(head) + "\n...[truncated " + middle + " bytes]...\n" + cleanupTruncated(tail);
     }
 
     private static final int HALF_MAX_SIZE = 500;
