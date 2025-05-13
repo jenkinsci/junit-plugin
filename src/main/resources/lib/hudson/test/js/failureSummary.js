@@ -43,9 +43,10 @@ function handleShowHideClick(event) {
     const id = link.id.replace(/-showlink$/, '').replace(/-hidelink$/, '');
 
     if (link.id.endsWith('-showlink')) {
-        // Remove any queries from URL
-        const baseUrl = document.URL.split('?')[0];
-        showFailureSummary(id, baseUrl + id.replace(PREFIX, '') + "summary");
+        // clear the query parameters
+        const cleanUrl = new URL(document.URL);
+        cleanUrl.search = "";
+        showFailureSummary(id, cleanUrl + id.replace(PREFIX, '') + "summary");
     } else {
         hideFailureSummary(id);
     }
