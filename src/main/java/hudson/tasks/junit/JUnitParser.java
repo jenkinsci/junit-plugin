@@ -37,6 +37,10 @@ import hudson.tasks.test.TestResultParser;
 import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.MasterToSlaveFileCallable;
@@ -58,11 +62,12 @@ public class JUnitParser extends TestResultParser {
     private final boolean keepTestNames;
 
     private final boolean skipOldReports;
+    private final boolean sortTestResultsByTimestamp;
 
     /** Generally unused, but present for extension compatibility. */
     @Deprecated
     public JUnitParser() {
-        this(false, false, false, false);
+        this(StdioRetention.DEFAULT, false, false, false, false, false);
     }
 
     /**
@@ -71,7 +76,7 @@ public class JUnitParser extends TestResultParser {
      */
     @Deprecated
     public JUnitParser(boolean keepLongStdio) {
-        this(keepLongStdio, false, false, false);
+        this(StdioRetention.fromKeepLongStdio(keepLongStdio), false, false, false, false);
     }
 
     /**
@@ -81,32 +86,50 @@ public class JUnitParser extends TestResultParser {
      */
     @Deprecated
     public JUnitParser(boolean keepLongStdio, boolean allowEmptyResults) {
-        this(StdioRetention.fromKeepLongStdio(keepLongStdio), false, allowEmptyResults, false, false);
+        this(StdioRetention.fromKeepLongStdio(keepLongStdio), false, allowEmptyResults, false, false, false);
     }
 
     @Deprecated
     public JUnitParser(
             boolean keepLongStdio, boolean keepProperties, boolean allowEmptyResults, boolean skipOldReports) {
-        this(StdioRetention.fromKeepLongStdio(keepLongStdio), keepProperties, allowEmptyResults, skipOldReports, false);
+        this(
+                StdioRetention.fromKeepLongStdio(keepLongStdio),
+                keepProperties,
+                allowEmptyResults,
+                skipOldReports,
+                false,
+                false);
     }
 
     @Deprecated
     public JUnitParser(
             StdioRetention stdioRetention, boolean keepProperties, boolean allowEmptyResults, boolean skipOldReports) {
-        this(stdioRetention, keepProperties, allowEmptyResults, skipOldReports, false);
+        this(stdioRetention, keepProperties, allowEmptyResults, skipOldReports, false, false);
     }
 
+    @Deprecated
     public JUnitParser(
             StdioRetention stdioRetention,
             boolean keepProperties,
             boolean allowEmptyResults,
             boolean skipOldReports,
             boolean keepTestNames) {
+        this(stdioRetention, keepProperties, allowEmptyResults, skipOldReports, keepTestNames, false);
+    }
+    // New Constructor with the additional parameter
+    public JUnitParser(
+            StdioRetention stdioRetention,
+            boolean keepProperties,
+            boolean allowEmptyResults,
+            boolean skipOldReports,
+            boolean keepTestNames,
+            boolean sortTestResultsByTimestamp) {
         this.stdioRetention = stdioRetention;
         this.keepProperties = keepProperties;
         this.allowEmptyResults = allowEmptyResults;
-        this.keepTestNames = keepTestNames;
         this.skipOldReports = skipOldReports;
+        this.keepTestNames = keepTestNames;
+        this.sortTestResultsByTimestamp = sortTestResultsByTimestamp;
     }
 
     @Override
@@ -152,7 +175,8 @@ public class JUnitParser extends TestResultParser {
                 keepTestNames,
                 pipelineTestDetails,
                 listener,
-                skipOldReports));
+                skipOldReports,
+                sortTestResultsByTimestamp));
     }
 
     public TestResultSummary summarizeResult(
@@ -174,7 +198,8 @@ public class JUnitParser extends TestResultParser {
                 pipelineTestDetails,
                 listener,
                 storage.createRemotePublisher(build),
-                skipOldReports));
+                skipOldReports,
+                sortTestResultsByTimestamp));
     }
 
     private abstract static class ParseResultCallable<T> extends MasterToSlaveFileCallable<T> {
@@ -194,6 +219,7 @@ public class JUnitParser extends TestResultParser {
         private final TaskListener listener;
 
         private boolean skipOldReports;
+        private final boolean sortTestResultsByTimestamp;
 
         private ParseResultCallable(
                 String testResults,
@@ -204,7 +230,8 @@ public class JUnitParser extends TestResultParser {
                 boolean keepTestNames,
                 PipelineTestDetails pipelineTestDetails,
                 TaskListener listener,
-                boolean skipOldReports) {
+                boolean skipOldReports,
+                boolean sortTestResultsByTimestamp) {
             this.buildStartTimeInMillis = build.getStartTimeInMillis();
             this.buildTimeInMillis = build.getTimeInMillis();
             this.testResults = testResults;
@@ -216,6 +243,7 @@ public class JUnitParser extends TestResultParser {
             this.pipelineTestDetails = pipelineTestDetails;
             this.listener = listener;
             this.skipOldReports = skipOldReports;
+            this.sortTestResultsByTimestamp = sortTestResultsByTimestamp;
         }
 
         @Override
@@ -226,7 +254,35 @@ public class JUnitParser extends TestResultParser {
             TestResult result;
             String[] files = ds.getIncludedFiles();
             if (files.length > 0) {
-                // not sure we can rely seriously on those timestamp so let's take the smaller one...
+                // New sorting logic starts here
+                List<File> fileList = new ArrayList<>();
+                for (String fileName : files) {
+                    fileList.add(new File(ds.getBasedir(), fileName));
+                }
+
+                if (sortTestResultsByTimestamp) {
+                    Collections.sort(fileList, Comparator.comparingLong(File::lastModified));
+                } else {
+                    Collections.sort(fileList, Comparator.comparing(File::getName));
+                }
+
+                // Convert back to String array with paths relative to the base directory
+                String[] sortedFiles = new String[fileList.size()];
+                String baseDirPath = ds.getBasedir().getAbsolutePath();
+                for (int i = 0; i < fileList.size(); i++) {
+                    String absolutePath = fileList.get(i).getAbsolutePath();
+                    if (absolutePath.startsWith(baseDirPath)) {
+                        sortedFiles[i] = absolutePath.substring(baseDirPath.length() + 1);
+                    } else {
+                        sortedFiles[i] = absolutePath;
+                    }
+                }
+
+                // Update the DirectoryScanner with the sorted files
+                ds.setIncludes(sortedFiles);
+
+                // Continue with existing processing logic
+                // Not sure we can rely seriously on those timestamps so let's take the smaller one...
                 long filesTimestamp = Math.min(buildStartTimeInMillis, buildTimeInMillis);
                 // previous mode buildStartTimeInMillis + (nowSlave - nowMaster);
                 if (LOGGER.isLoggable(Level.FINE)) {
@@ -270,7 +326,8 @@ public class JUnitParser extends TestResultParser {
                 boolean keepTestNames,
                 PipelineTestDetails pipelineTestDetails,
                 TaskListener listener,
-                boolean skipOldReports) {
+                boolean skipOldReports,
+                boolean sortTestResultsByTimestamp) {
             super(
                     testResults,
                     build,
@@ -280,7 +337,8 @@ public class JUnitParser extends TestResultParser {
                     keepTestNames,
                     pipelineTestDetails,
                     listener,
-                    skipOldReports);
+                    skipOldReports,
+                    sortTestResultsByTimestamp);
         }
 
         @Override
@@ -303,7 +361,8 @@ public class JUnitParser extends TestResultParser {
                 PipelineTestDetails pipelineTestDetails,
                 TaskListener listener,
                 JunitTestResultStorage.RemotePublisher publisher,
-                boolean skipOldReports) {
+                boolean skipOldReports,
+                boolean sortTestResultsByTimestamp) {
             super(
                     testResults,
                     build,
@@ -313,7 +372,8 @@ public class JUnitParser extends TestResultParser {
                     keepTestNames,
                     pipelineTestDetails,
                     listener,
-                    skipOldReports);
+                    skipOldReports,
+                    sortTestResultsByTimestamp);
             this.publisher = publisher;
         }
 
