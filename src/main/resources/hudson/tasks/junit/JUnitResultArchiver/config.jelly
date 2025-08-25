@@ -65,4 +65,7 @@ THE SOFTWARE.
     <f:entry title="${%Skip report files older than build start}" field="skipOldReports">
             <f:checkbox default="false" title="${%If checked, the test report files older than build start will not be included in the parsing}"/>
     </f:entry>
+    <f:entry field="sortTestResultsByTimestamp" title="Sort test result files by modification timestamp">
+        <f:checkbox/>
+    </f:entry>
 </j:jelly>
