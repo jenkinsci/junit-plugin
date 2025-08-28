@@ -1,0 +1,35 @@
+.jp-pills {
+    display: flex;
+    gap: var(--jenkins-border-width);
+    overflow: hidden !important;
+
+    .jp-pill {
+        &:not(:first-of-type) {
+            border-top-left-radius: 2px;
+            border-bottom-left-radius: 2px;
+        }
+
+        &:not(:last-of-type) {
+            border-top-right-radius: 2px;
+            border-bottom-right-radius: 2px;
+        }
+    }
+}
+
+.jp-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    border-radius: 100px;
+    border: var(--jenkins-border--inherit-subtle);
+    background-color: color-mix(in srgb, var(--color) 5%, transparent);
+    padding-inline: 0.75rem;
+    min-height: 2rem;
+    font-size: 0.875rem;
+
+    svg {
+        width: 1rem;
+        height: 1rem;
+    }
+}

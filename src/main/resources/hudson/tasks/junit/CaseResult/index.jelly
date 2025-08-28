@@ -33,7 +33,7 @@ THE SOFTWARE.
         <st:out value="${st.message}" />
       </h1>
       <p>
-        <span style="font-weight:bold">
+        <span style="font-weight:450">
           <st:out value="${it.fullDisplayName}"/>
         </span>
         <j:if test="${it.suiteResult != null &amp;&amp; it.className != it.suiteResult.name}">

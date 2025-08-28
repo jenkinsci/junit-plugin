@@ -24,40 +24,41 @@ THE SOFTWARE.
 -->
 
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:t="/lib/hudson/test">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:t="/lib/hudson/test" xmlns:f="/lib/form">
   <j:if test="${it.failCount!=0}">
-    <h2>${%All Failed Tests}</h2>
-    <table class="jenkins-table sortable" id="failedtestresult">
-      <thead>
-        <tr>
-          <th>${%Test Name}</th>
-          <th style="width:4em">${%Duration}</th>
-          <th style="width:3em">${%Age}</th>
-          <j:forEach var="tableheader" items="${it.testActions}">
-            <st:include it="${tableheader}" page="casetableheader.jelly" optional="true"/>
-          </j:forEach>
-        </tr>
-      </thead>
-      <j:forEach var="f" items="${it.failedTests}" varStatus="i">
-        <tr>
-          <td class="pane no-wrap"><t:failed-test result="${f}" url="${f.getRelativePathFrom(it)}"/></td>
-          <td class="pane no-wrap" style="text-align:right;" data="${f.duration}">
-            ${f.durationString}
-          </td>
-          <td class="pane" style="text-align:right;">
-            <a href="${rootURL}/${f.failedSinceRun.url}">${f.age}</a>
-          </td>
-          <j:forEach var="tablerow" items="${f.testActions}">
-            <st:include it="${tablerow}" page="tablerow.jelly" optional="true"/>
-          </j:forEach>
-        </tr>
-      </j:forEach>
-    </table>
+    <f:section title="${%All Failed Tests}">
+      <table class="jenkins-table sortable" id="failedtestresult">
+        <thead>
+          <tr>
+            <th>${%Test Name}</th>
+            <th style="width:4em">${%Duration}</th>
+            <th style="width:3em">${%Age}</th>
+            <j:forEach var="tableheader" items="${it.testActions}">
+              <st:include it="${tableheader}" page="casetableheader.jelly" optional="true"/>
+            </j:forEach>
+          </tr>
+        </thead>
+        <j:forEach var="f" items="${it.failedTests}" varStatus="i">
+          <tr>
+            <td class="pane no-wrap"><t:failed-test result="${f}" url="${f.getRelativePathFrom(it)}"/></td>
+            <td class="pane no-wrap" style="text-align:right;" data="${f.duration}">
+              ${f.durationString}
+            </td>
+            <td class="pane" style="text-align:right;">
+              <a href="${rootURL}/${f.failedSinceRun.url}">${f.age}</a>
+            </td>
+            <j:forEach var="tablerow" items="${f.testActions}">
+              <st:include it="${tablerow}" page="tablerow.jelly" optional="true"/>
+            </j:forEach>
+          </tr>
+        </j:forEach>
+      </table>
+    </f:section>
   </j:if>
 
   <j:if test="${it.totalCount!=0}">
-    <h2>${%All Tests}</h2>
-    <table class="jenkins-table sortable" id="testresult">
+    <f:section title="${%All Tests}">
+      <table class="jenkins-table sortable" id="testresult">
       <thead>
         <tr>
           <th>${it.childTitle}</th>
@@ -84,7 +85,7 @@ THE SOFTWARE.
               <j:invokeStatic var="encodedSafeName" className="hudson.Util" method="rawEncode">
                 <j:arg value="${p.safeName}" />
               </j:invokeStatic>
-              <a href="${encodedSafeName}/" class="body.jelly"><span style="${prev==null?'font-weight:bold':''}"><st:out value="${p.displayName}" /></span></a>
+              <a href="${encodedSafeName}/" class="body.jelly"><span style="${prev==null?'font-weight:450':''}"><st:out value="${p.displayName}" /></span></a>
               <j:forEach var="badge" items="${p.testActions}">
                 <st:include it="${badge}" page="badge.jelly" optional="true"/>
               </j:forEach>
@@ -113,5 +114,6 @@ THE SOFTWARE.
         </j:forEach>
       </tbody>
     </table>
+    </f:section>
   </j:if>
 </j:jelly>

@@ -156,8 +156,8 @@ THE SOFTWARE.
                   <td class="pane test-result-table-row"><j:out value="${app.markupFormatter.translate(item.description)}"/></td>
                 </j:if>
                 <td class="pane no-wrap test-result-table-row" data="${item.duration}">${item.durationString}</td>
-                <td class="pane test-result-table-row" style="${item.failCount > 0 ? 'font-weight: bold; color: var(--error-color);' : ''}">${item.failCount}</td>
-                <td class="pane test-result-table-row" style="${item.skipCount > 0 ? 'font-weight: bold; color: var(--warning-color);' : ''}">${item.skipCount}</td>
+                <td class="pane test-result-table-row" style="${item.failCount > 0 ? 'font-weight: 450; color: var(--error-color);' : ''}">${item.failCount}</td>
+                <td class="pane test-result-table-row" style="${item.skipCount > 0 ? 'font-weight: 450; color: var(--warning-color);' : ''}">${item.skipCount}</td>
                 <td class="pane test-result-table-row">${item.totalCount}</td>
               </tr>
             </j:if>
