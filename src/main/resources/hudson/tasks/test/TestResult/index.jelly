@@ -36,6 +36,11 @@ THE SOFTWARE.
       <j:set var="prev" value="${it.previousResult}" />
 
       <l:app-bar title="${it.title}" subtitle="${it.totalCount}">
+        <div class="jenkins-button jenkins-button--tertiary jp-pill jenkins-!-text-color-secondary" aria-label="${%took(it.durationString)}">
+          <l:icon src="symbol-timer-outline plugin-ionicons-api" />
+          ${it.durationString}
+        </div>
+
         <j:if test="${it.totalCount != it.passCount or it.class.simpleName != 'TestResult'}">
           <div class="jp-pills">
             <j:if test="${it.failCount gt 0}">

@@ -177,7 +177,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
 
     @Override
     public String getIconFileName() {
-        return "clipboard.png";
+        return "symbol-flask-outline plugin-ionicons-api";
     }
 
     @Override

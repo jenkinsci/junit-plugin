@@ -36,7 +36,9 @@ THE SOFTWARE.
           ${title}
         </h4>
         <pre id="${id}" style="display: ${display}">
-          <st:out value="${value}"/>
+          <j:forEach items="${value.split('\n')}" var="line" indexVar="index">
+            <div style="display: grid; grid-template-columns: 30px 1fr; gap: 1rem; margin-left: -45px"><span class="jenkins-!-text-color-secondary" style="margin-left: auto">${index}</span><st:out value="${line}" /></div>
+          </j:forEach>
         </pre>
       </j:if>
     </d:tag>

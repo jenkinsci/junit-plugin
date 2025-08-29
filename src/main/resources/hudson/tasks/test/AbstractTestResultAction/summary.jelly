@@ -27,7 +27,7 @@ THE SOFTWARE.
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:test="/lib/hudson/test" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
 
   <!-- summary -->
-  <t:summary icon="clipboard.png">
+  <t:summary icon="symbol-flask-outline plugin-ionicons-api">
     <a href="${it.urlName}/">${it.displayName}</a>
     <st:nbsp/>
     <test:test-result/>
