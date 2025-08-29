@@ -92,12 +92,17 @@
 
 /* Test result */
 
-.failure-summary {
+.lewisbirks2 {
+  background: var(--card-background);
+  border: var(--jenkins-border, 2px solid color-mix(in srgb, var(--text-color-secondary) 10%, transparent));
+  border-radius: var(--form-input-border-radius);
+}
+
+.lewisbirks {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
   padding: 1.5rem 2.25rem;
-  margin-right: -200px;
 
   pre {
     background: none;
@@ -121,6 +126,10 @@
     font-weight: 450;
     margin-bottom: 5px;
   }
+}
+
+.failure-summary {
+  margin-right: -200px;
 }
 
 .ninetynines {

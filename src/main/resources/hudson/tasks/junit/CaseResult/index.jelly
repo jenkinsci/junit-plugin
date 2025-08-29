@@ -34,10 +34,16 @@ THE SOFTWARE.
       <div class="jenkins-app-bar">
         <div class="jenkins-app-bar__content">
           <h1>
+            <span class="jenkins-!-margin-right-2">
+              ${it.name}
+            </span>
+
             <j:forEach var="i" items="${it.splitName}" varStatus="status">
-              <span class="${status.last ? '' : 'jenkins-!-text-color-secondary'}">
-                <st:out value="${i}" /><j:if test="${!status.last}">.</j:if>
-              </span>
+              <j:if test="${!status.last}">
+                <span class="${status.last ? 'jenkins-!-text-color-secondary' : 'jenkins-!-text-color-secondary'}">
+                  <st:out value="${i}" /><j:if test="${!status.last}">.</j:if>
+                </span>
+              </j:if>
             </j:forEach>
           </h1>
         </div>
@@ -137,6 +143,10 @@ THE SOFTWARE.
 <!--            <pre><j:out value="${it.annotate(it.stderr)}"/></pre>-->
 <!--          </f:section>-->
 <!--        </j:if>-->
+      </div>
+
+      <div class="lewisbirks lewisbirks2">
+        <st:include page="dummary.jelly" />
       </div>
     </l:main-panel>
   </l:layout>

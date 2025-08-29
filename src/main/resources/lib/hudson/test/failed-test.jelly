@@ -69,7 +69,7 @@ THE SOFTWARE.
     <st:include it="${badge}" page="badge.jelly" optional="true"/>
   </j:forEach>
 
-  <div id="test-${id}" class="failure-summary" style="display: none;">
+  <div id="test-${id}" class="failure-summary lewisbirks" style="display: none;">
     ${%Loading...}
   </div>
 </j:jelly>
