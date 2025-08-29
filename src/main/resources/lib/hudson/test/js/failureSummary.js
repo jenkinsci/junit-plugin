@@ -51,9 +51,9 @@ function handleShowHideClick(event) {
 document.addEventListener('DOMContentLoaded', () => {
     initializeShowHideLinks();
 
-    document.querySelectorAll(".jenkins-button").forEach(button => {
+    document.querySelectorAll(".jp-pill").forEach(button => {
         button.addEventListener("click", event => {
-            button.classList.add("jenkins-button--primary");
+            button.classList.toggle("jenkins-button--primary");
         })
     })
 

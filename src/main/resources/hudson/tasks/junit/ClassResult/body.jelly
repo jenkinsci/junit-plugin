@@ -48,7 +48,7 @@ THE SOFTWARE.
               </j:forEach>
               <td class="jenkins-table__cell--tight">
                 <div class="jenkins-table__cell__button-wrapper">
-                  <a href="${rootURL}/${f.url}" class="jenkins-button jenkins-button--tertiary">
+                  <a href="${rootURL}/${p.url}" class="jenkins-button jenkins-button--tertiary">
                     <l:icon src="symbol-external" />
                   </a>
                 </div>
