@@ -25,6 +25,7 @@ THE SOFTWARE.
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form" xmlns:t="/lib/hudson/test" xmlns:l="/lib/layout">
   <j:if test="${it.totalCount!=0}">
+    <script src="${resURL}/plugin/junit/js/filter.js?${h.generateId()}" defer="true" type="module" />
     <f:section title="${%All Tests}">
       <table class="jenkins-table sortable" id="testresult">
         <thead>
@@ -39,7 +40,7 @@ THE SOFTWARE.
         </thead>
         <tbody>
           <j:forEach var="p" items="${it.children}" varStatus="status">
-            <tr>
+            <tr data-jp-status="${p.status}">
               <td class="no-wrap"><t:failed-test result="${p}" url="${p.getRelativePathFrom(it)}"/></td>
               <td class="no-wrap" style="width:6em" data="${p.duration}">${p.durationString}</td>
               <j:forEach var="tablerow" items="${p.testActions}">
