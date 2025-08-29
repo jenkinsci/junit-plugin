@@ -132,10 +132,6 @@
   margin-right: -200px;
 }
 
-.ninetynines {
-  word-break: break-all;
-}
-
 .jp-details {
   display: flex;
   align-items: center;
@@ -190,4 +186,5 @@
 pre {
   background: var(--card-background);
   border: var(--jenkins-border, 2px solid color-mix(in srgb, var(--text-color-secondary) 10%, transparent));
+  word-break: break-all;
 }

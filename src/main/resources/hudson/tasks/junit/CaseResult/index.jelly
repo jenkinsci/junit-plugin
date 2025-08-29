@@ -34,7 +34,7 @@ THE SOFTWARE.
       <div class="jenkins-app-bar">
         <div class="jenkins-app-bar__content">
           <h1>
-            <span class="jenkins-!-margin-right-2">
+            <span class="jenkins-!-margin-right-3">
               ${it.name}
             </span>
 
@@ -52,98 +52,59 @@ THE SOFTWARE.
             <l:icon src="symbol-bar-chart-outline plugin-ionicons-api" />
             History
           </a>
+          <t:editDescriptionButton permission="${it.run.UPDATE}" />
         </div>
       </div>
+      <div class="jp-details">
+        <div class="jp-pill jenkins-button ${st.cssClass}">
+          <l:icon src="symbol-close-outline plugin-ionicons-api" />
+          <st:out value="${st.message}" />
+        </div>
 
-      <div class="ninetynines">
-        <div class="jp-details">
-          <div class="jp-pill jenkins-button ${st.cssClass}">
-            <l:icon src="symbol-close-outline plugin-ionicons-api" />
-            <st:out value="${st.message}" />
-          </div>
+        <div>
+          <l:icon src="symbol-timer-outline plugin-ionicons-api" />
+          ${%took(it.durationString)}
 
-          <div>
-            <l:icon src="symbol-timer-outline plugin-ionicons-api" />
-            ${%took(it.durationString)}
-
-            <j:if test="${it.suiteResult != null &amp;&amp; it.className != it.suiteResult.name}">
-              (from <st:out value="${it.suiteResult.name}"/>)
-            </j:if>
-          </div>
-
-          <j:if test="${!it.passed}">
-            <div>
-              <j:choose>
-                <j:when test="${it.skipped}">
-                  <l:icon src="symbol-play-skip-forward-circle-outline plugin-ionicons-api" />
-                </j:when>
-                <j:otherwise>
-                  <l:icon src="symbol-close-circle-outline plugin-ionicons-api" />
-                </j:otherwise>
-              </j:choose>
-
-              <a href="${rootURL}/${it.run.url}">
-                <j:choose>
-                  <j:when test="${it.skipped}">
-                    ${%skippedFor(it.age)}
-                  </j:when>
-                  <j:otherwise>
-                    ${%failingFor(it.age)}
-                  </j:otherwise>
-                </j:choose>
-                ${%since.before}
-                #${it.failedSince}
-                ${%since.after}
-              </a>
-            </div>
+          <j:if test="${it.suiteResult != null &amp;&amp; it.className != it.suiteResult.name}">
+            (from <st:out value="${it.suiteResult.name}"/>)
           </j:if>
         </div>
 
-<!--        <t:editableDescription permission="${it.run.UPDATE}"/>-->
+        <j:if test="${!it.passed}">
+          <div>
+            <j:choose>
+              <j:when test="${it.skipped}">
+                <l:icon src="symbol-play-skip-forward-circle-outline plugin-ionicons-api" />
+              </j:when>
+              <j:otherwise>
+                <l:icon src="symbol-close-circle-outline plugin-ionicons-api" />
+              </j:otherwise>
+            </j:choose>
 
-        <table style="margin-top: 1em; margin-left:0em;">
-          <j:forEach var="action" items="${it.testActions}">
-            <st:include page="summary.jelly" from="${action}" optional="true" it="${action}" />
-          </j:forEach>
-        </table>
-
-<!--        <st:include page="summary.jelly" />-->
-
-<!--        <j:forEach var="p" items="${it.properties}">-->
-<!--          <h3>${p.key}</h3>-->
-<!--          <pre><j:out value="${p.value}"/></pre>-->
-<!--        </j:forEach>-->
-
-<!--        <j:if test="${!empty(it.skippedMessage)}">-->
-<!--          <f:section title="${%Skip Message}">-->
-<!--            <pre><j:out value="${it.annotate(it.skippedMessage)}"/></pre>-->
-<!--          </f:section>-->
-<!--        </j:if>-->
-
-<!--        <j:if test="${!empty(it.errorDetails)}">-->
-<!--          <f:section title="${%Error Message}">-->
-<!--            <pre><j:out value="${it.annotate(it.errorDetails)}"/></pre>-->
-<!--          </f:section>-->
-<!--        </j:if>-->
-
-<!--        <j:if test="${!empty(it.errorStackTrace)}">-->
-<!--          <f:section title="${%Stacktrace}">-->
-<!--            <pre><j:out value="${it.annotate(it.errorStackTrace)}"/></pre>-->
-<!--          </f:section>-->
-<!--        </j:if>-->
-
-<!--        <j:if test="${!empty(it.stdout)}">-->
-<!--          <f:section title="${%Standard Output}">-->
-<!--            <pre><j:out value="${it.annotate(it.stdout)}"/></pre>-->
-<!--          </f:section>-->
-<!--        </j:if>-->
-
-<!--        <j:if test="${!empty(it.stderr)}">-->
-<!--          <f:section title="${%Standard Error}">-->
-<!--            <pre><j:out value="${it.annotate(it.stderr)}"/></pre>-->
-<!--          </f:section>-->
-<!--        </j:if>-->
+            <a href="${rootURL}/${it.run.url}">
+              <j:choose>
+                <j:when test="${it.skipped}">
+                  ${%skippedFor(it.age)}
+                </j:when>
+                <j:otherwise>
+                  ${%failingFor(it.age)}
+                </j:otherwise>
+              </j:choose>
+              ${%since.before}
+              #${it.failedSince}
+              ${%since.after}
+            </a>
+          </div>
+        </j:if>
       </div>
+
+      <t:editableDescription permission="${it.run.UPDATE}" hideButton="true" />
+
+      <table style="margin-top: 1em; margin-left:0em;">
+        <j:forEach var="action" items="${it.testActions}">
+          <st:include page="summary.jelly" from="${action}" optional="true" it="${action}" />
+        </j:forEach>
+      </table>
 
       <div class="lewisbirks lewisbirks2">
         <st:include page="dummary.jelly" />

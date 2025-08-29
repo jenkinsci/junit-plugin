@@ -59,31 +59,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     var canvas = document.getElementById('my-canvas');
 
-// only initialize once
-    canvas.confetti = canvas.confetti || confetti.create(canvas, { resize: true });
+    if (canvas) {
+        // only initialize once
+        canvas.confetti = canvas.confetti || confetti.create(canvas, { resize: true });
 
-    var defaults = {
-        startVelocity: 20,        // much slower speed
-        spread: 80,              // narrow spread so it falls downwards
-        ticks: 200,              // particles live longer
-        zIndex: 0,
-        particleCount: 10,        // fewer particles per burst
-        disableForReducedMotion: true
-    };
+        var defaults = {
+            startVelocity: 20,        // much slower speed
+            spread: 80,              // narrow spread so it falls downwards
+            ticks: 200,              // particles live longer
+            zIndex: 0,
+            particleCount: 10,        // fewer particles per burst
+            disableForReducedMotion: true
+        };
 
-    function randomInRange(min, max) {
-        return Math.random() * (max - min) + min;
-    }
+        function randomInRange(min, max) {
+            return Math.random() * (max - min) + min;
+        }
 
-    function conf() {
-        canvas.confetti({
-            ...defaults,
-            origin: { x: randomInRange(0, 1), y: -0.1 } // start just above the canvas
-        });
-    }
+        function conf() {
+            canvas.confetti({
+                ...defaults,
+                origin: { x: randomInRange(0, 1), y: -0.1 } // start just above the canvas
+            });
+        }
 
 // trigger small bursts quickly to simulate rain
-    setInterval(conf, 200);
+        setInterval(conf, 200);
 
-    conf();
+        conf();
+    }
 });
