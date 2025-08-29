@@ -25,7 +25,9 @@ THE SOFTWARE.
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form" xmlns:t="/lib/hudson/test" xmlns:l="/lib/layout">
   <j:if test="${it.totalCount!=0}">
-    <script src="${resURL}/plugin/junit/js/filter.js?${h.generateId()}" defer="true" type="module" />
+    <st:once>
+      <st:adjunct includes="lib.hudson.test.js.filter" />
+    </st:once>
     <f:section title="${%All Tests}">
       <table class="jenkins-table sortable" id="testresult">
         <thead>
