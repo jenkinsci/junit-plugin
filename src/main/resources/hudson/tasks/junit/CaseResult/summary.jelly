@@ -32,9 +32,8 @@ THE SOFTWARE.
         <j:set var="display" value="${attrs.opened ? '' : 'none'}"/>
         <j:set var="idisplay" value="${attrs.opened ? 'none' : ''}"/>
         <st:adjunct includes="lib.hudson.test.js.failureSummary" />
-        <h4 id="${id}-showlink">
+        <h4>
           ${title}
-          <l:icon src="symbol-chevron-forward-outline plugin-ionicons-api" />
         </h4>
         <pre id="${id}" style="display: ${display}">
           <st:out value="${value}"/>
@@ -49,11 +48,11 @@ THE SOFTWARE.
 
   <j:set var="id" value="${h.generateId()}"/>
 
-  <local:item id="${id}" name="error" title="${%Error Details}" value="${it.errorDetails}" opened="true"/>
+  <local:item id="${id}" name="error" title="${%Error Details}" value="${it.errorDetails}" opened="true" />
   <j:forEach var="p" items="${it.properties}">
-    <local:item id="${id}" name="${p.key}" title="${p.key}" value="${p.value}"/>
+    <local:item id="${id}" name="${p.key}" title="${p.key}" value="${p.value}" opened="true" />
   </j:forEach>
-  <local:item id="${id}" name="stacktrace" title="${%Stack Trace}" value="${it.errorStackTrace}"/>
-  <local:item id="${id}" name="stdout" title="${%Standard Output}" value="${it.stdout}"/>
-  <local:item id="${id}" name="stderr" title="${%Standard Error}" value="${it.stderr}"/>
+  <local:item id="${id}" name="stacktrace" title="${%Stack Trace}" value="${it.errorStackTrace}" opened="true" />
+  <local:item id="${id}" name="stdout" title="${%Standard Output}" value="${it.stdout}" opened="true" />
+  <local:item id="${id}" name="stderr" title="${%Standard Error}" value="${it.stderr}" opened="true" />
 </j:jelly>

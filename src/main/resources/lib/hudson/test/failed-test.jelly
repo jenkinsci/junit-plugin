@@ -44,10 +44,16 @@ THE SOFTWARE.
   <a id="test-${id}-showlink" class="jp-idk" href="${url}">
     <l:icon src="symbol-status-red" />
 
+    <span class="jenkins-!-margin-right-2">
+      ${result.name}
+    </span>
+
     <j:forEach var="i" items="${result.splitName}" varStatus="status">
-      <span class="${status.last ? '' : 'jenkins-!-text-color-secondary'}">
-        <st:out value="${i}" /><j:if test="${!status.last}">.</j:if>
-      </span>
+      <j:if test="${!status.last}">
+        <span class="${status.last ? 'jenkins-!-text-color-secondary' : 'jenkins-!-text-color-secondary'}">
+          <st:out value="${i}" /><j:if test="${!status.last}">.</j:if>
+        </span>
+      </j:if>
     </j:forEach>
 
     <j:if test="${result.age eq 1}">

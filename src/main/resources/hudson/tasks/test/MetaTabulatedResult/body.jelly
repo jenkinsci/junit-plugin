@@ -36,7 +36,7 @@ THE SOFTWARE.
             <j:forEach var="tableheader" items="${it.testActions}">
               <st:include it="${tableheader}" page="casetableheader.jelly" optional="true"/>
             </j:forEach>
-              <th style="width:3em">${%Open}</th>
+              <th />
           </tr>
         </thead>
         <j:forEach var="f" items="${it.failedTests}" varStatus="i">
@@ -51,10 +51,12 @@ THE SOFTWARE.
             <j:forEach var="tablerow" items="${f.testActions}">
               <st:include it="${tablerow}" page="tablerow.jelly" optional="true"/>
             </j:forEach>
-              <td>
+              <td class="jenkins-table__cell--tight">
+                <div class="jenkins-table__cell__button-wrapper">
                   <a href="${rootURL}/${f.url}" class="jenkins-button jenkins-button--tertiary">
                       <l:icon src="symbol-external" />
                   </a>
+                </div>
             </td>
           </tr>
         </j:forEach>

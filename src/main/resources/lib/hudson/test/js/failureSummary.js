@@ -36,6 +36,7 @@ function handleShowHideClick(event) {
 
     let link = event.target.closest('[id$="-showlink"]');
     const id = link.id.replace(/-showlink$/, '').replace(/-hidelink$/, '');
+    link.classList.toggle("active")
 
     if (document.getElementById(id).style.display === "none") {
         // clear the query parameters
