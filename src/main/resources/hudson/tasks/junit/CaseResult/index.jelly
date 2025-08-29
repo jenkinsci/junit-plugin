@@ -52,6 +52,7 @@ THE SOFTWARE.
       <div class="ninetynines">
         <div class="jp-details">
           <div class="jp-pill jenkins-button ${st.cssClass}">
+            <l:icon src="symbol-close-outline plugin-ionicons-api" />
             <st:out value="${st.message}" />
           </div>
 
