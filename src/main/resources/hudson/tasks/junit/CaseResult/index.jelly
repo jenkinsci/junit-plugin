@@ -27,81 +27,114 @@ THE SOFTWARE.
          xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
   <l:layout title="${it.run} test - ${it.displayName}" type="one-column">
     <l:main-panel>
+      <link rel="stylesheet" href="${resURL}/plugin/junit/styles.css?${h.generateId()}" defer="true" />
+
       <j:set var="st" value="${it.status}" />
 
-        <l:app-bar title="${it.fullDisplayName}">
-            <h1 class="${st.cssClass}">
-                <st:out value="${st.message}" />
-            </h1>
-        </l:app-bar>
-
-      <p>
-        <j:if test="${it.suiteResult != null &amp;&amp; it.className != it.suiteResult.name}">
-          (from <st:out value="${it.suiteResult.name}"/>)
-        </j:if>
-      </p>
-      <j:if test="${!it.passed}">
-        <div style="text-align:right;">
-          <j:choose>
-            <j:when test="${it.skipped}">
-              ${%skippedFor(it.age)}
-            </j:when>
-            <j:otherwise>
-              ${%failingFor(it.age)}
-            </j:otherwise>
-          </j:choose>
-          (${%since.before}<t:buildLink job="${it.run.parent}" number="${it.failedSince}"/>${%since.after})
+      <div class="jenkins-app-bar">
+        <div class="jenkins-app-bar__content">
+          <h1>
+            <j:forEach var="i" items="${it.splitName}" varStatus="status">
+              <span class="${status.last ? '' : 'jenkins-!-text-color-secondary'}">
+                <st:out value="${i}" /><j:if test="${!status.last}">.</j:if>
+              </span>
+            </j:forEach>
+          </h1>
         </div>
-      </j:if>
-
-      <div style="text-align:right;">
-        <a href="history">
-          ${%took(it.durationString)}
-        </a>
+        <div class="jenkins-app-bar__controls">
+          <a href="history" class="jenkins-button">
+            <l:icon src="symbol-bar-chart-outline plugin-ionicons-api" />
+            History
+          </a>
+        </div>
       </div>
 
-      <t:editableDescription permission="${it.run.UPDATE}"/>
+      <div class="ninetynines">
+        <div class="jp-details">
+          <div class="jp-pill jenkins-button ${st.cssClass}">
+            <st:out value="${st.message}" />
+          </div>
 
-      <table style="margin-top: 1em; margin-left:0em;">
-        <j:forEach var="action" items="${it.testActions}">
-          <st:include page="summary.jelly" from="${action}" optional="true" it="${action}" />
+          <div>
+            <l:icon src="symbol-timer-outline plugin-ionicons-api" />
+            ${%took(it.durationString)}
+
+            <j:if test="${it.suiteResult != null &amp;&amp; it.className != it.suiteResult.name}">
+              (from <st:out value="${it.suiteResult.name}"/>)
+            </j:if>
+          </div>
+
+          <j:if test="${!it.passed}">
+            <div>
+              <j:choose>
+                <j:when test="${it.skipped}">
+                  <l:icon src="symbol-play-skip-forward-circle-outline plugin-ionicons-api" />
+                </j:when>
+                <j:otherwise>
+                  <l:icon src="symbol-close-circle-outline plugin-ionicons-api" />
+                </j:otherwise>
+              </j:choose>
+
+              <a href="${rootURL}/${it.run.url}">
+                <j:choose>
+                  <j:when test="${it.skipped}">
+                    ${%skippedFor(it.age)}
+                  </j:when>
+                  <j:otherwise>
+                    ${%failingFor(it.age)}
+                  </j:otherwise>
+                </j:choose>
+                ${%since.before}
+                #${it.failedSince}
+                ${%since.after}
+              </a>
+            </div>
+          </j:if>
+        </div>
+
+<!--        <t:editableDescription permission="${it.run.UPDATE}"/>-->
+
+        <table style="margin-top: 1em; margin-left:0em;">
+          <j:forEach var="action" items="${it.testActions}">
+            <st:include page="summary.jelly" from="${action}" optional="true" it="${action}" />
+          </j:forEach>
+        </table>
+
+        <j:forEach var="p" items="${it.properties}">
+          <h3>${p.key}</h3>
+          <pre><j:out value="${p.value}"/></pre>
         </j:forEach>
-      </table>
 
-       <j:forEach var="p" items="${it.properties}">
-         <h3>${p.key}</h3>
-         <pre><j:out value="${p.value}"/></pre>
-       </j:forEach>
+        <j:if test="${!empty(it.skippedMessage)}">
+          <f:section title="${%Skip Message}">
+            <pre><j:out value="${it.annotate(it.skippedMessage)}"/></pre>
+          </f:section>
+        </j:if>
 
-      <j:if test="${!empty(it.skippedMessage)}">
-        <f:section title="${%Skip Message}">
-          <pre><j:out value="${it.annotate(it.skippedMessage)}"/></pre>
-        </f:section>
-      </j:if>
+        <j:if test="${!empty(it.errorDetails)}">
+          <f:section title="${%Error Message}">
+            <pre><j:out value="${it.annotate(it.errorDetails)}"/></pre>
+          </f:section>
+        </j:if>
 
-      <j:if test="${!empty(it.errorDetails)}">
-        <f:section title="${%Error Message}">
-          <pre><j:out value="${it.annotate(it.errorDetails)}"/></pre>
-        </f:section>
-      </j:if>
+        <j:if test="${!empty(it.errorStackTrace)}">
+          <f:section title="${%Stacktrace}">
+            <pre><j:out value="${it.annotate(it.errorStackTrace)}"/></pre>
+          </f:section>
+        </j:if>
 
-      <j:if test="${!empty(it.errorStackTrace)}">
-        <f:section title="${%Stacktrace}">
-          <pre><j:out value="${it.annotate(it.errorStackTrace)}"/></pre>
-        </f:section>
-      </j:if>
+        <j:if test="${!empty(it.stdout)}">
+          <f:section title="${%Standard Output}">
+            <pre><j:out value="${it.annotate(it.stdout)}"/></pre>
+          </f:section>
+        </j:if>
 
-      <j:if test="${!empty(it.stdout)}">
-        <f:section title="${%Standard Output}">
-          <pre><j:out value="${it.annotate(it.stdout)}"/></pre>
-        </f:section>
-      </j:if>
-
-      <j:if test="${!empty(it.stderr)}">
-        <f:section title="${%Standard Error}">
-          <pre><j:out value="${it.annotate(it.stderr)}"/></pre>
-        </f:section>
-      </j:if>
+        <j:if test="${!empty(it.stderr)}">
+          <f:section title="${%Standard Error}">
+            <pre><j:out value="${it.annotate(it.stderr)}"/></pre>
+          </f:section>
+        </j:if>
+      </div>
     </l:main-panel>
   </l:layout>
 </j:jelly>

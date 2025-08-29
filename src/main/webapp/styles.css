@@ -1,34 +1,39 @@
 .jp-pills {
   display: flex;
   gap: var(--jenkins-border-width);
-  overflow: hidden !important;
 
   .jp-pill {
-    padding-inline: 1.125rem;
+    padding-inline: 1rem;
+  }
 
+  .jenkins-button--primary {
+    transition: margin-inline var(--standard-transition);
+  }
+
+  .jp-pill:not(.jenkins-button--primary) {
     &:not(:first-of-type) {
       border-top-left-radius: 2px;
       border-bottom-left-radius: 2px;
+      padding-left: 0.75rem;
     }
 
     &:not(:last-of-type) {
       border-top-right-radius: 2px;
       border-bottom-right-radius: 2px;
+      padding-right: 0.75rem;
     }
+  }
+
+  &:empty {
+    display: none;
   }
 }
 
 .jp-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   gap: 0.375rem;
   border-radius: 100px;
-  border: var(--jenkins-border--inherit-subtle);
-  background-color: color-mix(in srgb, var(--color) 5%, transparent);
-  padding-inline: 0.75rem;
-  min-height: 2rem;
-  font-size: 0.875rem;
+  padding: 0 0.75rem;
+  min-height: 1.875rem;
   text-box: cap alphabetic;
   font-weight: 450;
 
@@ -117,4 +122,64 @@
       color: var(--text-color-secondary);
     }
   }
+}
+
+.ninetynines {
+  word-break: break-all;
+}
+
+.jp-details {
+  display: flex;
+  align-items: center;
+  gap: 1rem 1.5rem;
+  margin-left: 0.25rem;
+  margin-bottom: 0.875rem;
+  margin-top: -0.25rem;
+  flex-wrap: wrap;
+
+  @media (width <= 800px) {
+    margin-block: 0.75rem 1rem;
+  }
+
+  .jp-pill {
+    margin-left: -0.25rem;
+  }
+
+  & > div {
+    display: flex;
+    align-items: center;
+    gap: 1ch;
+    font-size: var(--font-size-sm);
+    color: var(--text-color-secondary);
+    font-weight: var(--font-bold-weight);
+    text-box: trim-both;
+
+    a {
+      color: inherit;
+    }
+
+    svg,
+    img {
+      width: 1.125rem;
+      height: 1.125rem;
+    }
+  }
+}
+
+.jenkins-notice {
+  position: relative;
+  overflow: hidden;
+}
+
+#my-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  bottom: 100%;
+  z-index: 1;
+}
+
+pre {
+  background: var(--card-background);
+  border: var(--jenkins-border, 2px solid color-mix(in srgb, var(--text-color-secondary) 10%, transparent));
 }

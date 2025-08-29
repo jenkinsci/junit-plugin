@@ -26,35 +26,70 @@ THE SOFTWARE.
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:test="/lib/test">
   <l:layout title="${it.run} ${it.displayName}" type="one-column">
     <l:main-panel>
-      <l:app-bar title="${it.title}" subtitle="${it.totalCount}">
-        <div class="jp-pills">
-          <j:if test="${it.failCount gt 0}">
-            <div class="jp-pill jenkins-!-error-color">
-              <l:icon src="symbol-close-outline plugin-ionicons-api" />
-              ${it.failCount}
-            </div>
-          </j:if>
-          <j:if test="${it.skipCount gt 0}">
-            <div class="jp-pill jenkins-!-skipped-color">
-              <l:icon src="symbol-play-skip-back-outline plugin-ionicons-api" />
-              ${it.skipCount}
-            </div>
-          </j:if>
-          <j:if test="${it.passCount gt 0}">
-            <div class="jp-pill jenkins-!-success-color">
-              <l:icon src="symbol-checkmark-outline plugin-ionicons-api" />
-              ${it.passCount}
-            </div>
-          </j:if>
-        </div>
+      <link rel="stylesheet" href="${resURL}/plugin/junit/styles.css?${h.generateId()}" defer="true" />
 
-      </l:app-bar>
+      <st:once>
+        <st:adjunct includes="lib.hudson.test.js.confetti" />
+        <st:adjunct includes="lib.hudson.test.js.failureSummary" />
+      </st:once>
 
       <j:set var="prev" value="${it.previousResult}" />
 
-      <st:include page="body.jelly" />
+      <l:app-bar title="${it.title}" subtitle="${it.totalCount}">
+        <j:if test="${it.totalCount != it.passCount}">
+          <div class="jp-pills">
+            <j:if test="${it.failCount gt 0}">
+              <div class="jenkins-button jp-pill jenkins-!-error-color" tooltip="${it.passCount} failing">
+                <l:icon src="symbol-close-outline plugin-ionicons-api" />
+                ${it.failCount}
+              </div>
+            </j:if>
+            <j:if test="${it.skipCount gt 0}">
+              <div class="jenkins-button jp-pill jenkins-!-skipped-color" tooltip="${it.passCount} skipped">
+                <l:icon src="symbol-play-skip-forward-outline plugin-ionicons-api" />
+                ${it.skipCount}
+              </div>
+            </j:if>
+            <j:if test="${it.passCount gt 0}">
+              <div class="jenkins-button jp-pill jenkins-!-success-color" tooltip="${it.passCount} passing">
+                <l:icon src="symbol-checkmark-outline plugin-ionicons-api" />
+                ${it.passCount}
+              </div>
+            </j:if>
+          </div>
+        </j:if>
 
-      <link rel="stylesheet" href="${resURL}/plugin/junit/styles.css?${h.generateId()}"/>
+        <j:if test="${it.totalCount eq prev.totalCount}">
+          <div class="jp-pills">
+            <j:if test="${it.passCount gt prev.passCount}">
+              <button class="jenkins-button jp-pill jenkins-!-success-color" tooltip="${it.passCount - prev.passCount} more passing than ${prev.run.displayName}">
+                <l:icon src="symbol-trending-up-outline plugin-ionicons-api" />
+                ${it.passCount - prev.passCount}
+              </button>
+            </j:if>
+
+            <j:if test="${it.failCount gt prev.failCount}">
+              <button class="jenkins-button jp-pill jenkins-!-error-color" tooltip="${it.failCount - prev.failCount} more failing than ${prev.run.displayName}">
+                <l:icon src="symbol-trending-down-outline plugin-ionicons-api" />
+                ${it.failCount - prev.failCount}
+              </button>
+            </j:if>
+          </div>
+        </j:if>
+      </l:app-bar>
+
+      <j:if test="${it.totalCount eq it.passCount}">
+        <div class="jenkins-notice">
+          <canvas id="my-canvas" />
+          <l:icon src="symbol-balloon-outline plugin-ionicons-api" />
+          <div>All tests are passing!</div>
+          <div class="jenkins-notice__description">
+            Nice one! All ${it.totalCount} tests are passing.
+          </div>
+        </div>
+      </j:if>
+
+      <st:include page="body.jelly" />
     </l:main-panel>
   </l:layout>
 </j:jelly>

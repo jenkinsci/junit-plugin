@@ -1039,24 +1039,24 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         /**
          * This test runs OK, just like its previous run.
          */
-        PASSED("jp-pill jenkins-!-success-color", Messages._CaseResult_Status_Passed(), true),
+        PASSED("jenkins-button jp-pill jenkins-!-success-color", Messages._CaseResult_Status_Passed(), true),
         /**
          * This test was skipped due to configuration or the
          * failure or skipping of a method that it depends on.
          */
-        SKIPPED("jp-pill jenkins-!-skipped-color", Messages._CaseResult_Status_Skipped(), false),
+        SKIPPED("jenkins-button jp-pill jenkins-!-skipped-color", Messages._CaseResult_Status_Skipped(), false),
         /**
          * This test failed, just like its previous run.
          */
-        FAILED("jp-pill jenkins-!-error-color", Messages._CaseResult_Status_Failed(), false),
+        FAILED("jenkins-button jp-pill jenkins-!-error-color", Messages._CaseResult_Status_Failed(), false),
         /**
          * This test has been failing, but now it runs OK.
          */
-        FIXED("result-fixed", Messages._CaseResult_Status_Fixed(), true),
+        FIXED("jenkins-!-success-color", Messages._CaseResult_Status_Fixed(), true),
         /**
          * This test has been running OK, but now it failed.
          */
-        REGRESSION("result-regression", Messages._CaseResult_Status_Regression(), false);
+        REGRESSION("jenkins-!-error-color", Messages._CaseResult_Status_Regression(), false);
 
         private final String cssClass;
         private final Localizable message;
