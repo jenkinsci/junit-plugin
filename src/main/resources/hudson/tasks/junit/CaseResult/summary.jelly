@@ -32,13 +32,9 @@ THE SOFTWARE.
         <j:set var="display" value="${attrs.opened ? '' : 'none'}"/>
         <j:set var="idisplay" value="${attrs.opened ? 'none' : ''}"/>
         <st:adjunct includes="lib.hudson.test.js.failureSummary" />
-        <h4>
-          <a id="${id}-showlink" title="Show ${title}" style="display: ${idisplay}">
-            <l:icon src="symbol-add-outline plugin-ionicons-api" class="icon-sm"/><st:nbsp/>${title}
-          </a>
-          <a id="${id}-hidelink" title="Hide ${title}" style="display: ${display}">
-            <l:icon src="symbol-remove-outline plugin-ionicons-api" class="icon-sm"/><st:nbsp/>${title}
-          </a>
+        <h4 id="${id}-showlink">
+          ${title}
+          <l:icon src="symbol-chevron-forward-outline plugin-ionicons-api" />
         </h4>
         <pre id="${id}" style="display: ${display}">
           <st:out value="${value}"/>

@@ -29,9 +29,9 @@ THE SOFTWARE.
       <table class="jenkins-table sortable" id="testresult">
         <thead>
           <tr>
+              <th style="width:6em">${%Status}</th>
             <th>${%Test name}</th>
             <th style="width:6em">${%Duration}</th>
-            <th style="width:6em">${%Status}</th>
             <j:forEach var="tableheader" items="${it.testActions}">
               <st:include it="${tableheader}" page="${it.childType}tableheader.jelly" optional="true"/>
             </j:forEach>
@@ -40,6 +40,12 @@ THE SOFTWARE.
         <tbody>
           <j:forEach var="p" items="${it.children}" varStatus="status">
             <tr>
+            <td class="pane" style="width:6em">
+                <j:set var="pst" value="${p.status}" />
+                <span class="${pst.cssClass}">
+                    ${pst.message}
+                </span>
+            </td>
               <td class="pane">
                 <j:invokeStatic var="encodedSafeName" className="hudson.Util" method="rawEncode">
                   <j:arg value="${p.safeName}" />
@@ -50,12 +56,6 @@ THE SOFTWARE.
                 </j:forEach>
               </td>
               <td class="pane no-wrap" style="width:6em" data="${p.duration}">${p.durationString}</td>
-              <td class="pane" style="width:6em">
-                <j:set var="pst" value="${p.status}" />
-                <span class="${pst.cssClass}">
-                  ${pst.message}
-                </span>
-              </td>
               <j:forEach var="tablerow" items="${p.testActions}">
                 <st:include it="${tablerow}" page="tablerow.jelly" optional="true"/>
               </j:forEach>

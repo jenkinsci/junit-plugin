@@ -24,7 +24,7 @@ THE SOFTWARE.
 -->
 
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:t="/lib/hudson/test" xmlns:f="/lib/form">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:t="/lib/hudson/test" xmlns:f="/lib/form" xmlns:l="/lib/layout">
   <j:if test="${it.failCount!=0}">
     <f:section title="${%All Failed Tests}">
       <table class="jenkins-table sortable" id="failedtestresult">
@@ -36,6 +36,7 @@ THE SOFTWARE.
             <j:forEach var="tableheader" items="${it.testActions}">
               <st:include it="${tableheader}" page="casetableheader.jelly" optional="true"/>
             </j:forEach>
+              <th style="width:3em">${%Open}</th>
           </tr>
         </thead>
         <j:forEach var="f" items="${it.failedTests}" varStatus="i">
@@ -50,6 +51,11 @@ THE SOFTWARE.
             <j:forEach var="tablerow" items="${f.testActions}">
               <st:include it="${tablerow}" page="tablerow.jelly" optional="true"/>
             </j:forEach>
+              <td class="pane" style="text-align:right;">
+                  <a href="${rootURL}/${f.url}" class="jenkins-button jenkins-button--tertiary">
+                      <l:icon src="symbol-external" />
+                  </a>
+              </td>
           </tr>
         </j:forEach>
       </table>

@@ -1,13 +1,10 @@
 const PREFIX = "test-";
 const SHOWLINK_SUFFIX = "-showlink";
-const HIDELINK_SUFFIX = "-hidelink";
 
 function showFailureSummary(summaryId, query) {
     let element = document.getElementById(summaryId);
 
     element.style.display = "";
-    document.getElementById(summaryId + SHOWLINK_SUFFIX).style.display = "none";
-    document.getElementById(summaryId + HIDELINK_SUFFIX).style.display = "";
 
     if (typeof query !== 'undefined' && element.innerHTML.trim() === 'Loading...') {
         let rqo = new XMLHttpRequest();
@@ -24,25 +21,23 @@ function showFailureSummary(summaryId, query) {
 function hideFailureSummary(summaryId) {
     document.getElementById(summaryId).style.display = "none";
     document.getElementById(summaryId + SHOWLINK_SUFFIX).style.display = "";
-    document.getElementById(summaryId + HIDELINK_SUFFIX).style.display = "none";
 }
 
 function initializeShowHideLinks(container) {
     container = container || document;
 
-    container.querySelectorAll('a[id$="-showlink"], a[id$="-hidelink"]').forEach(link => {
+    container.querySelectorAll('[id$="-showlink"]').forEach(link => {
         link.addEventListener('click', handleShowHideClick);
-        link.style.cursor = 'pointer';
     });
 }
 
 function handleShowHideClick(event) {
     event.preventDefault();
 
-    let link = event.target.closest('a[id$="-showlink"], a[id$="-hidelink"]');
+    let link = event.target.closest('[id$="-showlink"]');
     const id = link.id.replace(/-showlink$/, '').replace(/-hidelink$/, '');
 
-    if (link.id.endsWith('-showlink')) {
+    if (document.getElementById(id).style.display === "none") {
         // clear the query parameters
         const cleanUrl = new URL(document.URL);
         cleanUrl.search = "";

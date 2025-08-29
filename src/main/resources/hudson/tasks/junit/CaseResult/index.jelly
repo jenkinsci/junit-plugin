@@ -25,17 +25,17 @@ THE SOFTWARE.
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
          xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-  <l:layout title="${it.run} test - ${it.displayName}">
-    <st:include page="sidepanel.jelly" />
+  <l:layout title="${it.run} test - ${it.displayName}" type="one-column">
     <l:main-panel>
       <j:set var="st" value="${it.status}" />
-      <h1 class="${st.cssClass}">
-        <st:out value="${st.message}" />
-      </h1>
+
+        <l:app-bar title="${it.fullDisplayName}">
+            <h1 class="${st.cssClass}">
+                <st:out value="${st.message}" />
+            </h1>
+        </l:app-bar>
+
       <p>
-        <span style="font-weight:450">
-          <st:out value="${it.fullDisplayName}"/>
-        </span>
         <j:if test="${it.suiteResult != null &amp;&amp; it.className != it.suiteResult.name}">
           (from <st:out value="${it.suiteResult.name}"/>)
         </j:if>
@@ -74,28 +74,33 @@ THE SOFTWARE.
        </j:forEach>
 
       <j:if test="${!empty(it.skippedMessage)}">
-        <h3>${%Skip Message}</h3>
-        <pre><j:out value="${it.annotate(it.skippedMessage)}"/></pre>
+        <f:section title="${%Skip Message}">
+          <pre><j:out value="${it.annotate(it.skippedMessage)}"/></pre>
+        </f:section>
       </j:if>
 
       <j:if test="${!empty(it.errorDetails)}">
-        <h3>${%Error Message}</h3>
-        <pre><j:out value="${it.annotate(it.errorDetails)}"/></pre>
+        <f:section title="${%Error Message}">
+          <pre><j:out value="${it.annotate(it.errorDetails)}"/></pre>
+        </f:section>
       </j:if>
 
       <j:if test="${!empty(it.errorStackTrace)}">
-        <h3>${%Stacktrace}</h3>
-        <pre><j:out value="${it.annotate(it.errorStackTrace)}"/></pre>
+        <f:section title="${%Stacktrace}">
+          <pre><j:out value="${it.annotate(it.errorStackTrace)}"/></pre>
+        </f:section>
       </j:if>
 
       <j:if test="${!empty(it.stdout)}">
-        <h3>${%Standard Output}</h3>
-        <pre><j:out value="${it.annotate(it.stdout)}"/></pre>
+        <f:section title="${%Standard Output}">
+          <pre><j:out value="${it.annotate(it.stdout)}"/></pre>
+        </f:section>
       </j:if>
 
       <j:if test="${!empty(it.stderr)}">
-        <h3>${%Standard Error}</h3>
-        <pre><j:out value="${it.annotate(it.stderr)}"/></pre>
+        <f:section title="${%Standard Error}">
+          <pre><j:out value="${it.annotate(it.stderr)}"/></pre>
+        </f:section>
       </j:if>
     </l:main-panel>
   </l:layout>

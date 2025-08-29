@@ -23,7 +23,7 @@ THE SOFTWARE.
 -->
 
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout">
   <st:documentation>
     Display link to the failed test.
     @since 1.538
@@ -34,46 +34,29 @@ THE SOFTWARE.
       Failed test object
     </st:attribute>
   </st:documentation>
-    <st:once>
+
+  <st:once>
     <st:adjunct includes="lib.hudson.test.js.failureSummary" />
-    <style type="text/css">
-      .failure-summary {
-        margin-left: 2em;
-      }
-
-      .failure-summary h4 {
-        margin: 0.5em 0 0.5em 0;
-      }
-
-      .failure-summary h4 a {
-        text-decoration: none;
-        color: inherit;
-      }
-
-      .failure-summary h4 a img {
-        width: 8px;
-        height: 8px;
-      }
-
-      .failure-summary pre {
-        margin-left: 2em;
-      }
-    </style>
   </st:once>
 
-  <j:set var="id" value="${h.htmlAttributeEscape(url)}"/>
+  <j:set var="id" value="${h.htmlAttributeEscape(url)}" />
 
-  <a id="test-${id}-showlink" title="${%Show details}">
-    <l:icon src="symbol-add-outline plugin-ionicons-api" class="icon-sm"/>
+  <a id="test-${id}-showlink" class="jp-idk" href="${url}">
+    <l:icon src="symbol-status-red" />
+
+    <j:forEach var="i" items="${result.splitName}" varStatus="status">
+      <span class="${status.last ? '' : 'jenkins-!-text-color-secondary'}">
+        <st:out value="${i}" /><j:if test="${!status.last}">.</j:if>
+      </span>
+    </j:forEach>
+
+    <l:icon src="symbol-chevron-forward-outline plugin-ionicons-api" />
   </a>
-  <a id="test-${id}-hidelink" title="${%Hide details}" style="display:none">
-    <l:icon src="symbol-remove-outline plugin-ionicons-api" class="icon-sm"/>
-  </a>
-  <st:nbsp/>
-  <a href="${url}"><st:out value="${result.fullDisplayName}"/></a>
+
   <j:forEach var="badge" items="${result.testActions}">
     <st:include it="${badge}" page="badge.jelly" optional="true"/>
   </j:forEach>
+
   <div id="test-${id}" class="failure-summary" style="display: none;">
     ${%Loading...}
   </div>

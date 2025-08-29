@@ -641,6 +641,11 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         return getNameWithEnclosingBlocks(getTransformedFullDisplayName());
     }
 
+    // TODO!
+    public String[] getSplitName() {
+        return getNameWithEnclosingBlocks(getTransformedFullDisplayName()).split("\\.");
+    }
+
     public String getTransformedFullDisplayName() {
         return TestNameTransformer.getTransformedName(getFullName());
     }
