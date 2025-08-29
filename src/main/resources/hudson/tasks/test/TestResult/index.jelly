@@ -36,7 +36,7 @@ THE SOFTWARE.
       <j:set var="prev" value="${it.previousResult}" />
 
       <l:app-bar title="${it.title}" subtitle="${it.totalCount}">
-        <j:if test="${it.totalCount != it.passCount}">
+        <j:if test="${it.totalCount != it.passCount or it.class.simpleName != 'TestResult'}">
           <div class="jp-pills">
             <j:if test="${it.failCount gt 0}">
               <div class="jenkins-button jp-pill jenkins-!-error-color" tooltip="${it.passCount} failing">
@@ -78,7 +78,7 @@ THE SOFTWARE.
         </j:if>
       </l:app-bar>
 
-      <j:if test="${it.totalCount eq it.passCount}">
+      <j:if test="${it.totalCount eq it.passCount and it.class.simpleName eq 'TestResult'}">
         <div class="jenkins-notice">
           <canvas id="my-canvas" />
           <l:icon src="symbol-balloon-outline plugin-ionicons-api" />
