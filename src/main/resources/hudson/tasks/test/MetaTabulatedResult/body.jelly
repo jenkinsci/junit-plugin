@@ -42,20 +42,20 @@ THE SOFTWARE.
         <j:forEach var="f" items="${it.failedTests}" varStatus="i">
           <tr>
             <td class="pane no-wrap"><t:failed-test result="${f}" url="${f.getRelativePathFrom(it)}"/></td>
-            <td class="pane no-wrap" style="text-align:right;" data="${f.duration}">
+            <td class="no-wrap jenkins-!-text-color-secondary" data="${f.duration}">
               ${f.durationString}
             </td>
-            <td class="pane" style="text-align:right;">
+            <td>
               <a href="${rootURL}/${f.failedSinceRun.url}">${f.age}</a>
             </td>
             <j:forEach var="tablerow" items="${f.testActions}">
               <st:include it="${tablerow}" page="tablerow.jelly" optional="true"/>
             </j:forEach>
-              <td class="pane" style="text-align:right;">
+              <td>
                   <a href="${rootURL}/${f.url}" class="jenkins-button jenkins-button--tertiary">
                       <l:icon src="symbol-external" />
                   </a>
-              </td>
+            </td>
           </tr>
         </j:forEach>
       </table>
@@ -87,7 +87,7 @@ THE SOFTWARE.
         <j:forEach var="p" items="${it.children}">
           <j:set var="prev" value="${prevAll.findCorrespondingResult(p.id)}" />
           <tr>
-            <td class="pane">
+            <td>
               <j:invokeStatic var="encodedSafeName" className="hudson.Util" method="rawEncode">
                 <j:arg value="${p.safeName}" />
               </j:invokeStatic>
@@ -97,20 +97,20 @@ THE SOFTWARE.
               </j:forEach>
             </td>
             <td class="pane no-wrap" style="text-align:right" data="${p.duration}">${p.durationString}</td>
-            <td class="pane" style="text-align:right">${p.failCount}</td>
-            <td class="pane" style="text-align:right" data="${p.failCount-prev.failCount}">
+            <td style="text-align:right">${p.failCount}</td>
+            <td style="text-align:right" data="${p.failCount-prev.failCount}">
               ${h.getDiffString2(p.failCount-prev.failCount)}
             </td>
-            <td class="pane" style="text-align:right">${p.skipCount}</td>
-            <td class="pane" style="text-align:right" data="${p.skipCount-prev.skipCount}">
+            <td style="text-align:right">${p.skipCount}</td>
+            <td style="text-align:right" data="${p.skipCount-prev.skipCount}">
               ${h.getDiffString2(p.skipCount-prev.skipCount)}
             </td>
-            <td class="pane" style="text-align:right">${p.passCount}</td>
-            <td class="pane" style="text-align:right">
+            <td style="text-align:right">${p.passCount}</td>
+            <td style="text-align:right">
               ${h.getDiffString2(p.passCount-prev.passCount)}
             </td>
-            <td class="pane" style="text-align:right">${p.totalCount}</td>
-            <td class="pane" style="text-align:right" data="${p.totalCount-prev.totalCount}">
+            <td style="text-align:right">${p.totalCount}</td>
+            <td style="text-align:right" data="${p.totalCount-prev.totalCount}">
               ${h.getDiffString2(p.totalCount-prev.totalCount)}
             </td>
             <j:forEach var="tablerow" items="${p.testActions}">

@@ -50,6 +50,12 @@ THE SOFTWARE.
       </span>
     </j:forEach>
 
+    <j:if test="${result.age eq 1}">
+      <span class="jp-pill jenkins-button jenkins-!-error-color">
+        ${%New}
+      </span>
+    </j:if>
+
     <l:icon src="symbol-chevron-forward-outline plugin-ionicons-api" />
   </a>
 
