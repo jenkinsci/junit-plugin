@@ -42,7 +42,7 @@ THE SOFTWARE.
   <j:set var="id" value="${h.htmlAttributeEscape(url)}" />
 
   <a id="test-${id}-showlink" class="jp-idk" href="${url}">
-    <l:icon src="symbol-status-red" />
+    <l:icon src="${result.status == 'PASSED' ? 'symbol-status-blue' : 'symbol-status-red'}" />
 
     <span class="jenkins-!-margin-right-2">
       ${result.name}
