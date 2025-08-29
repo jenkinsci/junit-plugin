@@ -44,19 +44,19 @@ THE SOFTWARE.
         <j:if test="${it.totalCount != it.passCount or it.class.simpleName != 'TestResult'}">
           <div class="jp-pills">
             <j:if test="${it.failCount gt 0}">
-              <div data-jp-pill="fail" class="jenkins-button jp-pill jenkins-!-error-color" tooltip="${it.passCount} failing">
+              <div data-jp-filter-pill="FAILED" class="jenkins-button jp-pill jenkins-!-error-color" tooltip="${it.passCount} failing">
                 <l:icon src="symbol-close-outline plugin-ionicons-api" />
                 ${it.failCount}
               </div>
             </j:if>
             <j:if test="${it.skipCount gt 0}">
-              <div data-jp-pill="skip" class="jenkins-button jp-pill jenkins-!-skipped-color" tooltip="${it.passCount} skipped">
+              <div data-jp-filter-pill="SKIPPED" class="jenkins-button jp-pill jenkins-!-skipped-color" tooltip="${it.passCount} skipped">
                 <l:icon src="symbol-play-skip-forward-outline plugin-ionicons-api" />
                 ${it.skipCount}
               </div>
             </j:if>
             <j:if test="${it.passCount gt 0}">
-              <div data-jp-pill="pass" class="jenkins-button jp-pill jenkins-!-success-color" tooltip="${it.passCount} passing">
+              <div data-jp-filter-pill="PASSED" class="jenkins-button jp-pill jenkins-!-success-color" tooltip="${it.passCount} passing">
                 <l:icon src="symbol-checkmark-outline plugin-ionicons-api" />
                 ${it.passCount}
               </div>

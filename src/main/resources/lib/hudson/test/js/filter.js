@@ -1,63 +1,76 @@
 document.addEventListener('DOMContentLoaded', () => {
-  const failPill = document.querySelector("[data-jp-pill='fail']")
-  const passPill = document.querySelector("[data-jp-pill='pass']")
-  const skipPill = document.querySelector("[data-jp-pill='skip']")
   const allRows = Array.from(document.querySelectorAll(`[data-jp-status]`))
 
+  /**
+   * @typedef {Object} Filter
+   * @property {function(): void} show - A function to make the rows visible.
+   * @property {function(): void} hide - A function to hide the rows.
+   * @property {function(function(Filter): void): void} onClick - A function to attach a click event listener to the pill.
+   */
 
-  class Filter {
-    _pill
-    _rows
-
-    constructor(pill, state) {
-      this._pill = pill
-      this._rows = allRows.filter(row => row.dataset.jpStatus === state)
+  /**
+   * @param {string} state
+   *
+   * @returns {Filter|null} - A filter object, or null if a filter pill with the given state does not exist.
+   */
+  function createFilter(state) {
+    const pill = document.querySelector(`[data-jp-filter-pill='${state}']`)
+    if (!pill) {
+      return null
     }
-
-    hide() {
-      this._rows.forEach(row => row.classList.add('jenkins-hidden'))
-    }
-
-    show() {
-      this._rows.forEach(row => row.classList.remove('jenkins-hidden'))
-    }
-
-    register(callback) {
-      const self = this;
-      this._pill.addEventListener("click", () => {
-        console.log("click", self._pill)
-        callback(self)
-      })
+    const rows = allRows.filter(row => row.dataset.jpStatus === state)
+    let hidden = false
+    return {
+      show() {
+        if (!hidden) {
+          return
+        }
+        rows.forEach(row => row.classList.remove('jenkins-hidden'))
+        hidden = false
+      },
+      hide() {
+        if (hidden) {
+          return
+        }
+        rows.forEach(row => row.classList.add('jenkins-hidden'))
+        hidden = true
+      },
+      onClick(callback) {
+        const self = this
+        pill.addEventListener("click", () => callback(self))
+      }
     }
   }
 
+  /**
+   * @param {[Filter]} filters
+   */
   function track(filters) {
     const all = [...filters]
-    let previous = null
+    const active = new Set()
 
-    function action(filter) {
-      if (previous === filter) {
-        previous = null
-        all.forEach(filter => filter.show())
+    function toggle(filter) {
+      if (active.has(filter)) {
+        active.delete(filter)
       } else {
-        if (!previous) {
-          all.filter(f => f !== filter).forEach(filter => filter.hide())
-        } else {
-          previous.hide()
-        }
-        filter.show()
-        previous = filter
+        active.add(filter)
+      }
+      if (active.size === 0) {
+        all.forEach(f => f.show())
+      } else {
+        all.filter(f => !active.has(f)).forEach(f => f.hide())
+        active.forEach(f => f.show())
       }
     }
 
-    all.forEach(filter => filter.register(action))
+    all.forEach(filter => filter.onClick(toggle))
   }
 
-  const fail = failPill && new Filter(failPill, 'FAILED')
-  const pass = passPill && new Filter(passPill, 'PASSED')
-  const skip = skipPill && new Filter(skipPill, 'SKIPPED')
+  const states = ['FAILED', 'PASSED', 'SKIPPED'];
 
-  const all = [ fail, pass, skip].filter(x => x)
+  const allFilters = states
+    .map(state => createFilter(state))
+    .filter(x => x);
 
-  track(all)
+  track(allFilters);
 })
