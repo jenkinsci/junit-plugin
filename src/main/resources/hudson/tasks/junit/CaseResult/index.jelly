@@ -38,7 +38,7 @@ THE SOFTWARE.
               ${it.displayName}
             </span>
 
-            <span class="jenkins-!-text-color-secondary">
+            <span class="jenkins-!-text-color-secondary" style="font-family: var(--font-family-mono)">
               ${it.className}
             </span>
           </h1>

@@ -54,7 +54,7 @@ THE SOFTWARE.
                 <td class="pane no-wrap">
                     <j:set var="url" value="${f.getRelativePathFrom(it)}" />
                     <j:set var="id" value="${h.htmlAttributeEscape(url)}" />
-                    
+
                     <a id="test-${id}-showlink" class="jp-idk" href="${url}">
                         <l:icon src="${f.status == 'PASSED' ? 'symbol-status-blue' : 'symbol-status-red'}" />
 
@@ -62,7 +62,7 @@ THE SOFTWARE.
                             ${f.name}
                         </span>
 
-                        <span class="jenkins-!-text-color-secondary">
+                        <span class="jenkins-!-text-color-secondary" style="font-family: var(--font-family-mono)">
                             <st:out value="${f.className}" />
                         </span>
 
@@ -87,7 +87,7 @@ THE SOFTWARE.
                 </j:forEach>
                 <td class="jenkins-table__cell--tight">
                     <div class="jenkins-table__cell__button-wrapper">
-                        <a href="${url}" class="jenkins-button jenkins-button--tertiary">
+                        <a href="${url}" class="jenkins-button jenkins-button--tertiary" tooltip="Open in new tab" target="_blank">
                             <l:icon src="symbol-external" />
                         </a>
                     </div>

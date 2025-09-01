@@ -30,7 +30,6 @@ THE SOFTWARE.
             <j:if test="${value!=null and !empty value}">
                 <j:set var="id" value="${attrs.id}-${attrs.name}"/>
                 <j:set var="display" value="${attrs.opened ? '' : 'none'}"/>
-                <j:set var="idisplay" value="${attrs.opened ? 'none' : ''}"/>
                 <st:adjunct includes="lib.hudson.test.js.failureSummary" />
                 <h4>
                     ${title}
