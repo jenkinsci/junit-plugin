@@ -223,8 +223,3 @@
   bottom: 100%;
   z-index: 1;
 }
-
-/* Prism stacktrace highlighting overflows without this */
-#main-panel {
-  overflow-x: hidden;
-}
