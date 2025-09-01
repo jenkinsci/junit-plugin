@@ -24,30 +24,33 @@ THE SOFTWARE.
 
 <!--  this is loaded on demand in the failed test results summary -->
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:local="local">
+<j:jelly xmlns:j="jelly:core" xmlns:d="jelly:define" xmlns:local="local" xmlns:l="/lib/layout">
     <d:taglib uri="local">
         <d:tag name="item">
             <j:if test="${value!=null and !empty value}">
-                <j:set var="id" value="${attrs.id}-${attrs.name}"/>
-                <j:set var="display" value="${attrs.opened ? '' : 'none'}"/>
-                <st:adjunct includes="lib.hudson.test.js.failureSummary" />
-                <h4>
-                    ${title}
-                </h4>
-                <pre id="${id}" style="display: ${display}">
-                    <j:forEach items="${value.split('\n')}" var="line" indexVar="index">
-                        <div style="display: grid; grid-template-columns: 30px 1fr; gap: 1rem; margin-left: -45px"><span class="jenkins-!-text-color-secondary" style="margin-left: auto">${index}</span><st:out value="${line}" /></div>
-                    </j:forEach>
-                </pre>
+                <div class="jp-code-card">
+                    <details open="true">
+                        <summary>
+                            ${title}
+                            <l:icon src="symbol-chevron-forward-outline plugin-ionicons-api" />
+                        </summary>
+
+                        <pre class="jdl-component-code__code">
+                            <code class="language-javastacktrace">
+                                ${value}
+                            </code>
+                        </pre>
+                    </details>
+                </div>
             </j:if>
         </d:tag>
     </d:taglib>
 
-    <local:item id="${id}" name="error" title="${%Error Details}" value="${it.errorDetails}" opened="true" />
+    <local:item id="${id}" name="error" title="${%Error Details}" value="${it.errorDetails}" />
     <j:forEach var="p" items="${it.properties}">
-        <local:item id="${id}" name="${p.key}" title="${p.key}" value="${p.value}" opened="true" />
+        <local:item id="${id}" name="${p.key}" title="${p.key}" value="${p.value}" />
     </j:forEach>
-    <local:item id="${id}" name="stacktrace" title="${%Stack Trace}" value="${it.errorStackTrace}" opened="true" />
-    <local:item id="${id}" name="stdout" title="${%Standard Output}" value="${it.stdout}" opened="true" />
-    <local:item id="${id}" name="stderr" title="${%Standard Error}" value="${it.stderr}" opened="true" />
+    <local:item id="${id}" name="stacktrace" title="${%Stack Trace}" value="${it.errorStackTrace}" />
+    <local:item id="${id}" name="stdout" title="${%Standard Output}" value="${it.stdout}" />
+    <local:item id="${id}" name="stderr" title="${%Standard Error}" value="${it.stderr}" />
 </j:jelly>

@@ -13,6 +13,9 @@ function showFailureSummary(element, query) {
         rqo.onreadystatechange = function() {
             element.innerHTML = rqo.responseText;
             initializeShowHideLinks(element);
+            element.querySelectorAll("code").forEach(code => {
+                Prism.highlightElement(code);
+            })
         }
         rqo.send(null);
     }

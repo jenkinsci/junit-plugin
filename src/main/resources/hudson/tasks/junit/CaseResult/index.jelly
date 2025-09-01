@@ -25,8 +25,9 @@ THE SOFTWARE.
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
          xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-  <l:layout title="${it.displayName} - ${it.run}" type="one-column">
+  <l:layout title="${it.displayName} - ${it.run}" type="one-column" xmlns:p="/prism">
     <l:main-panel>
+      <p:prism configuration="${it.prismConfiguration}" />
       <link rel="stylesheet" href="${resURL}/plugin/junit/styles.css?${h.generateId()}" defer="true" />
 
       <j:set var="st" value="${it.status}" />
@@ -102,7 +103,7 @@ THE SOFTWARE.
         </j:forEach>
       </table>
 
-      <div class="lewisbirks lewisbirks2">
+      <div class="jp-code-list">
         <st:include page="dummary.jelly" />
       </div>
     </l:main-panel>

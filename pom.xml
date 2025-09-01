@@ -106,6 +106,10 @@
       <artifactId>workflow-step-api</artifactId>
     </dependency>
     <dependency>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>prism-api</artifactId>
+    </dependency>
+    <dependency>
       <groupId>io.jenkins</groupId>
       <artifactId>configuration-as-code</artifactId>
       <scope>test</scope>
