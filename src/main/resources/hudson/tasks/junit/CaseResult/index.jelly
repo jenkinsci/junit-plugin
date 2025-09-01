@@ -68,7 +68,7 @@ THE SOFTWARE.
         </div>
 
         <j:if test="${!it.passed}">
-          <div>
+          <a href="${rootURL}/${it.run.url}">
             <j:choose>
               <j:when test="${it.skipped}">
                 <l:icon src="symbol-play-skip-forward-circle-outline plugin-ionicons-api" />
@@ -78,20 +78,18 @@ THE SOFTWARE.
               </j:otherwise>
             </j:choose>
 
-            <a href="${rootURL}/${it.run.url}">
-              <j:choose>
-                <j:when test="${it.skipped}">
-                  ${%skippedFor(it.age)}
-                </j:when>
-                <j:otherwise>
-                  ${%failingFor(it.age)}
-                </j:otherwise>
-              </j:choose>
-              ${%since.before}
-              #${it.failedSince}
-              ${%since.after}
-            </a>
-          </div>
+            <j:choose>
+              <j:when test="${it.skipped}">
+                ${%skippedFor(it.age)}
+              </j:when>
+              <j:otherwise>
+                ${%failingFor(it.age)}
+              </j:otherwise>
+            </j:choose>
+            ${%since.before}
+            #${it.failedSince}
+            ${%since.after}
+          </a>
         </j:if>
       </div>
 

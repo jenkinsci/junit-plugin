@@ -38,7 +38,7 @@ THE SOFTWARE.
       <j:set var="prev" value="${it.previousResult}" />
 
       <l:app-bar title="${it.title}" subtitle="${it.totalCount}">
-        <div class="jenkins-button jenkins-button--tertiary jp-pill jenkins-!-text-color-secondary" aria-label="${%took(it.durationString)}">
+        <div class="jp-pill jenkins-!-text-color-secondary" aria-label="${%took(it.durationString)}">
           <l:icon src="symbol-timer-outline plugin-ionicons-api" />
           ${%took(it.durationString)}
         </div>

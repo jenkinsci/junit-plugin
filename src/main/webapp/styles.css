@@ -30,6 +30,9 @@
 }
 
 .jp-pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   gap: 0.375rem;
   border-radius: 100px;
   padding: 0 0.75rem;
@@ -187,7 +190,7 @@
     margin-left: -0.25rem;
   }
 
-  & > div {
+  & > div, & > a {
     display: flex;
     align-items: center;
     gap: 1ch;
