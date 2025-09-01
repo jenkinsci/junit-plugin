@@ -245,6 +245,11 @@
   overflow-x: hidden;
 }
 
+/* Package names in the app bar don't break */
+h1 {
+  word-break: break-word;
+}
+
 pre[class*="language-"],
 code[class*="language-"] {
   white-space: pre-wrap;
