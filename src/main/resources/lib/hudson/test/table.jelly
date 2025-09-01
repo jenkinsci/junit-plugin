@@ -25,7 +25,6 @@ THE SOFTWARE.
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout">
     <st:documentation>
-        TODO
         <st:attribute name="items">
             The tests to display inside of this table.
         </st:attribute>
@@ -34,23 +33,19 @@ THE SOFTWARE.
         </st:attribute>
     </st:documentation>
 
-    <st:once>
-        <st:adjunct includes="lib.hudson.test.js.failureSummary" />
-    </st:once>
-
     <table class="jenkins-table sortable" id="${attrs.id}">
         <thead>
             <tr>
                 <th>${%Name}</th>
                 <th style="width:4em">${%Duration}</th>
                 <j:forEach var="tableheader" items="${it.testActions}">
-                    <st:include it="${tableheader}" page="casetableheader.jelly" optional="true"/>
+                    <st:include it="${tableheader}" page="casetableheader.jelly" optional="true" />
                 </j:forEach>
                 <th />
             </tr>
         </thead>
         <j:forEach var="f" items="${attrs.items}" varStatus="i">
-            <tr>
+            <tr data-type="test-row">
                 <td class="pane no-wrap">
                     <j:set var="url" value="${f.getRelativePathFrom(it)}" />
                     <j:set var="id" value="${h.htmlAttributeEscape(url)}" />
@@ -58,9 +53,7 @@ THE SOFTWARE.
                     <a id="test-${id}-showlink" class="jp-idk" href="${url}">
                         <l:icon src="${f.status == 'PASSED' ? 'symbol-status-blue' : 'symbol-status-red'}" />
 
-                        <span>
-                            ${f.name}
-                        </span>
+                        ${f.name}
 
                         <j:if test="${it.class.simpleName eq 'TestResult'}">
                             <span class="jenkins-!-text-color-secondary jenkins-!-margin-left-2" style="font-family: var(--font-family-mono)">
@@ -78,14 +71,14 @@ THE SOFTWARE.
                     </a>
 
                     <j:forEach var="badge" items="${f.testActions}">
-                        <st:include it="${badge}" page="badge.jelly" optional="true"/>
+                        <st:include it="${badge}" page="badge.jelly" optional="true" />
                     </j:forEach>
                 </td>
                 <td class="no-wrap jenkins-!-text-color-secondary" data="${f.duration}">
                     ${f.durationString}
                 </td>
                 <j:forEach var="tablerow" items="${f.testActions}">
-                    <st:include it="${tablerow}" page="tablerow.jelly" optional="true"/>
+                    <st:include it="${tablerow}" page="tablerow.jelly" optional="true" />
                 </j:forEach>
                 <td class="jenkins-table__cell--tight">
                     <div class="jenkins-table__cell__button-wrapper">
@@ -93,12 +86,6 @@ THE SOFTWARE.
                             <l:icon src="symbol-external" />
                         </a>
                     </div>
-                </td>
-            </tr>
-
-            <tr class="jenkins-hidden">
-                <td colspan="10" class="failure-summary">
-                    <l:spinner />
                 </td>
             </tr>
         </j:forEach>

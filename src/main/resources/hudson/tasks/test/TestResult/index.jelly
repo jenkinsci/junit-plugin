@@ -87,7 +87,7 @@ THE SOFTWARE.
 
       <j:if test="${it.totalCount eq it.passCount and it.class.simpleName eq 'TestResult'}">
         <div class="jenkins-notice">
-          <canvas id="my-canvas" />
+          <canvas id="confetti-canvas" />
           <l:icon src="symbol-balloon-outline plugin-ionicons-api" />
           <div>All tests are passing!</div>
           <div class="jenkins-notice__description">
