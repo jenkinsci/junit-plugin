@@ -69,12 +69,12 @@ THE SOFTWARE.
                         </j:if>
 
                         <j:if test="${f.age eq 1}">
-                            <span class="jenkins-tag jenkins-!-error-color">
+                            <span class="jenkins-tag jenkins-!-error-color jenkins-!-margin-left-2">
                                 ${%New}
                             </span>
                         </j:if>
 
-                        <l:icon src="symbol-chevron-forward-outline plugin-ionicons-api" />
+                        <l:icon src="symbol-chevron-forward-outline plugin-ionicons-api" class="jenkins-!-margin-left-2" />
                     </a>
 
                     <j:forEach var="badge" items="${f.testActions}">
