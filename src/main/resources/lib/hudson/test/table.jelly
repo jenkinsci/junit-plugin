@@ -58,13 +58,15 @@ THE SOFTWARE.
                     <a id="test-${id}-showlink" class="jp-idk" href="${url}">
                         <l:icon src="${f.status == 'PASSED' ? 'symbol-status-blue' : 'symbol-status-red'}" />
 
-                        <span class="jenkins-!-margin-right-2">
+                        <span>
                             ${f.name}
                         </span>
 
-                        <span class="jenkins-!-text-color-secondary" style="font-family: var(--font-family-mono)">
-                            <st:out value="${f.className}" />
-                        </span>
+                        <j:if test="${it.class.simpleName eq 'TestResult'}">
+                            <span class="jenkins-!-text-color-secondary jenkins-!-margin-left-2" style="font-family: var(--font-family-mono)">
+                                <st:out value="${f.className}" />
+                            </span>
+                        </j:if>
 
                         <j:if test="${f.age eq 1}">
                             <span class="jenkins-tag jenkins-!-error-color">
