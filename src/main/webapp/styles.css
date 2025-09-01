@@ -150,7 +150,6 @@
       background: none;
       border: none;
       padding: 0;
-      word-break: break-all;
       margin-top: 0.5rem;
       margin-bottom: 0;
     }
@@ -222,4 +221,18 @@
   width: 100%;
   bottom: 100%;
   z-index: 1;
+}
+
+#main-panel {
+  overflow-x: hidden;
+}
+
+pre[class*="language-"],
+code[class*="language-"] {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+pre[class*="language-"] {
+  overflow-wrap: anywhere;
 }
