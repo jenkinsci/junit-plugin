@@ -54,6 +54,8 @@
   display: flex;
   align-items: center;
   justify-content: start;
+  flex-wrap: wrap;
+  word-break: break-word;
   text-box: cap alphabetic;
   min-height: 48px;
   margin-left: calc(var(--table-padding) * -2);
@@ -87,6 +89,20 @@
     transition: rotate var(--standard-transition);
   }
 
+  @media (width <= 800px) {
+    display: grid;
+    grid-template-columns: auto 1fr;
+
+    span {
+      grid-area: 2 / 2;
+      margin: 0 !important;
+    }
+
+    svg:last-of-type {
+      display: none;
+    }
+  }
+
   &.active {
     svg:last-of-type {
       rotate: 90deg;
@@ -95,8 +111,8 @@
 }
 
 .jenkins-tag {
-  background: color-mix(in srgb, var(--color) 10%, transparent);
-  border: var(--jenkins-border-width) solid color-mix(in srgb, var(--color) 10%, transparent);
+  background: color-mix(in srgb, var(--color, var(--text-color-secondary)) 10%, transparent);
+  border: var(--jenkins-border-width) solid color-mix(in srgb, var(--color, var(--text-color-secondary)) 10%, transparent);
   border-radius: 100px;
   padding: 0 0.5rem;
 }

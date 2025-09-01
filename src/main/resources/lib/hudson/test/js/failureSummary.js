@@ -9,6 +9,10 @@ document.addEventListener('DOMContentLoaded', () => {
 function initializeShowHideLinks() {
     document.querySelectorAll('[id$="-showlink"]').forEach(link => {
         link.addEventListener('click', (e) => {
+            if (window.innerWidth <= 800) {
+                return;
+            }
+
             e.preventDefault();
 
             let link = e.currentTarget;
