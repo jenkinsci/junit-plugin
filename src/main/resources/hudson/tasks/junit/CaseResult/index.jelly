@@ -25,7 +25,7 @@ THE SOFTWARE.
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
          xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-  <l:layout title="${it.run} test - ${it.displayName}" type="one-column">
+  <l:layout title="${it.displayName} - ${it.run}" type="one-column">
     <l:main-panel>
       <link rel="stylesheet" href="${resURL}/plugin/junit/styles.css?${h.generateId()}" defer="true" />
 
@@ -35,16 +35,12 @@ THE SOFTWARE.
         <div class="jenkins-app-bar__content">
           <h1>
             <span class="jenkins-!-margin-right-3">
-              ${it.name}
+              ${it.displayName}
             </span>
 
-            <j:forEach var="i" items="${it.splitName}" varStatus="status">
-              <j:if test="${!status.last}">
-                <span class="${status.last ? 'jenkins-!-text-color-secondary' : 'jenkins-!-text-color-secondary'}">
-                  <st:out value="${i}" /><j:if test="${!status.last}">.</j:if>
-                </span>
-              </j:if>
-            </j:forEach>
+            <span class="jenkins-!-text-color-secondary">
+              ${it.className}
+            </span>
           </h1>
         </div>
         <div class="jenkins-app-bar__controls">

@@ -24,43 +24,10 @@ THE SOFTWARE.
 -->
 
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:t="/lib/hudson/test" xmlns:f="/lib/form" xmlns:l="/lib/layout">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:t="/lib/hudson/test" xmlns:f="/lib/form">
   <j:if test="${it.failCount!=0}">
     <f:section title="${%All Failed Tests}">
-      <table class="jenkins-table sortable" id="failedtestresult">
-        <thead>
-          <tr>
-            <th>${%Test Name}</th>
-            <th style="width:4em">${%Duration}</th>
-            <th style="width:3em">${%Age}</th>
-            <j:forEach var="tableheader" items="${it.testActions}">
-              <st:include it="${tableheader}" page="casetableheader.jelly" optional="true"/>
-            </j:forEach>
-              <th />
-          </tr>
-        </thead>
-        <j:forEach var="f" items="${it.failedTests}" varStatus="i">
-          <tr>
-            <td class="pane no-wrap"><t:failed-test result="${f}" url="${f.getRelativePathFrom(it)}"/></td>
-            <td class="no-wrap jenkins-!-text-color-secondary" data="${f.duration}">
-              ${f.durationString}
-            </td>
-            <td>
-              <a href="${rootURL}/${f.failedSinceRun.url}">${f.age}</a>
-            </td>
-            <j:forEach var="tablerow" items="${f.testActions}">
-              <st:include it="${tablerow}" page="tablerow.jelly" optional="true"/>
-            </j:forEach>
-              <td class="jenkins-table__cell--tight">
-                <div class="jenkins-table__cell__button-wrapper">
-                  <a href="${rootURL}/${f.url}" class="jenkins-button jenkins-button--tertiary">
-                      <l:icon src="symbol-external" />
-                  </a>
-                </div>
-            </td>
-          </tr>
-        </j:forEach>
-      </table>
+      <t:table items="${it.failedTests}" id="failedtestresult" />
     </f:section>
   </j:if>
 

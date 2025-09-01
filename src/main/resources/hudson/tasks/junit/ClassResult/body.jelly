@@ -23,42 +23,14 @@ THE SOFTWARE.
 -->
 
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form" xmlns:t="/lib/hudson/test" xmlns:l="/lib/layout">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form" xmlns:t="/lib/hudson/test">
   <j:if test="${it.totalCount!=0}">
     <st:once>
       <st:adjunct includes="lib.hudson.test.js.filter" />
     </st:once>
+
     <f:section title="${%All Tests}">
-      <table class="jenkins-table sortable" id="testresult">
-        <thead>
-          <tr>
-            <th>${%Test name}</th>
-            <th style="width:6em">${%Duration}</th>
-            <j:forEach var="tableheader" items="${it.testActions}">
-              <st:include it="${tableheader}" page="${it.childType}tableheader.jelly" optional="true"/>
-            </j:forEach>
-            <th />
-          </tr>
-        </thead>
-        <tbody>
-          <j:forEach var="p" items="${it.children}" varStatus="status">
-            <tr data-jp-status="${p.status}">
-              <td class="no-wrap"><t:failed-test result="${p}" url="${p.getRelativePathFrom(it)}"/></td>
-              <td class="no-wrap" style="width:6em" data="${p.duration}">${p.durationString}</td>
-              <j:forEach var="tablerow" items="${p.testActions}">
-                <st:include it="${tablerow}" page="tablerow.jelly" optional="true"/>
-              </j:forEach>
-              <td class="jenkins-table__cell--tight">
-                <div class="jenkins-table__cell__button-wrapper">
-                  <a href="${rootURL}/${p.url}" class="jenkins-button jenkins-button--tertiary">
-                    <l:icon src="symbol-external" />
-                  </a>
-                </div>
-              </td>
-            </tr>
-          </j:forEach>
-        </tbody>
-      </table>
+      <t:table items="${it.children}" id="testresult" />
     </f:section>
   </j:if>
 </j:jelly>

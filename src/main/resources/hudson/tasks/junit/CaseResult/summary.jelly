@@ -30,5 +30,7 @@ THE SOFTWARE.
   <j:new var="h" className="hudson.Functions" />
   ${h.initPageVariables(context)}
 
-  <st:include page="dummary.jelly" />
+  <div class="lewisbirks">
+    <st:include page="dummary.jelly" />
+  </div>
 </j:jelly>

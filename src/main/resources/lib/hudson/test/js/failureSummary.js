@@ -1,12 +1,13 @@
 const PREFIX = "test-";
 const SHOWLINK_SUFFIX = "-showlink";
 
-function showFailureSummary(summaryId, query) {
-    let element = document.getElementById(summaryId);
-
-    element.style.display = "";
-
-    if (typeof query !== 'undefined' && element.innerHTML.trim() === 'Loading...') {
+/**
+ * @param {Element} element
+ * @param {string} query
+ */
+function showFailureSummary(element, query) {
+    // TODO - validate this caches
+    if (typeof query !== 'undefined' && !element.classList.contains("jenkins-hidden")) {
         let rqo = new XMLHttpRequest();
         rqo.open('GET', query, true);
         rqo.onreadystatechange = function() {
@@ -15,12 +16,6 @@ function showFailureSummary(summaryId, query) {
         }
         rqo.send(null);
     }
-
-}
-
-function hideFailureSummary(summaryId) {
-    document.getElementById(summaryId).style.display = "none";
-    document.getElementById(summaryId + SHOWLINK_SUFFIX).style.display = "";
 }
 
 function initializeShowHideLinks(container) {
@@ -38,21 +33,23 @@ function handleShowHideClick(event) {
     const id = link.id.replace(/-showlink$/, '').replace(/-hidelink$/, '');
     link.classList.toggle("active")
 
-    if (document.getElementById(id).style.display === "none") {
+    const nextRow = link.closest("tr").nextElementSibling;
+
+    if (nextRow.classList.contains("jenkins-hidden")) {
         // clear the query parameters
         const cleanUrl = new URL(document.URL);
         cleanUrl.search = "";
-        showFailureSummary(id, cleanUrl + id.replace(PREFIX, '') + "summary");
-    } else {
-        hideFailureSummary(id);
+        showFailureSummary(nextRow.querySelector("td"), cleanUrl + id.replace(PREFIX, '') + "summary");
     }
+
+    nextRow.classList.toggle("jenkins-hidden");
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     initializeShowHideLinks();
 
     document.querySelectorAll(".jp-pill").forEach(button => {
-        button.addEventListener("click", event => {
+        button.addEventListener("click", () => {
             button.classList.toggle("jenkins-button--primary");
         })
     })
