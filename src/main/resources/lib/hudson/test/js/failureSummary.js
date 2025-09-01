@@ -26,6 +26,7 @@ function initializeShowHideLinks() {
                 td.colSpan = 10;
                 td.textContent = "Loading";
                 nextRow.appendChild(td);
+                nextRow.dataset.type = "foldout-row";
                 table.insertBefore(nextRow, tableRow.nextSibling);
 
                 // Clear the query parameters
@@ -35,6 +36,8 @@ function initializeShowHideLinks() {
             } else {
                 nextRow.remove();
             }
+
+            tryEnableSortheader();
         });
     });
 }
@@ -90,4 +93,13 @@ function tryShowConfetti() {
         setInterval(conf, 200);
         conf();
     }
+}
+
+function tryEnableSortheader() {
+    const hasFoldouts = document.querySelectorAll("[data-type='foldout-row']").length > 0;
+
+    document.querySelectorAll(".sortheader").forEach(link => {
+        console.log(link, hasFoldouts)
+        link.style.pointerEvents = hasFoldouts ? "none" : "unset";
+    })
 }
