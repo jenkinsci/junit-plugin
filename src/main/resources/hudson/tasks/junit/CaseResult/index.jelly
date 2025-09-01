@@ -59,6 +59,12 @@ THE SOFTWARE.
           <st:out value="${st.message}" />
         </div>
 
+        <j:if test="${it.age eq 1}">
+          <span class="jenkins-tag">
+            ${%New}
+          </span>
+        </j:if>
+
         <div>
           <l:icon src="symbol-timer-outline plugin-ionicons-api" />
           ${%took(it.durationString)}

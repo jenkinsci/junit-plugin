@@ -110,6 +110,11 @@
   }
 }
 
+/* The external icon is too big, so lets shrink it */
+.icon-sm {
+  scale: 0.85;
+}
+
 .jenkins-tag {
   background: color-mix(in srgb, var(--color, var(--text-color-secondary)) 10%, transparent);
   border: var(--jenkins-border-width) solid color-mix(in srgb, var(--color, var(--text-color-secondary)) 10%, transparent);
@@ -190,8 +195,8 @@
   display: flex;
   align-items: center;
   gap: 1rem 1.5rem;
-  margin-bottom: 0.875rem;
-  margin-top: -0.25rem;
+  /*margin-bottom: 0.875rem;*/
+  /*margin-top: -0.25rem;*/
   flex-wrap: wrap;
 
   @media (width <= 800px) {

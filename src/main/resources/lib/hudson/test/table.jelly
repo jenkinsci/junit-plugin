@@ -83,7 +83,7 @@ THE SOFTWARE.
                 <td class="jenkins-table__cell--tight jenkins-mobile-hide">
                     <div class="jenkins-table__cell__button-wrapper">
                         <a href="${url}" class="jenkins-button jenkins-button--tertiary" tooltip="Open in new tab" target="_blank">
-                            <l:icon src="symbol-external" />
+                            <l:icon src="symbol-external" class="icon-sm" />
                         </a>
                     </div>
                 </td>
