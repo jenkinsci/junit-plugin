@@ -46,7 +46,7 @@ THE SOFTWARE.
         </thead>
         <j:forEach var="f" items="${attrs.items}" varStatus="i">
             <tr data-type="test-row">
-                <td class="pane no-wrap">
+                <td class="no-wrap">
                     <j:set var="url" value="${f.getRelativePathFrom(it)}" />
                     <j:set var="id" value="${h.htmlAttributeEscape(url)}" />
 

@@ -11,7 +11,7 @@ function initializeShowHideLinks() {
         link.addEventListener('click', (e) => {
             e.preventDefault();
 
-            let link = e.target;
+            let link = e.currentTarget;
             const id = link.id.replace(/-showlink$/, '');
             link.classList.toggle("active")
 
@@ -31,7 +31,7 @@ function initializeShowHideLinks() {
                 // Clear the query parameters
                 const cleanUrl = new URL(document.URL);
                 cleanUrl.search = "";
-                showSummary(nextRow.querySelector("td"), cleanUrl + id.replace(PREFIX, '') + "summary");
+                showSummary(td, cleanUrl + id.replace(PREFIX, '') + "summary");
             } else {
                 nextRow.remove();
             }
