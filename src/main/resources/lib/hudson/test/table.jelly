@@ -23,7 +23,7 @@ THE SOFTWARE.
 -->
 
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:t="/lib/hudson/test">
     <st:documentation>
         <st:attribute name="items">
             The tests to display inside of this table.
@@ -62,9 +62,7 @@ THE SOFTWARE.
                         </j:if>
 
                         <j:if test="${f.age eq 1}">
-                            <span class="jenkins-tag jenkins-!-margin-left-2 jenkins-mobile-hide">
-                                ${%New}
-                            </span>
+                            <t:new-tag clazz="jenkins-!-margin-left-2 jenkins-mobile-hide" />
                         </j:if>
 
                         <l:icon src="symbol-chevron-forward-outline plugin-ionicons-api" class="jenkins-!-margin-left-2" />

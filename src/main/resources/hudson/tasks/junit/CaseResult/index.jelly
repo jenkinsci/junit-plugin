@@ -23,8 +23,7 @@ THE SOFTWARE.
 -->
 
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
-         xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:test="/lib/hudson/test">
   <l:layout title="${it.displayName} - ${it.run}" type="one-column" xmlns:p="/prism">
     <l:main-panel>
       <p:prism configuration="${it.prismConfiguration}" />
@@ -55,27 +54,15 @@ THE SOFTWARE.
       <div class="jp-details">
         <div class="${st.cssClass}">
           <l:icon src="${it.status == 'PASSED' ? 'symbol-checkmark-outline plugin-ionicons-api' : 'symbol-close-outline plugin-ionicons-api'}" />
-
           <st:out value="${st.message}" />
         </div>
 
         <j:if test="${it.age eq 1}">
-          <span class="jenkins-tag">
-            ${%New}
-          </span>
+          <test:new-tag />
         </j:if>
 
-        <div>
-          <l:icon src="symbol-timer-outline plugin-ionicons-api" />
-          ${%took(it.durationString)}
-
-          <j:if test="${it.suiteResult != null &amp;&amp; it.className != it.suiteResult.name}">
-            (from <st:out value="${it.suiteResult.name}"/>)
-          </j:if>
-        </div>
-
         <j:if test="${!it.passed}">
-          <a href="${rootURL}/${it.run.url}">
+          <a href="${rootURL}/${it.run.url}" class="jp-pill jp-pill--tertiary">
             <j:choose>
               <j:when test="${it.skipped}">
                 <l:icon src="symbol-play-skip-forward-circle-outline plugin-ionicons-api" />
@@ -98,6 +85,15 @@ THE SOFTWARE.
             ${%since.after}
           </a>
         </j:if>
+
+        <div class="jp-pill jp-pill--tertiary">
+          <l:icon src="symbol-timer-outline plugin-ionicons-api" />
+          ${%took(it.durationString)}
+
+          <j:if test="${it.suiteResult != null &amp;&amp; it.className != it.suiteResult.name}">
+            (from <st:out value="${it.suiteResult.name}"/>)
+          </j:if>
+        </div>
       </div>
 
       <t:editableDescription permission="${it.run.UPDATE}" hideButton="true" />

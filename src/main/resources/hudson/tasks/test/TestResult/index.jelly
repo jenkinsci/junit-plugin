@@ -39,27 +39,22 @@ THE SOFTWARE.
 
       <l:app-bar title="${it.title}" subtitle="${it.totalCount}">
         <div class="jp-details">
-          <div class="jp-pill jenkins-!-text-color-secondary" aria-label="${%took(it.durationString)}">
-            <l:icon src="symbol-timer-outline plugin-ionicons-api" />
-            ${%took(it.durationString)}
-          </div>
-
           <j:if test="${it.totalCount != it.passCount or it.class.simpleName != 'TestResult'}">
             <div class="jp-pills">
               <j:if test="${it.failCount gt 0}">
-                <div data-jp-filter-pill="FAILED" class="jenkins-button jp-pill jenkins-!-error-color" tooltip="${it.passCount} failing">
+                <div data-jp-filter-pill="FAILED" class="jp-pill jenkins-!-error-color" tooltip="${it.passCount} failing">
                   <l:icon src="symbol-close-outline plugin-ionicons-api" />
                   ${it.failCount}
                 </div>
               </j:if>
               <j:if test="${it.skipCount gt 0}">
-                <div data-jp-filter-pill="SKIPPED" class="jenkins-button jp-pill jenkins-!-skipped-color" tooltip="${it.passCount} skipped">
+                <div data-jp-filter-pill="SKIPPED" class="jp-pill jenkins-!-skipped-color" tooltip="${it.passCount} skipped">
                   <l:icon src="symbol-play-skip-forward-outline plugin-ionicons-api" />
                   ${it.skipCount}
                 </div>
               </j:if>
               <j:if test="${it.passCount gt 0}">
-                <div data-jp-filter-pill="PASSED" class="jenkins-button jp-pill jenkins-!-success-color" tooltip="${it.passCount} passing">
+                <div data-jp-filter-pill="PASSED" class="jp-pill jenkins-!-success-color" tooltip="${it.passCount} passing">
                   <l:icon src="symbol-checkmark-outline plugin-ionicons-api" />
                   ${it.passCount}
                 </div>
@@ -70,32 +65,38 @@ THE SOFTWARE.
           <j:if test="${it.totalCount eq prev.totalCount}">
             <div class="jp-pills">
               <j:if test="${it.passCount gt prev.passCount}">
-                <button class="jenkins-button jp-pill jenkins-!-success-color" tooltip="${it.passCount - prev.passCount} more passing than ${prev.run.displayName}">
+                <a href="history"
+                   class="jp-pill jenkins-!-success-color"
+                   tooltip="${it.passCount - prev.passCount} more passing than ${prev.run.displayName}">
                   <l:icon src="symbol-trending-up-outline plugin-ionicons-api" />
                   ${it.passCount - prev.passCount}
-                </button>
+                </a>
               </j:if>
 
               <j:if test="${it.failCount gt prev.failCount}">
-                <button class="jenkins-button jp-pill jenkins-!-error-color" tooltip="${it.failCount - prev.failCount} more failing than ${prev.run.displayName}">
+                <a href="history"
+                   class="jp-pill jenkins-!-error-color"
+                   tooltip="${it.failCount - prev.failCount} more failing than ${prev.run.displayName}">
                   <l:icon src="symbol-trending-down-outline plugin-ionicons-api" />
                   ${it.failCount - prev.failCount}
-                </button>
+                </a>
               </j:if>
             </div>
           </j:if>
+
+          <div class="jp-pill jp-pill--tertiary" aria-label="${%took(it.durationString)}">
+            <l:icon src="symbol-timer-outline plugin-ionicons-api" />
+            ${%took(it.durationString)}
+          </div>
         </div>
       </l:app-bar>
 
       <j:if test="${it.totalCount eq it.passCount and it.class.simpleName eq 'TestResult'}">
-        <div class="jenkins-notice">
+        <l:notice title="All tests are passing!"
+                  icon="symbol-balloon-outline plugin-ionicons-api">
           <canvas id="confetti-canvas" />
-          <l:icon src="symbol-balloon-outline plugin-ionicons-api" />
-          <div>All tests are passing!</div>
-          <div class="jenkins-notice__description">
-            Nice one! All ${it.totalCount} tests are passing.
-          </div>
-        </div>
+          Nice one! All ${it.totalCount} tests are passing.
+        </l:notice>
       </j:if>
 
       <st:include page="body.jelly" />

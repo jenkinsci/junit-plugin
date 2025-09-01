@@ -1,7 +1,7 @@
 <!--
 The MIT License
 
-Copyright (c) 20013 Red Hat, Inc.
+Copyright (c) 2004-2009, Sun Microsystems, Inc., Kohsuke Kawaguchi
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,29 +23,14 @@ THE SOFTWARE.
 -->
 
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:t="/lib/hudson/test">
-  <st:documentation>
-    Display links to failed test from all child reports.
-    @since 1.538
-    <st:attribute name="it" type="AggregatedTestResultAction">
-      Aggregated action.
-    </st:attribute>
-  </st:documentation>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler">
+    <st:documentation>
+        <st:attribute name="clazz" use="optional">
+            Optional CSS classes for the tag.
+        </st:attribute>
+    </st:documentation>
 
-  <j:if test="${it.failCount!=0}">
-    <br/>
-    <h2>Failed Tests</h2>
-
-    <j:forEach var="report" items="${it.childReports}">
-      <j:if test="${report.result.failCount!=0}">
-
-        <h3>
-          <a name="${report.child.project.name}"/>
-          <a href="../${report.child.project.shortUrl}testReport">${report.child.project.name}</a>
-        </h3>
-
-        <t:table items="${report.result.failedTests}" />
-      </j:if>
-    </j:forEach>
-   </j:if>
+    <span class="jp-pill jenkins-!-accent-color ${attrs.clazz}">
+        ${%New}
+    </span>
 </j:jelly>

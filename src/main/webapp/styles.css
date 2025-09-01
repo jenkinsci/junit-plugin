@@ -1,3 +1,22 @@
+/* Details and pills */
+.jp-details {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.875rem;
+  margin-top: -0.25rem;
+  flex-wrap: wrap;
+
+  @media (width <= 800px) {
+    margin-block: 0.75rem 1rem;
+  }
+}
+
+.jenkins-app-bar .jp-details {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
 .jp-pills {
   display: flex;
   gap: var(--jenkins-border-width);
@@ -39,6 +58,11 @@
   min-height: 1.875rem;
   text-box: cap alphabetic;
   font-weight: 450;
+  background: color-mix(in srgb, var(--color, var(--text-color-secondary)) 10%, transparent);
+  border: var(--jenkins-border-width) solid color-mix(in srgb, var(--color, var(--text-color-secondary)) 10%, transparent);
+  color: var(--color, var(--text-color)) !important;
+  text-decoration: none !important;
+  cursor: text;
 
   svg {
     width: 1rem;
@@ -50,6 +74,17 @@
   }
 }
 
+a.jp-pill, button.jp-pill {
+  cursor: pointer;
+}
+
+.jp-pill--tertiary {
+  background: transparent;
+  border: var(--jenkins-border-width) solid color-mix(in srgb, var(--color, var(--text-color-secondary)) 10%, transparent);
+  color: var(--text-color-secondary) !important;
+}
+
+/*Custom table row*/
 .jp-table-row {
   display: flex;
   align-items: center;
@@ -115,15 +150,7 @@
   scale: 0.85;
 }
 
-.jenkins-tag {
-  background: color-mix(in srgb, var(--color, var(--text-color-secondary)) 10%, transparent);
-  border: var(--jenkins-border-width) solid color-mix(in srgb, var(--color, var(--text-color-secondary)) 10%, transparent);
-  border-radius: 100px;
-  padding: 0 0.5rem;
-}
-
 /* Test result */
-
 .jp-code-list {
   display: flex;
   flex-direction: column;
@@ -191,58 +218,18 @@
   height: unset !important;
 }
 
-.jp-details {
-  display: flex;
-  align-items: center;
-  gap: 1rem 1.5rem;
-  /*margin-bottom: 0.875rem;*/
-  /*margin-top: -0.25rem;*/
-  flex-wrap: wrap;
-
-  @media (width <= 800px) {
-    margin-block: 0.75rem 1rem;
-  }
-
-  .jp-pill {
-    margin-left: -0.25rem;
-  }
-
-  & > div, & > a {
-    display: flex;
-    align-items: center;
-    gap: 1ch;
-    font-size: var(--font-size-sm);
-    color: var(--text-color-secondary);
-    font-weight: var(--font-bold-weight);
-    text-box: trim-both;
-
-    a {
-      color: inherit;
-    }
-
-    svg,
-    img {
-      width: 1.125rem;
-      height: 1.125rem;
-    }
-  }
-}
-
+/* Notice needs to have overflow hidden to contain the confetti canvas */
 .jenkins-notice {
   position: relative;
   overflow: hidden;
-}
 
-#confetti-canvas {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  bottom: 100%;
-  z-index: 1;
-}
-
-#main-panel {
-  overflow-x: hidden;
+  #confetti-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    bottom: 100%;
+    z-index: 1;
+  }
 }
 
 /* Package names in the app bar don't break */
@@ -250,6 +237,7 @@ h1 {
   word-break: break-word;
 }
 
+/* TODO */
 @media (width > 800px) {
   pre[class*="language-"],
   code[class*="language-"] {
