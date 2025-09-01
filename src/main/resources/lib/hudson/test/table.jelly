@@ -50,7 +50,7 @@ THE SOFTWARE.
                     <j:set var="url" value="${f.getRelativePathFrom(it)}" />
                     <j:set var="id" value="${h.htmlAttributeEscape(url)}" />
 
-                    <a id="test-${id}-showlink" class="jp-idk" href="${url}">
+                    <a id="test-${id}-showlink" class="jp-table-row" href="${url}">
                         <l:icon src="${f.status == 'PASSED' ? 'symbol-status-blue' : 'symbol-status-red'}" />
 
                         ${f.name}

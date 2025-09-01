@@ -24,13 +24,14 @@ function initializeShowHideLinks() {
                 const nextRow = document.createElement("tr");
                 const td = document.createElement("td");
                 td.colSpan = 10;
+                td.textContent = "Loading";
                 nextRow.appendChild(td);
                 table.insertBefore(nextRow, tableRow.nextSibling);
 
                 // Clear the query parameters
                 const cleanUrl = new URL(document.URL);
                 cleanUrl.search = "";
-                showFailureSummary(nextRow.querySelector("td"), cleanUrl + id.replace(PREFIX, '') + "summary");
+                showSummary(nextRow.querySelector("td"), cleanUrl + id.replace(PREFIX, '') + "summary");
             } else {
                 nextRow.remove();
             }
@@ -38,7 +39,7 @@ function initializeShowHideLinks() {
     });
 }
 
-function showFailureSummary(element, query) {
+function showSummary(element, query) {
     function setInnerHTML() {
         element.innerHTML = CACHE[query];
         element.querySelectorAll("code").forEach(code => {
