@@ -46,7 +46,7 @@ THE SOFTWARE.
         <div class="jenkins-app-bar__controls">
           <a href="history" class="jenkins-button">
             <l:icon src="symbol-bar-chart-outline plugin-ionicons-api" />
-            History
+            ${%History}
           </a>
           <t:editDescriptionButton permission="${it.run.UPDATE}" />
         </div>
