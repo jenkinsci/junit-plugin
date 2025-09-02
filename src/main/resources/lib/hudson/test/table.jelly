@@ -72,7 +72,7 @@ THE SOFTWARE.
                         <st:include it="${badge}" page="badge.jelly" optional="true" />
                     </j:forEach>
                 </td>
-                <td class="no-wrap jenkins-!-text-color-secondary jenkins-mobile-hide" data="${f.duration}">
+                <td class="no-wrap jenkins-mobile-hide" data="${f.duration}">
                     ${f.durationString}
                 </td>
                 <j:forEach var="tablerow" items="${f.testActions}">

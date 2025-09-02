@@ -49,7 +49,7 @@
 }
 
 .jp-pill {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.375rem;
@@ -62,7 +62,6 @@
   border: var(--jenkins-border-width) solid color-mix(in srgb, var(--color, var(--text-color-secondary)) 10%, transparent);
   color: var(--color, var(--text-color)) !important;
   text-decoration: none !important;
-  cursor: text;
   transition: var(--standard-transition);
 
   svg {
@@ -72,6 +71,10 @@
     * {
       stroke-width: 50px;
     }
+  }
+
+  &:empty {
+    display: none;
   }
 }
 
@@ -93,7 +96,14 @@ a.jp-pill, button.jp-pill {
   color: var(--text-color-secondary) !important;
 }
 
-/*Custom table row*/
+.jenkins-table {
+  .jp-pill {
+    padding: 0 0.625rem;
+    min-height: 1.5625rem;
+  }
+}
+
+/* Custom table row */
 .jp-table-row {
   display: flex;
   align-items: center;

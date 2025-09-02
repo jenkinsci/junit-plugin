@@ -37,15 +37,11 @@ THE SOFTWARE.
       <thead>
         <tr>
           <th>${it.childTitle}</th>
-          <th style="width:5em; text-align:right">${%Duration}</th>
-          <th style="width:5em; text-align:right">${%Fail}</th>
-          <th style="width:3em; text-align:right; white-space:nowrap;">(${%diff})</th>
-          <th style="width:5em; text-align:right">${%Skip}</th>
-          <th style="width:3em; text-align:right; white-space:nowrap;">(${%diff})</th>
-          <th style="width:5em; text-align:right">${%Pass}</th>
-          <th style="width:3em; text-align:right; white-space:nowrap;">(${%diff})</th>
-          <th style="width:5em; text-align:right">${%Total}</th>
-          <th style="width:3em; text-align:right; white-space:nowrap;">(${%diff})</th>
+          <th style="width: 8em;">${%Duration}</th>
+          <th style="width: 8em;">${%Fail}</th>
+          <th style="width: 8em;">${%Skip}</th>
+          <th style="width: 8em;">${%Pass}</th>
+          <th style="width: 8em;">${%Total}</th>
           <j:forEach var="tableheader" items="${it.testActions}">
             <st:include it="${tableheader}" page="${it.childType}tableheader.jelly" optional="true"/>
           </j:forEach>
@@ -60,27 +56,39 @@ THE SOFTWARE.
               <j:invokeStatic var="encodedSafeName" className="hudson.Util" method="rawEncode">
                 <j:arg value="${p.safeName}" />
               </j:invokeStatic>
-              <a href="${encodedSafeName}/" class="body.jelly"><span style="${prev==null?'font-weight:450':''}"><st:out value="${p.displayName}" /></span></a>
+              <a href="${encodedSafeName}/" style="font-family: var(--font-family-mono)">
+                <span style="${prev==null?'font-weight:450':''}"><st:out value="${p.displayName}" /></span>
+              </a>
               <j:forEach var="badge" items="${p.testActions}">
                 <st:include it="${badge}" page="badge.jelly" optional="true"/>
               </j:forEach>
             </td>
-            <td class="pane no-wrap" style="text-align:right" data="${p.duration}">${p.durationString}</td>
-            <td style="text-align:right">${p.failCount}</td>
-            <td style="text-align:right" data="${p.failCount-prev.failCount}">
-              ${h.getDiffString2(p.failCount-prev.failCount)}
+            <td class="no-wrap" data="${p.duration}">
+              ${p.durationString}
             </td>
-            <td style="text-align:right">${p.skipCount}</td>
-            <td style="text-align:right" data="${p.skipCount-prev.skipCount}">
-              ${h.getDiffString2(p.skipCount-prev.skipCount)}
+            <td>
+              ${p.failCount}
+              <span class="jp-pill jenkins-!-error-color jenkins-!-margin-left-1">
+                ${h.getDiffString2(p.failCount-prev.failCount)}
+              </span>
             </td>
-            <td style="text-align:right">${p.passCount}</td>
-            <td style="text-align:right">
-              ${h.getDiffString2(p.passCount-prev.passCount)}
+            <td>
+              ${p.skipCount}
+              <span class="jp-pill jenkins-!-skipped-color jenkins-!-margin-left-1">
+                ${h.getDiffString2(p.skipCount-prev.skipCount)}
+              </span>
             </td>
-            <td style="text-align:right">${p.totalCount}</td>
-            <td style="text-align:right" data="${p.totalCount-prev.totalCount}">
-              ${h.getDiffString2(p.totalCount-prev.totalCount)}
+            <td>
+              ${p.passCount}
+              <span class="jp-pill jenkins-!-success-color jenkins-!-margin-left-1">
+                ${h.getDiffString2(p.passCount-prev.passCount)}
+              </span>
+            </td>
+            <td>
+              ${p.totalCount}
+              <span class="jp-pill jenkins-!-margin-left-1">
+                ${h.getDiffString2(p.totalCount-prev.totalCount)}
+              </span>
             </td>
             <j:forEach var="tablerow" items="${p.testActions}">
               <st:include it="${tablerow}" page="tablerow.jelly" optional="true"/>
