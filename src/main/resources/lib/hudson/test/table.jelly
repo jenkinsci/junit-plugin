@@ -45,7 +45,7 @@ THE SOFTWARE.
             </tr>
         </thead>
         <j:forEach var="f" items="${attrs.items}" varStatus="i">
-            <tr data-type="test-row">
+            <tr data-type="test-row" data="${f.className}.${f.name}">
                 <td>
                     <j:set var="url" value="${f.getRelativePathFrom(it)}" />
                     <j:set var="id" value="${h.htmlAttributeEscape(url)}" />
