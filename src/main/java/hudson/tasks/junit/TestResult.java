@@ -35,6 +35,7 @@ import hudson.tasks.test.PipelineTestDetails;
 import hudson.tasks.test.TabulatedResult;
 import hudson.tasks.test.TestObject;
 import io.jenkins.plugins.junit.storage.TestResultImpl;
+import io.jenkins.plugins.prism.PrismConfiguration;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -57,8 +58,6 @@ import java.util.stream.Stream;
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
-
-import io.jenkins.plugins.prism.PrismConfiguration;
 import jenkins.util.SystemProperties;
 import org.apache.tools.ant.DirectoryScanner;
 import org.dom4j.DocumentException;
