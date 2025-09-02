@@ -27,7 +27,7 @@ THE SOFTWARE.
   <l:layout title="${it.displayName} - ${it.run}" type="one-column" xmlns:p="/prism">
     <l:main-panel>
       <p:prism configuration="${it.prismConfiguration}" />
-      <link rel="stylesheet" href="${resURL}/plugin/junit/styles.css?${h.generateId()}" defer="true" />
+      <link rel="stylesheet" href="${resURL}/plugin/junit/styles.css" defer="true" />
 
       <j:set var="st" value="${it.status}" />
 
@@ -105,7 +105,7 @@ THE SOFTWARE.
       </table>
 
       <div class="jp-code-list">
-        <st:include page="dummary.jelly" />
+        <st:include page="test-output.jelly" />
       </div>
     </l:main-panel>
   </l:layout>

@@ -23,12 +23,8 @@ THE SOFTWARE.
 -->
 
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form" xmlns:t="/lib/hudson/test">
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form" xmlns:t="/lib/hudson/test">
   <j:if test="${it.totalCount!=0}">
-    <st:once>
-      <st:adjunct includes="lib.hudson.test.js.filter" />
-    </st:once>
-
     <f:section title="${%All Tests}">
       <t:table items="${it.children}" id="testresult" />
     </f:section>

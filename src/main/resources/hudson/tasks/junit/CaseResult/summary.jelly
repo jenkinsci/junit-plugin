@@ -24,13 +24,13 @@ THE SOFTWARE.
 
 <!--  this is loaded on demand in the failed test results summary -->
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:local="local">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler">
   <st:contentType value="text/plain;charset=UTF-8"/>
 
   <j:new var="h" className="hudson.Functions" />
   ${h.initPageVariables(context)}
 
   <div class="jp-code-list jp-code-list--inline">
-    <st:include page="dummary.jelly" />
+    <st:include page="test-output.jelly" />
   </div>
 </j:jelly>

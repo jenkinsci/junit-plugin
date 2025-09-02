@@ -1,7 +1,7 @@
 <!--
 The MIT License
 
-Copyright (c) 2004-2010, Sun Microsystems, Inc., Tom Huybrechts
+Copyright (c) 2025 Jan Faracik
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,7 +22,6 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 -->
 
-<!--  this is loaded on demand in the failed test results summary -->
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:d="jelly:define" xmlns:local="local" xmlns:l="/lib/layout">
     <d:taglib uri="local">

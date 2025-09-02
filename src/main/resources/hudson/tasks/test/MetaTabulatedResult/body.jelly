@@ -33,7 +33,7 @@ THE SOFTWARE.
 
   <j:if test="${it.totalCount!=0}">
     <f:section title="${%All Tests}">
-      <table class="jenkins-table sortable" id="testresult">
+    <table class="jenkins-table sortable" id="testresult">
       <thead>
         <tr>
           <th>${it.childTitle}</th>

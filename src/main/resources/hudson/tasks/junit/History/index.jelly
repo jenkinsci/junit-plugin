@@ -36,7 +36,7 @@ THE SOFTWARE.
     <st:adjunct includes="io.jenkins.plugins.echarts-trend-default-setup"/>
     <st:adjunct includes="hudson.tasks.junit.History.history"/>
     <link rel="stylesheet" href="${resURL}/plugin/junit/history/history.css"/>
-    <link rel="stylesheet" href="${resURL}/plugin/junit/styles.css?${h.generateId()}" defer="true" />
+    <link rel="stylesheet" href="${resURL}/plugin/junit/styles.css" defer="true" />
 
     <st:once>
       <c:chart-setup id="test-history"/>
