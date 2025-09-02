@@ -63,6 +63,7 @@
   color: var(--color, var(--text-color)) !important;
   text-decoration: none !important;
   cursor: text;
+  transition: var(--standard-transition);
 
   svg {
     width: 1rem;
@@ -76,6 +77,14 @@
 
 a.jp-pill, button.jp-pill {
   cursor: pointer;
+
+  &:hover {
+    background: color-mix(in srgb, var(--color, var(--text-color-secondary)) 15%, transparent);
+  }
+
+  &:active, &:focus {
+    background: color-mix(in srgb, var(--color, var(--text-color-secondary)) 20%, transparent);
+  }
 }
 
 .jp-pill--tertiary {
@@ -214,6 +223,7 @@ a.jp-pill, button.jp-pill {
   }
 }
 
+/* Remove the fixed height from the table foldout */
 .failure-summary {
   height: unset !important;
 }
@@ -237,7 +247,7 @@ h1 {
   word-break: break-word;
 }
 
-/* TODO */
+/* Adjust Prism so that it doesn't overflow */
 @media (width > 800px) {
   pre[class*="language-"],
   code[class*="language-"] {

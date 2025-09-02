@@ -23,14 +23,16 @@ THE SOFTWARE.
 -->
 
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler">
-    <st:documentation>
-        <st:attribute name="clazz" use="optional">
-            Optional CSS classes for the tag.
-        </st:attribute>
-    </st:documentation>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout">
+    <st:once>
+        <st:adjunct includes="lib.hudson.test.js.confetti" />
+    </st:once>
 
-    <span class="jp-pill jenkins-!-accent-color ${attrs.clazz}">
-        ${%New}
-    </span>
+    <j:if test="${it.failCount eq 0 and it.passCount gt 0 and it.class.simpleName eq 'TestResult'}">
+        <l:notice title="${%allTestsPassing}"
+                  icon="symbol-balloon-outline plugin-ionicons-api">
+            <canvas id="confetti-canvas" />
+            ${%allTestsPassingDescription(it.totalCount)}
+        </l:notice>
+    </j:if>
 </j:jelly>
