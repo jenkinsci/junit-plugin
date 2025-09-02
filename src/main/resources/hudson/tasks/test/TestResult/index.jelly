@@ -38,28 +38,26 @@ THE SOFTWARE.
 
       <l:app-bar title="${it.title}" subtitle="${it.totalCount}">
         <div class="jp-details">
-          <j:if test="${it.totalCount != it.passCount or it.class.simpleName != 'TestResult'}">
-            <div class="jp-pills">
-              <j:if test="${it.failCount gt 0}">
-                <div data-jp-filter-pill="FAILED" class="jp-pill jenkins-!-error-color" tooltip="${it.passCount} failing">
-                  <l:icon src="symbol-close-outline plugin-ionicons-api" />
-                  ${it.failCount}
-                </div>
-              </j:if>
-              <j:if test="${it.skipCount gt 0}">
-                <div data-jp-filter-pill="SKIPPED" class="jp-pill jenkins-!-skipped-color" tooltip="${it.passCount} skipped">
-                  <l:icon src="symbol-play-skip-forward-outline plugin-ionicons-api" />
-                  ${it.skipCount}
-                </div>
-              </j:if>
-              <j:if test="${it.passCount gt 0}">
-                <div data-jp-filter-pill="PASSED" class="jp-pill jenkins-!-success-color" tooltip="${it.passCount} passing">
-                  <l:icon src="symbol-checkmark-outline plugin-ionicons-api" />
-                  ${it.passCount}
-                </div>
-              </j:if>
-            </div>
-          </j:if>
+          <div class="jp-pills">
+            <j:if test="${it.failCount gt 0}">
+              <div data-jp-filter-pill="FAILED" class="jp-pill jenkins-!-error-color" tooltip="${it.passCount} failing">
+                <l:icon src="symbol-close-outline plugin-ionicons-api" />
+                ${it.failCount}
+              </div>
+            </j:if>
+            <j:if test="${it.skipCount gt 0}">
+              <div data-jp-filter-pill="SKIPPED" class="jp-pill jenkins-!-skipped-color" tooltip="${it.passCount} skipped">
+                <l:icon src="symbol-play-skip-forward-outline plugin-ionicons-api" />
+                ${it.skipCount}
+              </div>
+            </j:if>
+            <j:if test="${it.passCount gt 0}">
+              <div data-jp-filter-pill="PASSED" class="jp-pill jenkins-!-success-color" tooltip="${it.passCount} passing">
+                <l:icon src="symbol-checkmark-outline plugin-ionicons-api" />
+                ${it.passCount}
+              </div>
+            </j:if>
+          </div>
 
           <j:if test="${it.totalCount eq prev.totalCount}">
             <div class="jp-pills">
