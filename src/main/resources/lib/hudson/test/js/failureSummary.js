@@ -88,10 +88,11 @@ function tryShowConfetti() {
         }
 
         function conf() {
-            canvas.confetti({
-                ...defaults,
+            const confettiOptions = Object.assign({}, defaults, {
                 origin: { x: randomInRange(0, 1), y: -0.1 }
             });
+
+            canvas.confetti(confettiOptions);
         }
 
         setInterval(conf, 200);
