@@ -61,9 +61,7 @@ THE SOFTWARE.
                             </span>
                         </j:if>
 
-                        <j:if test="${f.age eq 1}">
-                            <t:new-tag clazz="jenkins-!-margin-left-2 jenkins-mobile-hide" />
-                        </j:if>
+                        <t:condition-tag test="${f}" clazz="jenkins-!-margin-left-2 jenkins-mobile-hide" />
 
                         <l:icon src="symbol-chevron-forward-outline plugin-ionicons-api" class="jenkins-!-margin-left-2" />
                     </a>

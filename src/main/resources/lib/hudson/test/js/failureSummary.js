@@ -103,7 +103,6 @@ function tryEnableSortheader() {
     const hasFoldouts = document.querySelectorAll("[data-type='foldout-row']").length > 0;
 
     document.querySelectorAll(".sortheader").forEach(link => {
-        console.log(link, hasFoldouts)
         link.style.pointerEvents = hasFoldouts ? "none" : "unset";
     })
 }

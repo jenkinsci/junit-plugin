@@ -52,14 +52,12 @@ THE SOFTWARE.
         </div>
       </div>
       <div class="jp-details">
-        <div class="${st.cssClass}">
+        <div class="${it.status.cssClass}">
           <l:icon src="${it.status == 'PASSED' ? 'symbol-checkmark-outline plugin-ionicons-api' : 'symbol-close-outline plugin-ionicons-api'}" />
-          <st:out value="${st.message}" />
+          ${it.status.message}
         </div>
 
-        <j:if test="${it.age eq 1}">
-          <test:new-tag />
-        </j:if>
+        <test:condition-tag test="${it}" />
 
         <j:if test="${!it.passed}">
           <a href="${rootURL}/${it.run.url}" class="jp-pill jp-pill--tertiary">

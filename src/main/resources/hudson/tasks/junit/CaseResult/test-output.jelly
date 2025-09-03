@@ -32,6 +32,7 @@ THE SOFTWARE.
                         <summary>
                             ${title}
                             <l:icon src="symbol-chevron-forward-outline plugin-ionicons-api" />
+                            <l:copyButton text="${value}" iconOnly="true" clazz="jenkins-mobile-hide" />
                         </summary>
 
                         <pre class="jdl-component-code__code">

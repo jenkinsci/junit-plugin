@@ -25,12 +25,17 @@ THE SOFTWARE.
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler">
     <st:documentation>
+        <st:attribute name="test">
+            The test to use to populate the tag.
+        </st:attribute>
         <st:attribute name="clazz" use="optional">
             Optional CSS classes for the tag.
         </st:attribute>
     </st:documentation>
 
-    <span class="jp-pill jenkins-!-accent-color ${attrs.clazz}">
-        ${%New}
-    </span>
+    <j:if test="${attrs.test.condition != null}">
+        <span class="jp-pill ${attrs.test.condition.cssClass} ${attrs.clazz}">
+            ${attrs.test.condition.message}
+        </span>
+    </j:if>
 </j:jelly>

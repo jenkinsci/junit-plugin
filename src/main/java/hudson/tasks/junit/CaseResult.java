@@ -1003,15 +1003,27 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         if (skipped) {
             return Status.SKIPPED;
         }
+
+        return isPassed() ? Status.PASSED : Status.FAILED;
+    }
+
+    /**
+     * Gets the condition for a test result, e.g., has the test regressed since it last ran
+     */
+    public Status getCondition() {
+        if (skipped) {
+            return null;
+        }
+
         CaseResult pr = getPreviousResult();
         if (pr == null) {
-            return isPassed() ? Status.PASSED : Status.FAILED;
+            return null;
         }
 
         if (pr.isPassed()) {
-            return isPassed() ? Status.PASSED : Status.REGRESSION;
+            return isPassed() ? null : Status.REGRESSION;
         } else {
-            return isPassed() ? Status.FIXED : Status.FAILED;
+            return isPassed() ? Status.FIXED : null;
         }
     }
 

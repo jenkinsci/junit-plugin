@@ -101,6 +101,10 @@ a.jp-pill, button.jp-pill {
     padding: 0 0.625rem;
     min-height: 1.5625rem;
   }
+
+  .jenkins-copy-button {
+    display: none;
+  }
 }
 
 /* Custom table row */
@@ -206,20 +210,33 @@ a.jp-pill, button.jp-pill {
       gap: 0.5rem;
       font-weight: 450;
       cursor: pointer;
+      box-sizing: border-box;
 
-      svg {
+      > svg {
         width: 0.875rem;
         height: 0.875rem;
         color: var(--text-color-secondary);
         transition: rotate var(--standard-transition);
       }
+
+      span {
+        display: contents;
+
+        .jenkins-copy-button {
+          padding: 0;
+          min-width: 2.375rem;
+          margin: -1rem -0.75rem -1rem auto !important;
+
+          &::before, &::after {
+            display: none;
+          }
+        }
+      }
     }
 
     &[open] {
-      summary {
-        svg {
-          rotate: 90deg;
-        }
+      summary > svg {
+        rotate: 90deg;
       }
     }
 
