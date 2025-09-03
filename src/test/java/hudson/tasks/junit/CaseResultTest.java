@@ -183,12 +183,14 @@ class CaseResultTest {
 
         HtmlPage page = rule.createWebClient().goTo("job/render-test/1/testReport/" + testUrl);
 
-        HtmlElement errorMsg = (HtmlElement) page.getByXPath("//h3[text()='Error Message']/following-sibling::*")
-                .get(0);
+        HtmlElement errorMsg =
+                (HtmlElement) page.getByXPath("//summary[normalize-space(.)='Error Details']/following-sibling::*")
+                        .get(0);
 
         assertEquals(cr.annotate(cr.getErrorDetails()).replaceAll("&lt;", "<"), errorMsg.getTextContent());
-        HtmlElement errorStackTrace = (HtmlElement) page.getByXPath("//h3[text()='Stacktrace']/following-sibling::*")
-                .get(0);
+        HtmlElement errorStackTrace =
+                (HtmlElement) page.getByXPath("//summary[normalize-space(.)='Stack Trace']/following-sibling::*")
+                        .get(0);
         // Have to do some annoying replacing here to get the same text Jelly produces in the end.
         assertEquals(
                 cr.annotate(cr.getErrorStackTrace()).replaceAll("&lt;", "<").replace("\r\n", "\n"),
