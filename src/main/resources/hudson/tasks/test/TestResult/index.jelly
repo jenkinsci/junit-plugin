@@ -40,13 +40,13 @@ THE SOFTWARE.
         <div class="jp-details">
           <div class="jp-pills">
             <j:if test="${it.failCount gt 0}">
-              <div class="jp-pill jenkins-!-error-color" tooltip="${it.passCount} failing">
+              <div class="jp-pill jenkins-!-error-color" tooltip="${it.failCount} failing">
                 <l:icon src="symbol-close-outline plugin-ionicons-api" />
                 ${it.failCount}
               </div>
             </j:if>
             <j:if test="${it.skipCount gt 0}">
-              <div class="jp-pill jenkins-!-skipped-color" tooltip="${it.passCount} skipped">
+              <div class="jp-pill jenkins-!-skipped-color" tooltip="${it.skipCount} skipped">
                 <l:icon src="symbol-play-skip-forward-outline plugin-ionicons-api" />
                 ${it.skipCount}
               </div>

@@ -37,7 +37,6 @@ THE SOFTWARE.
       <thead>
         <tr>
           <th>${it.childTitle}</th>
-          <th style="width: 8em;">${%Duration}</th>
           <th style="width: 8em;">${%Fail}</th>
           <th style="width: 8em;">${%Skip}</th>
           <th style="width: 8em;">${%Pass}</th>
@@ -45,6 +44,7 @@ THE SOFTWARE.
           <j:forEach var="tableheader" items="${it.testActions}">
             <st:include it="${tableheader}" page="${it.childType}tableheader.jelly" optional="true"/>
           </j:forEach>
+          <th style="width: 8em;">${%Duration}</th>
         </tr>
       </thead>
       <tbody>
@@ -63,24 +63,21 @@ THE SOFTWARE.
                 <st:include it="${badge}" page="badge.jelly" optional="true"/>
               </j:forEach>
             </td>
-            <td class="no-wrap" data="${p.duration}">
-              ${p.durationString}
-            </td>
             <td>
-              ${p.failCount}
-              <span class="jp-pill jenkins-!-error-color jenkins-!-margin-left-1">
+              <span class="${p.failCount gt 0 ? '' : 'jenkins-!-text-color-secondary'}">${p.failCount}</span>
+              <span class="jp-pill jenkins-!-margin-left-1">
                 ${h.getDiffString2(p.failCount-prev.failCount)}
               </span>
             </td>
             <td>
-              ${p.skipCount}
-              <span class="jp-pill jenkins-!-skipped-color jenkins-!-margin-left-1">
+              <span class="${p.skipCount gt 0 ? '' : 'jenkins-!-text-color-secondary'}">${p.skipCount}</span>
+              <span class="jp-pill jenkins-!-margin-left-1">
                 ${h.getDiffString2(p.skipCount-prev.skipCount)}
               </span>
             </td>
             <td>
-              ${p.passCount}
-              <span class="jp-pill jenkins-!-success-color jenkins-!-margin-left-1">
+              <span class="${p.passCount gt 0 ? '' : 'jenkins-!-text-color-secondary'}">${p.passCount}</span>
+              <span class="jp-pill jenkins-!-margin-left-1">
                 ${h.getDiffString2(p.passCount-prev.passCount)}
               </span>
             </td>
@@ -93,6 +90,9 @@ THE SOFTWARE.
             <j:forEach var="tablerow" items="${p.testActions}">
               <st:include it="${tablerow}" page="tablerow.jelly" optional="true"/>
             </j:forEach>
+            <td class="no-wrap" data="${p.duration}">
+              ${p.durationString}
+            </td>
           </tr>
         </j:forEach>
       </tbody>
