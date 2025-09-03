@@ -28,9 +28,8 @@ THE SOFTWARE.
     <l:main-panel>
       <p:prism configuration="${it.prismConfiguration}" />
 
-      <link rel="stylesheet" href="${resURL}/plugin/junit/styles.css" defer="true" />
-
       <st:once>
+        <link rel="stylesheet" href="${resURL}/plugin/junit/styles.css" defer="true" />
         <st:adjunct includes="lib.hudson.test.js.failureSummary" />
       </st:once>
 

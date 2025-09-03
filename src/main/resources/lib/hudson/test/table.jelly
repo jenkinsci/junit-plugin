@@ -28,10 +28,21 @@ THE SOFTWARE.
         <st:attribute name="items">
             The tests to display inside of this table.
         </st:attribute>
+        <st:attribute name="baseUrl" use="optional">
+            Optional base URL for the table.
+        </st:attribute>
+        <st:attribute name="relativeParent" use="optional">
+            Optional relative parent for the row's ID and URL.
+        </st:attribute>
         <st:attribute name="id" use="optional">
             Optional ID for the table.
         </st:attribute>
     </st:documentation>
+
+    <st:once>
+        <link rel="stylesheet" href="${resURL}/plugin/junit/styles.css" defer="true" />
+        <st:adjunct includes="lib.hudson.test.js.failureSummary" />
+    </st:once>
 
     <table class="jenkins-table sortable" id="${attrs.id}">
         <thead>
@@ -47,7 +58,7 @@ THE SOFTWARE.
         <j:forEach var="f" items="${attrs.items}" varStatus="i">
             <tr data-type="test-row" data="${f.className}.${f.name}">
                 <td>
-                    <j:set var="url" value="${f.getRelativePathFrom(it)}" />
+                    <j:set var="url" value="${attrs.baseUrl}${f.getRelativePathFrom(attrs.relativeParent ?: it)}" />
                     <j:set var="id" value="${h.htmlAttributeEscape(url)}" />
 
                     <a id="test-${id}-showlink" class="jp-table-row" href="${url}">
