@@ -91,7 +91,7 @@ a.jp-pill, button.jp-pill {
 }
 
 .jp-pill--tertiary {
-  background: transparent;
+  background: var(--card-background);
   border: var(--jenkins-border-width) solid color-mix(in srgb, var(--color, var(--text-color-secondary)) 10%, transparent);
   color: var(--text-color-secondary) !important;
 }
