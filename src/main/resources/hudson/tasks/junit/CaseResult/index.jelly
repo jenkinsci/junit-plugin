@@ -48,7 +48,6 @@ THE SOFTWARE.
             <l:icon src="symbol-bar-chart-outline plugin-ionicons-api" />
             ${%History}
           </a>
-          <t:editDescriptionButton permission="${it.run.UPDATE}" />
         </div>
       </div>
       <div class="jp-details">
@@ -92,6 +91,8 @@ THE SOFTWARE.
             (from <st:out value="${it.suiteResult.name}"/>)
           </j:if>
         </div>
+
+        <test:edit-description-button permission="${it.run.UPDATE}" />
       </div>
 
       <t:editableDescription permission="${it.run.UPDATE}" hideButton="true" />

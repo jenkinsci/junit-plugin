@@ -23,7 +23,7 @@ THE SOFTWARE.
 -->
 
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:p="/prism" xmlns:t="/lib/hudson/test">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:p="/prism" xmlns:t="/lib/hudson" xmlns:test="/lib/hudson/test">
   <l:layout title="${it.displayName} - ${it.run}" type="one-column">
     <l:main-panel>
       <p:prism configuration="${it.prismConfiguration}" />
@@ -84,10 +84,14 @@ THE SOFTWARE.
             <l:icon src="symbol-timer-outline plugin-ionicons-api" />
             ${%took(it.durationString)}
           </div>
+
+          <test:edit-description-button permission="${it.run.UPDATE}" />
         </div>
       </l:app-bar>
 
-      <t:success-summary />
+      <t:editableDescription permission="${it.run.UPDATE}" hideButton="true" />
+
+      <test:success-summary />
 
       <st:include page="body.jelly" />
     </l:main-panel>
