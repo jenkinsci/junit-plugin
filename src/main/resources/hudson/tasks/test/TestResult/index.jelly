@@ -93,6 +93,10 @@ THE SOFTWARE.
 
       <test:success-summary />
 
+      <j:forEach var="action" items="${it.testActions}">
+        <st:include page="summary.jelly" from="${action}" optional="true" it="${action}" />
+      </j:forEach>
+
       <st:include page="body.jelly" />
     </l:main-panel>
   </l:layout>

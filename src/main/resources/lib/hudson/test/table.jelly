@@ -48,6 +48,7 @@ THE SOFTWARE.
         <thead>
             <tr>
                 <th>${%Name}</th>
+                <th class="jenkins-mobile-hide">${%Age}</th>
                 <th style="width:4em" class="jenkins-mobile-hide">${%Duration}</th>
                 <j:forEach var="tableheader" items="${it.testActions}">
                     <st:include it="${tableheader}" page="casetableheader.jelly" optional="true" />
@@ -80,6 +81,9 @@ THE SOFTWARE.
                     <j:forEach var="badge" items="${f.testActions}">
                         <st:include it="${badge}" page="badge.jelly" optional="true" />
                     </j:forEach>
+                </td>
+                <td class="jenkins-mobile-hide">
+                    <a href="${rootURL}/${f.failedSinceRun.url}">${f.age}</a>
                 </td>
                 <td class="no-wrap jenkins-mobile-hide" data="${f.duration}">
                     ${f.durationString}
