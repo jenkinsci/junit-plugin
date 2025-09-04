@@ -35,7 +35,6 @@ import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
 import hudson.model.BuildListener;
 import hudson.model.Descriptor;
-import hudson.model.Item;
 import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.Saveable;
@@ -59,7 +58,6 @@ import java.util.logging.Logger;
 import jenkins.tasks.SimpleBuildStep;
 import org.apache.tools.ant.DirectoryScanner;
 import org.apache.tools.ant.types.FileSet;
-import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
@@ -544,22 +542,6 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
         @Override
         public String getDisplayName() {
             return Messages.JUnitResultArchiver_DisplayName();
-        }
-
-        /**
-         * Performs on-the-fly validation on the file mask wildcard.
-         * @param project Project.
-         * @param value File mask to validate.
-         *
-         * @return the validation result.
-         * @throws IOException if an error occurs.
-         */
-        public FormValidation doCheckTestResults(@AncestorInPath AbstractProject project, @QueryParameter String value)
-                throws IOException {
-            if (project == null || !project.hasPermission(Item.WORKSPACE)) {
-                return FormValidation.ok();
-            }
-            return FilePath.validateFileMask(project.getSomeWorkspace(), value);
         }
 
         @Override
