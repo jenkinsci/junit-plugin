@@ -48,8 +48,8 @@ THE SOFTWARE.
         <thead>
             <tr>
                 <th>${%Name}</th>
-                <th class="jenkins-mobile-hide">${%Age}</th>
-                <th style="width:4em" class="jenkins-mobile-hide">${%Duration}</th>
+                <th style="width: 4em" class="jenkins-mobile-hide">${%Age}</th>
+                <th style="width: 4em" class="jenkins-mobile-hide">${%Duration}</th>
                 <j:forEach var="tableheader" items="${it.testActions}">
                     <st:include it="${tableheader}" page="casetableheader.jelly" optional="true" />
                 </j:forEach>
