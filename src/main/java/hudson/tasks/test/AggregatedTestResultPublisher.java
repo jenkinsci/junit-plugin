@@ -126,13 +126,13 @@ public class AggregatedTestResultPublisher extends Recorder {
         private final boolean includeFailedBuilds;
 
         /**
-         * The last time the fields of this object is computed from the rest.
+         * The reference of the lastChangedReference when we last recomputed the aggregation. if this is != lastChangedReference then we need to recomupte the results.
          */
-        private transient long lastUpdated = 0;
+        private transient Object lastRecomputedReference = null;
         /**
-         * When was the last time any build completed?
+         * Unique Object set whenever a build completes.
          */
-        private static long lastChanged = 0;
+        private static volatile Object lastChangedReference = new Object();
 
         private transient int failCount;
         private transient int totalCount;
@@ -271,10 +271,10 @@ public class AggregatedTestResultPublisher extends Recorder {
                 justification = "False positive. Short-circuited")
         private synchronized void upToDateCheck() {
             // up to date check
-            if (lastUpdated > lastChanged) {
+            if (lastRecomputedReference == lastChangedReference) {
                 return;
             }
-            lastUpdated = lastChanged + 1;
+            lastRecomputedReference = lastChangedReference;
 
             int failCount = 0;
             int totalCount = 0;
@@ -350,9 +350,10 @@ public class AggregatedTestResultPublisher extends Recorder {
 
         @Extension
         public static class RunListenerImpl extends RunListener<Run> {
+            @SuppressFBWarnings(value = "ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD", justification = "intended by design")
             @Override
             public void onCompleted(Run run, TaskListener listener) {
-                lastChanged = System.currentTimeMillis();
+                lastChangedReference = new Object();
             }
         }
     }
