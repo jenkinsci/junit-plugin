@@ -29,6 +29,10 @@ THE SOFTWARE.
     <f:entry title="${%Test report XMLs}" field="testResults"
         description="${%description('http://ant.apache.org/manual/Types/fileset.html')}">
         <f:textbox />
+        <f:description>
+            ${%Note: Validation is optional. Only use the validate button in small workspaces to avoid memory issues.}
+        </f:description>
+        <f:validateButton title="${%Validate Pattern}" method="validateTestResults" with="testResults" />
     </f:entry>
     <f:entry field="stdioRetention" title="${%Test output retention}">
         <f:select />
