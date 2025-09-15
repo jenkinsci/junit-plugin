@@ -432,7 +432,7 @@ class JUnitResultArchiverTest {
         wc.waitForBackgroundJavaScript(10000L);
         assertThat(page.asNormalizedText(), containsString(EXPECTED));
 
-        page.getElementById(ID_PREFIX + "-hidelink").click();
+        page.getElementById(ID_PREFIX + "-showlink").click();
         wc.waitForBackgroundJavaScript(10000L);
         assertThat(page.asNormalizedText(), not(containsString(EXPECTED)));
     }

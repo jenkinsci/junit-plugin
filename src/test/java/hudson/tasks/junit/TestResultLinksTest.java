@@ -90,7 +90,7 @@ class TestResultLinksTest {
         rule.assertGoodStatus(packagePage); // I expect this to work; just checking that my use of the APIs is correct.
 
         // Now we're on that page. We should be able to find a link to the failed test in there.
-        HtmlAnchor anchor = testReportPage.getAnchorByText("tacoshack.meals.NachosTest.testBeanDip");
+        HtmlAnchor anchor = testReportPage.getAnchorByText("testBeanDip tacoshack.meals.NachosTest");
         String href = anchor.getHrefAttribute();
         System.out.println("link is : " + href);
         Page failureFromLink = anchor.click();
