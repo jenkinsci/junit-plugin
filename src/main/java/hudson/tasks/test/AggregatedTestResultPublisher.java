@@ -40,7 +40,6 @@ import hudson.model.ItemGroup;
 import hudson.model.Job;
 import hudson.model.Result;
 import hudson.model.Run;
-import hudson.model.TaskListener;
 import hudson.model.listeners.RunListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
@@ -352,7 +351,7 @@ public class AggregatedTestResultPublisher extends Recorder {
         public static class RunListenerImpl extends RunListener<Run> {
             @SuppressFBWarnings(value = "ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD", justification = "intended by design")
             @Override
-            public void onCompleted(Run run, TaskListener listener) {
+            public void onFinalized(Run run) {
                 lastChangedReference = new Object();
             }
         }
