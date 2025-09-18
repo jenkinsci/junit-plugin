@@ -164,9 +164,7 @@ public class AggregatedTestResultPublisher extends Recorder {
         public Collection<AbstractProject> getJobs() {
             if (jobs == null) {
                 Set<AbstractProject> projects = getProject().getTransitiveDownstreamProjects();
-                return projects.stream()
-                        .filter(p -> p.hasPermission(Item.READ))
-                        .collect(Collectors.toSet());
+                return projects.stream().filter(p -> p.hasPermission(Item.READ)).collect(Collectors.toSet());
             }
             List<AbstractProject> r = new ArrayList<>();
             for (String job : Util.tokenize(jobs, ",")) {
