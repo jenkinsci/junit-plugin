@@ -92,7 +92,7 @@ public class AggregatedTestResultPublisher extends Recorder {
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
             throws InterruptedException, IOException {
         // add a TestResult just so that it can show up later.
-        build.addAction(new TestResultAction(jobs, includeFailedBuilds, build));
+        build.addAction(new TestResultAction(jobs, includeFailedBuilds));
         return true;
     }
 
@@ -143,22 +143,16 @@ public class AggregatedTestResultPublisher extends Recorder {
 
         private transient List<AbstractProject> noFingerprints;
 
-        @SuppressWarnings("deprecation") // calls getProject in constructor, so needs owner immediately
+        /**
+         * @deprecated use {@link #TestResultAction(String, boolean)}
+         */
+        @Deprecated(forRemoval = true)
         public TestResultAction(String jobs, boolean includeFailedBuilds, AbstractBuild<?, ?> owner) {
-            super(owner);
-            this.includeFailedBuilds = includeFailedBuilds;
+            this(jobs, includeFailedBuilds);
+        }
 
-            if (jobs == null) {
-                // resolve null as the transitive downstream jobs
-                StringBuilder buf = new StringBuilder();
-                for (AbstractProject p : getProject().getTransitiveDownstreamProjects()) {
-                    if (buf.length() > 0) {
-                        buf.append(',');
-                    }
-                    buf.append(p.getFullName());
-                }
-                jobs = buf.toString();
-            }
+        public TestResultAction(String jobs, boolean includeFailedBuilds) {
+            this.includeFailedBuilds = includeFailedBuilds;
             this.jobs = jobs;
         }
 
@@ -166,20 +160,21 @@ public class AggregatedTestResultPublisher extends Recorder {
          * Gets the jobs to be monitored.
          */
         public Collection<AbstractProject> getJobs() {
+            if (jobs == null) {
+                return getProject().getTransitiveDownstreamProjects();
+            }
             List<AbstractProject> r = new ArrayList<>();
-            if (jobs != null) {
-                for (String job : Util.tokenize(jobs, ",")) {
-                    try {
-                        AbstractProject j = Jenkins.get().getItemByFullName(job.trim(), AbstractProject.class);
-                        if (j != null) {
-                            r.add(j);
-                        }
-                    } catch (RuntimeException x) {
-                        if (x.getClass().getSimpleName().startsWith("AccessDeniedException")) {
-                            // just skip it
-                        } else {
-                            throw x;
-                        }
+            for (String job : Util.tokenize(jobs, ",")) {
+                try {
+                    AbstractProject j = Jenkins.get().getItemByFullName(job.trim(), AbstractProject.class);
+                    if (j != null) {
+                        r.add(j);
+                    }
+                } catch (RuntimeException x) {
+                    if (x.getClass().getSimpleName().startsWith("AccessDeniedException")) {
+                        // just skip it
+                    } else {
+                        throw x;
                     }
                 }
             }
