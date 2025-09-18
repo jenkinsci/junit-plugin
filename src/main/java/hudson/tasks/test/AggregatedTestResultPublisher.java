@@ -165,8 +165,6 @@ public class AggregatedTestResultPublisher extends Recorder {
             if (jobs == null) {
                 Set<AbstractProject> projects = getProject().getTransitiveDownstreamProjects();
                 return projects.stream()
-                        .filter(AbstractProject.class::isInstance)
-                        .map(AbstractProject.class::cast)
                         .filter(p -> p.hasPermission(Item.READ))
                         .collect(Collectors.toSet());
             }
