@@ -52,6 +52,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.kohsuke.accmod.Restricted;
@@ -161,7 +163,12 @@ public class AggregatedTestResultPublisher extends Recorder {
          */
         public Collection<AbstractProject> getJobs() {
             if (jobs == null) {
-                return getProject().getTransitiveDownstreamProjects();
+                Set<AbstractProject> projects = getProject().getTransitiveDownstreamProjects();
+                return projects.stream()
+                        .filter(AbstractProject.class::isInstance)
+                        .map(AbstractProject.class::cast)
+                        .filter(p -> p.hasPermission(Item.READ))
+                        .collect(Collectors.toSet());
             }
             List<AbstractProject> r = new ArrayList<>();
             for (String job : Util.tokenize(jobs, ",")) {
