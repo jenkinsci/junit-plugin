@@ -24,7 +24,9 @@ THE SOFTWARE.
 
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:p="/prism" xmlns:t="/lib/hudson" xmlns:test="/lib/hudson/test">
-  <l:layout title="${it.displayName} - ${it.run}" type="one-column">
+  <l:layout title="${it.displayName} - ${it.run}">
+    <st:include page="sidepanel.jelly" />
+
     <l:main-panel>
       <p:prism configuration="${it.prismConfiguration}" />
 
