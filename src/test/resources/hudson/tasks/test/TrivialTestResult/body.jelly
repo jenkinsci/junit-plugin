@@ -88,7 +88,7 @@ THE SOFTWARE.
                     <j:invokeStatic var="encodedSafeName" className="hudson.Util" method="rawEncode">
                       <j:arg value="${p.safeName}" />
                     </j:invokeStatic>
-	            <a href="${encodedSafeName}/"><span style='${prev==null?"font-weight:bold":""}'>${p.name}</span></a>
+	            <a href="${encodedSafeName}/"><span style='${prev==null?"font-weight:450":""}'>${p.name}</span></a>
 	          	<st:nbsp/>
 		        <j:forEach var="badge" items="${p.testActions}">
 		          <st:include it="${badge}" page="badge.jelly" optional="true"/>

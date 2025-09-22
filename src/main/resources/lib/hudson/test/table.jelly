@@ -1,0 +1,104 @@
+<!--
+The MIT License
+
+Copyright (c) 2025 Jan Faracik
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+-->
+
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:t="/lib/hudson/test">
+    <st:documentation>
+        <st:attribute name="items">
+            The tests to display inside of this table.
+        </st:attribute>
+        <st:attribute name="baseUrl" use="optional">
+            Optional base URL for the table.
+        </st:attribute>
+        <st:attribute name="relativeParent" use="optional">
+            Optional relative parent for the row's ID and URL.
+        </st:attribute>
+        <st:attribute name="id" use="optional">
+            Optional ID for the table.
+        </st:attribute>
+    </st:documentation>
+
+    <st:once>
+        <link rel="stylesheet" href="${resURL}/plugin/junit/styles.css" defer="true" />
+        <st:adjunct includes="lib.hudson.test.js.failureSummary" />
+    </st:once>
+
+    <table class="jenkins-table sortable" id="${attrs.id}">
+        <thead>
+            <tr>
+                <th>${%Name}</th>
+                <th style="width: 4em" class="jenkins-mobile-hide">${%Age}</th>
+                <th style="width: 4em" class="jenkins-mobile-hide">${%Duration}</th>
+                <j:forEach var="tableheader" items="${it.testActions}">
+                    <st:include it="${tableheader}" page="casetableheader.jelly" optional="true" />
+                </j:forEach>
+                <th class="jenkins-mobile-hide" />
+            </tr>
+        </thead>
+        <j:forEach var="f" items="${attrs.items}" varStatus="i">
+            <tr data-type="test-row" data="${f.className}.${f.name}">
+                <td>
+                    <j:set var="url" value="${attrs.baseUrl}${f.getRelativePathFrom(attrs.relativeParent ?: it)}" />
+                    <j:set var="id" value="${h.htmlAttributeEscape(url)}" />
+
+                    <a id="test-${id}-showlink" class="jp-table-row" href="${url}">
+                        <l:icon src="${f.status == 'PASSED' ? 'symbol-status-blue' : 'symbol-status-red'}" />
+
+                        ${f.name}
+
+                        <j:if test="${it.class.simpleName eq 'TestResult'}">
+                            <span class="jenkins-!-text-color-secondary jenkins-!-margin-left-2" style="font-family: var(--font-family-mono)">
+                                <st:out value="${f.className}" />
+                            </span>
+                        </j:if>
+
+                        <t:condition-tag test="${f}" clazz="jenkins-!-margin-left-2 jenkins-mobile-hide" />
+
+                        <l:icon src="symbol-chevron-forward-outline plugin-ionicons-api" class="jenkins-!-margin-left-2" />
+                    </a>
+
+                    <j:forEach var="badge" items="${f.testActions}">
+                        <st:include it="${badge}" page="badge.jelly" optional="true" />
+                    </j:forEach>
+                </td>
+                <td class="jenkins-mobile-hide">
+                    <a href="${rootURL}/${f.failedSinceRun.url}">${f.age}</a>
+                </td>
+                <td class="no-wrap jenkins-mobile-hide" data="${f.duration}">
+                    ${f.durationString}
+                </td>
+                <j:forEach var="tablerow" items="${f.testActions}">
+                    <st:include it="${tablerow}" page="tablerow.jelly" optional="true" />
+                </j:forEach>
+                <td class="jenkins-table__cell--tight jenkins-mobile-hide">
+                    <div class="jenkins-table__cell__button-wrapper">
+                        <a href="${url}" class="jenkins-button jenkins-button--tertiary" tooltip="Open in new tab" target="_blank">
+                            <l:icon src="symbol-external" class="icon-sm" />
+                        </a>
+                    </div>
+                </td>
+            </tr>
+        </j:forEach>
+    </table>
+</j:jelly>

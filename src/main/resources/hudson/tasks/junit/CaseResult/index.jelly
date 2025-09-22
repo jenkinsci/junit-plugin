@@ -23,44 +23,79 @@ THE SOFTWARE.
 -->
 
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
-         xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-  <l:layout title="${it.run} test - ${it.displayName}">
-    <st:include page="sidepanel.jelly" />
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:test="/lib/hudson/test">
+  <l:layout title="${it.displayName} - ${it.run}" type="one-column" xmlns:p="/prism">
     <l:main-panel>
-      <j:set var="st" value="${it.status}" />
-      <h1 class="${st.cssClass}">
-        <st:out value="${st.message}" />
-      </h1>
-      <p>
-        <span style="font-weight:bold">
-          <st:out value="${it.fullDisplayName}"/>
-        </span>
-        <j:if test="${it.suiteResult != null &amp;&amp; it.className != it.suiteResult.name}">
-          (from <st:out value="${it.suiteResult.name}"/>)
-        </j:if>
-      </p>
-      <j:if test="${!it.passed}">
-        <div style="text-align:right;">
-          <j:choose>
-            <j:when test="${it.skipped}">
-              ${%skippedFor(it.age)}
-            </j:when>
-            <j:otherwise>
-              ${%failingFor(it.age)}
-            </j:otherwise>
-          </j:choose>
-          (${%since.before}<t:buildLink job="${it.run.parent}" number="${it.failedSince}"/>${%since.after})
-        </div>
-      </j:if>
+      <p:prism configuration="${it.prismConfiguration}" />
+      <link rel="stylesheet" href="${resURL}/plugin/junit/styles.css" defer="true" />
 
-      <div style="text-align:right;">
-        <a href="history">
+      <j:set var="st" value="${it.status}" />
+
+      <div class="jenkins-app-bar">
+        <div class="jenkins-app-bar__content">
+          <h1>
+            <span class="jenkins-!-margin-right-3">
+              ${it.displayName}
+            </span>
+
+            <span class="jenkins-!-text-color-secondary" style="font-family: var(--font-family-mono)">
+              ${it.className}
+            </span>
+          </h1>
+        </div>
+        <div class="jenkins-app-bar__controls">
+          <a href="history" class="jenkins-button">
+            <l:icon src="symbol-bar-chart-outline plugin-ionicons-api" />
+            ${%History}
+          </a>
+        </div>
+      </div>
+      <div class="jp-details">
+        <div class="${it.status.cssClass}">
+          <l:icon src="${it.status == 'PASSED' ? 'symbol-checkmark-outline plugin-ionicons-api' : 'symbol-close-outline plugin-ionicons-api'}" />
+          ${it.status.message}
+        </div>
+
+        <test:condition-tag test="${it}" />
+
+        <j:if test="${!it.passed}">
+          <a href="${rootURL}/${it.run.url}" class="jp-pill jp-pill--tertiary">
+            <j:choose>
+              <j:when test="${it.skipped}">
+                <l:icon src="symbol-play-skip-forward-circle-outline plugin-ionicons-api" />
+              </j:when>
+              <j:otherwise>
+                <l:icon src="symbol-close-circle-outline plugin-ionicons-api" />
+              </j:otherwise>
+            </j:choose>
+
+            <j:choose>
+              <j:when test="${it.skipped}">
+                ${%skippedFor(it.age)}
+              </j:when>
+              <j:otherwise>
+                ${%failingFor(it.age)}
+              </j:otherwise>
+            </j:choose>
+            ${%since.before}
+            #${it.failedSince}
+            ${%since.after}
+          </a>
+        </j:if>
+
+        <div class="jp-pill jp-pill--tertiary">
+          <l:icon src="symbol-timer-outline plugin-ionicons-api" />
           ${%took(it.durationString)}
-        </a>
+
+          <j:if test="${it.suiteResult != null &amp;&amp; it.className != it.suiteResult.name}">
+            (from <st:out value="${it.suiteResult.name}"/>)
+          </j:if>
+        </div>
+
+        <test:edit-description-button permission="${it.run.UPDATE}" />
       </div>
 
-      <t:editableDescription permission="${it.run.UPDATE}"/>
+      <t:editableDescription permission="${it.run.UPDATE}" hideButton="true" />
 
       <table style="margin-top: 1em; margin-left:0em;">
         <j:forEach var="action" items="${it.testActions}">
@@ -68,35 +103,9 @@ THE SOFTWARE.
         </j:forEach>
       </table>
 
-       <j:forEach var="p" items="${it.properties}">
-         <h3>${p.key}</h3>
-         <pre><j:out value="${p.value}"/></pre>
-       </j:forEach>
-
-      <j:if test="${!empty(it.skippedMessage)}">
-        <h3>${%Skip Message}</h3>
-        <pre><j:out value="${it.annotate(it.skippedMessage)}"/></pre>
-      </j:if>
-
-      <j:if test="${!empty(it.errorDetails)}">
-        <h3>${%Error Message}</h3>
-        <pre><j:out value="${it.annotate(it.errorDetails)}"/></pre>
-      </j:if>
-
-      <j:if test="${!empty(it.errorStackTrace)}">
-        <h3>${%Stacktrace}</h3>
-        <pre><j:out value="${it.annotate(it.errorStackTrace)}"/></pre>
-      </j:if>
-
-      <j:if test="${!empty(it.stdout)}">
-        <h3>${%Standard Output}</h3>
-        <pre><j:out value="${it.annotate(it.stdout)}"/></pre>
-      </j:if>
-
-      <j:if test="${!empty(it.stderr)}">
-        <h3>${%Standard Error}</h3>
-        <pre><j:out value="${it.annotate(it.stderr)}"/></pre>
-      </j:if>
+      <div class="jp-code-list">
+        <st:include page="test-output.jelly" />
+      </div>
     </l:main-panel>
   </l:layout>
 </j:jelly>
