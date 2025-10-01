@@ -291,6 +291,15 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                             task.isKeepTestNames())
                     .summarizeResult(testResults, build, pipelineTestDetails, workspace, launcher, listener, storage);
         }
+        var data = new ArrayList<TestResultAction.Data>();
+        if (task.getTestDataPublishers() != null) {
+            for (var tdp : task.getTestDataPublishers()) {
+                var d = tdp.contributeTestData(build, workspace, launcher, listener, result);
+                if (d != null) {
+                    data.add(d);
+                }
+            }
+        }
 
         synchronized (build) {
             // TODO can the build argument be omitted now, or is it used prior to the call to addAction?
@@ -320,14 +329,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                 }
             }
 
-            if (task.getTestDataPublishers() != null) {
-                for (TestDataPublisher tdp : task.getTestDataPublishers()) {
-                    TestResultAction.Data d = tdp.contributeTestData(build, workspace, launcher, listener, result);
-                    if (d != null) {
-                        action.addData(d);
-                    }
-                }
-            }
+            data.forEach(action::addData);
 
             if (appending) {
                 build.save();
