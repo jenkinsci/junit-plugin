@@ -35,6 +35,7 @@ import hudson.tasks.test.PipelineTestDetails;
 import hudson.tasks.test.TabulatedResult;
 import hudson.tasks.test.TestObject;
 import io.jenkins.plugins.junit.storage.TestResultImpl;
+import io.jenkins.plugins.prism.PrismConfiguration;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -60,6 +61,8 @@ import javax.xml.stream.XMLStreamReader;
 import jenkins.util.SystemProperties;
 import org.apache.tools.ant.DirectoryScanner;
 import org.dom4j.DocumentException;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.StaplerRequest2;
 import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.export.Exported;
@@ -1243,5 +1246,10 @@ public final class TestResult extends MetaTabulatedResult {
                 .filter(Objects::nonNull)
                 .findFirst()
                 .orElse(null);
+    }
+
+    @Restricted(NoExternalUse.class)
+    public PrismConfiguration getPrismConfiguration() {
+        return PrismConfiguration.getInstance();
     }
 }
