@@ -73,7 +73,7 @@ class CustomColumnsTest {
         List<HtmlTableCell> headerRowCells =
                 testResultTable.getHeader().getRows().get(0).getCells();
         int numberOfColumns = headerRowCells.size();
-        assertEquals(headerName, headerRowCells.get(numberOfColumns - 1).asNormalizedText());
+        assertEquals(headerName, headerRowCells.get(numberOfColumns - 2).asNormalizedText());
 
         for (int x = 0; x < rowValues.length; x++) {
             List<HtmlTableCell> bodyRowCells =
@@ -81,7 +81,7 @@ class CustomColumnsTest {
             assertThat(bodyRowCells.get(0).asNormalizedText(), CoreMatchers.containsString(rowValues[x].getLeft()));
             assertEquals(
                     rowValues[x].getRight(),
-                    bodyRowCells.get(numberOfColumns - 1).asNormalizedText());
+                    bodyRowCells.get(numberOfColumns - 2).asNormalizedText());
         }
     }
 

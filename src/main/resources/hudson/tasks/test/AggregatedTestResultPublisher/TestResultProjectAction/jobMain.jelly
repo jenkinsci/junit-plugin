@@ -28,7 +28,7 @@ THE SOFTWARE.
     <table style="margin-top: 1em; margin-left: 1em;">
         <j:set var="atr" value="${it.project.lastCompletedBuild.getAction(it.class.classLoader.loadClass('hudson.tasks.test.AggregatedTestResultPublisher$TestResultAction'))}"/>
         <j:if test="${atr != null}">
-            <t:summary icon="clipboard.png">
+            <t:summary icon="symbol-flask-outline plugin-ionicons-api">
                 <a href="lastCompletedBuild/${atr.urlName}/">${%Latest Aggregated Test Result}</a>
                 <st:nbsp/>
                 <test:test-result it="${atr}"/>

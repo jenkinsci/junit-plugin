@@ -1003,15 +1003,27 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         if (skipped) {
             return Status.SKIPPED;
         }
+
+        return isPassed() ? Status.PASSED : Status.FAILED;
+    }
+
+    /**
+     * Gets the condition for a test result, e.g., has the test regressed since it last ran
+     */
+    public Status getCondition() {
+        if (skipped) {
+            return null;
+        }
+
         CaseResult pr = getPreviousResult();
         if (pr == null) {
-            return isPassed() ? Status.PASSED : Status.FAILED;
+            return null;
         }
 
         if (pr.isPassed()) {
-            return isPassed() ? Status.PASSED : Status.REGRESSION;
+            return isPassed() ? null : Status.REGRESSION;
         } else {
-            return isPassed() ? Status.FIXED : Status.FAILED;
+            return isPassed() ? Status.FIXED : null;
         }
     }
 
@@ -1034,24 +1046,24 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         /**
          * This test runs OK, just like its previous run.
          */
-        PASSED("result-passed", Messages._CaseResult_Status_Passed(), true),
+        PASSED("jp-pill jenkins-!-success-color", Messages._CaseResult_Status_Passed(), true),
         /**
          * This test was skipped due to configuration or the
          * failure or skipping of a method that it depends on.
          */
-        SKIPPED("result-skipped", Messages._CaseResult_Status_Skipped(), false),
+        SKIPPED("jp-pill jenkins-!-skipped-color", Messages._CaseResult_Status_Skipped(), false),
         /**
          * This test failed, just like its previous run.
          */
-        FAILED("result-failed", Messages._CaseResult_Status_Failed(), false),
+        FAILED("jp-pill jenkins-!-error-color", Messages._CaseResult_Status_Failed(), false),
         /**
          * This test has been failing, but now it runs OK.
          */
-        FIXED("result-fixed", Messages._CaseResult_Status_Fixed(), true),
+        FIXED("jp-pill jenkins-!-success-color", Messages._CaseResult_Status_Fixed(), true),
         /**
          * This test has been running OK, but now it failed.
          */
-        REGRESSION("result-regression", Messages._CaseResult_Status_Regression(), false);
+        REGRESSION("jp-pill jenkins-!-error-color", Messages._CaseResult_Status_Regression(), false);
 
         private final String cssClass;
         private final Localizable message;

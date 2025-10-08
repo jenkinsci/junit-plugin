@@ -1,7 +1,7 @@
 <!--
 The MIT License
 
-Copyright (c) 2004-2010, Sun Microsystems, Inc., Kohsuke Kawaguchi, id:cactusman
+Copyright (c) 2025 Jan Faracik
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,10 +23,16 @@ THE SOFTWARE.
 -->
 
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form" xmlns:t="/lib/hudson/test">
-  <j:if test="${it.totalCount!=0}">
-    <f:section title="${%All Tests}">
-      <t:table items="${it.children}" id="testresult" />
-    </f:section>
-  </j:if>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout">
+    <st:once>
+        <st:adjunct includes="lib.hudson.test.js.confetti" />
+    </st:once>
+
+    <j:if test="${it.failCount eq 0 and it.passCount gt 0 and it.class.simpleName eq 'TestResult'}">
+        <l:notice title="${%allTestsPassing}"
+                  icon="symbol-balloon-outline plugin-ionicons-api">
+            <canvas id="confetti-canvas" />
+            ${%allTestsPassingDescription(it.totalCount)}
+        </l:notice>
+    </j:if>
 </j:jelly>

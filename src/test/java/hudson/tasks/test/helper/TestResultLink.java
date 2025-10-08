@@ -7,7 +7,7 @@ import org.htmlunit.html.HtmlAnchor;
 
 public class TestResultLink extends AbstractTestResultLink<TestResultLink> {
 
-    public static final String TEST_RESULT_STRING = "Test Result";
+    public static final String TEST_RESULT_STRING = "Tests";
     public static final String AGGREGATED_TEST_RESULT_STRING = "Aggregated Test Result";
 
     TestResultLink(HtmlAnchor testResultLink) {

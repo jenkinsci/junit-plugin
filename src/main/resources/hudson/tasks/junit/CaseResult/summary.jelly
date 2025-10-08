@@ -24,40 +24,13 @@ THE SOFTWARE.
 
 <!--  this is loaded on demand in the failed test results summary -->
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:local="local">
-  <d:taglib uri="local">
-    <d:tag name="item">
-      <j:if test="${value!=null and !empty value}">
-        <j:set var="id" value="${attrs.id}-${attrs.name}"/>
-        <j:set var="display" value="${attrs.opened ? '' : 'none'}"/>
-        <j:set var="idisplay" value="${attrs.opened ? 'none' : ''}"/>
-        <st:adjunct includes="lib.hudson.test.js.failureSummary" />
-        <h4>
-          <a id="${id}-showlink" title="Show ${title}" style="display: ${idisplay}">
-            <l:icon src="symbol-add-outline plugin-ionicons-api" class="icon-sm"/><st:nbsp/>${title}
-          </a>
-          <a id="${id}-hidelink" title="Hide ${title}" style="display: ${display}">
-            <l:icon src="symbol-remove-outline plugin-ionicons-api" class="icon-sm"/><st:nbsp/>${title}
-          </a>
-        </h4>
-        <pre id="${id}" style="display: ${display}">
-          <st:out value="${value}"/>
-        </pre>
-      </j:if>
-    </d:tag>
-  </d:taglib>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler">
   <st:contentType value="text/plain;charset=UTF-8"/>
 
   <j:new var="h" className="hudson.Functions" />
   ${h.initPageVariables(context)}
 
-  <j:set var="id" value="${h.generateId()}"/>
-
-  <local:item id="${id}" name="error" title="${%Error Details}" value="${it.errorDetails}" opened="true"/>
-  <j:forEach var="p" items="${it.properties}">
-    <local:item id="${id}" name="${p.key}" title="${p.key}" value="${p.value}"/>
-  </j:forEach>
-  <local:item id="${id}" name="stacktrace" title="${%Stack Trace}" value="${it.errorStackTrace}"/>
-  <local:item id="${id}" name="stdout" title="${%Standard Output}" value="${it.stdout}"/>
-  <local:item id="${id}" name="stderr" title="${%Standard Error}" value="${it.stderr}"/>
+  <div class="jp-code-list jp-code-list--inline">
+    <st:include page="test-output.jelly" />
+  </div>
 </j:jelly>

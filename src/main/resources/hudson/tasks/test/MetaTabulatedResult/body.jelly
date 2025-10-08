@@ -24,55 +24,27 @@ THE SOFTWARE.
 -->
 
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:t="/lib/hudson/test">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:t="/lib/hudson/test" xmlns:f="/lib/form">
   <j:if test="${it.failCount!=0}">
-    <h2>${%All Failed Tests}</h2>
-    <table class="jenkins-table sortable" id="failedtestresult">
-      <thead>
-        <tr>
-          <th>${%Test Name}</th>
-          <th style="width:4em">${%Duration}</th>
-          <th style="width:3em">${%Age}</th>
-          <j:forEach var="tableheader" items="${it.testActions}">
-            <st:include it="${tableheader}" page="casetableheader.jelly" optional="true"/>
-          </j:forEach>
-        </tr>
-      </thead>
-      <j:forEach var="f" items="${it.failedTests}" varStatus="i">
-        <tr>
-          <td class="pane no-wrap"><t:failed-test result="${f}" url="${f.getRelativePathFrom(it)}"/></td>
-          <td class="pane no-wrap" style="text-align:right;" data="${f.duration}">
-            ${f.durationString}
-          </td>
-          <td class="pane" style="text-align:right;">
-            <a href="${rootURL}/${f.failedSinceRun.url}">${f.age}</a>
-          </td>
-          <j:forEach var="tablerow" items="${f.testActions}">
-            <st:include it="${tablerow}" page="tablerow.jelly" optional="true"/>
-          </j:forEach>
-        </tr>
-      </j:forEach>
-    </table>
+    <f:section title="${%All Failed Tests}">
+      <t:table items="${it.failedTests}" id="failedtestresult" />
+    </f:section>
   </j:if>
 
   <j:if test="${it.totalCount!=0}">
-    <h2>${%All Tests}</h2>
+    <f:section title="${%All Tests}">
     <table class="jenkins-table sortable" id="testresult">
       <thead>
         <tr>
           <th>${it.childTitle}</th>
-          <th style="width:5em; text-align:right">${%Duration}</th>
-          <th style="width:5em; text-align:right">${%Fail}</th>
-          <th style="width:3em; text-align:right; white-space:nowrap;">(${%diff})</th>
-          <th style="width:5em; text-align:right">${%Skip}</th>
-          <th style="width:3em; text-align:right; white-space:nowrap;">(${%diff})</th>
-          <th style="width:5em; text-align:right">${%Pass}</th>
-          <th style="width:3em; text-align:right; white-space:nowrap;">(${%diff})</th>
-          <th style="width:5em; text-align:right">${%Total}</th>
-          <th style="width:3em; text-align:right; white-space:nowrap;">(${%diff})</th>
+          <th style="width: 8em;">${%Fail}</th>
+          <th style="width: 8em;">${%Skip}</th>
+          <th style="width: 8em;">${%Pass}</th>
+          <th style="width: 8em;">${%Total}</th>
           <j:forEach var="tableheader" items="${it.testActions}">
             <st:include it="${tableheader}" page="${it.childType}tableheader.jelly" optional="true"/>
           </j:forEach>
+          <th style="width: 8em;">${%Duration}</th>
         </tr>
       </thead>
       <tbody>
@@ -80,38 +52,51 @@ THE SOFTWARE.
         <j:forEach var="p" items="${it.children}">
           <j:set var="prev" value="${prevAll.findCorrespondingResult(p.id)}" />
           <tr>
-            <td class="pane">
+            <td>
               <j:invokeStatic var="encodedSafeName" className="hudson.Util" method="rawEncode">
                 <j:arg value="${p.safeName}" />
               </j:invokeStatic>
-              <a href="${encodedSafeName}/" class="body.jelly"><span style="${prev==null?'font-weight:bold':''}"><st:out value="${p.displayName}" /></span></a>
+              <a href="${encodedSafeName}/" style="font-family: var(--font-family-mono)">
+                <span style="${prev==null?'font-weight:450':''}"><st:out value="${p.displayName}" /></span>
+              </a>
               <j:forEach var="badge" items="${p.testActions}">
                 <st:include it="${badge}" page="badge.jelly" optional="true"/>
               </j:forEach>
             </td>
-            <td class="pane no-wrap" style="text-align:right" data="${p.duration}">${p.durationString}</td>
-            <td class="pane" style="text-align:right">${p.failCount}</td>
-            <td class="pane" style="text-align:right" data="${p.failCount-prev.failCount}">
-              ${h.getDiffString2(p.failCount-prev.failCount)}
+            <td>
+              <span class="${p.failCount gt 0 ? '' : 'jenkins-!-text-color-secondary'}">${p.failCount}</span>
+              <span class="jp-pill jenkins-!-margin-left-1">
+                ${h.getDiffString2(p.failCount-prev.failCount)}
+              </span>
             </td>
-            <td class="pane" style="text-align:right">${p.skipCount}</td>
-            <td class="pane" style="text-align:right" data="${p.skipCount-prev.skipCount}">
-              ${h.getDiffString2(p.skipCount-prev.skipCount)}
+            <td>
+              <span class="${p.skipCount gt 0 ? '' : 'jenkins-!-text-color-secondary'}">${p.skipCount}</span>
+              <span class="jp-pill jenkins-!-margin-left-1">
+                ${h.getDiffString2(p.skipCount-prev.skipCount)}
+              </span>
             </td>
-            <td class="pane" style="text-align:right">${p.passCount}</td>
-            <td class="pane" style="text-align:right">
-              ${h.getDiffString2(p.passCount-prev.passCount)}
+            <td>
+              <span class="${p.passCount gt 0 ? '' : 'jenkins-!-text-color-secondary'}">${p.passCount}</span>
+              <span class="jp-pill jenkins-!-margin-left-1">
+                ${h.getDiffString2(p.passCount-prev.passCount)}
+              </span>
             </td>
-            <td class="pane" style="text-align:right">${p.totalCount}</td>
-            <td class="pane" style="text-align:right" data="${p.totalCount-prev.totalCount}">
-              ${h.getDiffString2(p.totalCount-prev.totalCount)}
+            <td>
+              ${p.totalCount}
+              <span class="jp-pill jenkins-!-margin-left-1">
+                ${h.getDiffString2(p.totalCount-prev.totalCount)}
+              </span>
             </td>
             <j:forEach var="tablerow" items="${p.testActions}">
               <st:include it="${tablerow}" page="tablerow.jelly" optional="true"/>
             </j:forEach>
+            <td class="no-wrap" data="${p.duration}">
+              ${p.durationString}
+            </td>
           </tr>
         </j:forEach>
       </tbody>
     </table>
+    </f:section>
   </j:if>
 </j:jelly>

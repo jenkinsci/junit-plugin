@@ -23,29 +23,81 @@ THE SOFTWARE.
 -->
 
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:test="/lib/test">
-  <l:layout title="${it.run} ${it.displayName}">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:p="/prism" xmlns:t="/lib/hudson" xmlns:test="/lib/hudson/test">
+  <l:layout title="${it.displayName} - ${it.run}">
     <st:include page="sidepanel.jelly" />
+
     <l:main-panel>
-      <h1><st:out value="${it.title}" /></h1>
+      <p:prism configuration="${it.prismConfiguration}" />
+
+      <st:once>
+        <link rel="stylesheet" href="${resURL}/plugin/junit/styles.css" defer="true" />
+        <st:adjunct includes="lib.hudson.test.js.failureSummary" />
+      </st:once>
 
       <j:set var="prev" value="${it.previousResult}" />
 
-      <test:bar />
+      <l:app-bar title="${it.title}" subtitle="${it.totalCount}">
+        <div class="jp-details">
+          <div class="jp-pills">
+            <j:if test="${it.failCount gt 0}">
+              <div class="jp-pill jenkins-!-error-color" tooltip="${it.failCount} failing">
+                <l:icon src="symbol-close-outline plugin-ionicons-api" />
+                ${it.failCount}
+              </div>
+            </j:if>
+            <j:if test="${it.skipCount gt 0}">
+              <div class="jp-pill jenkins-!-skipped-color" tooltip="${it.skipCount} skipped">
+                <l:icon src="symbol-play-skip-forward-outline plugin-ionicons-api" />
+                ${it.skipCount}
+              </div>
+            </j:if>
+            <j:if test="${it.passCount gt 0}">
+              <div class="jp-pill jenkins-!-success-color" tooltip="${it.passCount} passing">
+                <l:icon src="symbol-checkmark-outline plugin-ionicons-api" />
+                ${it.passCount}
+              </div>
+            </j:if>
+          </div>
 
-      <div style="text-align:right;">
-        <a href="history">
-          ${%took(it.durationString)}
-        </a>
-      </div>
+          <j:if test="${it.totalCount eq prev.totalCount}">
+            <div class="jp-pills">
+              <j:if test="${it.passCount gt prev.passCount}">
+                <a href="history"
+                   class="jp-pill jenkins-!-success-color"
+                   tooltip="${it.passCount - prev.passCount} more passing than ${prev.run.displayName}">
+                  <l:icon src="symbol-trending-up-outline plugin-ionicons-api" />
+                  ${it.passCount - prev.passCount}
+                </a>
+              </j:if>
 
-      <t:editableDescription permission="${it.run.UPDATE}"/>
+              <j:if test="${it.failCount gt prev.failCount}">
+                <a href="history"
+                   class="jp-pill jenkins-!-error-color"
+                   tooltip="${it.failCount - prev.failCount} more failing than ${prev.run.displayName}">
+                  <l:icon src="symbol-trending-down-outline plugin-ionicons-api" />
+                  ${it.failCount - prev.failCount}
+                </a>
+              </j:if>
+            </div>
+          </j:if>
 
-      <table style="margin-top: 1em; margin-left:0em;">
-	  <j:forEach var="action" items="${it.testActions}">
-          <st:include page="summary.jelly" from="${action}" optional="true" it="${action}" />
-	  </j:forEach>
-      </table>
+          <div class="jp-pill jp-pill--tertiary" aria-label="${%took(it.durationString)}">
+            <l:icon src="symbol-timer-outline plugin-ionicons-api" />
+            ${%took(it.durationString)}
+          </div>
+
+          <test:edit-description-button permission="${it.run.UPDATE}" />
+        </div>
+      </l:app-bar>
+
+      <t:editableDescription permission="${it.run.UPDATE}" hideButton="true" />
+
+      <test:success-summary />
+
+      <j:forEach var="action" items="${it.testActions}">
+        <st:include page="summary.jelly" from="${action}" optional="true" it="${action}" />
+      </j:forEach>
 
       <st:include page="body.jelly" />
     </l:main-panel>
