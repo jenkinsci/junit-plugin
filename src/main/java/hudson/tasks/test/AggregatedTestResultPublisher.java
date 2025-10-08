@@ -40,7 +40,6 @@ import hudson.model.ItemGroup;
 import hudson.model.Job;
 import hudson.model.Result;
 import hudson.model.Run;
-import hudson.model.TaskListener;
 import hudson.model.listeners.RunListener;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.BuildStepMonitor;
@@ -53,6 +52,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
 import org.kohsuke.accmod.Restricted;
@@ -93,7 +94,7 @@ public class AggregatedTestResultPublisher extends Recorder {
     public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
             throws InterruptedException, IOException {
         // add a TestResult just so that it can show up later.
-        build.addAction(new TestResultAction(jobs, includeFailedBuilds, build));
+        build.addAction(new TestResultAction(jobs, includeFailedBuilds));
         return true;
     }
 
@@ -126,13 +127,13 @@ public class AggregatedTestResultPublisher extends Recorder {
         private final boolean includeFailedBuilds;
 
         /**
-         * The last time the fields of this object is computed from the rest.
+         * The reference of the lastChangedReference when we last recomputed the aggregation. if this is != lastChangedReference then we need to recomupte the results.
          */
-        private transient long lastUpdated = 0;
+        private transient Object lastRecomputedReference = null;
         /**
-         * When was the last time any build completed?
+         * Unique Object set whenever a build completes.
          */
-        private static long lastChanged = 0;
+        private static volatile Object lastChangedReference = new Object();
 
         private transient int failCount;
         private transient int totalCount;
@@ -144,22 +145,16 @@ public class AggregatedTestResultPublisher extends Recorder {
 
         private transient List<AbstractProject> noFingerprints;
 
-        @SuppressWarnings("deprecation") // calls getProject in constructor, so needs owner immediately
+        /**
+         * @deprecated use {@link #TestResultAction(String, boolean)}
+         */
+        @Deprecated(forRemoval = true)
         public TestResultAction(String jobs, boolean includeFailedBuilds, AbstractBuild<?, ?> owner) {
-            super(owner);
-            this.includeFailedBuilds = includeFailedBuilds;
+            this(jobs, includeFailedBuilds);
+        }
 
-            if (jobs == null) {
-                // resolve null as the transitive downstream jobs
-                StringBuilder buf = new StringBuilder();
-                for (AbstractProject p : getProject().getTransitiveDownstreamProjects()) {
-                    if (buf.length() > 0) {
-                        buf.append(',');
-                    }
-                    buf.append(p.getFullName());
-                }
-                jobs = buf.toString();
-            }
+        public TestResultAction(String jobs, boolean includeFailedBuilds) {
+            this.includeFailedBuilds = includeFailedBuilds;
             this.jobs = jobs;
         }
 
@@ -167,20 +162,22 @@ public class AggregatedTestResultPublisher extends Recorder {
          * Gets the jobs to be monitored.
          */
         public Collection<AbstractProject> getJobs() {
+            if (jobs == null) {
+                Set<AbstractProject> projects = getProject().getTransitiveDownstreamProjects();
+                return projects.stream().filter(p -> p.hasPermission(Item.READ)).collect(Collectors.toSet());
+            }
             List<AbstractProject> r = new ArrayList<>();
-            if (jobs != null) {
-                for (String job : Util.tokenize(jobs, ",")) {
-                    try {
-                        AbstractProject j = Jenkins.get().getItemByFullName(job.trim(), AbstractProject.class);
-                        if (j != null) {
-                            r.add(j);
-                        }
-                    } catch (RuntimeException x) {
-                        if (x.getClass().getSimpleName().startsWith("AccessDeniedException")) {
-                            // just skip it
-                        } else {
-                            throw x;
-                        }
+            for (String job : Util.tokenize(jobs, ",")) {
+                try {
+                    AbstractProject j = Jenkins.get().getItemByFullName(job.trim(), AbstractProject.class);
+                    if (j != null) {
+                        r.add(j);
+                    }
+                } catch (RuntimeException x) {
+                    if (x.getClass().getSimpleName().startsWith("AccessDeniedException")) {
+                        // just skip it
+                    } else {
+                        throw x;
                     }
                 }
             }
@@ -271,10 +268,10 @@ public class AggregatedTestResultPublisher extends Recorder {
                 justification = "False positive. Short-circuited")
         private synchronized void upToDateCheck() {
             // up to date check
-            if (lastUpdated > lastChanged) {
+            if (lastRecomputedReference == lastChangedReference) {
                 return;
             }
-            lastUpdated = lastChanged + 1;
+            lastRecomputedReference = lastChangedReference;
 
             int failCount = 0;
             int totalCount = 0;
@@ -350,9 +347,10 @@ public class AggregatedTestResultPublisher extends Recorder {
 
         @Extension
         public static class RunListenerImpl extends RunListener<Run> {
+            @SuppressFBWarnings(value = "ST_WRITE_TO_STATIC_FROM_INSTANCE_METHOD", justification = "intended by design")
             @Override
-            public void onCompleted(Run run, TaskListener listener) {
-                lastChanged = System.currentTimeMillis();
+            public void onFinalized(Run run) {
+                lastChangedReference = new Object();
             }
         }
     }
