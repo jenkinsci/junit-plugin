@@ -62,21 +62,40 @@ THE SOFTWARE.
                     <j:set var="url" value="${attrs.baseUrl}${f.getRelativePathFrom(attrs.relativeParent ?: it)}" />
                     <j:set var="id" value="${h.htmlAttributeEscape(url)}" />
 
-                    <a id="test-${id}-showlink" class="jp-table-row" href="${url}">
-                        <l:icon src="${f.status == 'PASSED' ? 'symbol-status-blue' : 'symbol-status-red'}" />
+                    <j:choose>
+                        <j:when test="${f.status == 'SKIPPED'}">
+                            <div class="jp-table-row">
+                                <l:icon src="symbol-status-skipped plugin-junit" />
 
-                        ${f.name}
+                                ${f.name}
 
-                        <j:if test="${it.class.simpleName eq 'TestResult'}">
-                            <span class="jenkins-!-text-color-secondary jenkins-!-margin-left-2" style="font-family: var(--font-family-mono)">
-                                <st:out value="${f.className}" />
-                            </span>
-                        </j:if>
+                                <j:if test="${it.class.simpleName eq 'TestResult'}">
+                                    <span class="jenkins-!-text-color-secondary jenkins-!-margin-left-2" style="font-family: var(--font-family-mono)">
+                                        <st:out value="${f.className}" />
+                                    </span>
+                                </j:if>
 
-                        <t:condition-tag test="${f}" clazz="jenkins-!-margin-left-2 jenkins-mobile-hide" />
+                                <t:condition-tag test="${f}" clazz="jenkins-!-margin-left-2 jenkins-mobile-hide" />
+                            </div>
+                        </j:when>
+                        <j:otherwise>
+                            <a id="test-${id}-showlink" class="jp-table-row" href="${url}">
+                                <l:icon src="${f.status == 'PASSED' ? 'symbol-status-blue' : 'symbol-status-red'}" />
 
-                        <l:icon src="symbol-chevron-forward-outline plugin-ionicons-api" class="jenkins-!-margin-left-2" />
-                    </a>
+                                ${f.name}
+
+                                <j:if test="${it.class.simpleName eq 'TestResult'}">
+                                    <span class="jenkins-!-text-color-secondary jenkins-!-margin-left-2" style="font-family: var(--font-family-mono)">
+                                        <st:out value="${f.className}" />
+                                    </span>
+                                </j:if>
+
+                                <t:condition-tag test="${f}" clazz="jenkins-!-margin-left-2 jenkins-mobile-hide" />
+
+                                <l:icon src="symbol-chevron-forward-outline plugin-ionicons-api" class="jenkins-!-margin-left-2" />
+                            </a>
+                        </j:otherwise>
+                    </j:choose>
 
                     <j:forEach var="badge" items="${f.testActions}">
                         <st:include it="${badge}" page="badge.jelly" optional="true" />

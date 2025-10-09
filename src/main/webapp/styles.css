@@ -108,6 +108,10 @@ a.jp-pill, button.jp-pill {
 }
 
 /* Custom table row */
+a.jp-table-row {
+  cursor: pointer;
+}
+
 .jp-table-row {
   display: flex;
   align-items: center;
@@ -130,21 +134,20 @@ a.jp-pill, button.jp-pill {
   background: none;
   outline: none;
   border: none;
-  cursor: pointer;
   border-radius: inherit;
   transition: background var(--standard-transition);
-
-  svg:first-of-type {
-    width: 1.25rem;
-    height: 1.25rem;
-    margin-right: 1rem;
-  }
 
   svg:last-of-type {
     width: 1rem;
     height: 1rem;
     color: var(--text-color-secondary);
     transition: rotate var(--standard-transition);
+  }
+
+  svg:first-of-type {
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-right: 1rem;
   }
 
   @media (width <= 800px) {
