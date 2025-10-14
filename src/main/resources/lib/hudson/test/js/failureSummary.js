@@ -33,10 +33,8 @@ function initializeShowHideLinks() {
                 nextRow.dataset.type = "foldout-row";
                 table.insertBefore(nextRow, tableRow.nextSibling);
 
-                // Clear the query parameters
-                const cleanUrl = new URL(document.URL);
-                cleanUrl.search = "";
-                showSummary(td, cleanUrl + id.replace(PREFIX, '') + "summary");
+                const summaryUrl = new URL(`${id.replace(PREFIX, '')}summary`, document.URL);
+                showSummary(td, summaryUrl);
             } else {
                 nextRow.remove();
             }
