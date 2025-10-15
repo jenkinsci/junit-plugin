@@ -34,10 +34,10 @@ THE SOFTWARE.
       <div class="jenkins-app-bar">
         <div class="jenkins-app-bar__content">
           <h1>
-            <span class="jenkins-!-margin-right-3">
+            <span class="jenkins-!-margin-right-2">
               ${it.displayName}
             </span>
-
+            <st:nbsp />
             <span class="jenkins-!-text-color-secondary" style="font-family: var(--font-family-mono)">
               ${it.className}
             </span>
