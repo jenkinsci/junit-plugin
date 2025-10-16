@@ -52,7 +52,7 @@ THE SOFTWARE.
       </div>
       <div class="jp-details">
         <div class="${it.status.cssClass}">
-          <l:icon src="${it.status == 'PASSED' ? 'symbol-checkmark-outline plugin-ionicons-api' : 'symbol-close-outline plugin-ionicons-api'}" />
+          <l:icon src="${it.iconFileName}" />
           ${it.status.message}
         </div>
 

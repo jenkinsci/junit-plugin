@@ -49,6 +49,7 @@ import org.dom4j.Element;
 import org.jvnet.localizer.Localizable;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.Beta;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.export.Exported;
 
@@ -1094,4 +1095,13 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     /*package*/ static final Comparator<CaseResult> BY_AGE = Comparator.comparingInt(CaseResult::getAge);
 
     private static final long serialVersionUID = 1L;
+
+    @Restricted(NoExternalUse.class)
+    public String getIconFileName() {
+        return switch (getStatus()) {
+            case PASSED -> "symbol-checkmark-outline plugin-ionicons-api";
+            case SKIPPED -> "symbol-play-skip-forward-outline plugin-ionicons-api";
+            default -> "symbol-close-outline plugin-ionicons-api";
+        };
+    }
 }
