@@ -102,7 +102,12 @@ THE SOFTWARE.
                     </j:forEach>
                 </td>
                 <td class="jenkins-mobile-hide">
-                    <a href="${rootURL}/${f.failedSinceRun.url}">${f.age}</a>
+                    <j:choose>
+                        <j:when test="${f.age == 0 or f.skipped}">0</j:when>
+                        <j:otherwise>
+                            <a href="${rootURL}/${f.failedSinceRun.url}">${f.age}</a>
+                        </j:otherwise>
+                    </j:choose>
                 </td>
                 <td class="no-wrap jenkins-mobile-hide" data="${f.duration}">
                     ${f.durationString}
