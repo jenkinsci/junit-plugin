@@ -51,7 +51,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import jenkins.management.Badge;
 import jenkins.model.RunAction2;
+import jenkins.model.Tab;
 import jenkins.model.lazy.LazyBuildMixIn;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
@@ -81,7 +83,7 @@ import org.kohsuke.stapler.export.ExportedBean;
  * @author Kohsuke Kawaguchi
  */
 @ExportedBean
-public abstract class AbstractTestResultAction<T extends AbstractTestResultAction>
+public abstract class AbstractTestResultAction<T extends AbstractTestResultAction> extends Tab
         implements HealthReportingAction, RunAction2 {
 
     private static final Logger LOGGER = Logger.getLogger(AbstractTestResultAction.class.getName());
@@ -99,7 +101,9 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
     private Map<String, String> descriptions = new ConcurrentHashMap<>();
 
     /** @since 1.545 */
-    protected AbstractTestResultAction() {}
+    protected AbstractTestResultAction() {
+        super(null);
+    }
 
     /**
      * @deprecated Use the default constructor and just call {@link Run#addAction} to associate the build with the action.
@@ -107,6 +111,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
      */
     @Deprecated
     protected AbstractTestResultAction(Run owner) {
+        super(owner);
         onAttached(owner);
     }
 
@@ -117,12 +122,14 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
 
     @Override
     public void onAttached(Run<?, ?> r) {
+        this.object = r;
         this.run = r;
         this.owner = r instanceof AbstractBuild ? (AbstractBuild<?, ?>) r : null;
     }
 
     @Override
     public void onLoad(Run<?, ?> r) {
+        this.object = r;
         this.run = r;
         this.owner = r instanceof AbstractBuild ? (AbstractBuild<?, ?>) r : null;
     }
@@ -178,6 +185,15 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
     @Override
     public String getIconFileName() {
         return "symbol-flask-outline plugin-ionicons-api";
+    }
+
+    @Override
+    public Badge getBadge() {
+        if (getFailCount() == 0) {
+            return null;
+        }
+
+        return new Badge(String.valueOf(getFailCount()), getFailCount() + " test failure", Badge.Severity.DANGER);
     }
 
     @Override

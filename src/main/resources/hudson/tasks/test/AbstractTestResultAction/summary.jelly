@@ -25,48 +25,49 @@ THE SOFTWARE.
 
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:test="/lib/hudson/test" xmlns:f="/lib/form" xmlns:i="jelly:fmt">
+  <l:userExperimentalFlag var="newBuildPage" flagClassName="jenkins.model.experimentalflags.NewBuildPageUserExperimentalFlag" />
 
-  <!-- summary -->
-  <t:summary icon="symbol-flask-outline plugin-ionicons-api">
-    <a href="${it.urlName}/">${it.displayName}</a>
-    <st:nbsp/>
-    <test:test-result/>
+  <j:if test="${!newBuildPage}">
+    <t:summary icon="symbol-flask-outline plugin-ionicons-api">
+      <a href="${it.urlName}/">${it.displayName}</a>
+      <st:nbsp/>
+      <test:test-result/>
 
-    <j:set var="failedTests" value="${it.failedTests}" />
-    <j:if test="${failedTests != null}">
-      <j:set var="failedIterator" value="${failedTests.iterator()}" />
-      <j:set var="displayedCount" value="${1}" />
-      <ul style="list-style-type: none; margin: 0;">
-        <j:while test="${failedIterator.hasNext()}">
-          <j:set var="testObject" value="${failedIterator.next()}" />
-          <!-- CaseResult -->
-          <j:set var="elementClass" value="hidden" />
-          <j:set var="elementStyle" value="display:none" />
+      <j:set var="failedTests" value="${it.failedTests}" />
+      <j:if test="${failedTests != null}">
+        <j:set var="failedIterator" value="${failedTests.iterator()}" />
+        <j:set var="displayedCount" value="${1}" />
+        <ul style="list-style-type: none; margin: 0;">
+          <j:while test="${failedIterator.hasNext()}">
+            <j:set var="testObject" value="${failedIterator.next()}" />
+            <!-- CaseResult -->
+            <j:set var="elementClass" value="hidden" />
+            <j:set var="elementStyle" value="display:none" />
 
-          <!-- Show max 10 failures from this build -->
-          <j:if test="${((testObject.age == 1) &amp;&amp; (displayedCount &lt;= 10))}">
-            <j:set var="displayedCount" value="${displayedCount + 1}" />
-            <j:set var="elementClass" value="shown" />
-            <j:set var="elementStyle" value="" />
-          </j:if>
+            <!-- Show max 10 failures from this build -->
+            <j:if test="${((testObject.age == 1) &amp;&amp; (displayedCount &lt;= 10))}">
+              <j:set var="displayedCount" value="${displayedCount + 1}" />
+              <j:set var="elementClass" value="shown" />
+              <j:set var="elementStyle" value="" />
+            </j:if>
 
-          <li class="${elementClass}" style="${elementStyle}">
-            <!-- child test results are referenced from their parent builds -->
-            <j:set var="build" value="${testObject.run}" />
-            <a href="${it.getTestResultPath(testObject)}">
-              <st:out value="${testObject.fullDisplayName}" />
-            </a>
-          </li>
-        </j:while>
-      </ul>
+            <li class="${elementClass}" style="${elementStyle}">
+              <!-- child test results are referenced from their parent builds -->
+              <j:set var="build" value="${testObject.run}" />
+              <a href="${it.getTestResultPath(testObject)}">
+                <st:out value="${testObject.fullDisplayName}" />
+              </a>
+            </li>
+          </j:while>
+        </ul>
 
-      <!-- Show failures link -->
-      <j:if test="${displayedCount &lt; failedTests.size() }">
-        <st:adjunct includes="hudson.tasks.test.AbstractTestResultAction.show-failures" />
-        <a id="showLink" name="editFailuresLink"
-           href="#showFailuresLink">${%Show all failed tests} ${">>>"}</a>
+        <!-- Show failures link -->
+        <j:if test="${displayedCount &lt; failedTests.size() }">
+          <st:adjunct includes="hudson.tasks.test.AbstractTestResultAction.show-failures" />
+          <a id="showLink" name="editFailuresLink"
+             href="#showFailuresLink">${%Show all failed tests} ${">>>"}</a>
+        </j:if>
       </j:if>
-    </j:if>
-
-  </t:summary>
+    </t:summary>
+  </j:if>
 </j:jelly>
