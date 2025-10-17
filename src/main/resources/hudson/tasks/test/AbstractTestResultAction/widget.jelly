@@ -24,39 +24,43 @@ THE SOFTWARE.
 
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout">
-    <l:card title="${it.displayName}" expandable="${it.urlName}/">
+    <l:card title="${it.displayName}" expandable="${it.urlName}">
+        <j:set var="passCount" value="${it.passedTests.size()}" />
+        <j:set var="skipCount" value="${it.skipCount}" />
+        <j:set var="failCount" value="${it.failCount}" />
+        <j:set var="totalCount" value="${it.totalCount}" />
+        <j:set var="duration" value="${it.result.durationString}" />
+
         <j:if test="${it.failCount gt 0}">
-            <div class="jenkins-card__teaser">
+            <a class="jenkins-card__teaser" href="${it.urlName}" tabindex="-1">
                 <l:icon src="symbol-close-circle-outline plugin-ionicons-api"
                         class="jenkins-!-error-color" />
-
-                <div>Some failures</div>
+                <div>${failCount} failing</div>
 
                 <div>
-                    ${it.failCount} failed, ${it.skipCount} skipped, ${it.totalCount} ran
+                    ${passCount} passing, ${skipCount} skipped, ${totalCount} ran
                 </div>
 
                 <div>
-                    Took ${it.durationString}
+                    ${%took(duration)}
                 </div>
-            </div>
+            </a>
         </j:if>
 
         <j:if test="${it.failCount eq 0 and it.totalCount gt 0}">
-            <div class="jenkins-card__teaser">
+            <a class="jenkins-card__teaser" href="${it.urlName}" tabindex="-1">
                 <l:icon src="symbol-checkmark-done-outline plugin-ionicons-api"
                         class="jenkins-!-success-color" />
-
                 <div>All tests are passing!</div>
 
                 <div>
-                    ${it.skipCount} skipped, ${it.totalCount} passed
+                    ${skipCount} skipped, ${totalCount} passed
                 </div>
 
                 <div>
-                    Took ${it.durationString}
+                    ${%took(duration)}
                 </div>
-            </div>
+            </a>
         </j:if>
     </l:card>
 </j:jelly>
