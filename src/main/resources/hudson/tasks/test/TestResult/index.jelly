@@ -40,7 +40,7 @@ THE SOFTWARE.
     <j:set var="prev" value="${it.previousResult}" />
 
     <l:app-bar title="${it.title}" subtitle="${it.totalCount}">
-      <div class="jp-details">
+      <div class="jenkins-details">
         <div class="jp-pills">
           <j:if test="${it.failCount gt 0}">
             <div class="jp-pill jenkins-!-error-color" tooltip="${it.failCount} failing">
@@ -83,16 +83,16 @@ THE SOFTWARE.
             </j:if>
           </div>
         </j:if>
-      </div>
 
-      <div class="jenkins-details__item" aria-label="${%took(it.durationString)}">
-        <div class="jenkins-details__item__icon">
-          <l:icon src="symbol-timer-outline plugin-ionicons-api" />
+        <div class="jenkins-details__item" aria-label="${%took(it.durationString)}">
+          <div class="jenkins-details__item__icon">
+            <l:icon src="symbol-timer-outline plugin-ionicons-api" />
+          </div>
+          ${%took(it.durationString)}
         </div>
-        ${%took(it.durationString)}
-      </div>
 
-      <t:editDescriptionButton permission="${it.run.UPDATE}" compact="true" />
+        <t:editDescriptionButton permission="${it.run.UPDATE}" compact="true" />
+      </div>
     </l:app-bar>
 
     <t:editableDescription permission="${it.run.UPDATE}" hideButton="true" />

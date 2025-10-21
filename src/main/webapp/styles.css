@@ -12,11 +12,6 @@
   }
 }
 
-.jenkins-app-bar .jp-details {
-  margin-top: 0;
-  margin-bottom: 0;
-}
-
 .jp-pills {
   display: flex;
   gap: var(--jenkins-border-width);
