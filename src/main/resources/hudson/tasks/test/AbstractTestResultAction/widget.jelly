@@ -35,7 +35,7 @@ THE SOFTWARE.
             <a class="jenkins-card__teaser" href="${it.urlName}" tabindex="-1">
                 <l:icon src="symbol-close-circle-outline plugin-ionicons-api"
                         class="jenkins-!-error-color" />
-                <div>${failCount} failing test</div>
+                <div>${failCount} failing ${failCount eq 1 ? 'test' : 'tests'}</div>
 
                 <div>
                     ${passCount} passing, ${skipCount} skipped, ${totalCount} ran
