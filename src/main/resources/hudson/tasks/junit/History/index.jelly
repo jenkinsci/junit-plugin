@@ -24,8 +24,12 @@ THE SOFTWARE.
 
 <!-- Displays the chart that show how long builds are taking -->
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:bs="/bootstrap5" xmlns:c="/charts" xmlns:f="/lib/form">
-  <bs:layout title="${%title(it.testObject.displayName)}">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:bs="/bootstrap5" xmlns:c="/charts">
+  <j:set var="history" value="${it}" />
+  <j:set var="it" value="${history.testObject.parentAction}" />
+
+  <l:run-subpage>
+    <j:set var="it" value="${history}" />
     <j:set var="count" value="${it.asInt(request2.getParameter('count'),100)}"/>
     <j:set var="start" value="${it.asInt(request2.getParameter('start'),0)}"/>
     <j:set var="end" value="${it.asInt(request2.getParameter('end'),start+count-1)}"/>
@@ -40,31 +44,30 @@ THE SOFTWARE.
     <st:once>
       <c:chart-setup id="test-history"/>
       <script id="history-data"
-        data-start="${start}"
-        data-end="${end}"
-        data-count="${count}"
-        data-interval="${interval}"
-        data-testObjectUrl="${it.testObject.url}"
-        type="application/json"
+              data-start="${start}"
+              data-end="${end}"
+              data-count="${count}"
+              data-interval="${interval}"
+              data-testObjectUrl="${it.testObject.url}"
+              type="application/json"
       >${historySummary.trendChartJson}</script>
 
     </st:once>
 
-    <st:include from="${it.testObject}" it="${it.testObject}" page="sidepanel.jelly"/>
-    <l:main-panel>
+    <l:app-bar title="${%History}">
       <div
-        class="jenkins-!-margin-bottom-2 jenkins-!-margin-top-0"
-        style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; height: auto; flex-wrap: wrap;"
-        >
+              class="jenkins-!-margin-bottom-2 jenkins-!-margin-top-0"
+              style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; height: auto; flex-wrap: wrap;"
+      >
         <j:if test="${it.testObject.run.parent.builds.size() > end}">
           <a href="${app.rootUrl}${it.testObject.url}/history?start=${end+1}&amp;count=${count}&amp;interval=${interval}"
-              class="jenkins-!-margin-right-2 jenkins-!-margin-bottom-1 jenkins-!-margin-top-1" style="height: fit-content">${%Older}
+             class="jenkins-!-margin-right-2 jenkins-!-margin-bottom-1 jenkins-!-margin-top-1" style="height: fit-content">${%Older}
           </a>
         </j:if>
 
         <j:if test="${start > 0}">
           <a href="${app.rootUrl}${it.testObject.url}/history${(start-count)>0?'?start='+(start-count)+'&amp;':'?'}count=${count}&amp;interval=${interval}"
-              class="jenkins-!-margin-right-2 jenkins-!-margin-bottom-1 jenkins-!-margin-top-1" style="height: fit-content">${%Newer}
+             class="jenkins-!-margin-right-2 jenkins-!-margin-bottom-1 jenkins-!-margin-top-1" style="height: fit-content">${%Newer}
           </a>
         </j:if>
         <div style="flex-grow: 1"/>
@@ -94,14 +97,16 @@ THE SOFTWARE.
           </select>
         </div>
       </div>
+    </l:app-bar>
+
       <bs:card title="">
         <details open="true">
           <summary style="width: fit-content">
             <div class="card-title">History</div>
           </summary>
-            <div class="jenkins-!-margin-bottom-2" style="overflow: visible;">
-              <div id="test-trend-chart" class="graph-cursor-pointer card-chart-carousel-2"/>
-            </div>
+          <div class="jenkins-!-margin-bottom-2" style="overflow: visible;">
+            <div id="test-trend-chart" class="graph-cursor-pointer card-chart-carousel-2"/>
+          </div>
         </details>
       </bs:card>
       <br/>
@@ -110,9 +115,9 @@ THE SOFTWARE.
           <summary style="width: fit-content">
             <div class="card-title">Distribution</div>
           </summary>
-            <div class="jenkins-!-margin-bottom-2" style="overflow: visible;">
-              <div id="test-distribution-chart" class="graph-cursor-pointer card-chart-carousel"/>
-            </div>
+          <div class="jenkins-!-margin-bottom-2" style="overflow: visible;">
+            <div id="test-distribution-chart" class="graph-cursor-pointer card-chart-carousel"/>
+          </div>
         </details>
       </bs:card>
 
@@ -121,13 +126,13 @@ THE SOFTWARE.
         <j:if test="${it.testObject.run.parent.builds.size() > end}">
           <a href="${app.rootUrl}${it.testObject.url}/history?start=${end+1}&amp;count=${count}&amp;interval=${interval}"
              class="jenkins-!-margin-right-2">
-             ${%Older}
+            ${%Older}
           </a>
         </j:if>
 
         <j:if test="${start > 0}">
           <a href="${app.rootUrl}${it.testObject.url}/history${(start-count)>0?'?start='+(start-count)+'&amp;':'?'}count=${count}&amp;interval=${interval}">
-             ${%Newer}
+            ${%Newer}
           </a>
         </j:if>
 
@@ -169,16 +174,15 @@ THE SOFTWARE.
         <j:if test="${it.testObject.run.parent.builds.size() > end}">
           <a href="${app.rootUrl}${it.testObject.url}/history?start=${end+1}&amp;count=${count}&amp;interval=${interval}"
              class="jenkins-!-margin-right-2">
-             ${%Older}
+            ${%Older}
           </a>
         </j:if>
 
         <j:if test="${start > 0}">
           <a href="${app.rootUrl}${it.testObject.url}/history${(start-count)>0?'?start='+(start-count)+'&amp;':'?'}count=${count}&amp;interval=${interval}">
-             ${%Newer}
+            ${%Newer}
           </a>
         </j:if>
       </div>
-    </l:main-panel>
-  </bs:layout>
+  </l:run-subpage>
 </j:jelly>
