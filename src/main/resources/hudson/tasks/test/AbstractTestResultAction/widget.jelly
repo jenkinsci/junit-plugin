@@ -25,42 +25,13 @@ THE SOFTWARE.
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:l="/lib/layout">
     <l:card title="${it.displayName}" expandable="${it.urlName}">
-        <j:set var="passCount" value="${it.passedTests.size()}" />
-        <j:set var="skipCount" value="${it.skipCount}" />
-        <j:set var="failCount" value="${it.failCount}" />
-        <j:set var="totalCount" value="${it.totalCount}" />
-        <j:set var="duration" value="${it.result.durationString}" />
+        <j:set var="widget" value="${it.widget}" />
 
-        <j:if test="${it.failCount gt 0}">
-            <a class="jenkins-card__teaser" href="${it.urlName}" tabindex="-1">
-                <l:icon src="symbol-close-circle-outline plugin-ionicons-api"
-                        class="jenkins-!-error-color" />
-                <div>${failCount} failing ${failCount eq 1 ? 'test' : 'tests'}</div>
-
-                <div>
-                    ${passCount} passing, ${skipCount} skipped, ${totalCount} ran
-                </div>
-
-                <div>
-                    ${%took(duration)}
-                </div>
-            </a>
-        </j:if>
-
-        <j:if test="${it.failCount eq 0 and it.totalCount gt 0}">
-            <a class="jenkins-card__teaser" href="${it.urlName}" tabindex="-1">
-                <l:icon src="symbol-checkmark-done-outline plugin-ionicons-api"
-                        class="jenkins-!-success-color" />
-                <div>All tests are passing!</div>
-
-                <div>
-                    ${skipCount} skipped, ${totalCount} passed
-                </div>
-
-                <div>
-                    ${%took(duration)}
-                </div>
-            </a>
-        </j:if>
+        <a class="jenkins-card__teaser" href="${it.urlName}" tabindex="-1">
+            <l:icon src="${widget.symbol}" class="${widget.symbolClass}" />
+            <j:forEach var="line" items="${widget.lines}">
+                <div>${line}</div>
+            </j:forEach>
+        </a>
     </l:card>
 </j:jelly>
