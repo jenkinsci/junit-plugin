@@ -23,91 +23,93 @@ THE SOFTWARE.
 -->
 
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:test="/lib/hudson/test">
-  <l:layout title="${it.displayName} - ${it.run}" type="one-column" xmlns:p="/prism">
-    <l:main-panel>
-      <p:prism configuration="${it.prismConfiguration}" />
-      <link rel="stylesheet" href="${resURL}/plugin/junit/styles.css" defer="true" />
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:test="/lib/hudson/test" xmlns:p="/prism">
+  <j:set var="test" value="${it}" />
+  <j:set var="it" value="${it.parentAction}" />
 
-      <j:set var="st" value="${it.status}" />
+  <l:run-subpage>
+    <j:set var="it" value="${test}" />
+    <p:prism configuration="${it.prismConfiguration}" />
+    <link rel="stylesheet" href="${resURL}/plugin/junit/styles.css" defer="true" />
 
-      <div class="jenkins-app-bar">
-        <div class="jenkins-app-bar__content">
-          <h1>
-            <span class="jenkins-!-margin-right-2">
-              ${it.displayName}
-            </span>
-            <st:nbsp />
-            <span class="jenkins-!-text-color-secondary" style="font-family: var(--font-family-mono)">
-              ${it.className}
-            </span>
-          </h1>
-        </div>
-        <div class="jenkins-app-bar__controls">
-          <a href="history" class="jenkins-button">
-            <l:icon src="symbol-bar-chart-outline plugin-ionicons-api" />
-            ${%History}
-          </a>
-        </div>
+    <j:set var="st" value="${it.status}" />
+
+    <div class="jenkins-app-bar jenkins-app-bar--with-icon">
+      <div class="jenkins-app-bar__content">
+        <l:icon src="${it.iconFileName}" />
+        <h1>
+          <span class="jenkins-!-margin-right-2">
+            ${it.displayName}
+          </span>
+          <st:nbsp />
+          <span class="jenkins-!-text-color-secondary" style="font-family: var(--font-family-mono)">
+            ${it.className}
+          </span>
+        </h1>
       </div>
-      <div class="jp-details">
-        <div class="${it.status.cssClass}">
-          <l:icon src="${it.iconFileName}" />
-          ${it.status.message}
-        </div>
+      <div class="jenkins-app-bar__controls">
+        <div class="jenkins-details">
+          <test:condition-tag test="${it}" />
 
-        <test:condition-tag test="${it}" />
+          <j:if test="${!it.passed}">
+            <a href="${rootURL}/${it.run.url}" class="jenkins-details__item">
+              <div class="jenkins-details__item__icon">
+                <j:choose>
+                  <j:when test="${it.skipped}">
+                    <l:icon src="symbol-play-skip-forward-circle-outline plugin-ionicons-api" />
+                  </j:when>
+                  <j:otherwise>
+                    <l:icon src="symbol-close-circle-outline plugin-ionicons-api" />
+                  </j:otherwise>
+                </j:choose>
+              </div>
 
-        <j:if test="${!it.passed}">
-          <a href="${rootURL}/${it.run.url}" class="jp-pill jp-pill--tertiary">
-            <j:choose>
-              <j:when test="${it.skipped}">
-                <l:icon src="symbol-play-skip-forward-circle-outline plugin-ionicons-api" />
-              </j:when>
-              <j:otherwise>
-                <l:icon src="symbol-close-circle-outline plugin-ionicons-api" />
-              </j:otherwise>
-            </j:choose>
-
-            <j:choose>
-              <j:when test="${it.skipped}">
-                ${%skippedFor(it.age)}
-              </j:when>
-              <j:otherwise>
-                ${%failingFor(it.age)}
-              </j:otherwise>
-            </j:choose>
-            ${%since.before}
-            #${it.failedSince}
-            ${%since.after}
-          </a>
-        </j:if>
-
-        <div class="jenkins-details__item">
-          <div class="jenkins-details__item__icon">
-            <l:icon src="symbol-timer-outline plugin-ionicons-api" />
-          </div>
-          ${%took(it.durationString)}
-
-          <j:if test="${it.suiteResult != null &amp;&amp; it.className != it.suiteResult.name}">
-            (from <st:out value="${it.suiteResult.name}"/>)
+              <j:choose>
+                <j:when test="${it.skipped}">
+                  ${%skippedFor(it.age)}
+                </j:when>
+                <j:otherwise>
+                  ${%failingFor(it.age)}
+                </j:otherwise>
+              </j:choose>
+              ${%since.before}
+              #${it.failedSince}
+              ${%since.after}
+            </a>
           </j:if>
+
+          <div class="jenkins-details__item">
+            <div class="jenkins-details__item__icon">
+              <l:icon src="symbol-timer-outline plugin-ionicons-api" />
+            </div>
+            ${%took(it.durationString)}
+
+            <j:if test="${it.suiteResult != null &amp;&amp; it.className != it.suiteResult.name}">
+              (from <st:out value="${it.suiteResult.name}"/>)
+            </j:if>
+          </div>
+
+          <a tooltip="${%History}"
+             href="history"
+             class="jenkins-button jenkins-details__button">
+            <l:icon src="symbol-bar-chart-outline plugin-ionicons-api" />
+          </a>
+
+          <t:editDescriptionButton permission="${it.run.UPDATE}" compact="true" />
         </div>
-
-        <t:editDescriptionButton permission="${it.run.UPDATE}" compact="true" />
       </div>
+    </div>
 
-      <t:editableDescription permission="${it.run.UPDATE}" hideButton="true" />
+    <t:editableDescription permission="${it.run.UPDATE}" hideButton="true" />
 
-      <table style="margin-top: 1em; margin-left:0em;">
-        <j:forEach var="action" items="${it.testActions}">
-          <st:include page="summary.jelly" from="${action}" optional="true" it="${action}" />
-        </j:forEach>
-      </table>
+    <table>
+      <j:forEach var="action" items="${it.testActions}">
+        <st:include page="summary.jelly" from="${action}" optional="true" it="${action}" />
+      </j:forEach>
+    </table>
 
-      <div class="jp-code-list">
-        <st:include page="test-output.jelly" />
-      </div>
-    </l:main-panel>
-  </l:layout>
+    <div class="jp-code-list">
+      <st:include page="test-output.jelly" />
+    </div>
+  </l:run-subpage>
 </j:jelly>

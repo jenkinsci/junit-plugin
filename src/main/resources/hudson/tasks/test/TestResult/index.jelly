@@ -91,6 +91,12 @@ THE SOFTWARE.
           ${%took(it.durationString)}
         </div>
 
+        <a tooltip="${%History}"
+           href="history"
+           class="jenkins-button jenkins-details__button">
+          <l:icon src="symbol-bar-chart-outline plugin-ionicons-api" />
+        </a>
+
         <t:editDescriptionButton permission="${it.run.UPDATE}" compact="true" />
       </div>
     </l:app-bar>
