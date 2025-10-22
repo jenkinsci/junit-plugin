@@ -29,4 +29,6 @@ public interface JUnitTask {
     String getChecksName();
 
     boolean isSkipOldReports();
+
+    boolean isSortTestResultsByTimestamp();
 }
