@@ -14,7 +14,9 @@ public class Widget {
         boolean isFailed = failCount > 0;
         int totalCount = result.getTotalCount();
 
-        this.symbol = isFailed ? "symbol-close-circle-outline plugin-ionicons-api" : "symbol-checkmark-done-outline plugin-ionicons-api";
+        this.symbol = isFailed
+                ? "symbol-close-circle-outline plugin-ionicons-api"
+                : "symbol-checkmark-done-outline plugin-ionicons-api";
         this.symbolClass = isFailed ? "jenkins-!-error-color" : "jenkins-!-success-color";
 
         List<String> counts = new ArrayList<>();
@@ -23,13 +25,16 @@ public class Widget {
             lines.add(Messages.Widget_Failed(failCount));
             counts.add(Messages.Widget_Passed(result.getPassCount()));
 
-            long regressions = result.getSuites().stream().flatMap(e -> e.getCases().stream()).filter(e -> {
-                var previousResult = e.getPreviousResult();
-                if (previousResult == null) {
-                    return false;
-                }
-                return e.isPassed();
-            }).count();
+            long regressions = result.getSuites().stream()
+                    .flatMap(e -> e.getCases().stream())
+                    .filter(e -> {
+                        var previousResult = e.getPreviousResult();
+                        if (previousResult == null) {
+                            return false;
+                        }
+                        return e.isPassed();
+                    })
+                    .count();
 
             if (regressions > 0) {
                 lines.add(Messages.Widget_Regression(regressions));
