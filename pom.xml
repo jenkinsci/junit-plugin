@@ -128,7 +128,7 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>github-checks</artifactId>
-      <version>602.v264a_83610da_6</version>
+      <version>634.v371dc6d978a_3</version>
       <scope>test</scope>
     </dependency>
     <dependency>
