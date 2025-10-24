@@ -193,7 +193,10 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
             return null;
         }
 
-        return new Badge(String.valueOf(getFailCount()), getFailCount() + " test failure", Badge.Severity.DANGER);
+        return new Badge(
+                String.valueOf(getFailCount()),
+                Messages.AbstractTestResultAction_Badge(getFailCount()),
+                Badge.Severity.DANGER);
     }
 
     @Override
