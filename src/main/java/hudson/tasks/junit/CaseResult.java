@@ -1099,9 +1099,9 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     @Restricted(NoExternalUse.class)
     public String getIconFileName() {
         return switch (getStatus()) {
-            case PASSED -> "symbol-checkmark-outline plugin-ionicons-api";
-            case SKIPPED -> "symbol-play-skip-forward-outline plugin-ionicons-api";
-            default -> "symbol-close-outline plugin-ionicons-api";
+            case PASSED -> "symbol-status-blue";
+            case SKIPPED -> "symbol-status-skipped plugin-junit";
+            default -> "symbol-status-red";
         };
     }
 }

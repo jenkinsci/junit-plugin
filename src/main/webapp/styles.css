@@ -1,22 +1,4 @@
-/* Details and pills */
-.jp-details {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.875rem;
-  margin-top: -0.25rem;
-  flex-wrap: wrap;
-
-  @media (width <= 800px) {
-    margin-block: 0.75rem 1rem;
-  }
-}
-
-.jenkins-app-bar .jp-details {
-  margin-top: 0;
-  margin-bottom: 0;
-}
-
+/* Pills */
 .jp-pills {
   display: flex;
   gap: var(--jenkins-border-width);
