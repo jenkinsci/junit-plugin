@@ -3,8 +3,8 @@
  https://github.com/jenkins-infra/pipeline-library/
 */
 buildPlugin(
-  useContainerAgent: true,
+  useContainerAgent: true, // use 'docker' if you have containerized tests
   configurations: [
-    [platform: 'linux', jdk: 21], // use 'docker' if you have containerized tests
-    [platform: 'windows', jdk: 17],
+    [platform: 'linux', jdk: 25],
+    [platform: 'windows', jdk: 21],
 ])
