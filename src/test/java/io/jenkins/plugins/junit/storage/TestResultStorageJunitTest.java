@@ -126,8 +126,7 @@ class TestResultStorageJunitTest {
         // ((Channel) remote.getChannel()).addListener(new
         // LoggingChannelListener(Logger.getLogger(TestResultStorageTest.class.getName()), Level.INFO));
         WorkflowJob p = r.createProject(WorkflowJob.class, "p");
-        p.setDefinition(new CpsFlowDefinition(
-                """
+        p.setDefinition(new CpsFlowDefinition("""
                         node('remote') {
                           writeFile file: 'x.xml', text: '''<testsuite name='sweet' time='200.0'>
                         <testcase classname='Klazz' name='test1' time='198.0'><error message='failure'/></testcase>
@@ -141,8 +140,7 @@ class TestResultStorageJunitTest {
                         </testsuite>'''
                           s = junit testResults: 'x.xml', skipPublishingChecks: true
                           echo(/next summary: fail=$s.failCount skip=$s.skipCount pass=$s.passCount total=$s.totalCount/)
-                        }""",
-                true));
+                        }""", true));
         WorkflowRun b = p.scheduleBuild2(0).get();
         try (Connection connection = Objects.requireNonNull(
                                 GlobalDatabaseConfiguration.get().getDatabase())
