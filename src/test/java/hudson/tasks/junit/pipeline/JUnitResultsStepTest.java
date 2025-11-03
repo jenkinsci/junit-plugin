@@ -288,8 +288,7 @@ class JUnitResultsStepTest {
         copyToWorkspace(j, TestResultTest.class.getResource("junit-report-2874.xml"), "second-result.xml");
         copyToWorkspace(j, TestResultTest.class.getResource("junit-report-nested-testsuites.xml"), "third-result.xml");
 
-        j.setDefinition(new CpsFlowDefinition(
-                """
+        j.setDefinition(new CpsFlowDefinition("""
                         stage('first') {
                           node {
                             touch 'first-result.xml'
@@ -300,8 +299,7 @@ class JUnitResultsStepTest {
                                      c: { def third = junit(testResults: 'third-result.xml', keepTestNames: true); assert third.totalCount == 3 })
                           }
                         }
-                        """,
-                true));
+                        """, true));
         WorkflowRun r = rule.assertBuildStatus(
                 Result.UNSTABLE, rule.waitForCompletion(j.scheduleBuild2(0).waitForStart()));
         TestResultAction action = r.getAction(TestResultAction.class);
@@ -323,8 +321,7 @@ class JUnitResultsStepTest {
         copyToWorkspace(j, TestResultTest.class.getResource("junit-report-2874.xml"), "second-result.xml");
         copyToWorkspace(j, TestResultTest.class.getResource("junit-report-nested-testsuites.xml"), "third-result.xml");
 
-        j.setDefinition(new CpsFlowDefinition(
-                """
+        j.setDefinition(new CpsFlowDefinition("""
                         stage('outer') {
                           node {
                             touch 'first-result.xml'
@@ -335,8 +332,7 @@ class JUnitResultsStepTest {
                                      c: { stage('d') { def third = junit(testResults: 'third-result.xml', keepTestNames: true); assert third.totalCount == 3 } })
                           }
                         }
-                        """,
-                true));
+                        """, true));
         WorkflowRun r = rule.assertBuildStatus(
                 Result.UNSTABLE, rule.waitForCompletion(j.scheduleBuild2(0).waitForStart()));
         TestResultAction action = r.getAction(TestResultAction.class);
@@ -358,8 +354,7 @@ class JUnitResultsStepTest {
     @Test
     void testTrends() throws Exception {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "testTrends");
-        j.setDefinition(new CpsFlowDefinition(
-                """
+        j.setDefinition(new CpsFlowDefinition("""
                         node {
                           stage('first') {
                             touch 'junit-report-testTrends-first.xml'
@@ -370,8 +365,7 @@ class JUnitResultsStepTest {
                             def second = junit(testResults: "junit-report-testTrends-second.xml")
                           }
                         }
-                        """,
-                true));
+                        """, true));
         FilePath ws = rule.jenkins.getWorkspaceFor(j);
         FilePath firstFile = ws.child("junit-report-testTrends-first.xml");
         FilePath secondFile = ws.child("junit-report-testTrends-second.xml");
@@ -471,8 +465,7 @@ class JUnitResultsStepTest {
     @Test
     void ageResetSameTestSuiteName() throws Exception {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "p");
-        j.setDefinition(new CpsFlowDefinition(
-                """
+        j.setDefinition(new CpsFlowDefinition("""
                         stage('stage 1') {
                           node {
                             touch 'ageReset-1.xml'
@@ -485,8 +478,7 @@ class JUnitResultsStepTest {
                             junit(testResults: '*-2.xml')
                           }
                         }
-                        """,
-                true));
+                        """, true));
         copyToWorkspace(j, JUnitResultsStepTest.class.getResource("ageReset-1.xml"), "ageReset-1.xml");
         copyToWorkspace(j, JUnitResultsStepTest.class.getResource("ageReset-2.xml"), "ageReset-2.xml");
         WorkflowRun r = rule.waitForCompletion(j.scheduleBuild2(0).waitForStart());

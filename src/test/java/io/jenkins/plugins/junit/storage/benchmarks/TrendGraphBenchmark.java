@@ -24,8 +24,7 @@ public class TrendGraphBenchmark {
 
         WorkflowJob lastJob;
 
-        public static final String SIMPLE_TEST_RESULT =
-                """
+        public static final String SIMPLE_TEST_RESULT = """
                         node {
                           writeFile file: 'x.xml', text: '''<testsuite name='sweet' time='200.0'>
                         <testcase classname='Klazz' name='test1' time='198.0'><error message='failure'/></testcase>
