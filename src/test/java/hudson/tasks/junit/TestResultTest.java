@@ -480,16 +480,12 @@ public class TestResultTest {
             assertNotNull(flakySuiteResult);
             assertEquals(
                     2,
-                    flakySuiteResult
-                            .getCase("io.olamy.FlakyTest.testApp")
-                            .getFlakyFailures()
-                            .size(),
+                    flakySuiteResult.getCase("io.olamy.FlakyTest.testApp").getFlakyFailures().length,
                     "Wrong number of flayfailures");
 
-            FlakyFailure flakyFailure = flakySuiteResult
-                    .getCase("io.olamy.FlakyTest.testApp")
-                    .getFlakyFailures()
-                    .get(0);
+            FlakyFailure flakyFailure =
+                    flakySuiteResult.getCase("io.olamy.FlakyTest.testApp").getFlakyFailures()[0];
+            assertNotNull(flakyFailure);
             assertEquals("junit.framework.AssertionFailedError", flakyFailure.type());
             assertEquals("obvious fail", flakyFailure.message());
             assertTrue(flakyFailure.stackTrace().contains("at io.olamy.FlakyTest.testApp(FlakyTest.java:27)"));
@@ -502,16 +498,12 @@ public class TestResultTest {
             assertNotNull(rerunSuite);
             assertEquals(
                     3,
-                    rerunSuite
-                            .getCase("io.olamy.AlwaysFailTest.testApp")
-                            .getRerunFailures()
-                            .size(),
+                    rerunSuite.getCase("io.olamy.AlwaysFailTest.testApp").getRerunFailures().length,
                     "Wrong number of rerun failures");
 
-            RerunFailure rerunFailure = rerunSuite
-                    .getCase("io.olamy.AlwaysFailTest.testApp")
-                    .getRerunFailures()
-                    .get(0);
+            RerunFailure rerunFailure =
+                    rerunSuite.getCase("io.olamy.AlwaysFailTest.testApp").getRerunFailures()[0];
+            assertNotNull(rerunFailure);
             assertEquals("junit.framework.AssertionFailedError", rerunFailure.type());
             assertEquals("built to fail", rerunFailure.message());
             assertTrue(

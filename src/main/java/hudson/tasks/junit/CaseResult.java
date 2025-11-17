@@ -84,8 +84,8 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     private String errorStackTrace;
     private String errorDetails;
     private Map<String, String> properties;
-    private List<FlakyFailure> flakyFailures = new ArrayList<>();
-    private List<RerunFailure> rerunFailures = new ArrayList<>();
+    private FlakyFailure[] flakyFailures;
+    private RerunFailure[] rerunFailures;
 
     @SuppressFBWarnings(value = "SE_TRANSIENT_FIELD_NOT_RESTORED", justification = "Specific method to restore it")
     private transient SuiteResult parent;
@@ -273,7 +273,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         return Math.min(365.0f * 24 * 60 * 60, Math.max(0.0f, d));
     }
 
-    static List<FlakyFailure> parseFlakyFailures(Element testCase) {
+    private static FlakyFailure[] parseFlakyFailures(Element testCase) {
         List<FlakyFailure> flakyFailures = new ArrayList<>();
         List<Element> flakyFailuresElements = testCase.elements("flakyFailure");
         if (flakyFailuresElements != null) {
@@ -286,10 +286,10 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
                 flakyFailures.add(new FlakyFailure(message, type, stackTrace, stdout, stderr));
             }
         }
-        return flakyFailures;
+        return flakyFailures.isEmpty() ? null : flakyFailures.toArray(new FlakyFailure[0]);
     }
 
-    static List<RerunFailure> parseRerunFailures(Element testCase) {
+    private static RerunFailure[] parseRerunFailures(Element testCase) {
         List<RerunFailure> rerunFailures = new ArrayList<>();
         List<Element> rerunFailureElements = testCase.elements("rerunFailure");
         if (rerunFailureElements != null) {
@@ -302,7 +302,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
                 rerunFailures.add(new RerunFailure(message, type, stackTrace, stdout, stderr));
             }
         }
-        return rerunFailures;
+        return rerunFailures.isEmpty() ? null : rerunFailures.toArray(new RerunFailure[0]);
     }
 
     static CaseResult parse(SuiteResult parent, final XMLStreamReader reader, String context, String ver)
@@ -1076,11 +1076,11 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         this.parent = parent;
     }
 
-    public List<FlakyFailure> getFlakyFailures() {
+    public @CheckForNull FlakyFailure[] getFlakyFailures() {
         return flakyFailures;
     }
 
-    public List<RerunFailure> getRerunFailures() {
+    public @CheckForNull RerunFailure[] getRerunFailures() {
         return rerunFailures;
     }
 

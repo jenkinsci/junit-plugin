@@ -85,7 +85,7 @@
 ]]></system-out>
     <system-err><![CDATA[this will really fail
 ]]></system-err>
-    <rerunFailure message="built to fail" type="junit.framework.AssertionFailedError">
+      <rerunFailure message="built to fail" type="junit.framework.AssertionFailedError">
       <stackTrace><![CDATA[junit.framework.AssertionFailedError: built to fail
 	at junit.framework.Assert.fail(Assert.java:57)
 	at junit.framework.Assert.assertTrue(Assert.java:22)
