@@ -463,4 +463,61 @@ public class TestResultTest {
         boolean isTwoEqual = FileUtils.contentEquals(f.getFile(), f2.getFile());
         assertTrue(isTwoEqual, "Forgot to implement XML parsing for something?");
     }
+
+    @Issue("GH-237")
+    @Test
+    void includeFlakyAndRerun() throws IOException, URISyntaxException {
+        TestResult testResult = new TestResult();
+        testResult.parse(getDataFile("gh-237/TEST-io.olamy.AlwaysFailTest.xml"), null);
+        testResult.parse(getDataFile("gh-237/TEST-io.olamy.FlakyTest.xml"), null);
+        testResult.tally();
+
+        assertEquals(2, testResult.getSuites().size(), "Wrong number of testsuites");
+        assertEquals(2, testResult.getTotalCount(), "Wrong number of test cases");
+
+        { // assert on flaky
+            SuiteResult flakySuiteResult = testResult.getSuite("io.olamy.FlakyTest");
+            assertNotNull(flakySuiteResult);
+            assertEquals(
+                    2,
+                    flakySuiteResult
+                            .getCase("io.olamy.FlakyTest.testApp")
+                            .getFlakyFailures()
+                            .size(),
+                    "Wrong number of flayfailures");
+
+            FlakyFailure flakyFailure = flakySuiteResult
+                    .getCase("io.olamy.FlakyTest.testApp")
+                    .getFlakyFailures()
+                    .get(0);
+            assertEquals("junit.framework.AssertionFailedError", flakyFailure.type());
+            assertEquals("obvious fail", flakyFailure.message());
+            assertTrue(flakyFailure.stackTrace().contains("at io.olamy.FlakyTest.testApp(FlakyTest.java:27)"));
+            assertEquals("this will fail maybe", flakyFailure.stdout().trim());
+            assertEquals("this will maybe fail", flakyFailure.stderr().trim());
+        }
+
+        { // assert on rerun failures
+            SuiteResult rerunSuite = testResult.getSuite("io.olamy.AlwaysFailTest");
+            assertNotNull(rerunSuite);
+            assertEquals(
+                    3,
+                    rerunSuite
+                            .getCase("io.olamy.AlwaysFailTest.testApp")
+                            .getRerunFailures()
+                            .size(),
+                    "Wrong number of rerun failures");
+
+            RerunFailure rerunFailure = rerunSuite
+                    .getCase("io.olamy.AlwaysFailTest.testApp")
+                    .getRerunFailures()
+                    .get(0);
+            assertEquals("junit.framework.AssertionFailedError", rerunFailure.type());
+            assertEquals("built to fail", rerunFailure.message());
+            assertTrue(
+                    rerunFailure.stackTrace().contains("at io.olamy.AlwaysFailTest.testApp(AlwaysFailTest.java:23)"));
+            assertEquals("this will fail for real", rerunFailure.stdout().trim());
+            assertEquals("this will really fail", rerunFailure.stderr().trim());
+        }
+    }
 }

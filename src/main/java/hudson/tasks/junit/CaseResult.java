@@ -84,6 +84,8 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     private String errorStackTrace;
     private String errorDetails;
     private Map<String, String> properties;
+    private List<FlakyFailure> flakyFailures = new ArrayList<>();
+    private List<RerunFailure> rerunFailures = new ArrayList<>();
 
     @SuppressFBWarnings(value = "SE_TRANSIENT_FIELD_NOT_RESTORED", justification = "Specific method to restore it")
     private transient SuiteResult parent;
@@ -247,6 +249,8 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         }
         this.properties = properties;
         this.keepTestNames = keepTestNames;
+        this.flakyFailures = parseFlakyFailures(testCase);
+        this.rerunFailures = parseRerunFailures(testCase);
     }
 
     public CaseResult(CaseResult src) {
@@ -267,6 +271,38 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
 
     public static float clampDuration(float d) {
         return Math.min(365.0f * 24 * 60 * 60, Math.max(0.0f, d));
+    }
+
+    static List<FlakyFailure> parseFlakyFailures(Element testCase) {
+        List<FlakyFailure> flakyFailures = new ArrayList<>();
+        List<Element> flakyFailuresElements = testCase.elements("flakyFailure");
+        if (flakyFailuresElements != null) {
+            for (Element flakyFailuresElement : flakyFailuresElements) {
+                String message = flakyFailuresElement.attributeValue("message");
+                String type = flakyFailuresElement.attributeValue("type");
+                String stackTrace = flakyFailuresElement.elementText("stackTrace");
+                String stdout = flakyFailuresElement.elementText("system-out");
+                String stderr = flakyFailuresElement.elementText("system-err");
+                flakyFailures.add(new FlakyFailure(message, type, stackTrace, stdout, stderr));
+            }
+        }
+        return flakyFailures;
+    }
+
+    static List<RerunFailure> parseRerunFailures(Element testCase) {
+        List<RerunFailure> rerunFailures = new ArrayList<>();
+        List<Element> rerunFailureElements = testCase.elements("rerunFailure");
+        if (rerunFailureElements != null) {
+            for (Element rerunFailureElement : rerunFailureElements) {
+                String message = rerunFailureElement.attributeValue("message");
+                String type = rerunFailureElement.attributeValue("type");
+                String stackTrace = rerunFailureElement.elementText("stackTrace");
+                String stdout = rerunFailureElement.elementText("system-out");
+                String stderr = rerunFailureElement.elementText("system-err");
+                rerunFailures.add(new RerunFailure(message, type, stackTrace, stdout, stderr));
+            }
+        }
+        return rerunFailures;
     }
 
     static CaseResult parse(SuiteResult parent, final XMLStreamReader reader, String context, String ver)
@@ -1038,6 +1074,14 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
 
     void replaceParent(SuiteResult parent) {
         this.parent = parent;
+    }
+
+    public List<FlakyFailure> getFlakyFailures() {
+        return flakyFailures;
+    }
+
+    public List<RerunFailure> getRerunFailures() {
+        return rerunFailures;
     }
 
     /**
