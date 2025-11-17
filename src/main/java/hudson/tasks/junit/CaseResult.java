@@ -286,7 +286,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
                 flakyFailures.add(new FlakyFailure(message, type, stackTrace, stdout, stderr));
             }
         }
-        return flakyFailures.isEmpty() ? null : Collections.unmodifiableList(flakyFailures);
+        return flakyFailures.isEmpty() ? null : flakyFailures;
     }
 
     private static List<RerunFailure> parseRerunFailures(Element testCase) {
@@ -302,7 +302,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
                 rerunFailures.add(new RerunFailure(message, type, stackTrace, stdout, stderr));
             }
         }
-        return rerunFailures.isEmpty() ? null : Collections.unmodifiableList(rerunFailures);
+        return rerunFailures.isEmpty() ? null : rerunFailures;
     }
 
     static CaseResult parse(SuiteResult parent, final XMLStreamReader reader, String context, String ver)
@@ -1077,11 +1077,11 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     }
 
     public @CheckForNull List<FlakyFailure> getFlakyFailures() {
-        return flakyFailures;
+        return flakyFailures == null ? null : Collections.unmodifiableList(flakyFailures);
     }
 
     public @CheckForNull List<RerunFailure> getRerunFailures() {
-        return rerunFailures;
+        return rerunFailures == null ? null : Collections.unmodifiableList(rerunFailures);
     }
 
     /**
