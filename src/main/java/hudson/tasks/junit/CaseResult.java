@@ -1077,11 +1077,11 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     }
 
     public @CheckForNull List<FlakyFailure> getFlakyFailures() {
-        return flakyFailures == null ? null : Collections.unmodifiableList(flakyFailures);
+        return flakyFailures == null ? Collections.emptyList() : Collections.unmodifiableList(flakyFailures);
     }
 
     public @CheckForNull List<RerunFailure> getRerunFailures() {
-        return rerunFailures == null ? null : Collections.unmodifiableList(rerunFailures);
+        return rerunFailures == null ? Collections.emptyList() : Collections.unmodifiableList(rerunFailures);
     }
 
     /**
