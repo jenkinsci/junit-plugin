@@ -486,7 +486,6 @@ public class TestResultTest {
                 .ignoreComments()
                 .build();
 
-        // fileDiff.getDifferences().forEach(System.out::println);
         assertFalse(
                 fileDiff.hasDifferences(),
                 "XML files are different:"
