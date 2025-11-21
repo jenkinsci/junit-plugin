@@ -427,6 +427,8 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         XSTREAM.alias("result", TestResult.class);
         XSTREAM.alias("suite", SuiteResult.class);
         XSTREAM.alias("case", CaseResult.class);
+        XSTREAM.alias("flakyFailure", FlakyFailure.class);
+        XSTREAM.alias("rerunFailure", RerunFailure.class);
         XSTREAM.registerConverter(new HeapSpaceStringConverter(), 100);
     }
 }

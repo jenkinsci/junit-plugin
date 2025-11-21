@@ -26,9 +26,12 @@ package hudson.tasks.test;
 import hudson.model.Job;
 import hudson.model.Result;
 import hudson.model.Run;
+import hudson.tasks.junit.FlakyFailure;
+import hudson.tasks.junit.RerunFailure;
 import hudson.tasks.junit.TestAction;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -261,6 +264,14 @@ public abstract class TestResult extends TestObject {
 
     public Map<String, String> getProperties() {
         return Collections.emptyMap();
+    }
+
+    public List<FlakyFailure> getFlakyFailures() {
+        return Collections.emptyList();
+    }
+
+    public List<RerunFailure> getRerunFailures() {
+        return Collections.emptyList();
     }
 
     /**

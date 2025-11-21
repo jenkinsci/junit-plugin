@@ -267,6 +267,8 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         this.stderr = src.stderr;
         this.properties = new HashMap<>();
         this.properties.putAll(src.properties);
+        this.flakyFailures = src.flakyFailures;
+        this.rerunFailures = src.rerunFailures;
     }
 
     public static float clampDuration(float d) {
@@ -286,7 +288,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
                 flakyFailures.add(new FlakyFailure(message, type, stackTrace, stdout, stderr));
             }
         }
-        return flakyFailures.isEmpty() ? null : flakyFailures;
+        return flakyFailures;
     }
 
     private static List<RerunFailure> parseRerunFailures(Element testCase) {
@@ -302,7 +304,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
                 rerunFailures.add(new RerunFailure(message, type, stackTrace, stdout, stderr));
             }
         }
-        return rerunFailures.isEmpty() ? null : rerunFailures;
+        return rerunFailures;
     }
 
     static CaseResult parse(SuiteResult parent, final XMLStreamReader reader, String context, String ver)
@@ -356,12 +358,138 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
                         r.properties = new HashMap<>();
                         parseProperties(r.properties, reader, context, ver);
                         break;
+                    case "flakyFailures":
+                        r.flakyFailures = parseFlakyFailures(reader, context, ver);
+                        break;
+                    case "rerunFailures":
+                        r.rerunFailures = parseRerunFailures(reader, context, ver);
+                        break;
                     default:
                         LOGGER.finest(() -> "Unknown field in " + context + ": " + elementName);
                 }
             }
         }
         return r;
+    }
+
+    static List<FlakyFailure> parseFlakyFailures(final XMLStreamReader reader, String context, String ver)
+            throws XMLStreamException {
+        List<FlakyFailure> flakyFailures = new ArrayList<>();
+        while (reader.hasNext()) {
+            final int event = reader.next();
+            if (event == XMLStreamReader.END_ELEMENT && reader.getLocalName().equals("flakyFailures")) {
+                break;
+            }
+            if (event == XMLStreamReader.START_ELEMENT) {
+                final String elementName = reader.getLocalName();
+                switch (elementName) {
+                    case "flakyFailure":
+                        flakyFailures.add(parseFlakyFailure(reader, context, ver));
+                        break;
+                    default:
+                        LOGGER.finest(() -> "Unknown field in " + context + ": " + elementName);
+                }
+            }
+        }
+        return flakyFailures;
+    }
+
+    public static FlakyFailure parseFlakyFailure(XMLStreamReader reader, String context, String ver)
+            throws XMLStreamException {
+        String message = null;
+        String type = null;
+        String stackTrace = null;
+        String stdout = null;
+        String stderr = null;
+        while (reader.hasNext()) {
+            int event = reader.next();
+            if (event == XMLStreamReader.END_ELEMENT && "flakyFailure".equals(reader.getLocalName())) {
+                break;
+            }
+            if (event == XMLStreamReader.START_ELEMENT) {
+                String elementName = reader.getLocalName();
+                switch (elementName) {
+                    case "message":
+                        message = reader.getElementText();
+                        break;
+                    case "type":
+                        type = reader.getElementText();
+                        break;
+                    case "stackTrace":
+                        stackTrace = reader.getElementText();
+                        break;
+                    case "stdout":
+                        stdout = reader.getElementText();
+                        break;
+                    case "stderr":
+                        stderr = reader.getElementText();
+                        break;
+                    default:
+                        LOGGER.finest(() -> "Unknown field in " + context + ": " + elementName);
+                }
+            }
+        }
+        return new FlakyFailure(message, type, stackTrace, stdout, stderr);
+    }
+
+    static List<RerunFailure> parseRerunFailures(final XMLStreamReader reader, String context, String ver)
+            throws XMLStreamException {
+        List<RerunFailure> rerunFailures = new ArrayList<>();
+        while (reader.hasNext()) {
+            final int event = reader.next();
+            if (event == XMLStreamReader.END_ELEMENT && reader.getLocalName().equals("rerunFailures")) {
+                break;
+            }
+            if (event == XMLStreamReader.START_ELEMENT) {
+                final String elementName = reader.getLocalName();
+                switch (elementName) {
+                    case "rerunFailure":
+                        rerunFailures.add(parseRerunFailure(reader, context, ver));
+                        break;
+                    default:
+                        LOGGER.finest(() -> "Unknown field in " + context + ": " + elementName);
+                }
+            }
+        }
+        return rerunFailures;
+    }
+
+    public static RerunFailure parseRerunFailure(XMLStreamReader reader, String context, String ver)
+            throws XMLStreamException {
+        String message = null;
+        String type = null;
+        String stackTrace = null;
+        String stdout = null;
+        String stderr = null;
+        while (reader.hasNext()) {
+            int event = reader.next();
+            if (event == XMLStreamReader.END_ELEMENT && "rerunFailure".equals(reader.getLocalName())) {
+                break;
+            }
+            if (event == XMLStreamReader.START_ELEMENT) {
+                String elementName = reader.getLocalName();
+                switch (elementName) {
+                    case "message":
+                        message = reader.getElementText();
+                        break;
+                    case "type":
+                        type = reader.getElementText();
+                        break;
+                    case "stackTrace":
+                        stackTrace = reader.getElementText();
+                        break;
+                    case "stdout":
+                        stdout = reader.getElementText();
+                        break;
+                    case "stderr":
+                        stderr = reader.getElementText();
+                        break;
+                    default:
+                        LOGGER.finest(() -> "Unknown field in " + context + ": " + elementName);
+                }
+            }
+        }
+        return new RerunFailure(message, type, stackTrace, stdout, stderr);
     }
 
     static void parseProperties(Map<String, String> r, final XMLStreamReader reader, String context, String ver)
@@ -1076,11 +1204,15 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         this.parent = parent;
     }
 
-    public @CheckForNull List<FlakyFailure> getFlakyFailures() {
+    @Exported
+    @Override
+    public List<FlakyFailure> getFlakyFailures() {
         return flakyFailures == null ? Collections.emptyList() : Collections.unmodifiableList(flakyFailures);
     }
 
-    public @CheckForNull List<RerunFailure> getRerunFailures() {
+    @Exported
+    @Override
+    public List<RerunFailure> getRerunFailures() {
         return rerunFailures == null ? Collections.emptyList() : Collections.unmodifiableList(rerunFailures);
     }
 
