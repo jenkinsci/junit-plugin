@@ -442,19 +442,19 @@ public class TestResultTest {
         TestResult tr = new TestResult();
         tr.getSuites().add(sr);
 
-        List<FlakyFailure> flakyFailures =
+        List<Failure> failures =
                 tr.getSuites().stream().map(SuiteResult::getCases).flatMap(Collection::stream).toList().stream()
                         .map(CaseResult::getFlakyFailures)
-                        .filter(failures -> !failures.isEmpty())
+                        .filter(flakyFailures -> !flakyFailures.isEmpty())
                         .flatMap(Collection::stream)
                         .toList();
 
-        assertEquals(2, flakyFailures.size());
-        assertNotNull(flakyFailures.get(0).message());
-        assertNotNull(flakyFailures.get(0).type());
-        assertNotNull(flakyFailures.get(0).stackTrace());
-        assertNotNull(flakyFailures.get(0).stdout());
-        assertNotNull(flakyFailures.get(0).stderr());
+        assertEquals(2, failures.size());
+        assertNotNull(failures.get(0).message());
+        assertNotNull(failures.get(0).type());
+        assertNotNull(failures.get(0).stackTrace());
+        assertNotNull(failures.get(0).stdout());
+        assertNotNull(failures.get(0).stderr());
 
         XmlFile f = new XmlFile(TestResultAction.XSTREAM, File.createTempFile("junitResult.xml", null, tmp));
         f.write(tr);
@@ -522,16 +522,16 @@ public class TestResultTest {
                             .size(),
                     "Wrong number of flayfailures");
 
-            FlakyFailure flakyFailure = flakySuiteResult
+            Failure failure = flakySuiteResult
                     .getCase("io.olamy.FlakyTest.testApp")
                     .getFlakyFailures()
                     .get(0);
-            assertNotNull(flakyFailure);
-            assertEquals("junit.framework.AssertionFailedError", flakyFailure.type());
-            assertEquals("obvious fail", flakyFailure.message());
-            assertTrue(flakyFailure.stackTrace().contains("at io.olamy.FlakyTest.testApp(FlakyTest.java:27)"));
-            assertEquals("this will fail maybe", flakyFailure.stdout().trim());
-            assertEquals("this will maybe fail", flakyFailure.stderr().trim());
+            assertNotNull(failure);
+            assertEquals("junit.framework.AssertionFailedError", failure.type());
+            assertEquals("obvious fail", failure.message());
+            assertTrue(failure.stackTrace().contains("at io.olamy.FlakyTest.testApp(FlakyTest.java:27)"));
+            assertEquals("this will fail maybe", failure.stdout().trim());
+            assertEquals("this will maybe fail", failure.stderr().trim());
 
             TestResult tr = new TestResult();
             tr.getSuites().add(flakySuiteResult);
@@ -577,7 +577,7 @@ public class TestResultTest {
                             .size(),
                     "Wrong number of rerun failures");
 
-            RerunFailure rerunFailure = rerunSuite
+            Failure rerunFailure = rerunSuite
                     .getCase("io.olamy.AlwaysFailTest.testApp")
                     .getRerunFailures()
                     .get(0);
