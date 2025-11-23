@@ -38,11 +38,15 @@ import java.nio.file.attribute.FileTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.StreamSupport;
 import org.apache.commons.io.FileUtils;
 import org.apache.tools.ant.DirectoryScanner;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.jvnet.hudson.test.Issue;
+import org.xmlunit.builder.DiffBuilder;
+import org.xmlunit.diff.Diff;
+import org.xmlunit.diff.Difference;
 
 /**
  * Tests the JUnit result XML file parsing in {@link TestResult}.
@@ -437,6 +441,21 @@ public class TestResultTest {
 
         TestResult tr = new TestResult();
         tr.getSuites().add(sr);
+
+        List<Failure> failures =
+                tr.getSuites().stream().map(SuiteResult::getCases).flatMap(Collection::stream).toList().stream()
+                        .map(CaseResult::getFlakyFailures)
+                        .filter(flakyFailures -> !flakyFailures.isEmpty())
+                        .flatMap(Collection::stream)
+                        .toList();
+
+        assertEquals(2, failures.size());
+        assertNotNull(failures.get(0).message());
+        assertNotNull(failures.get(0).type());
+        assertNotNull(failures.get(0).stackTrace());
+        assertNotNull(failures.get(0).stdout());
+        assertNotNull(failures.get(0).stderr());
+
         XmlFile f = new XmlFile(TestResultAction.XSTREAM, File.createTempFile("junitResult.xml", null, tmp));
         f.write(tr);
 
@@ -460,7 +479,146 @@ public class TestResultTest {
                         .getProperties()
                         .size());
 
+        Diff fileDiff = DiffBuilder.compare(f.getFile())
+                .withTest(f2.getFile())
+                .ignoreWhitespace()
+                .checkForSimilar()
+                .ignoreComments()
+                .build();
+
+        assertFalse(
+                fileDiff.hasDifferences(),
+                "XML files are different:"
+                        + String.join(
+                                "\n",
+                                StreamSupport.stream(fileDiff.getDifferences().spliterator(), true)
+                                        .map(Difference::toString)
+                                        .toList()));
         boolean isTwoEqual = FileUtils.contentEquals(f.getFile(), f2.getFile());
-        assertTrue(isTwoEqual, "Forgot to implement XML parsing for something?");
+        assertTrue(
+                isTwoEqual,
+                "Forgot to implement XML parsing for something? Forgot to implement XML parsing for something?");
+    }
+
+    @Issue("GH-237")
+    @Test
+    void includeFlakyAndRerun() throws Exception {
+        TestResult testResult = new TestResult();
+        testResult.parse(getDataFile("gh-237/TEST-io.olamy.AlwaysFailTest.xml"), null);
+        testResult.parse(getDataFile("gh-237/TEST-io.olamy.FlakyTest.xml"), null);
+        testResult.tally();
+
+        assertEquals(2, testResult.getSuites().size(), "Wrong number of testsuites");
+        assertEquals(2, testResult.getTotalCount(), "Wrong number of test cases");
+
+        { // assert on flaky
+            SuiteResult flakySuiteResult = testResult.getSuite("io.olamy.FlakyTest");
+            assertNotNull(flakySuiteResult);
+            assertEquals(
+                    2,
+                    flakySuiteResult
+                            .getCase("io.olamy.FlakyTest.testApp")
+                            .getFlakyFailures()
+                            .size(),
+                    "Wrong number of flayfailures");
+
+            Failure failure = flakySuiteResult
+                    .getCase("io.olamy.FlakyTest.testApp")
+                    .getFlakyFailures()
+                    .get(0);
+            assertNotNull(failure);
+            assertEquals("junit.framework.AssertionFailedError", failure.type());
+            assertEquals("obvious fail", failure.message());
+            assertTrue(failure.stackTrace().contains("at io.olamy.FlakyTest.testApp(FlakyTest.java:27)"));
+            assertEquals("this will fail maybe", failure.stdout().trim());
+            assertEquals("this will maybe fail", failure.stderr().trim());
+
+            TestResult tr = new TestResult();
+            tr.getSuites().add(flakySuiteResult);
+
+            XmlFile f = new XmlFile(TestResultAction.XSTREAM, File.createTempFile("junitResult.xml", null, tmp));
+            f.write(tr);
+
+            TestResult tr2 = new TestResult();
+            tr2.parse(f);
+            XmlFile f2 = new XmlFile(TestResultAction.XSTREAM, File.createTempFile("junitResult2.xml", null, tmp));
+            f2.write(tr2);
+
+            Diff fileDiff = DiffBuilder.compare(f.getFile())
+                    .withTest(f2.getFile())
+                    .ignoreWhitespace()
+                    .checkForSimilar()
+                    .ignoreComments()
+                    .build();
+
+            // fileDiff.getDifferences().forEach(System.out::println);
+            assertFalse(
+                    fileDiff.hasDifferences(),
+                    "Forgot to implement XML parsing for something? XML files are different:"
+                            + String.join(
+                                    "\n",
+                                    StreamSupport.stream(
+                                                    fileDiff.getDifferences().spliterator(), true)
+                                            .map(Difference::toString)
+                                            .toList()));
+
+            boolean isTwoEqual = FileUtils.contentEquals(f.getFile(), f2.getFile());
+            assertTrue(isTwoEqual, "Forgot to implement XML parsing for something?");
+        }
+
+        { // assert on rerun failures
+            SuiteResult rerunSuite = testResult.getSuite("io.olamy.AlwaysFailTest");
+            assertNotNull(rerunSuite);
+            assertEquals(
+                    3,
+                    rerunSuite
+                            .getCase("io.olamy.AlwaysFailTest.testApp")
+                            .getRerunFailures()
+                            .size(),
+                    "Wrong number of rerun failures");
+
+            Failure rerunFailure = rerunSuite
+                    .getCase("io.olamy.AlwaysFailTest.testApp")
+                    .getRerunFailures()
+                    .get(0);
+            assertNotNull(rerunFailure);
+            assertEquals("junit.framework.AssertionFailedError", rerunFailure.type());
+            assertEquals("built to fail", rerunFailure.message());
+            assertTrue(
+                    rerunFailure.stackTrace().contains("at io.olamy.AlwaysFailTest.testApp(AlwaysFailTest.java:23)"));
+            assertEquals("this will fail for real", rerunFailure.stdout().trim());
+            assertEquals("this will really fail", rerunFailure.stderr().trim());
+
+            TestResult tr = new TestResult();
+            tr.getSuites().add(rerunSuite);
+
+            XmlFile f = new XmlFile(TestResultAction.XSTREAM, File.createTempFile("junitResult.xml", null, tmp));
+            f.write(tr);
+
+            TestResult tr2 = new TestResult();
+            tr2.parse(f);
+            XmlFile f2 = new XmlFile(TestResultAction.XSTREAM, File.createTempFile("junitResult2.xml", null, tmp));
+            f2.write(tr2);
+
+            Diff fileDiff = DiffBuilder.compare(f.getFile())
+                    .withTest(f2.getFile())
+                    .ignoreWhitespace()
+                    .checkForSimilar()
+                    .ignoreComments()
+                    .build();
+
+            assertFalse(
+                    fileDiff.hasDifferences(),
+                    "Forgot to implement XML parsing for something? XML files are different:"
+                            + String.join(
+                                    "\n",
+                                    StreamSupport.stream(
+                                                    fileDiff.getDifferences().spliterator(), true)
+                                            .map(Difference::toString)
+                                            .toList()));
+
+            boolean isTwoEqual = FileUtils.contentEquals(f.getFile(), f2.getFile());
+            assertTrue(isTwoEqual, "Forgot to implement XML parsing for something?");
+        }
     }
 }

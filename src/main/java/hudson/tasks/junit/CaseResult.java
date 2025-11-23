@@ -84,6 +84,8 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     private String errorStackTrace;
     private String errorDetails;
     private Map<String, String> properties;
+    private List<Failure> flakyFailures;
+    private List<Failure> rerunFailures;
 
     @SuppressFBWarnings(value = "SE_TRANSIENT_FIELD_NOT_RESTORED", justification = "Specific method to restore it")
     private transient SuiteResult parent;
@@ -247,6 +249,8 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         }
         this.properties = properties;
         this.keepTestNames = keepTestNames;
+        this.flakyFailures = parseFlakyFailures(testCase);
+        this.rerunFailures = parseRerunFailures(testCase);
     }
 
     public CaseResult(CaseResult src) {
@@ -263,10 +267,44 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         this.stderr = src.stderr;
         this.properties = new HashMap<>();
         this.properties.putAll(src.properties);
+        this.flakyFailures = src.flakyFailures;
+        this.rerunFailures = src.rerunFailures;
     }
 
     public static float clampDuration(float d) {
         return Math.min(365.0f * 24 * 60 * 60, Math.max(0.0f, d));
+    }
+
+    private static List<Failure> parseFlakyFailures(Element testCase) {
+        List<Failure> failures = new ArrayList<>();
+        List<Element> flakyFailuresElements = testCase.elements("flakyFailure");
+        if (flakyFailuresElements != null) {
+            for (Element flakyFailuresElement : flakyFailuresElements) {
+                String message = flakyFailuresElement.attributeValue("message");
+                String type = flakyFailuresElement.attributeValue("type");
+                String stackTrace = flakyFailuresElement.elementText("stackTrace");
+                String stdout = flakyFailuresElement.elementText("system-out");
+                String stderr = flakyFailuresElement.elementText("system-err");
+                failures.add(new Failure(message, type, stackTrace, stdout, stderr));
+            }
+        }
+        return failures;
+    }
+
+    private static List<Failure> parseRerunFailures(Element testCase) {
+        List<Failure> rerunFailures = new ArrayList<>();
+        List<Element> rerunFailureElements = testCase.elements("rerunFailure");
+        if (rerunFailureElements != null) {
+            for (Element rerunFailureElement : rerunFailureElements) {
+                String message = rerunFailureElement.attributeValue("message");
+                String type = rerunFailureElement.attributeValue("type");
+                String stackTrace = rerunFailureElement.elementText("stackTrace");
+                String stdout = rerunFailureElement.elementText("system-out");
+                String stderr = rerunFailureElement.elementText("system-err");
+                rerunFailures.add(new Failure(message, type, stackTrace, stdout, stderr));
+            }
+        }
+        return rerunFailures;
     }
 
     static CaseResult parse(SuiteResult parent, final XMLStreamReader reader, String context, String ver)
@@ -320,12 +358,75 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
                         r.properties = new HashMap<>();
                         parseProperties(r.properties, reader, context, ver);
                         break;
+                    case "flakyFailures":
+                        r.flakyFailures = parseFailures(reader, context, "flakyFailures");
+                        break;
+                    case "rerunFailures":
+                        r.rerunFailures = parseFailures(reader, context, "rerunFailures");
+                        break;
                     default:
                         LOGGER.finest(() -> "Unknown field in " + context + ": " + elementName);
                 }
             }
         }
         return r;
+    }
+
+    static List<Failure> parseFailures(final XMLStreamReader reader, String context, String endElement)
+            throws XMLStreamException {
+        List<Failure> failures = new ArrayList<>();
+        while (reader.hasNext()) {
+            final int event = reader.next();
+            if (event == XMLStreamReader.END_ELEMENT && reader.getLocalName().equals(endElement)) {
+                break;
+            }
+            if (event == XMLStreamReader.START_ELEMENT) {
+                final String elementName = reader.getLocalName();
+                if (elementName.equals("failure")) {
+                    failures.add(parseFailure(reader, context));
+                } else {
+                    LOGGER.finest(() -> "Unknown field in " + context + ": " + elementName);
+                }
+            }
+        }
+        return failures;
+    }
+
+    public static Failure parseFailure(XMLStreamReader reader, String context) throws XMLStreamException {
+        String message = null;
+        String type = null;
+        String stackTrace = null;
+        String stdout = null;
+        String stderr = null;
+        while (reader.hasNext()) {
+            int event = reader.next();
+            if (event == XMLStreamReader.END_ELEMENT && "failure".equals(reader.getLocalName())) {
+                break;
+            }
+            if (event == XMLStreamReader.START_ELEMENT) {
+                String elementName = reader.getLocalName();
+                switch (elementName) {
+                    case "message":
+                        message = reader.getElementText();
+                        break;
+                    case "type":
+                        type = reader.getElementText();
+                        break;
+                    case "stackTrace":
+                        stackTrace = reader.getElementText();
+                        break;
+                    case "stdout":
+                        stdout = reader.getElementText();
+                        break;
+                    case "stderr":
+                        stderr = reader.getElementText();
+                        break;
+                    default:
+                        LOGGER.finest(() -> "Unknown field in " + context + ": " + elementName);
+                }
+            }
+        }
+        return new Failure(message, type, stackTrace, stdout, stderr);
     }
 
     static void parseProperties(Map<String, String> r, final XMLStreamReader reader, String context, String ver)
@@ -1038,6 +1139,18 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
 
     void replaceParent(SuiteResult parent) {
         this.parent = parent;
+    }
+
+    @Exported
+    @Override
+    public List<Failure> getFlakyFailures() {
+        return flakyFailures == null ? Collections.emptyList() : Collections.unmodifiableList(flakyFailures);
+    }
+
+    @Exported
+    @Override
+    public List<Failure> getRerunFailures() {
+        return rerunFailures == null ? Collections.emptyList() : Collections.unmodifiableList(rerunFailures);
     }
 
     /**
