@@ -34,6 +34,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import org.owasp.html.HtmlPolicyBuilder;
+import org.owasp.html.PolicyFactory;
 
 /**
  * A class that represents a general concept of a test result, without any
@@ -44,6 +48,16 @@ import java.util.logging.Logger;
  */
 public abstract class TestResult extends TestObject {
     private static final Logger LOGGER = Logger.getLogger(TestResult.class.getName());
+
+    private static final PolicyFactory POLICY_DEFINITION = new HtmlPolicyBuilder()
+            .allowElements("a")
+            .allowUrlProtocols("https")
+            .allowUrlProtocols("http")
+            .allowAttributes("href")
+            .onElements("a")
+            .toFactory();
+
+    private static final Pattern LINK_REGEX_PATTERN = Pattern.compile("\\b(https?://[^\\s)<>\"]+)");
 
     /**
      * If the concept of a parent action is important to a subclass, then it should
@@ -294,16 +308,76 @@ public abstract class TestResult extends TestObject {
     }
 
     /**
-     * Annotate some text -- what does this do?
-     * @param text Text to use to annotate the actions.
+     * Escapes "&" and "<" characters in the provided text, with the goal of preventing any HTML tags present
+     * in the text from being rendered / interpreted as HTML.
      *
+     * @param text The text to sanitize
+     * @return The sanitized text
+     */
+    private static String naiveHtmlSanitize(String text) {
+        return text.replace("&", "&amp;").replace("<", "&lt;");
+    }
+
+    private static String escapeHtmlAndMakeLinksClickable(String text) {
+        if (text == null) {
+            return null;
+        }
+
+        StringBuilder annotatedTxtBuilder = new StringBuilder();
+
+        Matcher linkMatcher = LINK_REGEX_PATTERN.matcher(text);
+
+        // Goal: Find all the things that look like URLs in the text, and convert them to clickable
+        // <a> tags so they render as clickable links when viewing test output.
+
+        int lastMatchEndIdxExclusive = 0;
+        while (linkMatcher.find()) {
+            // Group 1 in the regex is just the URL
+            String linkUrl = linkMatcher.group(1);
+
+            // Sanitize the final HTML tag we produce to make sure there's nothing malicious in there
+            String sanitizedLinkHtmlTag =
+                    POLICY_DEFINITION.sanitize(String.format("<a href=\"%s\">%s</a>", linkUrl, linkUrl));
+
+            annotatedTxtBuilder
+                    // Append all the chars in-between the last link and this current one, and run that substring
+                    // through naive HTML sanitization since we don't want anything other than the <a> tags we're
+                    // spawning to actually render as HTML.
+                    .append(naiveHtmlSanitize(text.substring(lastMatchEndIdxExclusive, linkMatcher.start())))
+                    // Append our clickable <a> tag
+                    .append(sanitizedLinkHtmlTag);
+
+            lastMatchEndIdxExclusive = linkMatcher.end();
+        }
+
+        // Finish up by sanitizing + appending all the remaining text after the last URL we found
+        annotatedTxtBuilder.append(naiveHtmlSanitize(text.substring(lastMatchEndIdxExclusive)));
+
+        return annotatedTxtBuilder.toString();
+    }
+
+    /**
+     * All JUnit test output (error message, stack trace, std out, std err) shown on the single test case result page
+     * is passed through this method when the page is rendered, which processes / sanitizes the text to make it
+     * suitable for HTML rendering. Attempts to auto-detect URLs in the test output and convert them to clickable
+     * links for convenience. All other HTML will be escaped.
+     * <p>
+     * Additionally, passes the test output through all the TestActions associated with this result, giving them a
+     * chance to apply their own custom rendering / transformations.
+     * <p>
+     * Note: The test output shown when expanding cases on the full "testReport" page is *not* passed through this
+     * method, and instead relies on the Jelly "escape-by-default" flag to escape test output for HTML rendering,
+     * which is why links are not clickable in that context.
+     *
+     * @param text Text to use to annotate the actions.
      * @return the provided text HTML-escaped.
      */
     public String annotate(String text) {
         if (text == null) {
             return null;
         }
-        text = text.replace("&", "&amp;").replace("<", "&lt;");
+
+        text = escapeHtmlAndMakeLinksClickable(text);
 
         for (TestAction action : getTestActions()) {
             text = action.annotate(text);
