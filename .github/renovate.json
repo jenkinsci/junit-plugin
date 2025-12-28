@@ -1,15 +1,10 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:base",
-    ":semanticCommitsDisabled",
+    "github>jenkinsci/renovate-config",
     "schedule:earlyMondays"
   ],
   "automerge": true,
-  "labels": [
-    "dependencies"
-  ],
-  "rebaseWhen": "conflicted",
   "packageRules": [
     {
       "matchPackageNames": [
