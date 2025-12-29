@@ -58,6 +58,8 @@ public class JUnitResultsStep extends Step implements JUnitTask {
 
     private Double healthScaleFactor;
 
+    private boolean sortTestResultsByTimestamp;
+
     /**
      * If true, don't throw exception on missing test results or no files found.
      */
@@ -95,6 +97,16 @@ public class JUnitResultsStep extends Step implements JUnitTask {
     @DataBoundSetter
     public final void setHealthScaleFactor(double healthScaleFactor) {
         this.healthScaleFactor = Math.max(0.0, healthScaleFactor);
+    }
+
+    @Override
+    public boolean isSortTestResultsByTimestamp() {
+        return sortTestResultsByTimestamp;
+    }
+
+    @DataBoundSetter
+    public void setSortTestResultsByTimestamp(boolean sortTestResultsByTimestamp) {
+        this.sortTestResultsByTimestamp = sortTestResultsByTimestamp;
     }
 
     @NonNull
