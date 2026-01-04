@@ -66,8 +66,9 @@ import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.StaplerRequest2;
 import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.export.Exported;
+import java.util.LinkedHashMap;
 
-/**
+/*
  * Root of all the test results for one build.
  *
  * @author Kohsuke Kawaguchi
@@ -1252,4 +1253,37 @@ public final class TestResult extends MetaTabulatedResult {
     public PrismConfiguration getPrismConfiguration() {
         return PrismConfiguration.getInstance();
     }
+
+
+    /**
+     * Gets failed tests grouped by package name.
+     * Returns a map where key is package name and value is list of failed tests in that package.
+     *
+     * @return Map of package name to list of CaseResult
+     */
+
+    public Map<String, List<CaseResult>> getFailedTestsByPackage() {
+        List<CaseResult> failed = getFailedTests();
+        Map<String, List<CaseResult>> grouped = new TreeMap<>();
+
+        for (CaseResult test : failed) {
+            String packageName = test.getPackageName();
+            grouped.computeIfAbsent(packageName, k -> new ArrayList<>()).add(test);
+        }
+
+        // Sort tests within each package by className then testName
+        for (List<CaseResult> tests : grouped.values()) {
+            tests.sort((a, b) -> {
+                int classCompare = a.getClassName().compareTo(b.getClassName());
+                if (classCompare != 0) {
+                    return classCompare;
+                }
+                return a.getName().compareTo(b.getName());
+            });
+        }
+
+        return grouped;
+    }
+
+
 }
