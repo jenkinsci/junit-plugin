@@ -28,49 +28,162 @@ pipeline {
             }
         }
         
-        stage('Publish JUnit Results') {
+        stage('Publish and Access Test Results') {
             steps {
-                echo "Publishing JUnit test results..."
-                
-                // Publish the test results - this returns TestResultSummary
-                junit 'target/surefire-reports/*.xml'
-                
-                echo "Test results published!"
+                script {
+                    echo "======================================"
+                    echo "Publishing JUnit test results..."
+                    echo "======================================"
+                    echo ""
+                    
+                    // Publish the test results - this returns TestResultSummary
+                    def testResults = junit 'target/surefire-reports/*.xml'
+                    
+                    echo "======================================"
+                    echo "✅ WHAT WORKS (Current API):"
+                    echo "======================================"
+                    echo ""
+                    echo "testResults.totalCount = ${testResults.totalCount}"
+                    echo "testResults.failCount = ${testResults.failCount}"
+                    echo "testResults.passCount = ${testResults.passCount}"
+                    echo "testResults.skipCount = ${testResults.skipCount}"
+                    echo ""
+                    echo "✅ These basic counts work fine!"
+                    echo "   But that's ALL you can access..."
+                    echo ""
+                    
+                    // Now try to access detailed test information
+                    echo "======================================"
+                    echo "❌ WHAT DOESN'T WORK (Missing API):"
+                    echo "======================================"
+                    echo ""
+                    echo "Attempting: def failedTests = testResults.getFailedTests()"
+                    echo ""
+                    
+                    try {
+                        // ❌ THIS WILL FAIL - Method doesn't exist!
+                        def failedTests = testResults.getFailedTests()
+                        
+                        // If it worked, we could do:
+                        echo "✅ SUCCESS! Found ${failedTests.size()} failed tests:"
+                        failedTests.each { test ->
+                            echo "  - ${test.fullName}"
+                            echo "    Duration: ${test.duration}s"
+                            echo "    Error: ${test.errorDetails}"
+                        }
+                        
+                    } catch (groovy.lang.MissingMethodException e) {
+                        echo "❌ ERROR: ${e.message}"
+                        echo ""
+                        echo "The method getFailedTests() does NOT exist on TestResultSummary!"
+                        echo ""
+                    }
+                    
+                    echo "======================================"
+                    echo "💡 WHAT USERS WANT TO DO:"
+                    echo "======================================"
+                    echo ""
+                    echo "Example 1: Send Slack notification with test names"
+                    echo "---------------------------------------------------"
+                    echo "  def failedTests = testResults.getFailedTests()"
+                    echo "  def message = 'Tests failed:\\n'"
+                    echo "  failedTests.each { test ->"
+                    echo "    message += \"- \${test.fullName}\\n\""
+                    echo "  }"
+                    echo "  slackSend(channel: '#dev', message: message)"
+                    echo ""
+                    
+                    echo "Example 2: Create JIRA ticket for each failure"
+                    echo "-----------------------------------------------"
+                    echo "  failedTests.each { test ->"
+                    echo "    jiraCreateIssue("
+                    echo "      project: 'PROJ',"
+                    echo "      summary: \"Test failed: \${test.fullName}\","
+                    echo "      description: test.errorDetails"
+                    echo "    )"
+                    echo "  }"
+                    echo ""
+                    
+                    echo "Example 3: Find slow tests"
+                    echo "--------------------------"
+                    echo "  def allTests = testResults.getAllTests()"
+                    echo "  def slowTests = allTests.findAll { it.duration > 5.0 }"
+                    echo "  if (slowTests) {"
+                    echo "    echo \"Slow tests: \${slowTests*.fullName}\""
+                    echo "  }"
+                    echo ""
+                    
+                    echo "Example 4: Conditional deployment based on failures"
+                    echo "----------------------------------------------------"
+                    echo "  def criticalFailed = failedTests.any { "
+                    echo "    it.className.contains('Critical')"
+                    echo "  }"
+                    echo "  if (criticalFailed) {"
+                    echo "    // Rollback deployment"
+                    echo "    sh 'kubectl rollout undo deployment/myapp'"
+                    echo "  }"
+                    echo ""
+                    
+                    echo "======================================"
+                    echo "⚙️  CURRENT WORKAROUND (Complex):"
+                    echo "======================================"
+                    echo ""
+                    echo "Users must do this complicated approach:"
+                    echo "  def action = currentBuild.rawBuild"
+                    echo "    .getAction(hudson.tasks.junit.TestResultAction)"
+                    echo "  def result = action.getResult()"
+                    echo "  def failedTests = result.getFailedTests()"
+                    echo ""
+                    echo "Problems with workaround:"
+                    echo "  ❌ Uses internal API (rawBuild)"
+                    echo "  ❌ Not documented"
+                    echo "  ❌ May break in future"
+                    echo "  ❌ Too complex for simple use cases"
+                    echo ""
+                }
+            }
+        }
+        
+        stage('Summary') {
+            steps {
                 echo ""
-                echo "======================================"
-                echo "ISSUE DEMONSTRATION:"
-                echo "======================================"
-                echo "The junit step returns a TestResultSummary object."
-                echo "This object ONLY provides:"
-                echo "  - totalCount"
-                echo "  - failCount"
-                echo "  - passCount"
-                echo "  - skipCount"
+                echo "╔════════════════════════════════════════╗"
+                echo "║      ISSUE #720 DEMONSTRATION         ║"
+                echo "╚════════════════════════════════════════╝"
                 echo ""
-                echo "It does NOT provide:"
-                echo "  - getFailedTests() - to get list of failed tests"
-                echo "  - getAllTests() - to get all test details"
-                echo "  - getPassedTests() - to get passed test details"
+                echo "PROBLEM:"
+                echo "  TestResultSummary only provides counts"
+                echo "  No way to access individual test details"
                 echo ""
-                echo "Users need these methods to:"
-                echo "  1. Send Slack notifications with test names"
-                echo "  2. Create JIRA tickets for failures"
-                echo "  3. Send detailed email reports"
-                echo "  4. Make decisions based on which tests failed"
-                echo "  5. Find slow tests (duration > 5s)"
-                echo "  6. Build custom dashboards"
+                echo "IMPACT:"
+                echo "  Cannot automate notifications"
+                echo "  Cannot create tickets for failures"
+                echo "  Cannot make decisions based on which tests failed"
+                echo "  Cannot find slow/flaky tests"
                 echo ""
-                echo "Currently, users must use complex workarounds"
-                echo "to access this information."
-                echo "======================================"
+                echo "SOLUTION NEEDED:"
+                echo "  Add these methods to TestResultSummary:"
+                echo "  • getFailedTests() -> List<CaseResult>"
+                echo "  • getAllTests() -> List<CaseResult>"
+                echo "  • getPassedTests() -> List<CaseResult>"
+                echo "  • getSkippedTests() -> List<CaseResult>"
+                echo ""
+                echo "This will enable simple, documented access"
+                echo "to test details in pipeline code!"
+                echo ""
+                echo "╚════════════════════════════════════════╝"
             }
         }
     }
     
     post {
         always {
-            echo "Build completed!"
+            echo ""
+            echo "Build completed! Check the test results tab."
             archiveArtifacts artifacts: 'target/surefire-reports/*.xml', allowEmptyArchive: true
+        }
+        unstable {
+            echo "Build is unstable (tests failed - as expected for demo)"
         }
     }
 }
