@@ -2,10 +2,24 @@ pipeline {
     agent any
     
     stages {
+        stage('Checkout') {
+            steps {
+                script {
+                    echo "========================================="
+                    echo "Checking out branch: fix-720-add-getfailedtests-to-testresultsummary"
+                    echo "========================================="
+                }
+                checkout scm
+            }
+        }
+        
         stage('Generate Test Results') {
             steps {
                 script {
+                    echo ""
+                    echo "========================================="
                     echo "Generating test results..."
+                    echo "========================================="
                     
                     // Create directory
                     bat 'if not exist target\\surefire-reports mkdir target\\surefire-reports'
@@ -37,7 +51,8 @@ pipeline {
                         ) > target\\surefire-reports\\TEST-PipelineTest.xml
                     '''
                     
-                    echo "Test results generated successfully!"
+                    echo "✅ Test results generated successfully!"
+                    echo "   Location: target/surefire-reports/TEST-PipelineTest.xml"
                 }
             }
         }
@@ -45,8 +60,9 @@ pipeline {
         stage('Publish JUnit Results') {
             steps {
                 script {
+                    echo ""
                     echo "========================================="
-                    echo "Publishing JUnit test results..."
+                    echo "📊 Publishing JUnit test results..."
                     echo "========================================="
                     
                     // This publishes the test results and returns TestResultSummary
@@ -57,35 +73,63 @@ pipeline {
                     echo "========================================="
                     echo "✅ Current TestResultSummary Information:"
                     echo "========================================="
-                    echo "Total Tests: ${testResults.totalCount}"
-                    echo "Failed Tests: ${testResults.failCount}"
-                    echo "Passed Tests: ${testResults.passCount}"
-                    echo "Skipped Tests: ${testResults.skipCount}"
-                    echo "Class Name: ${testResults.class.name}"
+                    echo "📝 Type: ${testResults.class.name}"
+                    echo "📊 Total Tests: ${testResults.totalCount}"
+                    echo "❌ Failed Tests: ${testResults.failCount}"
+                    echo "✅ Passed Tests: ${testResults.passCount}"
+                    echo "⏭️  Skipped Tests: ${testResults.skipCount}"
+                    
+                    // Check available methods
+                    echo ""
+                    echo "Available methods on TestResultSummary:"
+                    testResults.class.methods.each { method ->
+                        if (method.name.startsWith('get') && method.parameterTypes.length == 0) {
+                            echo "  - ${method.name}()"
+                        }
+                    }
                     
                     // ===== DESIRED BEHAVIOR (DOESN'T WORK YET) =====
                     echo ""
                     echo "========================================="
                     echo "❌ Trying to get failed test details..."
                     echo "========================================="
+                    echo "Attempting: testResults.getFailedTests()"
+                    echo ""
                     
                     try {
                         // This will FAIL because method doesn't exist!
                         def failedTests = testResults.getFailedTests()
-                        echo "✅ SUCCESS! Failed tests: ${failedTests}"
+                        
+                        echo "✅ SUCCESS! Method getFailedTests() exists!"
+                        echo "   Found ${failedTests.size()} failed tests:"
+                        echo ""
                         
                         failedTests.each { test ->
-                            echo "  - ${test.fullName}"
-                            echo "    Duration: ${test.duration}s"
+                            echo "   📍 ${test.fullName}"
+                            echo "      ⏱️  Duration: ${test.duration}s"
+                            echo "      💥 Error: ${test.errorDetails}"
+                            echo ""
                         }
-                    } catch (MissingMethodException e) {
-                        echo "❌ ERROR: Method getFailedTests() does not exist!"
-                        echo "Error: ${e.message}"
+                        
+                        echo "🎉 The feature has been implemented!"
+                        
+                    } catch (groovy.lang.MissingMethodException e) {
+                        echo "❌ ERROR: Method getFailedTests() does NOT exist!"
                         echo ""
-                        echo "This is the ISSUE we need to fix!"
-                        echo "TestResultSummary only provides counts, not test details."
+                        echo "📋 Error Details:"
+                        echo "   ${e.message}"
+                        echo ""
+                        echo "🔍 This confirms the ISSUE:"
+                        echo "   TestResultSummary only provides counts (totalCount, failCount, etc.)"
+                        echo "   but does NOT provide access to individual test results."
+                        echo ""
+                        echo "💡 What we need:"
+                        echo "   Add getFailedTests() method to TestResultSummary"
+                        echo "   so users can access detailed test information in pipelines."
+                        
                     } catch (Exception e) {
-                        echo "❌ ERROR: ${e.message}"
+                        echo "❌ Unexpected error: ${e.class.name}"
+                        echo "   Message: ${e.message}"
                     }
                     
                     // ===== WORKAROUND (Complex but works) =====
@@ -93,69 +137,156 @@ pipeline {
                     echo "========================================="
                     echo "⚙️  Using WORKAROUND to get test details..."
                     echo "========================================="
+                    echo "This demonstrates that the data EXISTS,"
+                    echo "but is hidden behind a complex workaround."
+                    echo ""
                     
                     try {
                         // Complex workaround from StackOverflow
-                        def testResultAction = currentBuild.rawBuild.getAction(hudson.tasks.junit.TestResultAction.class)
+                        // https://stackoverflow.com/questions/39920437/
+                        def testResultAction = currentBuild.rawBuild
+                            .getAction(hudson.tasks.junit.TestResultAction.class)
                         
                         if (testResultAction != null) {
                             def result = testResultAction.getResult()
-                            def failedTests = result.getFailedTests()
                             
-                            echo "✅ Found ${failedTests.size()} failed tests using workaround:"
+                            echo "✅ Workaround successful!"
+                            echo "   Accessed: TestResultAction -> TestResult"
+                            echo ""
+                            
+                            // Get failed tests
+                            def failedTests = result.getFailedTests()
+                            echo "📊 Found ${failedTests.size()} failed tests:"
                             echo ""
                             
                             failedTests.each { test ->
-                                echo "Failed Test:"
-                                echo "  Class: ${test.className}"
-                                echo "  Method: ${test.name}"
-                                echo "  Full Name: ${test.fullName}"
-                                echo "  Duration: ${test.duration}s"
-                                echo "  Status: ${test.status}"
-                                echo "  Error: ${test.errorDetails}"
-                                echo "  ---"
+                                echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                                echo "❌ Failed Test:"
+                                echo "   📦 Class: ${test.className}"
+                                echo "   🔧 Method: ${test.name}"
+                                echo "   📍 Full Name: ${test.fullName}"
+                                echo "   ⏱️  Duration: ${test.duration}s"
+                                echo "   📊 Status: ${test.status}"
+                                echo "   💥 Error: ${test.errorDetails}"
+                                echo ""
                             }
                             
+                            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
                             echo ""
-                            echo "⚠️  This workaround is:"
-                            echo "  - Too complex"
-                            echo "  - Uses internal APIs (rawBuild)"
-                            echo "  - Not officially supported"
-                            echo "  - May break in future versions"
+                            echo "⚠️  PROBLEMS with this workaround:"
+                            echo "   1. ❌ Too complex for simple use cases"
+                            echo "   2. ❌ Uses internal API (currentBuild.rawBuild)"
+                            echo "   3. ❌ Not officially documented"
+                            echo "   4. ❌ May break in future Jenkins versions"
+                            echo "   5. ❌ Requires deep Jenkins knowledge"
+                            echo "   6. ❌ Not discoverable (users won't find it)"
                             echo ""
-                            echo "��� We should add getFailedTests() to TestResultSummary!"
+                            echo "✅ SOLUTION:"
+                            echo "   Add getFailedTests() directly to TestResultSummary!"
+                            echo "   This makes it simple, official, and maintainable."
+                            
                         } else {
                             echo "❌ Could not find TestResultAction"
+                            echo "   This shouldn't happen, but confirms the issue."
                         }
+                        
                     } catch (Exception e) {
-                        echo "❌ Workaround also failed: ${e.message}"
-                        e.printStackTrace()
+                        echo "❌ Even the workaround failed!"
+                        echo "   Error: ${e.message}"
+                        echo ""
+                        echo "This further proves we need an official API!"
                     }
                 }
             }
         }
         
-        stage('Demonstrate Use Case') {
+        stage('Demonstrate Use Cases') {
             steps {
                 script {
                     echo ""
                     echo "========================================="
-                    echo "��� EXAMPLE USE CASE"
+                    echo "💡 REAL-WORLD USE CASES"
                     echo "========================================="
-                    echo "If getFailedTests() was available, we could:"
                     echo ""
-                    echo "1. Send Slack notification with failed test names"
-                    echo "2. Create Jira tickets for each failure"
-                    echo "3. Email detailed failure report to team"
-                    echo "4. Trigger different actions based on which tests failed"
-                    echo "5. Find slow tests (duration > 5s)"
-                    echo "6. Custom dashboards and metrics"
+                    echo "If getFailedTests() was available, users could:"
                     echo ""
-                    echo "Example desired code:"
-                    echo "  def failedTests = testResults.getFailedTests()"
-                    echo "  failedTests.each { test ->"
-                    echo "    slackSend(message: \"Test failed: \${test.fullName}\")"
-                    echo "  }"
+                    echo "📢 1. SLACK NOTIFICATIONS"
+                    echo "   def failedTests = testResults.getFailedTests()"
+                    echo "   def message = 'Failed tests:\\n' + failedTests*.fullName.join('\\n')"
+                    echo "   slackSend(message: message)"
+                    echo ""
+                    echo "🎫 2. JIRA TICKET CREATION"
+                    echo "   failedTests.each { test ->"
+                    echo "     jiraCreateIssue("
+                    echo "       summary: \"Test failed: \${test.fullName}\","
+                    echo "       description: test.errorDetails"
+                    echo "     )"
+                    echo "   }"
+                    echo ""
+                    echo "📧 3. EMAIL DETAILED REPORTS"
+                    echo "   def report = failedTests.collect { test ->"
+                    echo "     \"\${test.fullName}: \${test.errorDetails}\""
+                    echo "   }.join('\\n')"
+                    echo "   emailext(body: report, subject: 'Test Failures')"
+                    echo ""
+                    echo "🔍 4. CONDITIONAL LOGIC"
+                    echo "   if (failedTests.any { it.className.contains('Critical') }) {"
+                    echo "     // Trigger emergency deployment rollback"
+                    echo "   }"
+                    echo ""
+                    echo "⏱️  5. PERFORMANCE MONITORING"
+                    echo "   def slowTests = testResults.getAllTests()"
+                    echo "     .findAll { it.duration > 5.0 }"
+                    echo "   if (slowTests) {"
+                    echo "     echo \"Slow tests found: \${slowTests*.fullName}\""
+                    echo "   }"
+                    echo ""
+                    echo "📊 6. CUSTOM DASHBOARDS"
+                    echo "   def metrics = ["
+                    echo "     total: testResults.totalCount,"
+                    echo "     failed: failedTests.collect { [name: it.fullName, time: it.duration] }"
+                    echo "   ]"
+                    echo "   writeJSON(file: 'metrics.json', json: metrics)"
+                    echo ""
+                    echo "🎯 7. FLAKY TEST DETECTION"
+                    echo "   def flakyTests = failedTests.findAll { test ->"
+                    echo "     test.age < 2 // Failed recently"
+                    echo "   }"
+                    echo ""
+                    echo "========================================="
+                }
+            }
+        }
+        
+        stage('Summary') {
+            steps {
+                script {
+                    echo ""
+                    echo "╔════════════════════════════════════════╗"
+                    echo "║         ISSUE REPRODUCTION             ║"
+                    echo "╚════════════════════════════════════════╝"
+                    echo ""
+                    echo "✅ Successfully demonstrated the problem:"
+                    echo ""
+                    echo "   Current State:"
+                    echo "   • TestResultSummary only provides counts"
+                    echo "   • getFailedTests() method does NOT exist"
+                    echo "   • Users must use complex workarounds"
+                    echo ""
+                    echo "   Desired State:"
+                    echo "   • Add getFailedTests() to TestResultSummary"
+                    echo "   • Add getAllTests() for all test access"
+                    echo "   • Add getPassedTests() for completeness"
+                    echo "   • Simple, discoverable, official API"
+                    echo ""
+                    echo "   Next Steps:"
+                    echo "   • Modify TestResultSummary.java"
+                    echo "   • Add new methods with proper serialization"
+                    echo "   • Update documentation"
+                    echo "   • Add tests"
+                    echo "   • Submit PR"
+                    echo ""
+                    echo "╚════════════════════════════════════════╝"
                 }
             }
         }
@@ -165,17 +296,20 @@ pipeline {
         always {
             echo ""
             echo "========================================="
-            echo "Build completed!"
+            echo "🏁 Build completed!"
             echo "========================================="
+            
+            // Archive the generated test results for inspection
+            archiveArtifacts artifacts: 'target/surefire-reports/*.xml', allowEmptyArchive: true
+        }
+        unstable {
+            echo "⚠️  Build unstable (tests failed - as expected)"
+        }
+        success {
+            echo "✅ Build succeeded (but tests should have failed)"
         }
         failure {
             echo "❌ Build failed"
-        }
-        unstable {
-            echo "⚠️  Build unstable (tests failed)"
-        }
-        success {
-            echo "✅ Build succeeded"
         }
     }
 }
