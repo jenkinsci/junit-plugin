@@ -20,36 +20,70 @@ pipeline {
                     echo "========================================="
                     echo "Generating test results..."
                     echo "========================================="
+                    echo "Current directory: ${pwd()}"
                     
-                    // Create directory
-                    bat 'if not exist target\\surefire-reports mkdir target\\surefire-reports'
+                    // Check if we're on Windows or Linux
+                    def isWindows = isUnix() ? false : true
                     
-                    // Create test XML file inline
-                    bat '''
-                        @echo off
-                        (
-                        echo ^<?xml version="1.0" encoding="UTF-8"?^>
-                        echo ^<testsuite name="com.example.PipelineTest" tests="5" failures="2" errors="0" skipped="1" time="3.5"^>
-                        echo   ^<testcase name="testSuccess1" classname="com.example.PipelineTest" time="0.5"^>^</testcase^>
-                        echo   ^<testcase name="testSuccess2" classname="com.example.PipelineTest" time="0.8"^>^</testcase^>
-                        echo   ^<testcase name="testFailure1" classname="com.example.PipelineTest" time="1.2"^>
-                        echo     ^<failure message="Expected 5 but was 3" type="AssertionError"^>
-                        echo       AssertionError: Expected 5 but was 3
-                        echo       at com.example.PipelineTest.testFailure1(PipelineTest.java:25)
-                        echo     ^</failure^>
-                        echo   ^</testcase^>
-                        echo   ^<testcase name="testFailure2" classname="com.example.PipelineTest" time="0.7"^>
-                        echo     ^<failure message="NullPointerException" type="NullPointerException"^>
-                        echo       NullPointerException: Cannot invoke method
-                        echo       at com.example.PipelineTest.testFailure2(PipelineTest.java:42)
-                        echo     ^</failure^>
-                        echo   ^</testcase^>
-                        echo   ^<testcase name="testSkipped" classname="com.example.PipelineTest" time="0.0"^>
-                        echo     ^<skipped message="Test disabled"^>Test is disabled^</skipped^>
-                        echo   ^</testcase^>
-                        echo ^</testsuite^>
-                        ) > target\\surefire-reports\\TEST-PipelineTest.xml
-                    '''
+                    if (isWindows) {
+                        // Windows commands
+                        bat '''
+                            @echo off
+                            echo Creating directory...
+                            if not exist target\\surefire-reports mkdir target\\surefire-reports
+                            
+                            echo Generating test XML file...
+                            (
+                            echo ^<?xml version="1.0" encoding="UTF-8"?^>
+                            echo ^<testsuite name="com.example.PipelineTest" tests="5" failures="2" errors="0" skipped="1" time="3.5"^>
+                            echo   ^<testcase name="testSuccess1" classname="com.example.PipelineTest" time="0.5"^>^</testcase^>
+                            echo   ^<testcase name="testSuccess2" classname="com.example.PipelineTest" time="0.8"^>^</testcase^>
+                            echo   ^<testcase name="testFailure1" classname="com.example.PipelineTest" time="1.2"^>
+                            echo     ^<failure message="Expected 5 but was 3" type="AssertionError"^>AssertionError: Expected 5 but was 3 at com.example.PipelineTest.testFailure1^(PipelineTest.java:25^)^</failure^>
+                            echo   ^</testcase^>
+                            echo   ^<testcase name="testFailure2" classname="com.example.PipelineTest" time="0.7"^>
+                            echo     ^<failure message="NullPointerException" type="NullPointerException"^>NullPointerException: Cannot invoke method at com.example.PipelineTest.testFailure2^(PipelineTest.java:42^)^</failure^>
+                            echo   ^</testcase^>
+                            echo   ^<testcase name="testSkipped" classname="com.example.PipelineTest" time="0.0"^>
+                            echo     ^<skipped message="Test disabled"^>Test is disabled^</skipped^>
+                            echo   ^</testcase^>
+                            echo ^</testsuite^>
+                            ) > target\\surefire-reports\\TEST-PipelineTest.xml
+                            
+                            echo Verifying file was created...
+                            dir target\\surefire-reports
+                        '''
+                    } else {
+                        // Linux/Unix commands
+                        sh '''
+                            echo "Creating directory..."
+                            mkdir -p target/surefire-reports
+                            
+                            echo "Generating test XML file..."
+                            cat > target/surefire-reports/TEST-PipelineTest.xml << 'EOF'
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.example.PipelineTest" tests="5" failures="2" errors="0" skipped="1" time="3.5">
+  <testcase name="testSuccess1" classname="com.example.PipelineTest" time="0.5"></testcase>
+  <testcase name="testSuccess2" classname="com.example.PipelineTest" time="0.8"></testcase>
+  <testcase name="testFailure1" classname="com.example.PipelineTest" time="1.2">
+    <failure message="Expected 5 but was 3" type="AssertionError">AssertionError: Expected 5 but was 3
+    at com.example.PipelineTest.testFailure1(PipelineTest.java:25)</failure>
+  </testcase>
+  <testcase name="testFailure2" classname="com.example.PipelineTest" time="0.7">
+    <failure message="NullPointerException" type="NullPointerException">NullPointerException: Cannot invoke method
+    at com.example.PipelineTest.testFailure2(PipelineTest.java:42)</failure>
+  </testcase>
+  <testcase name="testSkipped" classname="com.example.PipelineTest" time="0.0">
+    <skipped message="Test disabled">Test is disabled</skipped>
+  </testcase>
+</testsuite>
+EOF
+                            
+                            echo "Verifying file was created..."
+                            ls -la target/surefire-reports/
+                            cat target/surefire-reports/TEST-PipelineTest.xml
+                        '''
+                    }
                     
                     echo "✅ Test results generated successfully!"
                     echo "   Location: target/surefire-reports/TEST-PipelineTest.xml"
@@ -66,7 +100,7 @@ pipeline {
                     echo "========================================="
                     
                     // This publishes the test results and returns TestResultSummary
-                    def testResults = junit testResults: 'target/surefire-reports/*.xml'
+                    def testResults = junit testResults: 'target/surefire-reports/*.xml', allowEmptyResults: false
                     
                     // ===== CURRENT BEHAVIOR (WORKS) =====
                     echo ""
@@ -82,10 +116,10 @@ pipeline {
                     // Check available methods
                     echo ""
                     echo "Available methods on TestResultSummary:"
-                    testResults.class.methods.each { method ->
-                        if (method.name.startsWith('get') && method.parameterTypes.length == 0) {
-                            echo "  - ${method.name}()"
-                        }
+                    testResults.class.methods.findAll { 
+                        it.name.startsWith('get') && it.parameterTypes.length == 0 && !it.name.equals('getClass')
+                    }.each { method ->
+                        echo "  - ${method.name}() -> ${method.returnType.simpleName}"
                     }
                     
                     // ===== DESIRED BEHAVIOR (DOESN'T WORK YET) =====
@@ -167,7 +201,9 @@ pipeline {
                                 echo "   📍 Full Name: ${test.fullName}"
                                 echo "   ⏱️  Duration: ${test.duration}s"
                                 echo "   📊 Status: ${test.status}"
-                                echo "   💥 Error: ${test.errorDetails}"
+                                if (test.errorDetails) {
+                                    echo "   💥 Error: ${test.errorDetails.take(100)}..."
+                                }
                                 echo ""
                             }
                             
