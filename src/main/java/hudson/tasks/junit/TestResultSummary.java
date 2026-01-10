@@ -1,6 +1,10 @@
 package hudson.tasks.junit;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.DoNotUse;
@@ -13,6 +17,7 @@ public class TestResultSummary implements Serializable {
     private int skipCount;
     private int passCount;
     private int totalCount;
+    private transient TestResult testResult;
 
     @Deprecated
     @Restricted(DoNotUse.class)
@@ -23,6 +28,7 @@ public class TestResultSummary implements Serializable {
         this.skipCount = skipCount;
         this.passCount = passCount;
         this.totalCount = totalCount;
+          this.testResult=null;
     }
 
     public TestResultSummary(TestResult result) {
@@ -30,6 +36,7 @@ public class TestResultSummary implements Serializable {
         this.skipCount = result.getSkipCount();
         this.passCount = result.getPassCount();
         this.totalCount = result.getTotalCount();
+        this.testResult=result;
         if (totalCount == 0) {
             for (SuiteResult suite : result.getSuites()) {
                 if (!suite.getCases().isEmpty()) {
@@ -58,5 +65,74 @@ public class TestResultSummary implements Serializable {
     @Whitelisted
     public int getTotalCount() {
         return totalCount;
+    }
+
+
+    /**
+     * Gets the list of failed tests.
+     *
+     * This method allows pipeline scripts to access individual failed test details
+     * for automated notifications, reporting, or conditional logic.
+     *
+     * @return List of failed test cases, or empty list if test result is not available
+     * @since TODO
+     */
+    @Whitelisted
+    public List<CaseResult> getFailedTests() {
+        if (testResult == null) {
+            return Collections.emptyList();
+        }
+        return testResult.getFailedTests();
+    }
+
+    /**
+     * Gets the list of passed tests.
+     *
+     * @return List of passed test cases, or empty list if test result is not available
+     * @since TODO
+     */
+    @Whitelisted
+    public List<CaseResult> getPassedTests() {
+        if (testResult == null) {
+            return Collections.emptyList();
+        }
+        return testResult.getPassedTests();
+    }
+
+    /**
+     * Gets the list of skipped tests.
+     *
+     * @return List of skipped test cases, or empty list if test result is not available
+     * @since TODO
+     */
+    @Whitelisted
+    public List<CaseResult> getSkippedTests() {
+        if (testResult == null) {
+            return Collections.emptyList();
+        }
+        return testResult.getSkippedTests();
+    }
+
+    /**
+     * Gets all test cases (passed, failed, and skipped).
+     *
+     * Useful for finding slow tests, generating comprehensive reports,
+     * or performing custom analysis on all test results.
+     *
+     * @return List of all test cases, or empty list if test result is not available
+     * @since TODO
+     */
+    @Whitelisted
+    public List<CaseResult> getAllTests() {
+        if (testResult == null) {
+            return Collections.emptyList();
+        }
+
+        // Combine all test results
+        List<CaseResult> allTests = new ArrayList<>();
+        for (SuiteResult suite : testResult.getSuites()) {
+            allTests.addAll(suite.getCases());
+        }
+        return allTests;
     }
 }
