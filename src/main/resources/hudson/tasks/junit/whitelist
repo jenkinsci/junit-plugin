@@ -1,19 +1,10 @@
-# TestObject methods (parent class of CaseResult)
-method hudson.tasks.test.TestObject getFullName
-method hudson.tasks.test.TestObject getDuration
-method hudson.tasks.test.TestObject getName
-method hudson.tasks.test.TestObject getClassName
-method hudson.tasks.test.TestObject getStatus
+# # TestObject methods (parent class of CaseResult)
+# method hudson.tasks.test.TestObject getFullName
+# method hudson.tasks.test.TestObject getDuration
+# method hudson.tasks.test.TestObject getName
+# method hudson.tasks.test.TestObject getClassName
+# method hudson.tasks.test.TestObject getStatus
 
-# CaseResult specific methods
-method hudson.tasks.junit.CaseResult getErrorDetails
-method hudson.tasks.junit.CaseResult getErrorStackTrace
-method hudson.tasks.junit.CaseResult getAge
-method hudson.tasks.junit.CaseResult isPassed
-method hudson.tasks.junit.CaseResult isFailed
-method hudson.tasks.junit.CaseResult isSkipped
-method hudson.tasks.junit.CaseResult getSimpleName
 
-# Additional methods that may be called internally
-method java.lang.Throwable printStackTrace
-method java.lang.Throwable getMessage
+
+
