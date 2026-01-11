@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-
 import org.jenkinsci.plugins.scriptsecurity.sandbox.whitelists.Whitelisted;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.DoNotUse;
@@ -28,7 +27,7 @@ public class TestResultSummary implements Serializable {
         this.skipCount = skipCount;
         this.passCount = passCount;
         this.totalCount = totalCount;
-          this.testResult=null;
+        this.testResult = null;
     }
 
     public TestResultSummary(TestResult result) {
@@ -36,7 +35,7 @@ public class TestResultSummary implements Serializable {
         this.skipCount = result.getSkipCount();
         this.passCount = result.getPassCount();
         this.totalCount = result.getTotalCount();
-        this.testResult=result;
+        this.testResult = result;
         if (totalCount == 0) {
             for (SuiteResult suite : result.getSuites()) {
                 if (!suite.getCases().isEmpty()) {
@@ -66,7 +65,6 @@ public class TestResultSummary implements Serializable {
     public int getTotalCount() {
         return totalCount;
     }
-
 
     /**
      * Gets the list of failed tests.
