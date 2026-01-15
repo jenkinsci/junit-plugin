@@ -75,7 +75,7 @@ public class TestResultSummary implements Serializable {
      * @return List of failed test cases, or empty list if test result is not available
      * @since TODO
      */
-    @Whitelisted
+
     public List<CaseResult> getFailedTests() {
         if (testResult == null) {
             return Collections.emptyList();
@@ -89,7 +89,7 @@ public class TestResultSummary implements Serializable {
      * @return List of passed test cases, or empty list if test result is not available
      * @since TODO
      */
-    @Whitelisted
+
     public List<CaseResult> getPassedTests() {
         if (testResult == null) {
             return Collections.emptyList();
@@ -103,7 +103,7 @@ public class TestResultSummary implements Serializable {
      * @return List of skipped test cases, or empty list if test result is not available
      * @since TODO
      */
-    @Whitelisted
+
     public List<CaseResult> getSkippedTests() {
         if (testResult == null) {
             return Collections.emptyList();
@@ -120,7 +120,7 @@ public class TestResultSummary implements Serializable {
      * @return List of all test cases, or empty list if test result is not available
      * @since TODO
      */
-    @Whitelisted
+
     public List<CaseResult> getAllTests() {
         if (testResult == null) {
             return Collections.emptyList();
