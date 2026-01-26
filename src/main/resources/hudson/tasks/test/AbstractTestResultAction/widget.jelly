@@ -28,7 +28,7 @@ THE SOFTWARE.
         <j:set var="widget" value="${it.widget}" />
 
         <a class="jenkins-card__teaser" href="${it.urlName}" tabindex="-1">
-            <l:icon src="${widget.symbol}" class="${widget.symbolClass}" />
+            <l:icon src="${widget.symbol}" />
             <j:forEach var="line" items="${widget.lines}">
                 <div>${line}</div>
             </j:forEach>
