@@ -6,7 +6,6 @@ import java.util.List;
 public class Widget {
 
     private final String symbol;
-    private final String symbolClass;
     private final List<String> lines = new ArrayList<>();
 
     public Widget(TestResult result) {
@@ -14,10 +13,7 @@ public class Widget {
         boolean isFailed = failCount > 0;
         int totalCount = result.getTotalCount();
 
-        this.symbol = isFailed
-                ? "symbol-close-circle-outline plugin-ionicons-api"
-                : "symbol-checkmark-done-outline plugin-ionicons-api";
-        this.symbolClass = isFailed ? "jenkins-!-error-color" : "jenkins-!-success-color";
+        this.symbol = isFailed ? "symbol-status-red" : "symbol-status-blue";
 
         List<String> counts = new ArrayList<>();
 
@@ -57,10 +53,6 @@ public class Widget {
 
     public String getSymbol() {
         return symbol;
-    }
-
-    public String getSymbolClass() {
-        return symbolClass;
     }
 
     public List<String> getLines() {
