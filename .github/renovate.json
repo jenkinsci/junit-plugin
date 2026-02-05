@@ -4,7 +4,6 @@
     "github>jenkinsci/renovate-config",
     "schedule:earlyMondays"
   ],
-  "automerge": true,
   "packageRules": [
     {
       "matchPackageNames": [
