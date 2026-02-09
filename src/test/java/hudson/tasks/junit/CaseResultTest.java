@@ -101,19 +101,39 @@ class CaseResultTest {
 
         // piggy back tests for annotate methods
         assertOutput(cr, "plain text", "plain text");
-        assertOutput(cr, "line #1\nhttp://nowhere.net/\nline #2\n", "line #1\nhttp://nowhere.net/\nline #2\n");
-        assertOutput(cr, "failed; see http://nowhere.net/", "failed; see http://nowhere.net/");
-        assertOutput(cr, "failed (see http://nowhere.net/)", "failed (see http://nowhere.net/)");
+        assertOutput(
+                cr,
+                "line #1\nhttp://nowhere.net/\nline #2\n",
+                "line #1\n" + "<a href=\"http://nowhere.net/\">http://nowhere.net/</a>\n" + "line #2\n");
+        assertOutput(
+                cr,
+                "failed; see http://nowhere.net/",
+                "failed; see <a href=\"http://nowhere.net/\">http://nowhere.net/</a>");
+        assertOutput(
+                cr,
+                "failed (see http://nowhere.net/)",
+                "failed (see <a href=\"http://nowhere.net/\">http://nowhere.net/</a>)");
         assertOutput(
                 cr,
                 "http://nowhere.net/ - failed: http://elsewhere.net/",
-                "http://nowhere.net/ - failed: " + "http://elsewhere.net/");
-        assertOutput(cr, "https://nowhere.net/", "https://nowhere.net/");
+                "<a href=\"http://nowhere.net/\">http://nowhere.net/</a> - failed: <a href=\"http://elsewhere.net/\">http://elsewhere.net/</a>");
+        assertOutput(cr, "https://nowhere.net/", "<a href=\"https://nowhere.net/\">https://nowhere.net/</a>");
         assertOutput(cr, "stuffhttp://nowhere.net/", "stuffhttp://nowhere.net/");
         assertOutput(cr, "a < b && c < d", "a &lt; b &amp;&amp; c &lt; d");
-        assertOutput(cr, "see <http://nowhere.net/>", "see &lt;http://nowhere.net/>");
-        assertOutput(cr, "http://google.com/?q=stuff&lang=en", "http://google.com/?q=stuff&amp;lang=en");
-        assertOutput(cr, "http://localhost:8080/stuff/", "http://localhost:8080/stuff/");
+        assertOutput(
+                cr, "see <http://nowhere.net/>", "see &lt;<a href=\"http://nowhere.net/\">http://nowhere.net/</a>>");
+        assertOutput(
+                cr,
+                "http://google.com/?q=stuff&lang=en",
+                "<a href=\"http://google.com/?q&#61;stuff&amp;lang&#61;en\">http://google.com/?q&#61;stuff&amp;lang&#61;en</a>");
+        assertOutput(
+                cr,
+                "http://localhost:8080/stuff/",
+                "<a href=\"http://localhost:8080/stuff/\">http://localhost:8080/stuff/</a>");
+        assertOutput(
+                cr,
+                "https://google.com\"onclick=alert(1)\"",
+                "<a href=\"https://google.com\">https://google.com</a>\"onclick=alert(1)\"");
     }
 
     /**
