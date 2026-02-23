@@ -130,7 +130,7 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>github-checks</artifactId>
-      <version>634.v371dc6d978a_3</version>
+      <version>676.v48c732b_52951</version>
       <scope>test</scope>
     </dependency>
     <dependency>
