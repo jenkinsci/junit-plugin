@@ -34,9 +34,8 @@ THE SOFTWARE.
                             <l:icon src="symbol-chevron-forward-outline plugin-ionicons-api" />
                             <l:copyButton text="${value}" iconOnly="true" clazz="jenkins-mobile-hide" />
                         </summary>
-
                         <pre class="jdl-component-code__code">
-                            <code class="language-javastacktrace">
+                            <code class="${codeClass}">
                                 ${value}
                             </code>
                         </pre>
@@ -45,12 +44,27 @@ THE SOFTWARE.
             </j:if>
         </d:tag>
     </d:taglib>
-
-    <local:item id="${id}" name="error" title="${%Error Details}" value="${it.errorDetails}" />
+    <local:item id="${id}" name="error" title="${%Error Details}" value="${it.errorDetails}" codeClass="language-javastacktrace" />
     <j:forEach var="p" items="${it.properties}">
-        <local:item id="${id}" name="${p.key}" title="${p.key}" value="${p.value}" />
+        <local:item id="${id}" name="${p.key}" title="${p.key}" value="${p.value}" codeClass="" />
     </j:forEach>
-    <local:item id="${id}" name="stacktrace" title="${%Stack Trace}" value="${it.errorStackTrace}" />
-    <local:item id="${id}" name="stdout" title="${%Standard Output}" value="${it.stdout}" />
-    <local:item id="${id}" name="stderr" title="${%Standard Error}" value="${it.stderr}" />
+    <local:item id="${id}" name="stacktrace" title="${%Stack Trace}" value="${it.errorStackTrace}" codeClass="language-javastacktrace" />
+
+
+    <j:set var="stdoutClass" value="" />
+    <j:if test="${it.stdout != null}">
+        <j:if test="${it.stdout.contains('Exception') or it.stdout.contains('Error') or it.stdout.contains('at ') and (it.stdout.contains('.java:') or it.stdout.contains('Caused by:'))}">
+            <j:set var="stdoutClass" value="language-javastacktrace" />
+        </j:if>
+    </j:if>
+    <local:item id="${id}" name="stdout" title="${%Standard Output}" value="${it.stdout}" codeClass="${stdoutClass}" />
+
+
+    <j:set var="stderrClass" value="" />
+    <j:if test="${it.stderr != null}">
+        <j:if test="${it.stderr.contains('Exception') or it.stderr.contains('Error') or it.stderr.contains('at ') and (it.stderr.contains('.java:') or it.stderr.contains('Caused by:'))}">
+            <j:set var="stderrClass" value="language-javastacktrace" />
+        </j:if>
+    </j:if>
+    <local:item id="${id}" name="stderr" title="${%Standard Error}" value="${it.stderr}" codeClass="${stderrClass}" />
 </j:jelly>
