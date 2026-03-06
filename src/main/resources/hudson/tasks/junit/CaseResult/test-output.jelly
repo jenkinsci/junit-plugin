@@ -47,6 +47,7 @@ THE SOFTWARE.
     </d:taglib>
 
     <local:item id="${id}" name="error" title="${%Error Details}" value="${it.errorDetails}" />
+    <local:item id="${id}" name="skipmessage" title="${%Skip Message}" value="${it.skippedMessage}" />
     <j:forEach var="p" items="${it.properties}">
         <local:item id="${id}" name="${p.key}" title="${p.key}" value="${p.value}" />
     </j:forEach>
