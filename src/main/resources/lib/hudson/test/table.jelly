@@ -65,7 +65,7 @@ THE SOFTWARE.
                     <j:choose>
                         <j:when test="${f.status == 'SKIPPED' and f.skippedMessage == null || f.skippedMessage.isEmpty()}">
                             <div class="jp-table-row">
-                                <l:icon src="${f.getIconFileName()}" />
+                                <l:icon src="${f.iconFileName}" />
 
                                 ${f.name}
 
