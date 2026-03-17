@@ -65,7 +65,7 @@ THE SOFTWARE.
                     <j:choose>
                         <j:when test="${f.status == 'SKIPPED'}">
                             <div class="jp-table-row">
-                                <l:icon src="symbol-status-skipped plugin-junit" />
+                                <l:icon src="${f.iconFileName}" />
 
                                 ${f.name}
 
@@ -80,7 +80,7 @@ THE SOFTWARE.
                         </j:when>
                         <j:otherwise>
                             <a id="test-${id}-showlink" class="jp-table-row" href="${url}">
-                                <l:icon src="${f.status == 'PASSED' ? 'symbol-status-blue' : 'symbol-status-red'}" />
+                                <l:icon src="${f.iconFileName}" />
 
                                 ${f.name}
 
