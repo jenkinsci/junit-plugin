@@ -63,7 +63,7 @@ THE SOFTWARE.
                     <j:set var="id" value="${h.htmlAttributeEscape(url)}" />
 
                     <j:choose>
-                        <j:when test="${f.status == 'SKIPPED' &amp;&amp; f.skippedMessage == null || f.skippedMessage.isEmpty()}">
+                        <j:when test="${f.status == 'SKIPPED' and f.skippedMessage == null || f.skippedMessage.isEmpty()}">
                             <div class="jp-table-row">
                                 <l:icon src="${f.getIconFileName()}" />
 
