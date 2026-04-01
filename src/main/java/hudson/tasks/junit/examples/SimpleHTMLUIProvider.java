@@ -157,9 +157,8 @@ public class SimpleHTMLUIProvider extends CustomUIProvider {
 
         out.println("<div class='info-row'>");
         out.println("<div class='info-label'>Success Rate:</div>");
-        double successRate = testResult.getTotalCount() > 0
-                ? (testResult.getPassCount() * 100.0 / testResult.getTotalCount())
-                : 0;
+        double successRate =
+                testResult.getTotalCount() > 0 ? (testResult.getPassCount() * 100.0 / testResult.getTotalCount()) : 0;
         out.println("<div class='info-value'>" + String.format("%.1f%%", successRate) + "</div>");
         out.println("</div>");
 

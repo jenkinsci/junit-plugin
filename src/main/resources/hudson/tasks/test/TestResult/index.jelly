@@ -30,13 +30,8 @@ THE SOFTWARE.
   <!-- Check if custom UI should be used -->
   <j:choose>
     <j:when test="${it.useCustomUI()}">
-      <!-- Custom UI rendering - provider will handle the response -->
-      <j:set var="customUIProvider" value="${it.customUIProvider}" />
-      <j:invoke on="${customUIProvider}" method="renderTestResultUI">
-        <j:arg value="${test}" />
-        <j:arg value="${request}" />
-        <j:arg value="${response}" />
-      </j:invoke>
+      <!-- Custom UI rendering - redirect to parent action's custom UI method -->
+      <st:redirect url="../../renderCustomUI"/>
     </j:when>
     <j:otherwise>
       <!-- Default UI rendering -->

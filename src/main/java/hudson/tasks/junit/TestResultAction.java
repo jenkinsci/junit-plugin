@@ -301,6 +301,25 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         return getCustomUIProvider() != null;
     }
 
+    /**
+     * Renders the custom UI for test results.
+     * This method is invoked by Stapler when custom UI is enabled.
+     *
+     * @param req the request
+     * @param rsp the response
+     * @throws IOException if rendering fails
+     * @since TBD
+     */
+    public void doRenderCustomUI(org.kohsuke.stapler.StaplerRequest2 req, org.kohsuke.stapler.StaplerResponse2 rsp)
+            throws IOException {
+        CustomUIProvider provider = getCustomUIProvider();
+        if (provider != null) {
+            provider.renderTestResultUI(getResult(), req, rsp);
+        } else {
+            rsp.sendError(404, "Custom UI provider not found");
+        }
+    }
+
     @Override
     public List<CaseResult> getFailedTests() {
         TestResult result = getResult();

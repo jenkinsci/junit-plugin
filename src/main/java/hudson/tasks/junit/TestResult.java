@@ -1252,4 +1252,37 @@ public final class TestResult extends MetaTabulatedResult {
     public PrismConfiguration getPrismConfiguration() {
         return PrismConfiguration.getInstance();
     }
+
+    /**
+     * Renders the custom UI for test results.
+     * This method delegates to the TestResultAction's custom UI provider.
+     *
+     * @param req the request
+     * @param rsp the response
+     * @throws IOException if rendering fails
+     * @since TBD
+     */
+    public void doRenderCustomUI(StaplerRequest2 req, StaplerResponse2 rsp) throws IOException {
+        AbstractTestResultAction<?> parentAction = getParentAction();
+        if (parentAction == null) {
+            rsp.sendError(404, "Parent test result action not found");
+            return;
+        }
+
+        if (!(parentAction instanceof TestResultAction)) {
+            rsp.sendError(404, "Parent action is not a TestResultAction: " + parentAction.getClass().getName());
+            return;
+        }
+
+        TestResultAction action = (TestResultAction) parentAction;
+        CustomUIProvider provider = action.getCustomUIProvider();
+
+        if (provider == null) {
+            rsp.sendError(404, "No custom UI provider configured or found");
+            return;
+        }
+
+        // Render the custom UI directly
+        provider.renderTestResultUI(this, req, rsp);
+    }
 }

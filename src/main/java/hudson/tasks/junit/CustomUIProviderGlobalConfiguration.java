@@ -23,17 +23,17 @@
  */
 package hudson.tasks.junit;
 
-import org.jenkinsci.Symbol;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.DataBoundSetter;
-import org.kohsuke.stapler.StaplerRequest2;
-
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.ExtensionList;
+import hudson.util.ListBoxModel;
 import jenkins.model.GlobalConfiguration;
 import net.sf.json.JSONObject;
+import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
+import org.kohsuke.stapler.StaplerRequest2;
 
 /**
  * Global configuration for JUnit Custom UI Provider.
@@ -96,5 +96,22 @@ public class CustomUIProviderGlobalConfiguration extends GlobalConfiguration {
     @NonNull
     public static CustomUIProviderGlobalConfiguration get() {
         return ExtensionList.lookupSingleton(CustomUIProviderGlobalConfiguration.class);
+    }
+
+    /**
+     * Populates the dropdown list with available custom UI providers.
+     *
+     * @return list of available custom UI providers
+     */
+    public ListBoxModel doFillCustomUIProviderIdItems() {
+        ListBoxModel items = new ListBoxModel();
+        items.add("Default UI", "");
+
+        // Add all registered custom UI providers
+        for (CustomUIProvider provider : CustomUIProvider.all()) {
+            items.add(provider.getDisplayName(), provider.getId());
+        }
+
+        return items;
     }
 }
