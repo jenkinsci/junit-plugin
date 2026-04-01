@@ -27,6 +27,19 @@ THE SOFTWARE.
   <j:set var="test" value="${it}" />
   <j:set var="it" value="${it.parentAction}" />
 
+  <!-- Check if custom UI should be used -->
+  <j:choose>
+    <j:when test="${it.useCustomUI()}">
+      <!-- Custom UI rendering - provider will handle the response -->
+      <j:set var="customUIProvider" value="${it.customUIProvider}" />
+      <j:invoke on="${customUIProvider}" method="renderCaseResultUI">
+        <j:arg value="${test}" />
+        <j:arg value="${request}" />
+        <j:arg value="${response}" />
+      </j:invoke>
+    </j:when>
+    <j:otherwise>
+      <!-- Default UI rendering -->
   <l:run-subpage>
     <j:set var="it" value="${test}" />
     <p:prism configuration="${it.prismConfiguration}" />
@@ -112,4 +125,6 @@ THE SOFTWARE.
       <st:include page="test-output.jelly" />
     </div>
   </l:run-subpage>
+    </j:otherwise>
+  </j:choose>
 </j:jelly>
