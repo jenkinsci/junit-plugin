@@ -162,6 +162,22 @@ public class MyCustomUIProvider extends CustomUIProvider {
 
 No changes needed for jobs or users. Test results automatically render with the configured custom UI.
 
+**Accessing Custom UI:**
+
+When a custom UI provider is configured, users can view test results in two ways:
+
+1. **Embedded in Jenkins UI** (Recommended):
+   - Navigate to: `/job/JOB_NAME/BUILD_NUMBER/testReport/`
+   - Example: `http://jenkins/job/myJob/42/testReport/`
+   - Shows custom UI within Jenkins layout (with sidebar, header, navigation)
+
+2. **Standalone Custom UI**:
+   - Navigate to: `/job/JOB_NAME/BUILD_NUMBER/testReport/renderCustomUI`
+   - Example: `http://jenkins/job/myJob/42/testReport/renderCustomUI`
+   - Shows only the custom UI content without Jenkins chrome
+
+The embedded view uses an iframe to display the custom UI while maintaining the Jenkins interface.
+
 ---
 
 ## API Reference

@@ -95,28 +95,40 @@ Add post-build action: **Publish JUnit test result report**
 
 After running the build, access the custom UI:
 
-**Job Level (Latest Build):**
+**Embedded in Jenkins UI (Recommended):**
+```
+http://localhost:8080/jenkins/job/YOUR-JOB/1/testReport/
+http://localhost:8080/jenkins/job/YOUR-JOB/lastBuild/testReport/
+```
+These URLs show the custom UI embedded within Jenkins layout (with sidebar and header).
+
+**Standalone Custom UI (No Jenkins Chrome):**
+```
+http://localhost:8080/jenkins/job/YOUR-JOB/1/testReport/renderCustomUI
+http://localhost:8080/jenkins/job/YOUR-JOB/lastBuild/testReport/renderCustomUI
+```
+These URLs show only the custom UI content without Jenkins sidebar/header.
+
+**Job Level (Redirects to Latest):**
 ```
 http://localhost:8080/jenkins/job/YOUR-JOB/test/renderCustomUI
 ```
-
-**Specific Build:**
-```
-http://localhost:8080/jenkins/job/YOUR-JOB/1/testReport/renderCustomUI
-```
-
-**Latest Build:**
-```
-http://localhost:8080/jenkins/job/YOUR-JOB/lastBuild/testReport/renderCustomUI
-```
+This redirects to the latest build's testReport.
 
 ## Expected Result
 
-You should see a beautiful custom UI with:
-- 🎨 Purple gradient background
-- 📊 Test statistics cards (Total, Passed, Failed, Skipped)
-- ℹ️ Test details section
-- ✨ Smooth hover effects
+**When accessing `/testReport/` (Embedded):**
+You should see:
+- ✅ Jenkins sidebar with build navigation
+- ✅ Jenkins header and breadcrumbs
+- ✅ Custom UI embedded in an iframe showing:
+  - 🎨 Purple gradient background
+  - 📊 Test statistics cards (Total, Passed, Failed, Skipped)
+  - ℹ️ Test details section
+  - ✨ Smooth hover effects
+
+**When accessing `/testReport/renderCustomUI` (Standalone):**
+You should see only the custom UI without Jenkins chrome.
 
 ## Troubleshooting
 
@@ -147,7 +159,8 @@ You should see a beautiful custom UI with:
 
 Make sure you're using the correct URL:
 - ❌ Wrong: `/job/NAME/renderCustomUI`
-- ✅ Correct: `/job/NAME/lastBuild/testReport/renderCustomUI`
+- ✅ Correct (Embedded): `/job/NAME/lastBuild/testReport/`
+- ✅ Correct (Standalone): `/job/NAME/lastBuild/testReport/renderCustomUI`
 
 ## Testing Different Scenarios
 
