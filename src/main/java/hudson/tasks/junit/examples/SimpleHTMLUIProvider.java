@@ -23,15 +23,17 @@
  */
 package hudson.tasks.junit.examples;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
+
 import hudson.Extension;
 import hudson.model.Run;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.CustomUIProvider;
 import hudson.tasks.junit.TestResult;
-import java.io.IOException;
-import java.io.PrintWriter;
-import org.kohsuke.stapler.StaplerRequest2;
-import org.kohsuke.stapler.StaplerResponse2;
 
 /**
  * Example custom UI provider that demonstrates the CustomUIProvider extension point.
@@ -166,8 +168,6 @@ public class SimpleHTMLUIProvider extends CustomUIProvider {
         out.println("<div class='info-label'>Build:</div>");
         out.println("<div class='info-value'>#" + testResult.getRun().getNumber() + "</div>");
         out.println("</div>");
-
-        out.println("<a href='../../' class='btn'>← Back to Build</a>");
         out.println("</div>");
 
         out.println("<div class='footer'>");
