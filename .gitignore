@@ -1,14 +1,6 @@
 target/
 work/
 
-# Temporary build and testing files
-*.log
-*.pid
-WEB-INF/
-META-INF/
-*-FIXED.hpi
-*-fixed.jar
-
 # IntelliJ project files 
 *.iml
 *.ipr
