@@ -1275,6 +1275,13 @@ public final class TestResult extends MetaTabulatedResult {
         }
 
         TestResultAction action = (TestResultAction) parentAction;
+
+        // Check if user has permission to view test results
+        Run<?, ?> build = action.run;
+        if (build != null) {
+            build.checkPermission(hudson.model.Item.READ);
+        }
+
         CustomUIProvider provider = action.getCustomUIProvider();
 
         if (provider == null) {

@@ -312,6 +312,9 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
      */
     public void doRenderCustomUI(org.kohsuke.stapler.StaplerRequest2 req, org.kohsuke.stapler.StaplerResponse2 rsp)
             throws IOException {
+        // Check if user has permission to view test results
+        run.checkPermission(hudson.model.Item.READ);
+
         CustomUIProvider provider = getCustomUIProvider();
         if (provider != null) {
             provider.renderTestResultUI(getResult(), req, rsp);
