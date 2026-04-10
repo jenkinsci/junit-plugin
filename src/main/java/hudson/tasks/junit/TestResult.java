@@ -1270,7 +1270,10 @@ public final class TestResult extends MetaTabulatedResult {
         }
 
         if (!(parentAction instanceof TestResultAction)) {
-            rsp.sendError(404, "Parent action is not a TestResultAction: " + parentAction.getClass().getName());
+            rsp.sendError(
+                    404,
+                    "Parent action is not a TestResultAction: "
+                            + parentAction.getClass().getName());
             return;
         }
 

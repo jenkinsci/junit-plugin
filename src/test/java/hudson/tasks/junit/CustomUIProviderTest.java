@@ -8,36 +8,39 @@ import hudson.model.Run;
 import java.io.IOException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.kohsuke.stapler.StaplerRequest2;
 import org.kohsuke.stapler.StaplerResponse2;
 
 /**
  * Tests for {@link CustomUIProvider} extension point and global configuration.
  */
+@WithJenkins
 public class CustomUIProviderTest {
-
-    @RegisterExtension
-    public JenkinsRule jenkins = new JenkinsRule();
 
     /**
      * Clean up global configuration after each test to prevent test pollution.
      */
     @AfterEach
     public void cleanupGlobalConfig() {
-        CustomUIProviderGlobalConfiguration.get().setCustomUIProviderId(null);
+        // Only cleanup if Jenkins instance is available
+        try {
+            CustomUIProviderGlobalConfiguration.get().setCustomUIProviderId(null);
+        } catch (IllegalStateException e) {
+            // Jenkins instance not available, nothing to cleanup
+        }
     }
 
     @Test
-    public void testCustomUIProviderRegistration() {
+    public void testCustomUIProviderRegistration(JenkinsRule jenkins) {
         // Test that the CustomUIProvider extension point can be queried
         assertNotNull(CustomUIProvider.all(), "CustomUIProvider.all() should not return null");
     }
 
     @Test
-    public void testFindByIdReturnsNullForInvalidId() {
+    public void testFindByIdReturnsNullForInvalidId(JenkinsRule jenkins) {
         CustomUIProvider provider = CustomUIProvider.findById("non-existent-provider");
         assertNull(provider, "Should return null for non-existent provider ID");
     }
@@ -55,7 +58,7 @@ public class CustomUIProviderTest {
     }
 
     @Test
-    public void testTestResultActionCustomUIConfiguration() throws Exception {
+    public void testTestResultActionCustomUIConfiguration(JenkinsRule jenkins) throws Exception {
         FreeStyleProject project = jenkins.createFreeStyleProject();
         Run<?, ?> build = project.scheduleBuild2(0).get();
 
@@ -75,7 +78,7 @@ public class CustomUIProviderTest {
     }
 
     @Test
-    public void testCustomUIProviderIntegration() throws Exception {
+    public void testCustomUIProviderIntegration(JenkinsRule jenkins) throws Exception {
         // Verify the test extension is registered
         CustomUIProvider provider = CustomUIProvider.findById("test-integration-provider");
         assertNotNull(provider, "Test provider should be registered");
@@ -96,7 +99,7 @@ public class CustomUIProviderTest {
     }
 
     @Test
-    public void testCustomUIProviderApplicability() throws Exception {
+    public void testCustomUIProviderApplicability(JenkinsRule jenkins) throws Exception {
         CustomUIProvider provider = CustomUIProvider.findById("test-conditional-provider");
         assertNotNull(provider, "Conditional provider should be registered");
 
@@ -112,21 +115,21 @@ public class CustomUIProviderTest {
     }
 
     @Test
-    public void testGlobalConfigurationExists() {
+    public void testGlobalConfigurationExists(JenkinsRule jenkins) {
         // Test that the global configuration can be retrieved
         CustomUIProviderGlobalConfiguration globalConfig = CustomUIProviderGlobalConfiguration.get();
         assertNotNull(globalConfig, "Global configuration should not be null");
     }
 
     @Test
-    public void testGlobalConfigurationDefaultValue() {
+    public void testGlobalConfigurationDefaultValue(JenkinsRule jenkins) {
         // Test that the default value is null (default UI)
         CustomUIProviderGlobalConfiguration globalConfig = CustomUIProviderGlobalConfiguration.get();
         assertNull(globalConfig.getCustomUIProviderId(), "Default global custom UI provider ID should be null");
     }
 
     @Test
-    public void testGlobalConfigurationSetAndGet() {
+    public void testGlobalConfigurationSetAndGet(JenkinsRule jenkins) {
         // Test setting and getting global configuration
         CustomUIProviderGlobalConfiguration globalConfig = CustomUIProviderGlobalConfiguration.get();
 
@@ -143,7 +146,7 @@ public class CustomUIProviderTest {
     }
 
     @Test
-    public void testGlobalConfigurationAppliedToAction() throws Exception {
+    public void testGlobalConfigurationAppliedToAction(JenkinsRule jenkins) throws Exception {
         // Test that global configuration is applied to test result actions
         CustomUIProviderGlobalConfiguration globalConfig = CustomUIProviderGlobalConfiguration.get();
 
@@ -172,7 +175,7 @@ public class CustomUIProviderTest {
     }
 
     @Test
-    public void testGlobalConfigurationWithNonExistentProvider() throws Exception {
+    public void testGlobalConfigurationWithNonExistentProvider(JenkinsRule jenkins) throws Exception {
         // Test that global configuration with non-existent provider falls back gracefully
         CustomUIProviderGlobalConfiguration globalConfig = CustomUIProviderGlobalConfiguration.get();
 
