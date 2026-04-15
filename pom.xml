@@ -10,7 +10,7 @@
 
   <artifactId>junit</artifactId>
   <version>${changelist}</version>
-  <packaging>jpi</packaging>
+  <packaging>hpi</packaging>
   <name>JUnit Plugin</name>
   <description>Allows JUnit-format test results to be published.</description>
   <url>https://github.com/jenkinsci/${project.artifactId}-plugin</url>
