@@ -44,12 +44,38 @@ THE SOFTWARE.
                 </div>
             </j:if>
         </d:tag>
+
+        <!-- Render a property value as a clickable link when it is a URL -->
+        <d:tag name="linkItem">
+            <j:if test="${value!=null and !empty value}">
+                <div class="jp-code-card">
+                    <details open="true">
+                        <summary>
+                            ${title}
+                            <l:icon src="symbol-chevron-forward-outline plugin-ionicons-api" />
+                            <l:copyButton text="${value}" iconOnly="true" clazz="jenkins-mobile-hide" />
+                        </summary>
+
+                        <div style="padding: 0.5em 1em;">
+                            <a href="${value}" target="_blank" rel="noopener noreferrer">${value}</a>
+                        </div>
+                    </details>
+                </div>
+            </j:if>
+        </d:tag>
     </d:taglib>
 
     <local:item id="${id}" name="error" title="${%Error Details}" value="${it.errorDetails}" />
     <local:item id="${id}" name="skipmessage" title="${%Skip Message}" value="${it.skippedMessage}" />
     <j:forEach var="p" items="${it.properties}">
-        <local:item id="${id}" name="${p.key}" title="${p.key}" value="${p.value}" />
+        <j:choose>
+            <j:when test="${p.value != null and (p.value.startsWith('http://') or p.value.startsWith('https://'))}">
+                <local:linkItem id="${id}" name="${p.key}" title="${p.key}" value="${p.value}" />
+            </j:when>
+            <j:otherwise>
+                <local:item id="${id}" name="${p.key}" title="${p.key}" value="${p.value}" />
+            </j:otherwise>
+        </j:choose>
     </j:forEach>
     <local:item id="${id}" name="stacktrace" title="${%Stack Trace}" value="${it.errorStackTrace}" />
     <local:item id="${id}" name="stdout" title="${%Standard Output}" value="${it.stdout}" />
