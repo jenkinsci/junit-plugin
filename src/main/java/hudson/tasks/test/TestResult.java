@@ -142,6 +142,16 @@ public abstract class TestResult extends TestObject {
         if (b == null) {
             return null;
         }
+        // getParentAction() returns null when no AbstractTestResultAction is attached
+        // to this run yet — notably while JUnitResultArchiver.parseAndSummarize is
+        // invoking TestDataPublishers (the action is constructed but only added to
+        // the build *after* the publisher loop). Without a known action class we
+        // can't find a corresponding result on a previous build, so just stop here
+        // instead of NPEing on .getClass() inside the loop below.
+        AbstractTestResultAction<?> parentAction = getParentAction();
+        if (parentAction == null) {
+            return null;
+        }
         Job<?, ?> job = b.getParent();
         while (true) {
             b = b.getPreviousBuild();
@@ -149,7 +159,7 @@ public abstract class TestResult extends TestObject {
                 return null;
             }
             try {
-                AbstractTestResultAction r = b.getAction(getParentAction().getClass());
+                AbstractTestResultAction r = b.getAction(parentAction.getClass());
                 if (r != null) {
                     TestResult result = r.findCorrespondingResult(this.getId());
                     if (result != null) {
@@ -174,7 +184,11 @@ public abstract class TestResult extends TestObject {
      */
     @Override
     public TestResult getResultInRun(Run<?, ?> build) {
-        AbstractTestResultAction tra = build.getAction(getParentAction().getClass());
+        AbstractTestResultAction<?> parentAction = getParentAction();
+        if (parentAction == null) {
+            return null;
+        }
+        AbstractTestResultAction tra = build.getAction(parentAction.getClass());
         if (tra == null) {
             tra = build.getAction(AbstractTestResultAction.class);
         }
