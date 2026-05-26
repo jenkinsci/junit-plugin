@@ -1060,8 +1060,10 @@ public final class TestResult extends MetaTabulatedResult {
         // Ask all of our children to tally themselves
         for (SuiteResult s : suites) {
             s.setParent(this); // kluge to prevent double-counting the results
-            suitesByName.merge(s.getName(), Collections.singleton(s), (a, b) -> Stream.concat(a.stream(), b.stream())
-                    .collect(Collectors.toList()));
+            suitesByName.merge(
+                    s.getName(),
+                    Collections.singleton(s),
+                    (a, b) -> Stream.concat(a.stream(), b.stream()).collect(Collectors.toList()));
             if (s.getNodeId() != null) {
                 addSuiteByNode(s);
             }
@@ -1123,8 +1125,10 @@ public final class TestResult extends MetaTabulatedResult {
                 continue;
             }
 
-            suitesByName.merge(s.getName(), Collections.singleton(s), (a, b) -> Stream.concat(a.stream(), b.stream())
-                    .collect(Collectors.toList()));
+            suitesByName.merge(
+                    s.getName(),
+                    Collections.singleton(s),
+                    (a, b) -> Stream.concat(a.stream(), b.stream()).collect(Collectors.toList()));
 
             if (s.getNodeId() != null) {
                 addSuiteByNode(s);
