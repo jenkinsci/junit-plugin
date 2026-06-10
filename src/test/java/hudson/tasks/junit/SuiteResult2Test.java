@@ -23,7 +23,7 @@
  */
 package hudson.tasks.junit;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.File;
@@ -31,14 +31,14 @@ import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.List;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.MemoryAssert;
 
-public class SuiteResult2Test {
+class SuiteResult2Test {
 
     @SuppressFBWarnings({"DM_DEFAULT_ENCODING", "OS_OPEN_STREAM", "RV_RETURN_VALUE_IGNORED_BAD_PRACTICE"})
     @Test
-    public void sizeSurefire() throws Exception {
+    void sizeSurefire() throws Exception {
         File data = File.createTempFile("TEST-", ".xml");
         try {
             Writer w = new FileWriter(data);

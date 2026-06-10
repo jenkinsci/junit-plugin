@@ -25,9 +25,10 @@ package hudson.tasks.junit;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 import hudson.FilePath;
 import hudson.Functions;
@@ -48,23 +49,25 @@ import org.htmlunit.Page;
 import org.htmlunit.html.HtmlElement;
 import org.htmlunit.html.HtmlPage;
 import org.htmlunit.xml.XmlPage;
-import org.junit.Assume;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Email;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestBuilder;
 import org.jvnet.hudson.test.TouchBuilder;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 /**
  * @author Kohsuke Kawaguchi
  */
-public class CaseResultTest {
+@WithJenkins
+class CaseResultTest {
     //    /**
     //     * Verifies that Hudson can capture the stdout/stderr output from Maven surefire.
     //     */
-    //    public void testSurefireOutput() throws Exception {
+    //    @Test
+    //    void testSurefireOutput() throws Exception {
     //        setJavaNetCredential();
     //        configureDefaultMaven();
     //
@@ -78,12 +81,16 @@ public class CaseResultTest {
     //        assertTrue(tc.getStdout().contains("stdout"));
     //    }
 
-    @Rule
-    public final JenkinsRule rule = new JenkinsRule();
+    private JenkinsRule rule;
+
+    @BeforeEach
+    void setUp(JenkinsRule rule) {
+        this.rule = rule;
+    }
 
     @Email("http://www.nabble.com/NPE-%28Fatal%3A-Null%29-in-recording-junit-test-results-td23562964.html")
     @Test
-    public void testIssue20090516() throws Exception {
+    void testIssue20090516() throws Exception {
         FreeStyleBuild b = configureTestBuild(null);
         TestResult tr = b.getAction(TestResultAction.class).getResult();
         assertEquals(3, tr.getFailedTests().size());
@@ -134,8 +141,8 @@ public class CaseResultTest {
      * Verifies that malicious code is escaped when expanding a failed test on the summary page
      */
     @Test
-    public void noPopUpsWhenExpandingATest() throws Exception {
-        Assume.assumeFalse(Functions.isWindows());
+    void noPopUpsWhenExpandingATest() throws Exception {
+        assumeFalse(Functions.isWindows());
 
         FreeStyleProject project = rule.createFreeStyleProject("escape_test");
 
@@ -183,26 +190,28 @@ public class CaseResultTest {
      */
     @Issue("JENKINS-4257")
     @Test
-    public void testFreestyleErrorMsgAndStacktraceRender() throws Exception {
+    void testFreestyleErrorMsgAndStacktraceRender() throws Exception {
         FreeStyleBuild b = configureTestBuild("render-test");
         TestResult tr = b.getAction(TestResultAction.class).getResult();
         assertEquals(3, tr.getFailedTests().size());
         CaseResult cr = tr.getFailedTests().get(1);
         assertEquals("org.twia.vendor.VendorManagerTest", cr.getClassName());
         assertEquals("testGetRevokedClaimsForAdjustingFirm", cr.getName());
-        assertNotNull("Error details should not be null", cr.getErrorDetails());
-        assertNotNull("Error stacktrace should not be null", cr.getErrorStackTrace());
+        assertNotNull(cr.getErrorDetails(), "Error details should not be null");
+        assertNotNull(cr.getErrorStackTrace(), "Error stacktrace should not be null");
 
         String testUrl = cr.getRelativePathFrom(tr);
 
         HtmlPage page = rule.createWebClient().goTo("job/render-test/1/testReport/" + testUrl);
 
-        HtmlElement errorMsg = (HtmlElement) page.getByXPath("//h3[text()='Error Message']/following-sibling::*")
-                .get(0);
+        HtmlElement errorMsg =
+                (HtmlElement) page.getByXPath("//summary[normalize-space(.)='Error Details']/following-sibling::*")
+                        .get(0);
 
         assertEquals(cr.annotate(cr.getErrorDetails()).replaceAll("&lt;", "<"), errorMsg.getTextContent());
-        HtmlElement errorStackTrace = (HtmlElement) page.getByXPath("//h3[text()='Stacktrace']/following-sibling::*")
-                .get(0);
+        HtmlElement errorStackTrace =
+                (HtmlElement) page.getByXPath("//summary[normalize-space(.)='Stack Trace']/following-sibling::*")
+                        .get(0);
         // Have to do some annoying replacing here to get the same text Jelly produces in the end.
         assertEquals(
                 cr.annotate(cr.getErrorStackTrace()).replaceAll("&lt;", "<").replace("\r\n", "\n"),
@@ -220,7 +229,7 @@ public class CaseResultTest {
     @Email(
             "http://jenkins.361315.n4.nabble.com/Change-remote-API-visibility-for-CaseResult-getStdout-getStderr-td395102.html")
     @Test
-    public void testRemoteApiDefaultVisibility() throws Exception {
+    void testRemoteApiDefaultVisibility() throws Exception {
         FreeStyleBuild b = configureTestBuild("test-remoteapi");
 
         XmlPage page = (XmlPage) rule.createWebClient()
@@ -228,22 +237,22 @@ public class CaseResultTest {
                         "job/test-remoteapi/1/testReport/org.twia.vendor/VendorManagerTest/testCreateAdjustingFirm/api/xml",
                         "application/xml");
 
-        int found = 0;
+        int found;
 
         found = page.getByXPath(composeXPath(MAX_VISIBILITY_FIELDS)).size();
-        assertTrue("Should have found an element, but found " + found, found > 0);
+        assertTrue(found > 0, "Should have found an element, but found " + found);
 
         found = page.getByXPath(composeXPath(REDUCED_VISIBILITY_FIELDS)).size();
-        assertTrue("Should have found an element, but found " + found, found > 0);
+        assertTrue(found > 0, "Should have found an element, but found " + found);
 
         found = page.getByXPath(composeXPath(OTHER_FIELDS)).size();
-        assertTrue("Should have found an element, but found " + found, found > 0);
+        assertTrue(found > 0, "Should have found an element, but found " + found);
     }
 
     @Email(
             "http://jenkins.361315.n4.nabble.com/Change-remote-API-visibility-for-CaseResult-getStdout-getStderr-td395102.html")
     @Test
-    public void testRemoteApiNoDetails() throws Exception {
+    void testRemoteApiNoDetails() throws Exception {
         FreeStyleBuild b = configureTestBuild("test-remoteapi");
 
         XmlPage page = (XmlPage) rule.createWebClient()
@@ -251,22 +260,22 @@ public class CaseResultTest {
                         "job/test-remoteapi/1/testReport/org.twia.vendor/VendorManagerTest/testCreateAdjustingFirm/api/xml?depth=-1",
                         "application/xml");
 
-        int found = 0;
+        int found;
 
         found = page.getByXPath(composeXPath(MAX_VISIBILITY_FIELDS)).size();
-        assertTrue("Should have found an element, but found " + found, found > 0);
+        assertTrue(found > 0, "Should have found an element, but found " + found);
 
         found = page.getByXPath(composeXPath(REDUCED_VISIBILITY_FIELDS)).size();
-        assertTrue("Should have found 0 elements, but found " + found, found == 0);
+        assertEquals(0, found, "Should have found 0 elements, but found " + found);
 
         found = page.getByXPath(composeXPath(OTHER_FIELDS)).size();
-        assertTrue("Should have found an element, but found " + found, found > 0);
+        assertTrue(found > 0, "Should have found an element, but found " + found);
     }
 
     @Email(
             "http://jenkins.361315.n4.nabble.com/Change-remote-API-visibility-for-CaseResult-getStdout-getStderr-td395102.html")
     @Test
-    public void testRemoteApiNameOnly() throws Exception {
+    void testRemoteApiNameOnly() throws Exception {
         FreeStyleBuild b = configureTestBuild("test-remoteapi");
 
         XmlPage page = (XmlPage) rule.createWebClient()
@@ -274,16 +283,16 @@ public class CaseResultTest {
                         "job/test-remoteapi/1/testReport/org.twia.vendor/VendorManagerTest/testCreateAdjustingFirm/api/xml?depth=-10",
                         "application/xml");
 
-        int found = 0;
+        int found;
 
         found = page.getByXPath(composeXPath(MAX_VISIBILITY_FIELDS)).size();
-        assertTrue("Should have found an element, but found " + found, found > 0);
+        assertTrue(found > 0, "Should have found an element, but found " + found);
 
         found = page.getByXPath(composeXPath(REDUCED_VISIBILITY_FIELDS)).size();
-        assertTrue("Should have found 0 elements, but found " + found, found == 0);
+        assertEquals(0, found, "Should have found 0 elements, but found " + found);
 
         found = page.getByXPath(composeXPath(OTHER_FIELDS)).size();
-        assertTrue("Should have found 0 elements, but found " + found, found == 0);
+        assertEquals(0, found, "Should have found 0 elements, but found " + found);
     }
 
     /**
@@ -292,7 +301,7 @@ public class CaseResultTest {
      */
     @Issue("JENKINS-21261")
     @Test
-    public void testContentType() throws Exception {
+    void testContentType() throws Exception {
         configureTestBuild("foo");
         JenkinsRule.WebClient wc = rule.createWebClient();
         wc.goTo("job/foo/1/testReport/org.twia.vendor/VendorManagerTest/testCreateAdjustingFirm/", "text/html");
@@ -305,7 +314,7 @@ public class CaseResultTest {
      */
     @Issue("JENKINS-30413")
     @Test
-    public void testAge() throws Exception {
+    void testAge() throws Exception {
         String projectName = "tr-age-test";
         String testResultResourceFile = "JENKINS-30413.xml";
 
@@ -367,7 +376,7 @@ public class CaseResultTest {
     }
 
     @Test
-    public void emptyName() throws Exception {
+    void emptyName() throws Exception {
         FreeStyleProject p = rule.createFreeStyleProject();
         rule.jenkins
                 .getWorkspaceFor(p)
@@ -379,7 +388,7 @@ public class CaseResultTest {
     }
 
     @Test
-    public void testProperties() throws Exception {
+    void testProperties() throws Exception {
         String projectName = "properties-test";
         String testResultResourceFile = "junit-report-with-properties.xml";
 
@@ -421,7 +430,7 @@ public class CaseResultTest {
     }
 
     @Test
-    public void testDontKeepProperties() throws Exception {
+    void testDontKeepProperties() throws Exception {
         String projectName = "properties-test";
         String testResultResourceFile = "junit-report-with-properties.xml";
 
@@ -456,10 +465,27 @@ public class CaseResultTest {
         assertEquals(0, cr.getProperties().size());
     }
 
-    private String composeXPath(String[] fields) throws Exception {
+    /**
+     * Test truncation works along unicode codepoint boundaries.
+     */
+    @Test
+    void testCleanupTruncated() throws Exception {
+        // empty
+        assertEquals("", CaseResult.cleanupTruncated("").toString());
+        // ordinary
+        assertEquals("abc", CaseResult.cleanupTruncated("abc").toString());
+        // starts with a trail surrogate.
+        assertEquals("abc", CaseResult.cleanupTruncated("\uDC00abc").toString());
+        // ends with a lead surrogate.
+        assertEquals("abc", CaseResult.cleanupTruncated("abc\uD800").toString());
+        // starts with trail surrogate and ends with lead surrogate
+        assertEquals("abc", CaseResult.cleanupTruncated("\uDC00abc\uD800").toString());
+    }
+
+    private String composeXPath(String[] fields) {
         StringBuilder tmp = new StringBuilder(100);
         for (String f : fields) {
-            if (tmp.length() > 0) {
+            if (!tmp.isEmpty()) {
                 tmp.append("|");
             }
             tmp.append("//caseResult/");
@@ -469,7 +495,7 @@ public class CaseResultTest {
         return tmp.toString();
     }
 
-    private void assertOutput(CaseResult cr, String in, String out) throws Exception {
+    private void assertOutput(CaseResult cr, String in, String out) {
         assertEquals(out, cr.annotate(in));
     }
 }

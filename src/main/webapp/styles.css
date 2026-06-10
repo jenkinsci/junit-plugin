@@ -1,0 +1,282 @@
+/* Pills */
+.jp-pills {
+  display: flex;
+  gap: var(--jenkins-border-width);
+
+  .jp-pill {
+    padding-inline: 1rem;
+  }
+
+  .jenkins-button--primary {
+    transition: margin-inline var(--standard-transition);
+  }
+
+  .jp-pill:not(.jenkins-button--primary) {
+    &:not(:first-of-type) {
+      border-top-left-radius: 2px;
+      border-bottom-left-radius: 2px;
+      padding-left: 0.75rem;
+    }
+
+    &:not(:last-of-type) {
+      border-top-right-radius: 2px;
+      border-bottom-right-radius: 2px;
+      padding-right: 0.75rem;
+    }
+  }
+
+  &:empty {
+    display: none;
+  }
+}
+
+.jp-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  border-radius: 100px;
+  padding: 0 0.75rem;
+  min-height: 1.875rem;
+  text-box: cap alphabetic;
+  font-weight: 450;
+  background: color-mix(in srgb, var(--color, var(--text-color-secondary)) 10%, transparent);
+  border: var(--jenkins-border-width) solid color-mix(in srgb, var(--color, var(--text-color-secondary)) 10%, transparent);
+  color: var(--color, var(--text-color)) !important;
+  text-decoration: none !important;
+  transition: var(--standard-transition);
+
+  svg {
+    width: 1rem;
+    height: 1rem;
+
+    * {
+      stroke-width: 50px;
+    }
+  }
+
+  &:empty {
+    display: none;
+  }
+}
+
+a.jp-pill, button.jp-pill {
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(in srgb, var(--color, var(--text-color-secondary)) 15%, transparent);
+  }
+
+  &:active, &:focus {
+    background: color-mix(in srgb, var(--color, var(--text-color-secondary)) 20%, transparent);
+  }
+}
+
+.jp-pill--tertiary {
+  background: var(--card-background);
+  border: var(--jenkins-border-width) solid color-mix(in srgb, var(--color, var(--text-color-secondary)) 10%, transparent);
+  color: var(--text-color-secondary) !important;
+}
+
+.jenkins-table {
+  .jp-pill {
+    padding: 0 0.625rem;
+    min-height: 1.5625rem;
+  }
+
+  .jenkins-copy-button {
+    display: none;
+  }
+}
+
+/* Custom table row */
+a.jp-table-row {
+  cursor: pointer;
+}
+
+.jp-table-row {
+  display: flex;
+  align-items: center;
+  justify-content: start;
+  flex-wrap: wrap;
+  word-break: break-word;
+  text-box: cap alphabetic;
+  min-height: 48px;
+  margin-left: calc(var(--table-padding) * -2);
+  margin-top: calc(var(--table-padding) * -1);
+  margin-bottom: calc(var(--table-padding) * -1);
+  padding-left: calc(var(--table-padding) * 2);
+  padding-top: calc(var(--table-padding) * 1);
+  padding-bottom: calc(var(--table-padding) * 1);
+  font-weight: 450;
+  color: var(--text-color) !important;
+  text-decoration: none !important;
+
+  appearance: none;
+  background: none;
+  outline: none;
+  border: none;
+  border-radius: inherit;
+  transition: background var(--standard-transition);
+
+  svg:last-of-type {
+    width: 1rem;
+    height: 1rem;
+    color: var(--text-color-secondary);
+    transition: rotate var(--standard-transition);
+  }
+
+  svg:first-of-type {
+    width: 1.25rem;
+    height: 1.25rem;
+    margin-right: 1rem;
+  }
+
+  @media (width <= 800px) {
+    display: grid;
+    grid-template-columns: auto 1fr;
+
+    span {
+      grid-area: 2 / 2;
+      margin: 0 !important;
+    }
+
+    svg:last-of-type {
+      display: none;
+    }
+  }
+
+  &.active {
+    svg:last-of-type {
+      rotate: 90deg;
+    }
+  }
+}
+
+/* The external icon is too big, so lets shrink it */
+.icon-sm {
+  scale: 0.85;
+}
+
+/* Test result */
+.jp-code-list {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--section-padding) / 2);
+}
+
+.jp-code-list--inline {
+  padding: 0.5rem 0.5rem 0.5rem 2.25rem;
+  gap: var(--section-padding);
+
+  .jp-code-card {
+    background: unset;
+    border: unset;
+    border-radius: unset;
+    padding: unset;
+  }
+}
+
+.jp-code-card {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  background: var(--card-background);
+  border: var(--jenkins-border);
+  border-radius: var(--form-input-border-radius);
+  padding: 0.875rem 1rem;
+
+  details {
+    summary {
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: start;
+      gap: 0.5rem;
+      font-weight: 450;
+      cursor: pointer;
+      box-sizing: border-box;
+
+      > svg {
+        width: 0.875rem;
+        height: 0.875rem;
+        color: var(--text-color-secondary);
+        transition: rotate var(--standard-transition);
+      }
+
+      span {
+        display: contents;
+
+        .jenkins-copy-button {
+          padding: 0;
+          min-width: 2.375rem;
+          margin: -1rem -0.75rem -1rem auto !important;
+
+          &::before, &::after {
+            display: none;
+          }
+        }
+      }
+    }
+
+    &[open] {
+      summary > svg {
+        rotate: 90deg;
+      }
+    }
+
+    pre {
+      background: none;
+      border: none;
+      padding: 0;
+      margin-top: 0.5rem;
+      margin-bottom: 0;
+    }
+  }
+}
+
+/* Remove the fixed height from the table foldout */
+.failure-summary {
+  height: unset !important;
+}
+
+/* Notice needs to have overflow hidden to contain the confetti canvas */
+.jenkins-notice {
+  position: relative;
+  overflow: hidden;
+
+  #confetti-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    bottom: 100%;
+    z-index: 1;
+  }
+}
+
+/* Package names in the app bar don't break */
+h1 {
+  word-break: break-word;
+}
+
+/* Adjust Prism so that it doesn't overflow */
+@media (width > 800px) {
+  pre[class*="language-"],
+  code[class*="language-"] {
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  pre[class*="language-"] {
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (width <= 800px) {
+  pre[class*="language-"] {
+    margin-inline: -1rem;
+    margin-bottom: -1rem !important;
+    padding-inline: 1rem !important;
+    padding-bottom: 1rem !important;
+  }
+}

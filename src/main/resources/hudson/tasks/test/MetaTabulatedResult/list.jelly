@@ -27,12 +27,12 @@ THE SOFTWARE.
     <table class="jenkins-table sortable" id="testresult">
       <thead>
           <tr>
-            <th class="pane-header">${%Build}</th>
-            <th class="pane-header">${%Description}</th>
-            <th class="pane-header" style="width:5em; text-align:right">${%Duration}</th>
-            <th class="pane-header" style="width:5em; text-align:right">${%Fail}</th>
-            <th class="pane-header" style="width:5em; text-align:right">${%Skip}</th>
-            <th class="pane-header" style="width:5em; text-align:right">${%Total}</th>
+            <th>${%Build}</th>
+            <th>${%Description}</th>
+            <th style="width:5em; text-align:right">${%Duration}</th>
+            <th style="width:5em; text-align:right">${%Fail}</th>
+            <th style="width:5em; text-align:right">${%Skip}</th>
+            <th style="width:5em; text-align:right">${%Total}</th>
           </tr>
       </thead>
       <tbody>

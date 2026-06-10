@@ -13,16 +13,22 @@ public class TestResultSummary implements Serializable {
     private int skipCount;
     private int passCount;
     private int totalCount;
+    private float duration;
 
     @Deprecated
     @Restricted(DoNotUse.class)
     public TestResultSummary() {}
 
     public TestResultSummary(int failCount, int skipCount, int passCount, int totalCount) {
+        this(failCount, skipCount, passCount, totalCount, -1.f);
+    }
+
+    public TestResultSummary(int failCount, int skipCount, int passCount, int totalCount, float duration) {
         this.failCount = failCount;
         this.skipCount = skipCount;
         this.passCount = passCount;
         this.totalCount = totalCount;
+        this.duration = duration;
     }
 
     public TestResultSummary(TestResult result) {
@@ -30,6 +36,7 @@ public class TestResultSummary implements Serializable {
         this.skipCount = result.getSkipCount();
         this.passCount = result.getPassCount();
         this.totalCount = result.getTotalCount();
+        this.duration = result.getDuration();
         if (totalCount == 0) {
             for (SuiteResult suite : result.getSuites()) {
                 if (!suite.getCases().isEmpty()) {
@@ -58,5 +65,10 @@ public class TestResultSummary implements Serializable {
     @Whitelisted
     public int getTotalCount() {
         return totalCount;
+    }
+
+    @Whitelisted
+    public float getDuration() {
+        return duration;
     }
 }

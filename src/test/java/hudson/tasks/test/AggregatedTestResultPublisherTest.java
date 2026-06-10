@@ -20,19 +20,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TouchBuilder;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.jvnet.hudson.test.recipes.LocalData;
 
-public class AggregatedTestResultPublisherTest {
+@WithJenkins
+class AggregatedTestResultPublisherTest {
     public static final String TEST_PROJECT_NAME = "junit";
     public static final String AGGREGATION_PROJECT_NAME = "aggregated";
-
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
 
     private FreeStyleProject upstreamProject;
     private FreeStyleProject downstreamProject;
@@ -44,14 +42,17 @@ public class AggregatedTestResultPublisherTest {
     private BuildPage buildPage;
     private ProjectPage projectPage;
 
-    @Before
-    public void setup() {
+    private JenkinsRule j;
+
+    @BeforeEach
+    void setUp(JenkinsRule rule) {
+        j = rule;
         wc = WebClientFactory.createWebClientWithDisabledJavaScript(j);
     }
 
     @LocalData
     @Test
-    public void aggregatedTestResultsOnly() throws Exception {
+    void aggregatedTestResultsOnly() throws Exception {
         createUpstreamProjectWithNoTests();
         createDownstreamProjectWithTests();
 
@@ -77,7 +78,7 @@ public class AggregatedTestResultPublisherTest {
 
     @LocalData
     @Test
-    public void testResultsOnly() throws Exception {
+    void testResultsOnly() throws Exception {
         createUpstreamProjectWithTests();
         createDownstreamProjectWithNoTests();
 
@@ -104,7 +105,7 @@ public class AggregatedTestResultPublisherTest {
 
     @LocalData
     @Test
-    public void testResultsAndAggregatedTestResults() throws Exception {
+    void testResultsAndAggregatedTestResults() throws Exception {
         createUpstreamProjectWithTests();
         createDownstreamProjectWithTests();
 
@@ -187,8 +188,7 @@ public class AggregatedTestResultPublisherTest {
         project.getBuildersList().add(new TouchBuilder());
     }
 
-    private void addFingerprinterToProject(FreeStyleProject project, String[] contents, String[] files)
-            throws Exception {
+    private void addFingerprinterToProject(FreeStyleProject project, String[] contents, String[] files) {
         StringBuilder targets = new StringBuilder();
         for (int i = 0; i < contents.length; i++) {
             String command = "echo $BUILD_NUMBER " + contents[i] + " > " + files[i];

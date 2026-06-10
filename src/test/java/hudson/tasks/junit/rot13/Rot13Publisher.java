@@ -87,19 +87,17 @@ public class Rot13Publisher extends TestDataPublisher {
             TestObject testObject = (TestObject) t;
 
             if (testObject instanceof CaseResult) {
-                return Collections.<TestAction>singletonList(
-                        new Rot13CaseAction(ciphertextMap.get(((CaseResult) testObject).getFullName())));
+                return Collections.singletonList(new Rot13CaseAction(ciphertextMap.get(testObject.getFullName())));
             }
             if (testObject instanceof ClassResult) {
-                return Collections.<TestAction>singletonList(
+                return Collections.singletonList(
                         new Rot13ClassAction(ciphertextMap.get(((ClassResult) testObject).getFullName())));
             }
             if (testObject instanceof PackageResult) {
-                return Collections.<TestAction>singletonList(
-                        new Rot13PackageAction(ciphertextMap.get(((PackageResult) testObject).getName())));
+                return Collections.singletonList(new Rot13PackageAction(ciphertextMap.get(testObject.getName())));
             }
             if (testObject instanceof TestResult) {
-                return Collections.<TestAction>singletonList(new Rot13TestAction());
+                return Collections.singletonList(new Rot13TestAction());
             }
             return Collections.emptyList();
         }

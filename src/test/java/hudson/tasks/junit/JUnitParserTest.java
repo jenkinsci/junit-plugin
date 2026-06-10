@@ -23,10 +23,11 @@
  */
 package hudson.tasks.junit;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import hudson.FilePath;
 import hudson.Launcher;
@@ -37,15 +38,16 @@ import hudson.model.FreeStyleProject;
 import hudson.tasks.Builder;
 import hudson.tasks.test.TestResult;
 import java.io.IOException;
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.jvnet.hudson.test.recipes.LocalData;
 
 /**
@@ -53,14 +55,15 @@ import org.jvnet.hudson.test.recipes.LocalData;
  * from the JUnitResultsArchiver
  *
  */
-public class JUnitParserTest {
-    @Rule
-    public final JenkinsRule rule = new JenkinsRule();
+@WithJenkins
+class JUnitParserTest {
 
     static hudson.tasks.junit.TestResult theResult = null;
 
     public static final class JUnitParserTestBuilder extends Builder implements Serializable {
+        @Serial
         private static final long serialVersionUID = 1L;
+
         private String testResultLocation;
 
         public JUnitParserTestBuilder(String testResultLocation) {
@@ -82,8 +85,8 @@ public class JUnitParserTest {
                     .parseResult(testResultLocation, build, null, build.getWorkspace(), launcher, listener);
 
             System.out.println("back from parse");
-            assertNotNull("we should have a non-null result", result);
-            assertTrue("result should be a TestResult", result instanceof hudson.tasks.junit.TestResult);
+            assertNotNull(result, "we should have a non-null result");
+            assertInstanceOf(hudson.tasks.junit.TestResult.class, result, "result should be a TestResult");
             System.out.println("We passed some assertions in the JUnitParserTestBuilder");
             theResult = result;
             return result != null;
@@ -93,8 +96,11 @@ public class JUnitParserTest {
     private FreeStyleProject project;
     private String projectName = "junit_parser_test";
 
-    @Before
-    public void setUp() throws Exception {
+    private JenkinsRule rule;
+
+    @BeforeEach
+    void setUp(JenkinsRule rule) throws Exception {
+        this.rule = rule;
         theResult = null;
         project = rule.createFreeStyleProject(projectName);
         project.getBuildersList().add(new JUnitParserTestBuilder("*.xml"));
@@ -102,40 +108,40 @@ public class JUnitParserTest {
 
     @LocalData
     @Test
-    public void testJustParsing() throws Exception {
+    void testJustParsing() throws Exception {
         FreeStyleBuild build = project.scheduleBuild2(0).get(100, TimeUnit.MINUTES);
         assertNotNull(build);
 
         // Now let's examine the result. We know lots of stuff about it because
         // we've analyzed the xml source files by hand.
-        assertNotNull("we should have a result in the static member", theResult);
+        assertNotNull(theResult, "we should have a result in the static member");
 
         // Check the overall counts. We should have 1 failure, 0 skips, and 132 passes.
         Collection<? extends TestResult> children = theResult.getChildren();
-        assertFalse("Should have several packages", children.isEmpty());
-        assertTrue("Should have several pacakges", children.size() > 3);
+        assertFalse(children.isEmpty(), "Should have several packages");
+        assertTrue(children.size() > 3, "Should have several pacakges");
         int passCount = theResult.getPassCount();
-        assertEquals("expecting many passes", 131, passCount);
+        assertEquals(131, passCount, "expecting many passes");
         int failCount = theResult.getFailCount();
-        assertEquals("we should have one failure", 1, failCount);
-        assertEquals("expected 0 skips", 0, theResult.getSkipCount());
-        assertEquals("expected 132 total tests", 132, theResult.getTotalCount());
+        assertEquals(1, failCount, "we should have one failure");
+        assertEquals(0, theResult.getSkipCount(), "expected 0 skips");
+        assertEquals(132, theResult.getTotalCount(), "expected 132 total tests");
 
         // Dig in to the failed test
         final String EXPECTED_FAILING_TEST_NAME = "testDataCompatibilityWith1_282";
         final String EXPECTED_FAILING_TEST_CLASSNAME = "hudson.security.HudsonPrivateSecurityRealmTest";
 
         Collection<? extends TestResult> failingTests = theResult.getFailedTests();
-        assertEquals("should have one failed test", 1, failingTests.size());
+        assertEquals(1, failingTests.size(), "should have one failed test");
         Map<String, TestResult> failedTestsByName = new HashMap<>();
         for (TestResult r : failingTests) {
             failedTestsByName.put(r.getName(), r);
         }
-        assertTrue("we've got the expected failed test", failedTestsByName.containsKey(EXPECTED_FAILING_TEST_NAME));
+        assertTrue(failedTestsByName.containsKey(EXPECTED_FAILING_TEST_NAME), "we've got the expected failed test");
         TestResult firstFailedTest = failedTestsByName.get(EXPECTED_FAILING_TEST_NAME);
-        assertFalse("should not have passed this test", firstFailedTest.isPassed());
+        assertFalse(firstFailedTest.isPassed(), "should not have passed this test");
 
-        assertTrue(firstFailedTest instanceof CaseResult);
+        assertInstanceOf(CaseResult.class, firstFailedTest);
         CaseResult firstFailedTestJunit = (CaseResult) firstFailedTest;
         assertEquals(EXPECTED_FAILING_TEST_CLASSNAME, firstFailedTestJunit.getClassName());
 

@@ -415,6 +415,10 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         return this;
     }
 
+    public Widget getWidget() {
+        return new Widget(getResult());
+    }
+
     private static final Logger logger = Logger.getLogger(TestResultAction.class.getName());
 
     static final XStream XSTREAM = new XStream2();
@@ -423,6 +427,7 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         XSTREAM.alias("result", TestResult.class);
         XSTREAM.alias("suite", SuiteResult.class);
         XSTREAM.alias("case", CaseResult.class);
+        XSTREAM.alias("failure", Failure.class);
         XSTREAM.registerConverter(new HeapSpaceStringConverter(), 100);
     }
 }

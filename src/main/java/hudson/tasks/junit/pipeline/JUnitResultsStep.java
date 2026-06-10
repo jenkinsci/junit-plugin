@@ -14,6 +14,8 @@ import hudson.tasks.junit.StdioRetention;
 import hudson.tasks.junit.TestDataPublisher;
 import hudson.util.DescribableList;
 import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -27,6 +29,7 @@ import org.jenkinsci.plugins.workflow.steps.StepExecution;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.verb.POST;
 
 public class JUnitResultsStep extends Step implements JUnitTask {
     /**
@@ -257,6 +260,21 @@ public class JUnitResultsStep extends Step implements JUnitTask {
             Set<Class<?>> context = new HashSet<>();
             Collections.addAll(context, FilePath.class, FlowNode.class, TaskListener.class, Launcher.class);
             return Collections.unmodifiableSet(context);
+        }
+
+        @POST
+        @SuppressWarnings("unused")
+        public ListBoxModel doFillStdioRetentionItems() {
+            ListBoxModel options = new ListBoxModel();
+            options.add(StdioRetention.DEFAULT.getDisplayName(), StdioRetention.DEFAULT.name());
+
+            List<ListBoxModel.Option> stdioRetentions = Arrays.stream(StdioRetention.values())
+                    .filter(retention -> retention != StdioRetention.DEFAULT)
+                    .map(option -> new ListBoxModel.Option(option.getDisplayName(), option.name()))
+                    .toList();
+            options.addAll(stdioRetentions);
+
+            return options;
         }
 
         public FormValidation doCheckHealthScaleFactor(@QueryParameter double value) {

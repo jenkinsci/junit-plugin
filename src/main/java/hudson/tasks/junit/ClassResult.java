@@ -30,8 +30,8 @@ import hudson.tasks.test.TestResult;
 import java.util.Collection;
 import java.util.Set;
 import java.util.TreeSet;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.export.Exported;
 
 /**
@@ -141,7 +141,7 @@ public final class ClassResult extends TabulatedResult implements Comparable<Cla
     }
 
     @Override
-    public Object getDynamic(String name, StaplerRequest req, StaplerResponse rsp) {
+    public Object getDynamic(String name, StaplerRequest2 req, StaplerResponse2 rsp) {
         CaseResult c = getCaseResult(name);
         if (c != null) {
             return c;

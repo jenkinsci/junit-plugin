@@ -23,8 +23,8 @@
  */
 package hudson.tasks.test;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
@@ -32,22 +32,28 @@ import hudson.model.Result;
 import hudson.model.Run;
 import java.util.concurrent.TimeUnit;
 import org.htmlunit.html.HtmlPage;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TouchBuilder;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 /**
  * A test case to make sure that the TestResult extension mechanism
  * is working properly.
  */
-public class TestResultExtensionTest {
+@WithJenkins
+class TestResultExtensionTest {
 
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+    private JenkinsRule j;
+
+    @BeforeEach
+    void setUp(JenkinsRule rule) {
+        j = rule;
+    }
 
     @Test
-    public void testTrivialRecorder() throws Exception {
+    void testTrivialRecorder() throws Exception {
         FreeStyleProject project = j.createFreeStyleProject("trivialtest");
         TrivialTestResultRecorder recorder = new TrivialTestResultRecorder();
         project.getPublishersList().add(recorder);
@@ -56,15 +62,15 @@ public class TestResultExtensionTest {
         FreeStyleBuild build = project.scheduleBuild2(0).get(5, TimeUnit.MINUTES); /* leave room for debugging*/
         j.assertBuildStatus(Result.SUCCESS, build);
         TrivialTestResultAction action = build.getAction(TrivialTestResultAction.class);
-        assertNotNull("we should have an action", action);
-        assertNotNull("parent action should have an owner", action.run);
+        assertNotNull(action, "we should have an action");
+        assertNotNull(action.run, "parent action should have an owner");
         Object resultObject = action.getResult();
-        assertNotNull("we should have a result");
-        assertTrue("result should be an TestResult", resultObject instanceof TestResult);
+        assertNotNull(resultObject, "we should have a result");
+        assertInstanceOf(TestResult.class, resultObject, "result should be an TestResult");
         TestResult result = (TestResult) resultObject;
         Run<?, ?> ownerBuild = result.getRun();
-        assertNotNull("we should have an owner", ownerBuild);
-        assertNotNull("we should have a list of test actions", result.getTestActions());
+        assertNotNull(ownerBuild, "we should have an owner");
+        assertNotNull(result.getTestActions(), "we should have a list of test actions");
 
         // Validate that there are test results where I expect them to be:
         JenkinsRule.WebClient wc = j.createWebClient();

@@ -38,9 +38,9 @@ THE SOFTWARE.
           <table class="jenkins-table sortable">
             <thead>
               <tr>
-                <th class="pane-header">${%Test}</th>
-                <th class="pane-header" style="text-align:right">${%Fail}</th>
-                <th class="pane-header" style="text-align:right">${%Total}</th>
+                <th>${%Test}</th>
+                <th style="text-align:right">${%Fail}</th>
+                <th style="text-align:right">${%Total}</th>
               </tr>
             </thead>
             <j:forEach var="i" items="${it.individuals}">

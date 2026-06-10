@@ -23,6 +23,8 @@
  */
 package hudson.tasks.test;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import hudson.Launcher;
 import hudson.Util;
 import hudson.model.AbstractBuild;
@@ -33,40 +35,41 @@ import hudson.model.Result;
 import hudson.tasks.junit.JUnitResultArchiver;
 import java.io.IOException;
 import org.htmlunit.AlertHandler;
-import org.htmlunit.Page;
 import org.htmlunit.html.HtmlPage;
-import org.junit.Assert;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestBuilder;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 
 /**
  * Simple test for UI changes to the test reports
  *
  * @author kzantow
  */
-public class TestReportUiTest {
+@WithJenkins
+class TestReportUiTest {
 
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+    private JenkinsRule j;
+
+    @BeforeEach
+    void setUp(JenkinsRule rule) {
+        j = rule;
+    }
 
     /**
      * Validate CSS styles present to prevent duration text from wrapping
      */
     @Issue("JENKINS-24352")
     @Test
-    public void testDurationStyle() throws Exception {
+    void testDurationStyle() throws Exception {
         AbstractBuild b = configureTestBuild("render-test");
 
         JenkinsRule.WebClient wc = j.createWebClient();
 
-        wc.setAlertHandler(new AlertHandler() {
-            @Override
-            public void handleAlert(Page page, String message) {
-                throw new AssertionError();
-            }
+        wc.setAlertHandler((AlertHandler) (page, message) -> {
+            throw new AssertionError();
         });
 
         HtmlPage pg = wc.getPage(b, "testReport");
@@ -76,19 +79,18 @@ public class TestReportUiTest {
         String duration3_3sec = Util.getTimeSpanString((long) (3.377 * 1000));
         String duration2_5sec = Util.getTimeSpanString((long) (2.502 * 1000));
 
-        Assert.assertNotNull(
+        assertNotNull(
                 pg.getFirstByXPath("//td[contains(text(),'" + duration3_3sec + "')][contains(@class,'no-wrap')]"));
 
         pg = wc.getPage(b, "testReport/org.twia.vendor");
 
-        Assert.assertNotNull(
+        assertNotNull(
                 pg.getFirstByXPath("//td[contains(text(),'" + duration3_3sec + "')][contains(@class,'no-wrap')]"));
-        Assert.assertNotNull(
-                pg.getFirstByXPath("//td[contains(text(),'" + duration14sec + "')][contains(@class,'no-wrap')]"));
+        assertNotNull(pg.getFirstByXPath("//td[contains(text(),'" + duration14sec + "')][contains(@class,'no-wrap')]"));
 
         pg = wc.getPage(b, "testReport/org.twia.vendor/VendorManagerTest");
 
-        Assert.assertNotNull(
+        assertNotNull(
                 pg.getFirstByXPath("//td[contains(text(),'" + duration2_5sec + "')][contains(@class,'no-wrap')]"));
     }
 

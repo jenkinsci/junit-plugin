@@ -18,25 +18,27 @@ import org.openjdk.jmh.infra.Blackhole;
 
 @JmhBenchmark
 public class TrendGraphBenchmark {
+
     @State(Scope.Benchmark)
     public static class JenkinsState extends JmhBenchmarkState {
 
         WorkflowJob lastJob;
 
-        public static final String SIMPLE_TEST_RESULT =
-                "node {\n" + "  writeFile file: 'x.xml', text: '''<testsuite name='sweet' time='200.0'>"
-                        + "<testcase classname='Klazz' name='test1' time='198.0'><error message='failure'/></testcase>"
-                        + "<testcase classname='Klazz' name='test2' time='2.0'/>"
-                        + "<testcase classname='other.Klazz' name='test3'><skipped message='Not actually run.'/></testcase>"
-                        + "</testsuite>'''\n"
-                        + "  def s = junit 'x.xml'\n"
-                        + "  echo(/summary: fail=$s.failCount skip=$s.skipCount pass=$s.passCount total=$s.totalCount/)\n"
-                        + "  writeFile file: 'x.xml', text: '''<testsuite name='supersweet'>"
-                        + "<testcase classname='another.Klazz' name='test1'><error message='another failure'/></testcase>"
-                        + "</testsuite>'''\n"
-                        + "  s = junit 'x.xml'\n"
-                        + "  echo(/next summary: fail=$s.failCount skip=$s.skipCount pass=$s.passCount total=$s.totalCount/)\n"
-                        + "}";
+        public static final String SIMPLE_TEST_RESULT = """
+                        node {
+                          writeFile file: 'x.xml', text: '''<testsuite name='sweet' time='200.0'>
+                        <testcase classname='Klazz' name='test1' time='198.0'><error message='failure'/></testcase>
+                        <testcase classname='Klazz' name='test2' time='2.0'/>
+                        <testcase classname='other.Klazz' name='test3'><skipped message='Not actually run.'/></testcase>
+                        </testsuite>'''
+                          def s = junit 'x.xml'
+                          echo(/summary: fail=$s.failCount skip=$s.skipCount pass=$s.passCount total=$s.totalCount/)
+                          writeFile file: 'x.xml', text: '''<testsuite name='supersweet'>
+                        <testcase classname='another.Klazz' name='test1'><error message='another failure'/></testcase>
+                        </testsuite>'''
+                          s = junit 'x.xml'
+                          echo(/next summary: fail=$s.failCount skip=$s.skipCount pass=$s.passCount total=$s.totalCount/)
+                        }""";
 
         @Override
         public void setup() throws Exception {
@@ -49,8 +51,7 @@ public class TrendGraphBenchmark {
             System.out.println("Next build number: " + lastJob.getNextBuildNumber());
         }
 
-        private void createLotsOfRuns(String jobName, int runCount)
-                throws java.io.IOException, InterruptedException, ExecutionException {
+        private void createLotsOfRuns(String jobName, int runCount) throws Exception {
             Jenkins jenkins = Jenkins.get();
             lastJob = jenkins.createProject(WorkflowJob.class, jobName);
             lastJob.setDefinition(new CpsFlowDefinition(SIMPLE_TEST_RESULT, true));
