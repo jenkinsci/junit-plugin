@@ -38,7 +38,7 @@ THE SOFTWARE.
                         <j:choose>
                             <!-- Render the value as a clickable link when it is a URL -->
                             <j:when test="${link}">
-                                <div style="padding: 0.5em 1em;">
+                                <div class="jenkins-!-margin-top-1">
                                     <a href="${value}" target="_blank" rel="noopener noreferrer">${value}</a>
                                 </div>
                             </j:when>
