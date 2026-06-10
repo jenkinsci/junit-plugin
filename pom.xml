@@ -60,10 +60,6 @@
 
   <dependencies>
     <dependency>
-        <groupId>org.jenkins-ci.plugins</groupId>
-        <artifactId>antisamy-markup-formatter</artifactId>
-    </dependency>
-    <dependency>
       <groupId>com.pivovarit</groupId>
       <artifactId>parallel-collectors</artifactId>
       <version>2.6.1</version>
@@ -87,6 +83,10 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>plugin-util-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>antisamy-markup-formatter</artifactId>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>

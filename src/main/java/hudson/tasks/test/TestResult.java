@@ -49,13 +49,13 @@ public abstract class TestResult extends TestObject {
 
     private static final PolicyFactory POLICY_DEFINITION = new HtmlPolicyBuilder()
             .allowElements("a")
-            .allowUrlProtocols("https")
-            .allowUrlProtocols("http")
+            .allowUrlProtocols("https", "http")
             .allowAttributes("href")
             .onElements("a")
             .toFactory();
 
-    private static final Pattern LINK_REGEX_PATTERN = Pattern.compile("\\b(https?://[^\\s)<>\"]+)");
+    private static final Pattern LINK_REGEX_PATTERN =
+            Pattern.compile("\\b(https?://[^\\s)<>\"]+)", Pattern.CASE_INSENSITIVE);
 
     /**
      * If the concept of a parent action is important to a subclass, then it should
@@ -309,10 +309,6 @@ public abstract class TestResult extends TestObject {
     }
 
     private static String escapeHtmlAndMakeLinksClickable(String text) {
-        if (text == null) {
-            return null;
-        }
-
         StringBuilder annotatedTxtBuilder = new StringBuilder();
 
         Matcher linkMatcher = LINK_REGEX_PATTERN.matcher(text);

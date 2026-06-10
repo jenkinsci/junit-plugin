@@ -111,6 +111,7 @@ public class CaseResultTest {
                 "http://nowhere.net/ - failed: http://elsewhere.net/",
                 "<a href=\"http://nowhere.net/\">http://nowhere.net/</a> - failed: <a href=\"http://elsewhere.net/\">http://elsewhere.net/</a>");
         assertOutput(cr, "https://nowhere.net/", "<a href=\"https://nowhere.net/\">https://nowhere.net/</a>");
+        assertOutput(cr, "HTTPS://nowhere.net/", "<a href=\"HTTPS://nowhere.net/\">HTTPS://nowhere.net/</a>");
         assertOutput(cr, "stuffhttp://nowhere.net/", "stuffhttp://nowhere.net/");
         assertOutput(cr, "a < b && c < d", "a &lt; b &amp;&amp; c &lt; d");
         assertOutput(
