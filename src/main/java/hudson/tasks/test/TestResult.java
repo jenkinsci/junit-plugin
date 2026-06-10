@@ -365,7 +365,9 @@ public abstract class TestResult extends TestObject {
      * method, and instead relies on the Jelly "escape-by-default" flag to escape test output for HTML rendering,
      * which is why links are not clickable in that context.
      *
-     * @return the provided text with URLs converted to sanitized <a> tags and all other HTML escaped.
+     * @param text Text to use to annotate the actions.
+     * @return the provided text with URLs converted to sanitized {@code <a>} tags and all other HTML escaped.
+     */
     public String annotate(String text) {
         if (text == null) {
             return null;
