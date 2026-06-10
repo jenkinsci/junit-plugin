@@ -80,6 +80,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     private String testName;
 
     private transient String safeName;
+    private boolean isProperFailure;
     private boolean skipped;
     private boolean keepTestNames;
     private String skippedMessage;
@@ -140,6 +141,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         this.stderr = null;
         this.duration = 0.0f;
         this.startTime = -1;
+        this.isProperFailure = false;
         this.skipped = false;
         this.skippedMessage = null;
         this.properties = Collections.emptyMap();
@@ -167,6 +169,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         this.duration = duration;
         this.startTime = -1;
 
+        this.isProperFailure = false;
         this.skipped = skippedMessage != null;
         this.skippedMessage = skippedMessage;
         this.properties = Collections.emptyMap();
@@ -222,6 +225,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         testName = nameAttr;
         errorStackTrace = getError(testCase);
         errorDetails = getErrorMessage(testCase);
+        isProperFailure = isMarkedAsProperFailure(testCase);
         this.parent = parent;
         duration = clampDuration(parseTime(testCase));
         this.startTime = -1;
@@ -261,6 +265,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         this.testName = src.testName;
         this.skippedMessage = src.skippedMessage;
         this.skipped = src.skipped;
+        this.isProperFailure = src.isProperFailure;
         this.keepTestNames = src.keepTestNames;
         this.errorStackTrace = src.errorStackTrace;
         this.errorDetails = src.errorDetails;
@@ -337,6 +342,9 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
                         break;
                     case "skipped":
                         r.skipped = Boolean.parseBoolean(reader.getElementText());
+                        break;
+                    case "isProperFailure":
+                        r.isProperFailure = Boolean.parseBoolean(reader.getElementText());
                         break;
                     case "keepTestNames":
                         r.keepTestNames = Boolean.parseBoolean(reader.getElementText());
@@ -599,6 +607,13 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      */
     private static boolean isMarkedAsSkipped(Element testCase) {
         return testCase.element("skipped") != null;
+    }
+
+    /**
+     * If the testCase element includes a failure element rather than an error element.
+     */
+    private static boolean isMarkedAsProperFailure(Element testCase) {
+        return testCase.element("failure") != null;
     }
 
     private static String getSkippedMessage(Element testCase) {
@@ -1232,7 +1247,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         return switch (getStatus()) {
             case PASSED -> "symbol-status-blue";
             case SKIPPED -> "symbol-status-skipped plugin-junit";
-            default -> "symbol-status-red";
+            default -> this.isProperFailure ? "symbol-status-failure plugin-junit" : "symbol-status-red";
         };
     }
 }
