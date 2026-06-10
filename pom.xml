@@ -60,9 +60,8 @@
 
   <dependencies>
     <dependency>
-      <groupId>com.googlecode.owasp-java-html-sanitizer</groupId>
-      <artifactId>owasp-java-html-sanitizer</artifactId>
-      <version>20220608.1</version>
+        <groupId>org.jenkins-ci.plugins</groupId>
+        <artifactId>antisamy-markup-formatter</artifactId>
     </dependency>
     <dependency>
       <groupId>com.pivovarit</groupId>
