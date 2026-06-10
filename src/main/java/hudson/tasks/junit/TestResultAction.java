@@ -24,6 +24,7 @@
 package hudson.tasks.junit;
 
 import com.thoughtworks.xstream.XStream;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Util;
@@ -81,6 +82,13 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
     private @Nullable Integer totalCount;
     private Double healthScaleFactor;
     private List<Data> testData = new ArrayList<>();
+
+    /**
+     * ID of the custom UI provider to use for rendering test results.
+     * If null or empty, the default UI will be used.
+     * @since TBD
+     */
+    private @CheckForNull String customUIProviderId;
 
     @Deprecated
     public TestResultAction(AbstractBuild owner, TestResult result, BuildListener listener) {
@@ -228,6 +236,91 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
 
     public void setHealthScaleFactor(double healthScaleFactor) {
         this.healthScaleFactor = Math.max(0.0, healthScaleFactor);
+    }
+
+    /**
+     * Gets the ID of the custom UI provider.
+     *
+     * @return the custom UI provider ID, or null for default UI
+     * @since TBD
+     */
+    @CheckForNull
+    public String getCustomUIProviderId() {
+        return customUIProviderId;
+    }
+
+    /**
+     * Sets the ID of the custom UI provider.
+     *
+     * @param customUIProviderId the custom UI provider ID
+     * @since TBD
+     */
+    public void setCustomUIProviderId(String customUIProviderId) {
+        this.customUIProviderId = customUIProviderId;
+    }
+
+    /**
+     * Returns the custom UI provider if configured and available.
+     *
+     * @return the custom UI provider, or null if not configured or not found
+     * @since TBD
+     */
+    @CheckForNull
+    public CustomUIProvider getCustomUIProvider() {
+        if (customUIProviderId == null || customUIProviderId.isEmpty()) {
+            return null;
+        }
+        CustomUIProvider provider = CustomUIProvider.findById(customUIProviderId);
+        if (provider == null) {
+            logger.log(
+                    Level.WARNING,
+                    "Custom UI provider ''{0}'' configured for {1} but not found. Falling back to default UI.",
+                    new Object[] {customUIProviderId, run.getFullDisplayName()});
+            return null;
+        }
+        if (!provider.isApplicable(run)) {
+            logger.log(
+                    Level.FINE,
+                    "Custom UI provider ''{0}'' not applicable for {1}. Using default UI.",
+                    new Object[] {customUIProviderId, run.getFullDisplayName()});
+            return null;
+        }
+        logger.log(Level.FINE, "Using custom UI provider ''{0}'' for {1}", new Object[] {
+            customUIProviderId, run.getFullDisplayName()
+        });
+        return provider;
+    }
+
+    /**
+     * Checks if a custom UI should be used instead of the default UI.
+     *
+     * @return true if custom UI should be used, false otherwise
+     * @since TBD
+     */
+    public boolean useCustomUI() {
+        return getCustomUIProvider() != null;
+    }
+
+    /**
+     * Renders the custom UI for test results.
+     * This method is invoked by Stapler when custom UI is enabled.
+     *
+     * @param req the request
+     * @param rsp the response
+     * @throws IOException if rendering fails
+     * @since TBD
+     */
+    public void doRenderCustomUI(org.kohsuke.stapler.StaplerRequest2 req, org.kohsuke.stapler.StaplerResponse2 rsp)
+            throws IOException {
+        // Check if user has permission to view test results
+        run.checkPermission(hudson.model.Item.READ);
+
+        CustomUIProvider provider = getCustomUIProvider();
+        if (provider != null) {
+            provider.renderTestResultUI(getResult(), req, rsp);
+        } else {
+            rsp.sendError(404, "Custom UI provider not found");
+        }
     }
 
     @Override

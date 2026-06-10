@@ -4,13 +4,26 @@
 [![GitHub release](https://img.shields.io/github/release/jenkinsci/junit-plugin.svg?label=release)](https://github.com/jenkinsci/junit-plugin/releases/latest)
 [![Jenkins Plugin Installs](https://img.shields.io/jenkins/plugin/i/junit.svg?color=blue)](https://plugins.jenkins.io/junit)
 
-The JUnit plugin provides a publisher that consumes XML test reports generated during the builds and provides some graphical visualization of the historical test results 
-(see [JUnit graph](https://wiki.jenkins.io/display/JENKINS/JUnit+graph) for a sample) 
-as well as a web UI for viewing test reports, tracking failures, and so on. 
-Jenkins understands the JUnit test report XML format (which is also used by TestNG). 
+The JUnit plugin provides a publisher that consumes XML test reports generated during the builds and provides some graphical visualization of the historical test results
+(see [JUnit graph](https://wiki.jenkins.io/display/JENKINS/JUnit+graph) for a sample)
+as well as a web UI for viewing test reports, tracking failures, and so on.
+Jenkins understands the JUnit test report XML format (which is also used by TestNG).
 When this option is configured, Jenkins can provide useful information about test results, such as trends.
 
 The plugin also provides a generic API for other unit-test publisher plugins in Jenkins. This functionality was part of the Jenkins Core until it was split out to this plugin in version in 1.577.
+
+## ✨ Custom UI Provider (New Feature)
+
+The JUnit plugin now supports **Custom UI Providers**, allowing you to configure custom visualizations for test results globally across all jobs. See [CUSTOM_UI_PROVIDER.md](CUSTOM_UI_PROVIDER.md) for detailed documentation on:
+- Creating custom UI provider plugins
+- Configuring global UI providers
+- Example implementations
+
+**Quick Start:**
+1. Go to **Manage Jenkins → System**
+2. Find the **JUnit Test Results** section
+3. Select a Custom UI Provider from the dropdown
+4. All test results will use the custom UI automatically
 
 ## Configuration
 
@@ -78,6 +91,22 @@ stage('Ignored') {
   }
 }
 ```
+
+## Custom UI Provider
+
+The JUnit plugin supports an extension point that allows other plugins to provide custom UI visualizations for test results. This enables alternative dashboards, custom charts, or specialized reporting interfaces.
+
+**Key Features:**
+- 🎯 Global configuration applies to all jobs automatically
+- 🔌 Extensible via the `CustomUIProvider` extension point
+- 🔙 Automatic fallback to default UI if custom provider unavailable
+- 🛡️ No job modifications required
+
+**Configuration:**
+Administrators can configure a custom UI provider globally at **Manage Jenkins** → **Configure System** → **JUnit Test Results** → **Default Custom UI Provider**
+
+**For Developers:**
+To create a custom UI provider plugin, implement the `CustomUIProvider` extension point. See [CUSTOM_UI_PROVIDER.md](CUSTOM_UI_PROVIDER.md) for complete documentation, API reference, and examples.
 
 ## Contributing
 
