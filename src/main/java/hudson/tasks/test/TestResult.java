@@ -148,7 +148,7 @@ public abstract class TestResult extends TestObject {
         // the build *after* the publisher loop). Without a known action class we
         // can't find a corresponding result on a previous build, so just stop here
         // instead of NPEing on .getClass() inside the loop below.
-        AbstractTestResultAction<?> parentAction = getParentAction();
+        AbstractTestResultAction parentAction = getParentAction();
         if (parentAction == null) {
             return null;
         }
@@ -184,7 +184,7 @@ public abstract class TestResult extends TestObject {
      */
     @Override
     public TestResult getResultInRun(Run<?, ?> build) {
-        AbstractTestResultAction<?> parentAction = getParentAction();
+        AbstractTestResultAction parentAction = getParentAction();
         if (parentAction == null) {
             return null;
         }
