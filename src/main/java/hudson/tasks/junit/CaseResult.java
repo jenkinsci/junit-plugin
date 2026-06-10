@@ -34,6 +34,8 @@ import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
 import io.jenkins.plugins.junit.storage.TestResultImpl;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -972,6 +974,22 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     @Override
     public Map<String, String> getProperties() {
         return properties;
+    }
+
+    /**
+     * Used by {@code test-output.jelly} to decide whether a property value should be rendered as a hyperlink.
+     */
+    @Restricted(NoExternalUse.class)
+    public boolean isUrlValue(String value) {
+        if (value == null || !(value.startsWith("http://") || value.startsWith("https://"))) {
+            return false;
+        }
+        try {
+            new URI(value);
+            return true;
+        } catch (URISyntaxException x) {
+            return false;
+        }
     }
 
     /**
