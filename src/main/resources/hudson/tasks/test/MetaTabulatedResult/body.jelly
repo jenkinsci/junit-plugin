@@ -27,7 +27,7 @@ THE SOFTWARE.
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:t="/lib/hudson/test" xmlns:f="/lib/form">
   <j:if test="${it.failCount!=0}">
     <f:section title="${%All Failed Tests}">
-      <t:table items="${it.failedTests}" id="failedtestresult" />
+      <t:table-grouped items="${it.failedTestsByPackage}" id="failedtestresult" />
     </f:section>
   </j:if>
 
