@@ -23,13 +23,7 @@ public class Widget {
 
             long regressions = result.getSuites().stream()
                     .flatMap(e -> e.getCases().stream())
-                    .filter(e -> {
-                        var previousResult = e.getPreviousResult();
-                        if (previousResult == null) {
-                            return false;
-                        }
-                        return e.isPassed();
-                    })
+                    .filter(e -> e.getCondition() == CaseResult.Status.REGRESSION)
                     .count();
 
             if (regressions > 0) {
