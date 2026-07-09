@@ -30,6 +30,7 @@ THE SOFTWARE.
 
   <l:run-subpage>
     <j:set var="it" value="${history}" />
+    <j:set var="buildCount" value="${it.testObject.run.parent.buildsAsMap.keySet().size()}"/>
     <j:set var="count" value="${it.asInt(request2.getParameter('count'),100)}"/>
     <j:set var="start" value="${it.asInt(request2.getParameter('start'),0)}"/>
     <j:set var="end" value="${it.asInt(request2.getParameter('end'),start+count-1)}"/>
@@ -59,7 +60,8 @@ THE SOFTWARE.
               class="jenkins-!-margin-bottom-2 jenkins-!-margin-top-0"
               style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; height: auto; flex-wrap: wrap;"
       >
-        <j:if test="${it.testObject.run.parent.builds.size() > end}">
+        <!--j:if test="${it.testObject.run.parent.builds.size() > end}"-->
+        <j:if test="${buildCount > end}">
           <a href="${app.rootUrl}${it.testObject.url}/history?start=${end+1}&amp;count=${count}&amp;interval=${interval}"
              class="jenkins-!-margin-right-2 jenkins-!-margin-bottom-1 jenkins-!-margin-top-1" style="height: fit-content">${%Older}
           </a>
@@ -123,7 +125,8 @@ THE SOFTWARE.
 
       <br/>
       <div class="jenkins-!-margin-bottom-2">
-        <j:if test="${it.testObject.run.parent.builds.size() > end}">
+        <!--j:if test="${it.testObject.run.parent.builds.size() > end}"-->
+        <j:if test="${buildCount > end}">
           <a href="${app.rootUrl}${it.testObject.url}/history?start=${end+1}&amp;count=${count}&amp;interval=${interval}"
              class="jenkins-!-margin-right-2">
             ${%Older}
@@ -171,7 +174,8 @@ THE SOFTWARE.
       </table>
 
       <div>
-        <j:if test="${it.testObject.run.parent.builds.size() > end}">
+        <!--j:if test="${it.testObject.run.parent.builds.size() > end}"-->
+        <j:if test="${buildCount > end}">
           <a href="${app.rootUrl}${it.testObject.url}/history?start=${end+1}&amp;count=${count}&amp;interval=${interval}"
              class="jenkins-!-margin-right-2">
             ${%Older}
