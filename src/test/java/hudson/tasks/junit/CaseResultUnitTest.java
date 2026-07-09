@@ -25,6 +25,8 @@
 package hudson.tasks.junit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicReference;
@@ -54,5 +56,18 @@ class CaseResultUnitTest {
         } finally {
             LocaleProvider.setProvider(old);
         }
+    }
+
+    @Test
+    void isUrlValue() {
+        CaseResult cr = new CaseResult(null, "testName", null);
+        assertTrue(cr.isUrlValue("http://example.com/build/123"));
+        assertTrue(cr.isUrlValue("https://example.com/build/123"));
+        assertFalse(cr.isUrlValue(null));
+        assertFalse(cr.isUrlValue(""));
+        assertFalse(cr.isUrlValue("just some text"));
+        assertFalse(cr.isUrlValue("ftp://example.com"));
+        assertFalse(cr.isUrlValue("https://example.com/with space"));
+        assertFalse(cr.isUrlValue("https://example.com\nsecond line"));
     }
 }

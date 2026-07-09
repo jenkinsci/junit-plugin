@@ -35,11 +35,21 @@ THE SOFTWARE.
                             <l:copyButton text="${value}" iconOnly="true" clazz="jenkins-mobile-hide" />
                         </summary>
 
-                        <pre class="jdl-component-code__code">
-                            <code class="language-javastacktrace">
-                                ${value}
-                            </code>
-                        </pre>
+                        <j:choose>
+                            <!-- Render the value as a clickable link when it is a URL -->
+                            <j:when test="${link}">
+                                <div class="jenkins-!-margin-top-1">
+                                    <a href="${value}" target="_blank" rel="noopener noreferrer">${value}</a>
+                                </div>
+                            </j:when>
+                            <j:otherwise>
+                                <pre class="jdl-component-code__code">
+                                    <code class="language-javastacktrace">
+                                        ${value}
+                                    </code>
+                                </pre>
+                            </j:otherwise>
+                        </j:choose>
                     </details>
                 </div>
             </j:if>
@@ -47,8 +57,9 @@ THE SOFTWARE.
     </d:taglib>
 
     <local:item id="${id}" name="error" title="${%Error Details}" value="${it.errorDetails}" />
+    <local:item id="${id}" name="skipmessage" title="${%Skip Message}" value="${it.skippedMessage}" />
     <j:forEach var="p" items="${it.properties}">
-        <local:item id="${id}" name="${p.key}" title="${p.key}" value="${p.value}" />
+        <local:item id="${id}" name="${p.key}" title="${p.key}" value="${p.value}" link="${it.isUrlValue(p.value)}" />
     </j:forEach>
     <local:item id="${id}" name="stacktrace" title="${%Stack Trace}" value="${it.errorStackTrace}" />
     <local:item id="${id}" name="stdout" title="${%Standard Output}" value="${it.stdout}" />
