@@ -83,6 +83,10 @@ class JUnitResultsStepTest {
         st.assertRoundTrip(
                 step,
                 "junit allowEmptyResults: true, healthScaleFactor: 2.0, skipMarkingBuildUnstable: true, testDataPublishers: [[$class: 'MockTestDataPublisher', name: 'testing']], testResults: '**/target/surefire-reports/TEST-*.xml'");
+        step.setSkipMarkingStageUnstable(true);
+        st.assertRoundTrip(
+                step,
+                "junit allowEmptyResults: true, healthScaleFactor: 2.0, skipMarkingBuildUnstable: true, skipMarkingStageUnstable: true, testDataPublishers: [[$class: 'MockTestDataPublisher', name: 'testing']], testResults: '**/target/surefire-reports/TEST-*.xml'");
     }
 
     @Issue("JENKINS-48250")
@@ -460,6 +464,31 @@ class JUnitResultsStepTest {
         WorkflowRun r = rule.waitForCompletion(j.scheduleBuild2(0).waitForStart());
         rule.assertBuildStatus(Result.SUCCESS, r);
         assertStageResults(r, 1, 8, 3, "first");
+    }
+
+    @Test
+    void skipStageUnstable() throws Exception {
+        WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "skipStageUnstable");
+        j.setDefinition(new CpsFlowDefinition(
+                "stage('first') {\n" + "  node {\n"
+                        + "    touch 'test-result.xml'\n"
+                        + "    def results = junit(skipMarkingStageUnstable: true, testResults: '*.xml')\n"
+                        + "    assert results.totalCount == 8\n"
+                        + "    assert currentBuild.result == null\n"
+                        + "  }\n"
+                        + "}\n",
+                true));
+        copyToWorkspace(
+                j, JUnitResultsStepTest.class.getResource("junit-report-testTrends-first-2.xml"), "test-result.xml");
+        WorkflowRun r = rule.waitForCompletion(j.scheduleBuild2(0).waitForStart());
+        rule.assertBuildStatus(Result.SUCCESS, r);
+
+        // Neither the build nor the stage should be marked unstable: the junit step attaches no WarningAction.
+        FlowExecution execution = r.getExecution();
+        BlockStartNode stage =
+                (BlockStartNode) new DepthFirstScanner().findFirstMatch(execution, stageForName("first"));
+        assertNotNull(stage);
+        assertThat(findJUnitSteps(stage), CoreMatchers.not(CoreMatchers.hasItem(hasWarningAction())));
     }
 
     @Test
