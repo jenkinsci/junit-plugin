@@ -13,12 +13,25 @@ public class HistoryTestResultSummary {
     private final int passCount;
     private final String description;
     private final hudson.tasks.test.TestResult resultInRun;
-    public HistoryTestResultSummary(Run<?, ?> run, hudson.tasks.test.TestResult resultInRun, float duration, int failCount, int skipCount, int passCount) {
+
+    public HistoryTestResultSummary(
+            Run<?, ?> run,
+            hudson.tasks.test.TestResult resultInRun,
+            float duration,
+            int failCount,
+            int skipCount,
+            int passCount) {
         this(run, resultInRun, duration, failCount, skipCount, passCount, null);
     }
 
     public HistoryTestResultSummary(
-            Run<?, ?> run, hudson.tasks.test.TestResult resultInRun, float duration, int failCount, int skipCount, int passCount, String description) {
+            Run<?, ?> run,
+            hudson.tasks.test.TestResult resultInRun,
+            float duration,
+            int failCount,
+            int skipCount,
+            int passCount,
+            String description) {
         this.run = run;
         this.duration = duration;
         this.failCount = failCount;
@@ -27,10 +40,12 @@ public class HistoryTestResultSummary {
         this.description = description;
         this.resultInRun = resultInRun;
     }
+
     @Deprecated
     public HistoryTestResultSummary(Run<?, ?> run, float duration, int failCount, int skipCount, int passCount) {
         this(run, null, duration, failCount, skipCount, passCount, null);
     }
+
     @Deprecated
     public HistoryTestResultSummary(
             Run<?, ?> run, float duration, int failCount, int skipCount, int passCount, String description) {
@@ -76,9 +91,11 @@ public class HistoryTestResultSummary {
     public String getFullDisplayName() {
         return run.getFullDisplayName();
     }
+
     public hudson.tasks.test.TestResult getResultInRun() {
         return resultInRun;
     }
+
     public String getUrl() {
         if (resultInRun != null) {
             return resultInRun.getUrl();

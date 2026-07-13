@@ -263,9 +263,9 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
     static Object syncObj = new Object();
     static volatile long lastCleanupNs = 0;
 
-    static long LARGE_RESULT_CACHE_CLEANUP_INTERVAL_NS =
-            SystemProperties.getLong(TestResultAction.class.getName() + ".LARGE_RESULT_CACHE_CLEANUP_INTERVAL_MS", 30000L)
-                    * 1000000L;
+    static long LARGE_RESULT_CACHE_CLEANUP_INTERVAL_NS = SystemProperties.getLong(
+                    TestResultAction.class.getName() + ".LARGE_RESULT_CACHE_CLEANUP_INTERVAL_MS", 30000L)
+            * 1000000L;
     static int LARGE_RESULT_CACHE_THRESHOLD =
             SystemProperties.getInteger(TestResultAction.class.getName() + ".LARGE_RESULT_CACHE_THRESHOLD", 10000);
     static boolean RESULT_CACHE_ENABLED =
