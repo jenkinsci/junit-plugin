@@ -67,7 +67,13 @@ THE SOFTWARE.
                             <div class="jp-table-row">
                                 <l:icon src="${f.iconFileName}" />
 
-                                ${f.className}.${f.name}
+                                ${f.name}
+
+                                <j:if test="${it.class.simpleName eq 'TestResult'}">
+                                    <span class="jenkins-!-text-color-secondary jenkins-!-margin-left-2" style="font-family: var(--font-family-mono)">
+                                        <st:out value="${f.className}" />
+                                    </span>
+                                </j:if>
 
                                 <t:condition-tag test="${f}" clazz="jenkins-!-margin-left-2 jenkins-mobile-hide" />
                             </div>
@@ -76,7 +82,13 @@ THE SOFTWARE.
                             <a id="test-${id}-showlink" class="jp-table-row" href="${url}">
                                 <l:icon src="${f.iconFileName}" />
 
-                                ${f.className}.${f.name}
+                                ${f.name}
+
+                                <j:if test="${it.class.simpleName eq 'TestResult'}">
+                                    <span class="jenkins-!-text-color-secondary jenkins-!-margin-left-2" style="font-family: var(--font-family-mono)">
+                                        <st:out value="${f.className}" />
+                                    </span>
+                                </j:if>
 
                                 <t:condition-tag test="${f}" clazz="jenkins-!-margin-left-2 jenkins-mobile-hide" />
 

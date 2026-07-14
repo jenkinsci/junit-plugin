@@ -713,7 +713,6 @@ public class History {
 
                             return new HistoryTestResultSummary(
                                     build,
-                                    resultInRun,
                                     resultInRun.getDuration(),
                                     resultInRun.getFailCount(),
                                     resultInRun.getSkipCount(),
