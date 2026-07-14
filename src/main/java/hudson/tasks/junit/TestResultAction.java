@@ -261,13 +261,13 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
 
     static ConcurrentHashMap<String, SoftReference<TestResult>> resultCache = new ConcurrentHashMap<>();
     static Object syncObj = new Object();
-    static long lastCleanupNs = 0;
+    static volatile long lastCleanupNs = 0;
 
-    static long LARGE_RESULT_CACHE_CLEANUP_INTERVAL_NS =
-            SystemProperties.getLong(TestResultAction.class.getName() + ".LARGE_RESULT_CACHE_CLEANUP_INTERVAL_MS", 500L)
-                    * 1000000L;
+    static long LARGE_RESULT_CACHE_CLEANUP_INTERVAL_NS = SystemProperties.getLong(
+                    TestResultAction.class.getName() + ".LARGE_RESULT_CACHE_CLEANUP_INTERVAL_MS", 30000L)
+            * 1000000L;
     static int LARGE_RESULT_CACHE_THRESHOLD =
-            SystemProperties.getInteger(TestResultAction.class.getName() + ".LARGE_RESULT_CACHE_THRESHOLD", 1000);
+            SystemProperties.getInteger(TestResultAction.class.getName() + ".LARGE_RESULT_CACHE_THRESHOLD", 10000);
     static boolean RESULT_CACHE_ENABLED =
             SystemProperties.getBoolean(TestResultAction.class.getName() + ".RESULT_CACHE_ENABLED", true);
 
@@ -301,16 +301,21 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
      */
     private TestResult loadCached() {
         if (resultCache.size() > LARGE_RESULT_CACHE_THRESHOLD) {
-            synchronized (syncObj) {
-                if (resultCache.size() > LARGE_RESULT_CACHE_THRESHOLD
-                        && (System.nanoTime() - lastCleanupNs) > LARGE_RESULT_CACHE_CLEANUP_INTERVAL_NS) {
-                    lastCleanupNs = System.nanoTime();
-                    resultCache.forEach((String k, SoftReference<TestResult> v) -> {
-                        if (v.get() == null) {
-                            resultCache.remove(k);
-                        }
-                    });
+            boolean doCleanup = false;
+            if ((System.nanoTime() - lastCleanupNs) > LARGE_RESULT_CACHE_CLEANUP_INTERVAL_NS) {
+                synchronized (syncObj) {
+                    if ((System.nanoTime() - lastCleanupNs) > LARGE_RESULT_CACHE_CLEANUP_INTERVAL_NS) {
+                        lastCleanupNs = System.nanoTime();
+                        doCleanup = true;
+                    }
                 }
+            }
+            if (doCleanup) {
+                resultCache.forEach((String k, SoftReference<TestResult> v) -> {
+                    if (v.refersTo(null)) {
+                        resultCache.remove(k);
+                    }
+                });
             }
         }
         TestResult r;
