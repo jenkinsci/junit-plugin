@@ -28,6 +28,6 @@ THE SOFTWARE.
     xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
     <st:include page="config.jelly" class="hudson.tasks.junit.JUnitResultArchiver" />
     <f:entry title="${%Skip marking stage as unstable on test failure}" field="skipMarkingStageUnstable">
-            <f:checkbox default="false" title="${%If checked, the test failures will still be reported but won't mark the stage (nor the build) as unstable}"/>
+            <f:checkbox default="false" title="${%If checked, the test failures will still be reported but won't mark the stage nor the build as unstable}"/>
     </f:entry>
 </j:jelly>
