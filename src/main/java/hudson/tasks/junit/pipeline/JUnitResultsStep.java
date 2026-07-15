@@ -71,9 +71,8 @@ public class JUnitResultsStep extends Step implements JUnitTask {
     private boolean skipMarkingBuildUnstable;
 
     /**
-     * If true, the stage (pipeline node) won't be marked as unstable if there are failing tests.
+     * If true, failing tests will not mark the stage (pipeline node) or the overall build as unstable.
      */
-    private boolean skipMarkingStageUnstable;
 
     private boolean skipOldReports;
 
