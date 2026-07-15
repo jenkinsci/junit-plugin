@@ -313,7 +313,7 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
             if (doCleanup) {
                 resultCache.forEach((String k, SoftReference<TestResult> v) -> {
                     if (v.refersTo(null)) {
-                        resultCache.remove(k);
+                        resultCache.remove(k, v);
                     }
                 });
             }
