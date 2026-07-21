@@ -554,12 +554,13 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
          * @return the validation result.
          * @throws IOException if an error occurs.
          */
-        public FormValidation doCheckTestResults(@AncestorInPath AbstractProject project, @QueryParameter String value)
+        public FormValidation doValidateTestResults(
+                @AncestorInPath AbstractProject project, @QueryParameter("testResults") String testResults)
                 throws IOException {
             if (project == null || !project.hasPermission(Item.WORKSPACE)) {
                 return FormValidation.ok();
             }
-            return FilePath.validateFileMask(project.getSomeWorkspace(), value);
+            return FilePath.validateFileMask(project.getSomeWorkspace(), testResults);
         }
 
         @Override
