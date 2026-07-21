@@ -37,11 +37,18 @@ The JUnit publisher is configured at the job level by adding a Publish JUnit tes
   results to corresponding SCM hosting platforms. If not, a default of "Test" will be used.
 * **Skip marking build unstable:**  If this option is unchecked, then the plugin will mark the build as unstable when it finds at least 1 test failure.
     If this option is checked, then the build will still be successful even if there are test failures reported.
-    In any case, the corresponding pipeline node (and stage) will be marked as unstable in case of test failure.
+    The corresponding pipeline node (and stage) will still be marked as unstable in case of test failure, unless `skipMarkingStageUnstable` is also set.
     In order to enable this, set the property: 
     `skipMarkingBuildUnstable` to `true`:
     
       junit skipMarkingBuildUnstable: true, testResults: 'test-results.xml'
+* **Skip marking stage unstable:** If this option is unchecked, then the plugin will mark the pipeline node (and stage) as unstable when it finds at least 1 test failure.
+    If this option is checked, then the test failures will still be reported, but no warning is attached to the pipeline node. Neither the stage nor the build will be marked as unstable.
+    Checking this option effectively implies `skipMarkingBuildUnstable: true`.
+    In order to enable this, set the property:
+    `skipMarkingStageUnstable` to `true`:
+
+      junit skipMarkingStageUnstable: true, testResults: 'test-results.xml'
       
 ### Test result checks (for GitHub projects)
 
