@@ -184,7 +184,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
 
     @Override
     public String getIconFileName() {
-        return "symbol-flask-outline plugin-ionicons-api";
+        return "symbol-junit-diamond-mono plugin-junit";
     }
 
     @Override
