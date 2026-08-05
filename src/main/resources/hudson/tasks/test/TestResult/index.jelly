@@ -27,6 +27,26 @@ THE SOFTWARE.
   <j:set var="test" value="${it}" />
   <j:set var="it" value="${it.parentAction}" />
 
+  <!-- Check if custom UI should be used -->
+  <j:choose>
+    <j:when test="${it.useCustomUI()}">
+      <!-- Custom UI rendering - embedded within Jenkins layout -->
+      <l:run-subpage>
+        <j:set var="it" value="${test}" />
+        <style>
+          .custom-ui-iframe {
+            width: 100%;
+            height: calc(100vh - 200px);
+            min-height: 600px;
+            border: none;
+            border-radius: 8px;
+          }
+        </style>
+        <iframe class="custom-ui-iframe" src="renderCustomUI"></iframe>
+      </l:run-subpage>
+    </j:when>
+    <j:otherwise>
+      <!-- Default UI rendering -->
   <l:run-subpage>
     <j:set var="it" value="${test}" />
 
@@ -111,4 +131,6 @@ THE SOFTWARE.
 
     <st:include page="body.jelly" />
   </l:run-subpage>
+    </j:otherwise>
+  </j:choose>
 </j:jelly>
