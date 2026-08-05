@@ -1,0 +1,137 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:t="/lib/hudson/test">
+    <st:documentation>
+        <st:attribute name="items">
+            Map of package names to lists of tests to display.
+        </st:attribute>
+        <st:attribute name="baseUrl" use="optional">
+            Optional base URL for the table.
+        </st:attribute>
+        <st:attribute name="relativeParent" use="optional">
+            Optional relative parent for the row's ID and URL.
+        </st:attribute>
+        <st:attribute name="id" use="optional">
+            Optional ID for the table.
+        </st:attribute>
+    </st:documentation>
+
+    <st:once>
+        <link rel="stylesheet" href="${resURL}/plugin/junit/styles.css" defer="true" />
+        <st:adjunct includes="lib.hudson.test.js.failureSummary" />
+        <style>
+            .package-group-header {
+            background-color: var(--background);
+            font-weight: 500;
+            font-family: var(--font-family-mono);
+            padding: 12px 16px;
+            border-top: 2px solid var(--line-green);
+            border-bottom: 1px solid var(--medium-grey);
+            }
+            .package-group-header .package-icon {
+            margin-right: 8px;
+            opacity: 0.7;
+            }
+            .package-test-row td:first-child {
+            padding-left: 48px;
+            }
+        </style>
+    </st:once>
+
+    <table class="jenkins-table" id="${attrs.id}">
+        <thead>
+            <tr>
+                <th>${%Name}</th>
+                <th style="width: 4em" class="jenkins-mobile-hide">${%Age}</th>
+                <th style="width: 4em" class="jenkins-mobile-hide">${%Duration}</th>
+                <j:forEach var="tableheader" items="${it.testActions}">
+                    <st:include it="${tableheader}" page="casetableheader.jelly" optional="true" />
+                </j:forEach>
+                <th class="jenkins-mobile-hide" />
+            </tr>
+        </thead>
+        <tbody>
+            <j:forEach var="packageEntry" items="${attrs.items.entrySet()}" varStatus="pkgStatus">
+                <!-- Package Header Row -->
+                <tr class="package-group-header">
+                    <td colspan="10">
+                        <span class="package-icon">📦</span>
+                        <st:out value="${packageEntry.key}" />
+                        <span class="jenkins-!-text-color-secondary jenkins-!-margin-left-2">
+                            (${packageEntry.value.size()} ${packageEntry.value.size() == 1 ? 'test' : 'tests'})
+                        </span>
+                    </td>
+                </tr>
+
+                <!-- Test Rows for this Package -->
+                <j:forEach var="f" items="${packageEntry.value}" varStatus="i">
+                    <tr class="package-test-row" data-type="test-row" data="${f.className}.${f.name}">
+                        <td>
+                            <j:set var="url" value="${attrs.baseUrl}${f.getRelativePathFrom(attrs.relativeParent ?: it)}" />
+                            <j:set var="id" value="${h.htmlAttributeEscape(url)}" />
+
+                            <j:choose>
+                                <j:when test="${f.status == 'SKIPPED'}">
+                                    <div class="jp-table-row">
+                                        <l:icon src="symbol-status-skipped plugin-junit" />
+
+                                        <span style="font-family: var(--font-family-mono)">
+                                            <st:out value="${f.simpleName}" />
+                                        </span>
+
+                                        <span class="jenkins-!-text-color-secondary">.</span>
+
+                                        <st:out value="${f.name}" />
+
+                                        <t:condition-tag test="${f}" clazz="jenkins-!-margin-left-2 jenkins-mobile-hide" />
+                                    </div>
+                                </j:when>
+                                <j:otherwise>
+                                    <a id="test-${id}-showlink" class="jp-table-row" href="${url}">
+                                        <l:icon src="${f.status == 'PASSED' ? 'symbol-status-blue' : 'symbol-status-red'}" />
+
+                                        <span style="font-family: var(--font-family-mono)">
+                                            <st:out value="${f.simpleName}" />
+                                        </span>
+
+                                        <span class="jenkins-!-text-color-secondary">.</span>
+
+                                        <st:out value="${f.name}" />
+
+                                        <t:condition-tag test="${f}" clazz="jenkins-!-margin-left-2 jenkins-mobile-hide" />
+
+                                        <l:icon src="symbol-chevron-forward-outline plugin-ionicons-api" class="jenkins-!-margin-left-2" />
+                                    </a>
+                                </j:otherwise>
+                            </j:choose>
+
+                            <j:forEach var="badge" items="${f.testActions}">
+                                <st:include it="${badge}" page="badge.jelly" optional="true" />
+                            </j:forEach>
+                        </td>
+                        <td class="jenkins-mobile-hide">
+                            <j:choose>
+                                <j:when test="${f.age == 0 or f.skipped}">0</j:when>
+                                <j:otherwise>
+                                    <a href="${rootURL}/${f.failedSinceRun.url}">${f.age}</a>
+                                </j:otherwise>
+                            </j:choose>
+                        </td>
+                        <td class="no-wrap jenkins-mobile-hide" data="${f.duration}">
+                            ${f.durationString}
+                        </td>
+                        <j:forEach var="tablerow" items="${f.testActions}">
+                            <st:include it="${tablerow}" page="tablerow.jelly" optional="true" />
+                        </j:forEach>
+                        <td class="jenkins-table__cell--tight jenkins-mobile-hide">
+                            <div class="jenkins-table__cell__button-wrapper">
+                                <a href="${url}" class="jenkins-button jenkins-button--tertiary" tooltip="Open in new tab" target="_blank">
+                                    <l:icon src="symbol-external" class="icon-sm" />
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                </j:forEach>
+            </j:forEach>
+        </tbody>
+    </table>
+</j:jelly>
