@@ -159,7 +159,9 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         long started = System.nanoTime();
         JunitTestResultStorage storage = JunitTestResultStorage.find();
         if (!(storage instanceof FileJunitTestResultStorage)) {
-            return new TestResult(storage.load(run.getParent().getFullName(), run.getNumber()));
+            TestResult result = new TestResult(storage.load(run.getParent().getFullName(), run.getNumber()));
+            result.setParentAction(this);
+            return result;
         }
         TestResult r;
         if (result == null) {
