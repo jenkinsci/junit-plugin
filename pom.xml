@@ -34,8 +34,8 @@
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
     <hpi.bundledArtifacts>parallel-collectors</hpi.bundledArtifacts>
     <hpi.strictBundledArtifacts>true</hpi.strictBundledArtifacts>
-    <jenkins.baseline>2.516</jenkins.baseline>
-    <jenkins.version>2.533</jenkins.version>
+    <jenkins.baseline>2.541</jenkins.baseline>
+    <jenkins.version>${jenkins.baseline}.3</jenkins.version>
     <no-test-jar>false</no-test-jar>
     <spotless.check.skip>false</spotless.check.skip>
     <ban-junit4-imports.skip>false</ban-junit4-imports.skip>
@@ -46,7 +46,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-${jenkins.baseline}.x</artifactId>
-        <version>6005.v4235c33d86a_5</version>
+        <version>6904.v75208ee5a_206</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
