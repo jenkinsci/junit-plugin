@@ -118,4 +118,45 @@ class TestObjectTest {
         doReturn(run).when(testObject).getRun();
         assertEquals("job/abc/123/testReport/dummy", testObject.getUrl());
     }
+
+    @Test
+    void safeReplacesEveryCharacterIllegalInAPathSegment() {
+        // RFC 3986 does not allow any of these to appear literally in a URL path segment
+        for (char c : " \"#%/:<>?[\\]^`{|}".toCharArray()) {
+            assertEquals("a_b", TestObject.safe("a" + c + "b"), "should have replaced '" + c + "'");
+        }
+    }
+
+    @Test
+    void safeReplacesControlCharacters() {
+        assertEquals("a_b", TestObject.safe("a\u0000b"));
+        assertEquals("a_b", TestObject.safe("a\tb"));
+        assertEquals("a_b", TestObject.safe("a\nb"));
+        assertEquals("a_b", TestObject.safe("a\u007Fb"));
+    }
+
+    @Test
+    void safeKeepsCharactersLegalInAPathSegment() {
+        String legal = "azAZ09-._~!$&'()*+,;=@";
+        assertEquals(legal, TestObject.safe(legal));
+    }
+
+    @Test
+    void safeKeepsNonAsciiCharacters() {
+        // percent-encoded as UTF-8 by the browser, so they survive the round trip
+        String name = "Gr\u00fc\u00dfe\u30c6\u30b9\u30c8";
+        assertEquals(name, TestObject.safe(name));
+    }
+
+    @Test
+    void safeReturnsPlaceholderForNullOrEmptyName() {
+        assertEquals("(empty)", TestObject.safe(null));
+        assertEquals("(empty)", TestObject.safe(""));
+    }
+
+    @Test
+    void safeReplacesEveryOccurrenceOfAnUnsafeCharacter() {
+        assertEquals("a_b_c", TestObject.safe("a|b|c"));
+        assertEquals("___", TestObject.safe("|||"));
+    }
 }
