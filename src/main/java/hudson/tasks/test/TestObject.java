@@ -405,6 +405,16 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
     private static final Map<String, Map<TestObject, Void>> UNIQUIFIED_NAMES = new HashMap<>();
 
     /**
+     * Characters that {@link #safe(String)} replaces, in addition to the space, the control
+     * characters and {@code DEL}.
+     *
+     * <p>These are the printable ASCII characters that RFC 3986 does not permit to appear
+     * literally in a URL path segment, plus {@code /} (the separator {@link #getId()} builds
+     * paths with) and {@code :} (replaced ever since this method was introduced).
+     */
+    private static final String UNSAFE_CHARS = "\"#%/:<>?[\\]^`{|}";
+
+    /**
      * Replaces URL-unsafe characters.
      * If s is an empty string, returns "(empty)" otherwise the generated URL would contain
      * two slashes one after the other and getDynamic() would fail.
@@ -415,20 +425,32 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
     public static String safe(String s) {
         if (s == null || s.isEmpty()) {
             return "(empty)";
-        } else {
-            // this still seems to be a bit faster than a single replace with regexp
-            return s.replace('/', '_')
-                    .replace('\\', '_')
-                    .replace(':', '_')
-                    .replace('?', '_')
-                    .replace('#', '_')
-                    .replace('%', '_')
-                    .replace('<', '_')
-                    .replace('>', '_');
-            // Note: we probably should some helpers like Commons URIEscapeUtils here to escape all invalid URL chars,
-            // but then we
-            // still would have to escape /, ? and so on
         }
+        // A single pass over the characters is faster than either a regexp or a chain of
+        // String#replace calls, and allocates nothing when there is nothing to replace.
+        StringBuilder buf = null;
+        for (int i = 0; i < s.length(); i++) {
+            if (isUnsafe(s.charAt(i))) {
+                if (buf == null) {
+                    buf = new StringBuilder(s);
+                }
+                buf.setCharAt(i, '_');
+            }
+        }
+        return buf == null ? s : buf.toString();
+    }
+
+    /**
+     * Whether the given character has to be replaced by {@link #safe(String)} for the result to be
+     * usable as a URL path segment.
+     *
+     * <p>Non-ASCII characters are left alone: they are percent-encoded as UTF-8 by the browser and
+     * survive the round trip, so replacing them would needlessly mangle test names that are not
+     * written in English.
+     */
+    private static boolean isUnsafe(char c) {
+        // c <= ' ' covers the C0 control characters as well as the space
+        return c <= ' ' || c == 0x7F || UNSAFE_CHARS.indexOf(c) >= 0;
     }
 
     /**
