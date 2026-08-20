@@ -28,7 +28,7 @@ THE SOFTWARE.
   <l:userExperimentalFlag var="newBuildPage" flagClassName="jenkins.model.experimentalflags.NewBuildPageUserExperimentalFlag" />
 
   <j:if test="${!newBuildPage}">
-    <t:summary icon="symbol-junit-diamond-mono plugin-junit">
+    <t:summary icon="symbol-checkbox-outline plugin-ionicons-api">
       <a href="${it.urlName}/">${it.displayName}</a>
       <st:nbsp/>
       <test:test-result/>
