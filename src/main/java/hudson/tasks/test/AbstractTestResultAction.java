@@ -184,7 +184,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
 
     @Override
     public String getIconFileName() {
-        return "symbol-junit-diamond-mono plugin-junit";
+        return "symbol-checkbox-outline plugin-ionicons-api";
     }
 
     @Override
