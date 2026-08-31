@@ -153,7 +153,7 @@ public class JUnitParser extends TestResultParser {
      * @param testResultLocations
      *      GLOB pattern relative to the {@code workspace} that
      *      specifies the locations of the test result files. Never null.
-     * @param run
+     * @param build
      *      Build for which these tests are parsed. Never null.
      * @param pipelineTestDetails A {@link PipelineTestDetails} instance containing Pipeline-related additional arguments.
      * @param workspace the workspace in which tests can be found
