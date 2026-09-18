@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+import jenkins.model.Jenkins;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -29,6 +30,12 @@ import org.jvnet.hudson.test.recipes.LocalData;
 
 @WithJenkins
 class AggregatedTestResultPublisherTest {
+
+    static {
+        // TODO @LocalData based on OLD_DEFAULT_WORKSPACES_DIR
+        System.setProperty(Jenkins.class.getName() + ".workspacesDir", "${ITEM_ROOTDIR}/workspace");
+    }
+
     public static final String TEST_PROJECT_NAME = "junit";
     public static final String AGGREGATION_PROJECT_NAME = "aggregated";
 
