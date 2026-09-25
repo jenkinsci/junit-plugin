@@ -531,7 +531,6 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     /**
      * Flavor of {@link #possiblyTrimStdio(Collection, StdioRetention, String)} that doesn't try to read the whole thing into memory.
      */
-    @SuppressFBWarnings(value = "DM_DEFAULT_ENCODING", justification = "Expected behavior")
     static String possiblyTrimStdio(Collection<CaseResult> results, StdioRetention stdioRetention, File stdio)
             throws IOException {
         long len = stdio.length();
