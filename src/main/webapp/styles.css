@@ -41,7 +41,7 @@
   text-box: cap alphabetic;
   font-weight: 450;
   background: color-mix(in srgb, var(--color, var(--text-color-secondary)) 10%, transparent);
-  border: var(--jenkins-border-width) solid color-mix(in srgb, var(--color, var(--text-color-secondary)) 10%, transparent);
+  border: var(--jenkins-border-width) solid var(--jenkins-border-color--inherit-subtle);
   color: var(--color, var(--text-color)) !important;
   text-decoration: none !important;
   transition: var(--standard-transition);
@@ -278,5 +278,25 @@ h1 {
     margin-bottom: -1rem !important;
     padding-inline: 1rem !important;
     padding-bottom: 1rem !important;
+  }
+}
+
+/* Tests card */
+.jenkins-card__teaser .jp-widget-line {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  column-gap: 0.75rem;
+}
+
+.jenkins-card__teaser .jp-widget-line__segment {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+
+  svg {
+    width: 1rem;
+    height: 1rem;
+    margin: 0;
   }
 }
