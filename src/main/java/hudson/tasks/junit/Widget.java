@@ -6,7 +6,7 @@ import java.util.List;
 public class Widget {
 
     private final String symbol;
-    private final List<String> lines = new ArrayList<>();
+    private final List<Line> lines = new ArrayList<>();
 
     public Widget(TestResult result) {
         int failCount = result.getFailCount();
@@ -17,21 +17,32 @@ public class Widget {
 
         List<String> counts = new ArrayList<>();
 
+        List<Line.Segment> changes = new ArrayList<>();
+
         if (isFailed) {
-            lines.add(Messages.Widget_Failed(failCount));
+            lines.add(new Line(Messages.Widget_Failed(failCount)));
             counts.add(Messages.Widget_Passed(result.getPassCount()));
 
-            long regressions = result.getSuites().stream()
-                    .flatMap(e -> e.getCases().stream())
-                    .filter(e -> e.getCondition() == CaseResult.Status.REGRESSION)
-                    .count();
+            long regressions = result.getRegressionCount();
 
             if (regressions > 0) {
-                lines.add(Messages.Widget_Regression(regressions));
+                changes.add(new Line.Segment(
+                        Messages.Widget_Regression(regressions), "symbol-trending-down-outline plugin-ionicons-api"));
             }
 
         } else {
-            lines.add(Messages.Widget_AllTestsPassing());
+            lines.add(new Line(Messages.Widget_AllTestsPassing()));
+        }
+
+        long fixed = result.getFixedCount();
+
+        if (fixed > 0) {
+            changes.add(
+                    new Line.Segment(Messages.Widget_Fixed(fixed), "symbol-trending-up-outline plugin-ionicons-api"));
+        }
+
+        if (!changes.isEmpty()) {
+            lines.add(new Line(changes));
         }
 
         if (result.getSkipCount() > 0) {
@@ -40,16 +51,52 @@ public class Widget {
 
         counts.add(Messages.Widget_Total(totalCount));
 
-        lines.add(String.join(", ", counts));
+        lines.add(new Line(String.join(", ", counts)));
 
-        lines.add(Messages.Widget_Took(result.getDurationString()));
+        lines.add(new Line(Messages.Widget_Took(result.getDurationString())));
     }
 
     public String getSymbol() {
         return symbol;
     }
 
-    public List<String> getLines() {
+    public List<Line> getLines() {
         return lines;
+    }
+
+    public static class Line {
+
+        private final List<Segment> segments;
+
+        Line(String text) {
+            this(List.of(new Segment(text, null)));
+        }
+
+        Line(List<Segment> segments) {
+            this.segments = segments;
+        }
+
+        public List<Segment> getSegments() {
+            return segments;
+        }
+
+        public static class Segment {
+
+            private final String text;
+            private final String icon;
+
+            Segment(String text, String icon) {
+                this.text = text;
+                this.icon = icon;
+            }
+
+            public String getText() {
+                return text;
+            }
+
+            public String getIcon() {
+                return icon;
+            }
+        }
     }
 }

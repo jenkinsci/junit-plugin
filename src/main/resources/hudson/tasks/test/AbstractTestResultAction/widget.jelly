@@ -27,10 +27,21 @@ THE SOFTWARE.
     <l:card title="${it.displayName}" expandable="${it.urlName}">
         <j:set var="widget" value="${it.widget}" />
 
+        <link rel="stylesheet" href="${resURL}/plugin/junit/styles.css" />
+
         <a class="jenkins-card__teaser" href="${it.urlName}" tabindex="-1">
             <l:icon src="${widget.symbol}" />
             <j:forEach var="line" items="${widget.lines}">
-                <div>${line}</div>
+                <div class="jp-widget-line">
+                    <j:forEach var="segment" items="${line.segments}">
+                        <span class="jp-widget-line__segment">
+                            <j:if test="${segment.icon != null}">
+                                <l:icon src="${segment.icon}" />
+                            </j:if>
+                            ${segment.text}
+                        </span>
+                    </j:forEach>
+                </div>
             </j:forEach>
         </a>
     </l:card>

@@ -26,6 +26,7 @@ package hudson.tasks.test;
 import hudson.model.Job;
 import hudson.model.Result;
 import hudson.model.Run;
+import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.Failure;
 import hudson.tasks.junit.TestAction;
 import java.util.Collection;
@@ -231,6 +232,32 @@ public abstract class TestResult extends TestObject {
      */
     public Collection<? extends TestResult> getSkippedTests() {
         return Collections.emptyList();
+    }
+
+    /**
+     * Gets the number of test cases under this result that failed in this build but passed in the previous one
+     */
+    public long getRegressionCount() {
+        return countCases(this, CaseResult.Status.REGRESSION);
+    }
+
+    /**
+     * Gets the number of test cases under this result that passed in this build but failed in the previous one
+     */
+    public long getFixedCount() {
+        return countCases(this, CaseResult.Status.FIXED);
+    }
+
+    private static long countCases(TestResult result, CaseResult.Status status) {
+        if (result instanceof CaseResult caseResult) {
+            return caseResult.getCondition() == status ? 1 : 0;
+        }
+        if (result instanceof TabulatedResult tabulatedResult) {
+            return tabulatedResult.getChildren().stream()
+                    .mapToLong(e -> countCases(e, status))
+                    .sum();
+        }
+        return 0;
     }
 
     /**
