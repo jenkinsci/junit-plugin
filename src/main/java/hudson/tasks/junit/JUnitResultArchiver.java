@@ -173,7 +173,8 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                         task.isKeepProperties(),
                         task.isAllowEmptyResults(),
                         task.isSkipOldReports(),
-                        task.isKeepTestNames())
+                        task.isKeepTestNames(),
+                        task.isSortTestResultsByTimestamp())
                 .parseResult(expandedTestResults, run, pipelineTestDetails, workspace, launcher, listener);
     }
 
@@ -189,7 +190,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     }
 
     @Override
-    public void perform(Run build, FilePath workspace, Launcher launcher, TaskListener listener)
+    public void perform(Run<?, ?> build, FilePath workspace, Launcher launcher, TaskListener listener)
             throws InterruptedException, IOException {
         if (parseAndSummarize(this, null, build, workspace, launcher, listener).getFailCount() > 0
                 && !skipMarkingBuildUnstable) {
@@ -288,7 +289,8 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                             task.isKeepProperties(),
                             task.isAllowEmptyResults(),
                             task.isSkipOldReports(),
-                            task.isKeepTestNames())
+                            task.isKeepTestNames(),
+                            task.isSortTestResultsByTimestamp())
                     .summarizeResult(testResults, build, pipelineTestDetails, workspace, launcher, listener, storage);
         }
 
@@ -499,6 +501,11 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     }
 
     @DataBoundSetter
+    public final void setAllowEmptyResults(boolean allowEmptyResults) {
+        this.allowEmptyResults = allowEmptyResults;
+    }
+
+    @DataBoundSetter
     public void setSkipPublishingChecks(boolean skipPublishingChecks) {
         this.skipPublishingChecks = skipPublishingChecks;
     }
@@ -511,11 +518,6 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     @DataBoundSetter
     public void setChecksName(String checksName) {
         this.checksName = checksName;
-    }
-
-    @DataBoundSetter
-    public final void setAllowEmptyResults(boolean allowEmptyResults) {
-        this.allowEmptyResults = allowEmptyResults;
     }
 
     public boolean isSkipMarkingBuildUnstable() {
@@ -538,6 +540,20 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     }
 
     private static final long serialVersionUID = 1L;
+
+    @Override
+    public boolean isSortTestResultsByTimestamp() {
+        // Return the appropriate value or a default (e.g., false)
+        return sortTestResultsByTimestamp;
+    }
+
+    // Add the field and setter if needed
+    private boolean sortTestResultsByTimestamp;
+
+    @DataBoundSetter
+    public void setSortTestResultsByTimestamp(boolean sortTestResultsByTimestamp) {
+        this.sortTestResultsByTimestamp = sortTestResultsByTimestamp;
+    }
 
     @Extension
     public static class DescriptorImpl extends BuildStepDescriptor<Publisher> {
