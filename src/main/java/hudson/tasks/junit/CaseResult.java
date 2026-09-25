@@ -46,6 +46,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
+import jenkins.model.Jenkins;
 import org.apache.commons.io.FileUtils;
 import org.dom4j.Element;
 import org.jvnet.localizer.Localizable;
@@ -53,6 +54,7 @@ import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.Beta;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.Stapler;
+import org.kohsuke.stapler.StaplerRequest2;
 import org.kohsuke.stapler.export.Exported;
 
 /**
@@ -989,6 +991,90 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     @Override
     public Map<String, String> getProperties() {
         return properties;
+    }
+
+    @CheckForNull
+    @Restricted(NoExternalUse.class)
+    public String getCopyAsPrompt() {
+        if (!isFailed()) {
+            return null;
+        }
+
+        StringBuilder prompt = new StringBuilder(
+                "Investigate this test failure. Explain the likely root cause and suggest concrete next debugging or fix steps.\n\n");
+        appendPromptLine(prompt, "Test", getDisplayName());
+        appendPromptLine(prompt, "Class", getClassName());
+
+        SuiteResult suiteResult = getSuiteResult();
+        if (suiteResult != null
+                && suiteResult.getName() != null
+                && !suiteResult.getName().equals(getClassName())) {
+            appendPromptLine(prompt, "Suite", suiteResult.getName());
+        }
+
+        Run<?, ?> run = suiteResult == null ? null : getRun();
+        if (run != null) {
+            appendPromptLine(prompt, "Build", run.getFullDisplayName());
+
+            int failedSince = getFailedSince();
+            if (failedSince > 0) {
+                appendPromptLine(prompt, "Failed since", "#" + failedSince);
+            }
+
+            int age = getAge();
+            if (age > 0) {
+                appendPromptLine(prompt, "Failing for", age + " build" + (age == 1 ? "" : "s"));
+            }
+        }
+
+        appendPromptLine(prompt, "Status", getStatus().name());
+        appendPromptLine(prompt, "Duration", getDurationString());
+        appendPromptSection(prompt, "Error details", getErrorDetails());
+        appendPromptSection(prompt, "Stack trace", getErrorStackTrace());
+        appendPromptSection(prompt, "Standard output", getStdout());
+        appendPromptSection(prompt, "Standard error", getStderr());
+        appendPromptLine(prompt, "Page URL", getPageUrl());
+        return prompt.toString();
+    }
+
+    private static void appendPromptLine(StringBuilder prompt, String label, String value) {
+        if (value != null && !value.isBlank()) {
+            prompt.append(label).append(": ").append(value).append('\n');
+        }
+    }
+
+    private static void appendPromptSection(StringBuilder prompt, String title, String value) {
+        if (value != null && !value.isBlank()) {
+            prompt.append('\n')
+                    .append(title)
+                    .append(":\n")
+                    .append(value.stripTrailing())
+                    .append('\n');
+        }
+    }
+
+    @CheckForNull
+    private String getPageUrl() {
+        SuiteResult suiteResult = getSuiteResult();
+        if (suiteResult == null) {
+            return null;
+        }
+
+        StaplerRequest2 request = Stapler.getCurrentRequest2();
+        if (request != null) {
+            String requestUrl = request.getRequestURL().toString();
+            String queryString = request.getQueryString();
+            return queryString == null ? requestUrl : requestUrl + '?' + queryString;
+        }
+
+        String relativeUrl = getUrl();
+        Jenkins jenkins = Jenkins.getInstanceOrNull();
+        if (jenkins == null) {
+            return relativeUrl;
+        }
+
+        String rootUrl = jenkins.getRootUrl();
+        return rootUrl == null ? relativeUrl : rootUrl + relativeUrl;
     }
 
     /**
