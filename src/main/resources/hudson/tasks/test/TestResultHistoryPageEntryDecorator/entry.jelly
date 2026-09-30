@@ -54,13 +54,13 @@ THE SOFTWARE.
     <div class="jp-history-summary__details">
       <span>${%Tests(summary.totalCount)}</span>
       <j:if test="${summary.regressionCount > 0}">
-        <span tooltip="${%RegressionTooltip}" data-tooltip-append-to-parent="true">
+        <span>
           <l:icon src="symbol-trending-down-outline plugin-ionicons-api" />
           ${%Regressions(summary.regressionCount)}
         </span>
       </j:if>
       <j:if test="${summary.fixedCount > 0}">
-        <span tooltip="${%FixedTooltip}" data-tooltip-append-to-parent="true">
+        <span>
           <l:icon src="symbol-trending-up-outline plugin-ionicons-api" />
           ${%Fixed(summary.fixedCount)}
         </span>
