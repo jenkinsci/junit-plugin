@@ -48,7 +48,7 @@ THE SOFTWARE.
       <local:tag count="${summary.passCount}" type="passed" tooltip="${%Passed(summary.passCount)}"
                  icon="symbol-checkmark-outline plugin-ionicons-api" />
       <local:tag count="${summary.skipCount}" type="skipped" tooltip="${%Skipped(summary.skipCount)}"
-                 icon="symbol-play-skip-forward-outline plugin-ionicons-api" />
+                 icon="symbol-skipped plugin-junit" />
     </div>
 
     <div class="jp-history-summary__details">
