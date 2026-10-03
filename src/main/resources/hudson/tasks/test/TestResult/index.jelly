@@ -48,7 +48,7 @@ THE SOFTWARE.
           </j:if>
           <j:if test="${it.skipCount gt 0}">
             <div class="jp-pill jenkins-!-skipped-color" tooltip="${it.skipCount} skipped">
-              <l:icon src="symbol-play-skip-forward-outline plugin-ionicons-api" />
+              <l:icon src="symbol-skipped plugin-junit" />
               ${it.skipCount}
             </div>
           </j:if>
