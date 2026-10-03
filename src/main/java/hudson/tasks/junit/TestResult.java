@@ -133,6 +133,7 @@ public final class TestResult extends MetaTabulatedResult {
     private boolean keepTestNames;
 
     private boolean keepProperties;
+    private transient String resultsLocation;
 
     // default 3s as it depends on OS some can be good some not really....
     public static final long FILE_TIME_PRECISION_MARGIN =
@@ -1036,6 +1037,17 @@ public final class TestResult extends MetaTabulatedResult {
     @Override
     public AbstractTestResultAction getParentAction() {
         return this.parentAction;
+    }
+
+    void setReportLocation(String resultsLocation) {
+        this.resultsLocation = resultsLocation;
+    }
+
+    /**
+     * @return path to the source .xml report in workspace
+     */
+    public String getReportLocation() {
+        return resultsLocation;
     }
 
     /**

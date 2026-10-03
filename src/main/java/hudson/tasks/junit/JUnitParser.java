@@ -243,6 +243,7 @@ public class JUnitParser extends TestResultParser {
                         keepTestNames,
                         pipelineTestDetails,
                         skipOldReports);
+                result.setReportLocation(testResults);
                 result.tally();
             } else {
                 if (this.allowEmptyResults) {

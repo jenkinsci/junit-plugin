@@ -75,6 +75,7 @@ import org.apache.commons.io.FileUtils;
 import org.htmlunit.html.HtmlForm;
 import org.htmlunit.html.HtmlPage;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
+import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.Issue;
@@ -263,15 +264,26 @@ class JUnitResultArchiverTest {
         assertEquals(/* ⅞ = 87.5% */ 87, testResultAction.getBuildHealth().getScore());
     }
 
+    @Test
+    public void accessLocationFromPublisher() throws Exception {
+        project.getPublishersList().removeAll(JUnitResultArchiver.class);
+        CapturingTestDataPublisher capturingPublisher = new CapturingTestDataPublisher();
+        project.getBuildersList().add(new SimpleArchive("A", 1, 1, capturingPublisher));
+        j.assertBuildStatus(Result.UNSTABLE, project.scheduleBuild2(0).get());
+        assertEquals("A.xml", capturingPublisher.capturedFile);
+    }
+
     public static final class SimpleArchive extends Builder {
         private final String name;
         private final int pass;
         private final int fail;
+        private final TestDataPublisher[] publishers;
 
-        public SimpleArchive(String name, int pass, int fail) {
+        public SimpleArchive(String name, int pass, int fail, TestDataPublisher... publishers) {
             this.name = name;
             this.pass = pass;
             this.fail = fail;
+            this.publishers = publishers;
         }
 
         @Override
@@ -293,7 +305,9 @@ class JUnitResultArchiverTest {
                 pw.flush();
             }
             ws.touch(build.getTimeInMillis() + 1);
-            new JUnitResultArchiver(name + ".xml").perform(build, ws, launcher, listener);
+            JUnitResultArchiver jUnitResultArchiver = new JUnitResultArchiver(name + ".xml");
+            jUnitResultArchiver.setTestDataPublishers(List.of(publishers));
+            jUnitResultArchiver.perform(build, ws, launcher, listener);
             return true;
         }
 
@@ -559,6 +573,21 @@ class JUnitResultArchiverTest {
         public HttpResponse doIndex() {
             triggerCount++;
             return HttpResponses.plainText("triggered");
+        }
+    }
+
+    private static class CapturingTestDataPublisher extends TestDataPublisher {
+        private String capturedFile;
+
+        @Override
+        public TestResultAction.Data contributeTestData(
+                Run<?, ?> run,
+                @NonNull FilePath workspace,
+                Launcher launcher,
+                TaskListener listener,
+                TestResult testResult) {
+            capturedFile = testResult.getReportLocation();
+            return null;
         }
     }
 }
