@@ -52,7 +52,6 @@ import org.jvnet.localizer.Localizable;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.Beta;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
-import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.export.Exported;
 
 /**
@@ -802,6 +801,14 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
 
     private void recomputeFailedSinceIfNeeded() {
         if (failedSince == 0 && getFailCount() == 1) {
+            JunitTestResultStorage storage = JunitTestResultStorage.find();
+            if (!(storage instanceof FileJunitTestResultStorage)) {
+                Run<?, ?> run = getFailedSinceRun();
+                if (run != null) {
+                    this.failedSince = run.getNumber();
+                    return;
+                }
+            }
             CaseResult prev = getPreviousResult();
             if (prev != null && prev.isFailed()) {
                 this.failedSince = prev.getFailedSince();
@@ -818,7 +825,10 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     public Run<?, ?> getFailedSinceRun() {
         JunitTestResultStorage storage = JunitTestResultStorage.find();
         if (!(storage instanceof FileJunitTestResultStorage)) {
-            Run<?, ?> run = Stapler.getCurrentRequest2().findAncestorObject(Run.class);
+            Run<?, ?> run = getRun();
+            if (run == null) {
+                return null;
+            }
             TestResultImpl pluggableStorage = storage.load(run.getParent().getFullName(), run.getNumber());
             return pluggableStorage.getFailedSinceRun(this);
         }
@@ -898,7 +908,12 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
             return null;
         }
 
-        TestResult previousResult = parent.getParent();
+        hudson.tasks.junit.TestResult currentBuildResult = parent.getParent();
+        if (currentBuildResult != null && currentBuildResult.supportsPreviousCaseResultViaStorage()) {
+            return currentBuildResult.getPreviousCaseResultViaStorage(this).orElse(null);
+        }
+
+        TestResult previousResult = currentBuildResult;
         int n = 0;
         while (previousResult != null && n < PREVIOUS_TEST_RESULT_BACKTRACK_BUILDS_MAX) {
             previousResult = previousResult.getPreviousResult();
