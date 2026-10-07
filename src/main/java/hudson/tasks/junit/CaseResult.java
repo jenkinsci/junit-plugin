@@ -53,7 +53,6 @@ import org.jvnet.localizer.Localizable;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.Beta;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
-import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.export.Exported;
 
 /**
@@ -805,11 +804,6 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         if (failedSince == 0 && getFailCount() == 1) {
             JunitTestResultStorage storage = JunitTestResultStorage.find();
             if (!(storage instanceof FileJunitTestResultStorage)) {
-                // Pluggable storage already answers "failed since" directly, typically in a bounded
-                // number of queries batched across every failing case of the build (see
-                // getFailedSinceRun()) -- use that instead of the recursive getPreviousResult() walk
-                // below, which revisits one historical build at a time and can touch an unbounded
-                // number of them for a long consecutive failing streak.
                 Run<?, ?> run = getFailedSinceRun();
                 if (run != null) {
                     this.failedSince = run.getNumber();
@@ -832,7 +826,10 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     public Run<?, ?> getFailedSinceRun() {
         JunitTestResultStorage storage = JunitTestResultStorage.find();
         if (!(storage instanceof FileJunitTestResultStorage)) {
-            Run<?, ?> run = Stapler.getCurrentRequest2().findAncestorObject(Run.class);
+            Run<?, ?> run = getRun();
+            if (run == null) {
+                return null;
+            }
             TestResultImpl pluggableStorage = storage.load(run.getParent().getFullName(), run.getNumber());
             return pluggableStorage.getFailedSinceRun(this);
         }
@@ -914,12 +911,6 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
 
         hudson.tasks.junit.TestResult currentBuildResult = parent.getParent();
         if (currentBuildResult != null && currentBuildResult.supportsPreviousCaseResultViaStorage()) {
-            // The pluggable storage backing the current build can answer this directly (e.g. with a
-            // single indexed query), instead of unconditionally walking up to
-            // PREVIOUS_TEST_RESULT_BACKTRACK_BUILDS_MAX historical builds one at a time below, each of
-            // which needs its own suite lookup. An empty Optional here means storage has definitively
-            // determined there is no previous result, so return null rather than falling through to
-            // the walk below.
             return currentBuildResult.getPreviousCaseResultViaStorage(this).orElse(null);
         }
 
