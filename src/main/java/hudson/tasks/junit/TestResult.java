@@ -487,6 +487,10 @@ public final class TestResult extends MetaTabulatedResult {
      * {@code true}.
      */
     Optional<CaseResult> getPreviousCaseResultViaStorage(CaseResult current) {
+        if (impl == null) {
+            throw new IllegalStateException(
+                    "getPreviousCaseResultViaStorage called without first checking supportsPreviousCaseResultViaStorage");
+        }
         return impl.getPreviousCaseResult(current);
     }
 
