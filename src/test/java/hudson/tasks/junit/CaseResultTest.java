@@ -26,6 +26,7 @@ package hudson.tasks.junit;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
@@ -216,6 +217,36 @@ class CaseResultTest {
         assertEquals(
                 cr.annotate(cr.getErrorStackTrace()).replaceAll("&lt;", "<").replace("\r\n", "\n"),
                 errorStackTrace.getTextContent());
+    }
+
+    @Test
+    void copyAsPromptButtonIsShownForFailuresOnly() throws Exception {
+        FreeStyleBuild b = configureTestBuild("copy-as-prompt");
+        TestResult tr = b.getAction(TestResultAction.class).getResult();
+
+        CaseResult failed = tr.getFailedTests().get(1);
+        HtmlPage failedPage =
+                rule.createWebClient().goTo("job/copy-as-prompt/1/testReport/" + failed.getRelativePathFrom(tr));
+
+        HtmlElement copyButton = failedPage.getFirstByXPath(
+                "//button[contains(@class,'jenkins-copy-button') and normalize-space(.)='Copy as prompt']");
+        assertNotNull(copyButton);
+
+        String prompt = copyButton.getAttribute("text");
+        assertFalse(prompt.isEmpty());
+        assertTrue(prompt.contains("Test: " + failed.getDisplayName()));
+        assertTrue(prompt.contains("Class: " + failed.getClassName()));
+        assertTrue(prompt.contains("Build: " + b.getFullDisplayName()));
+        assertTrue(prompt.contains("Error details:\n" + failed.getErrorDetails()));
+        assertTrue(prompt.contains("\nStack trace:\n"));
+        assertTrue(prompt.endsWith("Page URL: " + failedPage.getUrl().toExternalForm() + "\n"));
+
+        CaseResult passed = tr.getPassedTests().get(0);
+        HtmlPage passedPage =
+                rule.createWebClient().goTo("job/copy-as-prompt/1/testReport/" + passed.getRelativePathFrom(tr));
+        assertTrue(passedPage
+                .getByXPath("//button[normalize-space(.)='Copy as prompt']")
+                .isEmpty());
     }
 
     /**

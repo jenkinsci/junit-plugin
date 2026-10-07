@@ -89,6 +89,13 @@ THE SOFTWARE.
             </j:if>
           </div>
 
+          <j:set var="copyAsPrompt" value="${it.copyAsPrompt}" />
+          <j:if test="${!empty copyAsPrompt}">
+            <l:copyAsPromptButton text="${copyAsPrompt}"
+                                  label="${%copyAsPrompt}"
+                                  message="${%copyAsPromptMessage}" />
+          </j:if>
+
           <a tooltip="${%History}"
              href="history"
              class="jenkins-button jenkins-details__button">
