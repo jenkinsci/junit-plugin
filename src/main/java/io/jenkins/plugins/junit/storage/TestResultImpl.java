@@ -38,6 +38,7 @@ import hudson.tasks.junit.TrendTestResultSummary;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import jenkins.model.Jenkins;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.Beta;
@@ -93,6 +94,38 @@ public interface TestResultImpl {
     int getCountOfBuildsWithTestResults();
 
     Run<?, ?> getFailedSinceRun(CaseResult caseResult);
+
+    /**
+     * Whether this storage implementation provides a fast path for {@link CaseResult#getPreviousResult()}
+     * via {@link #getPreviousCaseResult(CaseResult)}. The default (file-based) implementation of that
+     * method walks up to {@code PREVIOUS_TEST_RESULT_BACKTRACK_BUILDS_MAX} historical builds one at a
+     * time, resolving a suite lookup against each, purely to find the nearest earlier build that
+     * contains a case with the same identity (suite/package/classname/testname). A storage backend
+     * that can answer that question directly (e.g. with a single indexed query, independent of how
+     * many historical builds must be considered) should return {@code true} here and override
+     * {@link #getPreviousCaseResult(CaseResult)}, so the per-build walk -- and its repeated suite
+     * loads -- can be skipped entirely.
+     *
+     * @return {@code true} if {@link #getPreviousCaseResult(CaseResult)} should be used instead of the
+     *         default build-by-build search
+     */
+    default boolean supportsPreviousCaseResultLookup() {
+        return false;
+    }
+
+    /**
+     * Fast path for {@link CaseResult#getPreviousResult()}, only called when
+     * {@link #supportsPreviousCaseResultLookup()} returns {@code true}.
+     *
+     * @param current the case to find the previous result for, belonging to the build this
+     *                {@link TestResultImpl} instance represents
+     * @return an {@link Optional} with the resolved result, or {@link Optional#empty()} if this
+     *         implementation has determined there is none within its own backtrack limit
+     */
+    @NonNull
+    default Optional<CaseResult> getPreviousCaseResult(@NonNull CaseResult current) {
+        return Optional.empty();
+    }
 
     @CheckForNull
     default Run<?, ?> getRun() {

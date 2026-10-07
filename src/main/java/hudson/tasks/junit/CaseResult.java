@@ -43,6 +43,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Logger;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
@@ -802,6 +803,19 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
 
     private void recomputeFailedSinceIfNeeded() {
         if (failedSince == 0 && getFailCount() == 1) {
+            JunitTestResultStorage storage = JunitTestResultStorage.find();
+            if (!(storage instanceof FileJunitTestResultStorage)) {
+                // Pluggable storage already answers "failed since" directly, typically in a bounded
+                // number of queries batched across every failing case of the build (see
+                // getFailedSinceRun()) -- use that instead of the recursive getPreviousResult() walk
+                // below, which revisits one historical build at a time and can touch an unbounded
+                // number of them for a long consecutive failing streak.
+                Run<?, ?> run = getFailedSinceRun();
+                if (run != null) {
+                    this.failedSince = run.getNumber();
+                    return;
+                }
+            }
             CaseResult prev = getPreviousResult();
             if (prev != null && prev.isFailed()) {
                 this.failedSince = prev.getFailedSince();
@@ -898,7 +912,18 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
             return null;
         }
 
-        TestResult previousResult = parent.getParent();
+        hudson.tasks.junit.TestResult currentBuildResult = parent.getParent();
+        if (currentBuildResult != null && currentBuildResult.supportsPreviousCaseResultViaStorage()) {
+            // The pluggable storage backing the current build can answer this directly (e.g. with a
+            // single indexed query), instead of unconditionally walking up to
+            // PREVIOUS_TEST_RESULT_BACKTRACK_BUILDS_MAX historical builds one at a time below, each of
+            // which needs its own suite lookup. An empty Optional here means storage has definitively
+            // determined there is no previous result, so return null rather than falling through to
+            // the walk below.
+            return currentBuildResult.getPreviousCaseResultViaStorage(this).orElse(null);
+        }
+
+        TestResult previousResult = currentBuildResult;
         int n = 0;
         while (previousResult != null && n < PREVIOUS_TEST_RESULT_BACKTRACK_BUILDS_MAX) {
             previousResult = previousResult.getPreviousResult();
