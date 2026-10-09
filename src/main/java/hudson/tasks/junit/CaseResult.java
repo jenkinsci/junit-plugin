@@ -52,7 +52,6 @@ import org.jvnet.localizer.Localizable;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.Beta;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
-import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.export.Exported;
 
 /**
@@ -159,6 +158,28 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
             String stdout,
             String stderr,
             String stacktrace) {
+        this(parent, className, testName, errorDetails, skippedMessage, duration, stdout, stderr, stacktrace, null);
+    }
+
+    /**
+     * Used by {@code JunitTestResultStorage} implementations to reconstruct a {@link CaseResult}
+     * from storage, including any test case properties that were retained at publish time (see
+     * {@link JUnitParser#JUnitParser(boolean, boolean, boolean, boolean)}'s {@code keepProperties}).
+     *
+     * @since TODO
+     */
+    @Restricted(Beta.class)
+    public CaseResult(
+            SuiteResult parent,
+            String className,
+            String testName,
+            String errorDetails,
+            String skippedMessage,
+            float duration,
+            String stdout,
+            String stderr,
+            String stacktrace,
+            @CheckForNull Map<String, String> properties) {
         this.className = className;
         this.testName = testName;
         this.errorStackTrace = stacktrace;
@@ -172,7 +193,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         this.isProperFailure = false;
         this.skipped = skippedMessage != null;
         this.skippedMessage = skippedMessage;
-        this.properties = Collections.emptyMap();
+        this.properties = properties == null ? Collections.emptyMap() : properties;
         this.keepTestNames = false;
     }
 
@@ -802,6 +823,14 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
 
     private void recomputeFailedSinceIfNeeded() {
         if (failedSince == 0 && getFailCount() == 1) {
+            JunitTestResultStorage storage = JunitTestResultStorage.find();
+            if (!(storage instanceof FileJunitTestResultStorage)) {
+                Run<?, ?> run = getFailedSinceRun();
+                if (run != null) {
+                    this.failedSince = run.getNumber();
+                    return;
+                }
+            }
             CaseResult prev = getPreviousResult();
             if (prev != null && prev.isFailed()) {
                 this.failedSince = prev.getFailedSince();
@@ -818,7 +847,10 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     public Run<?, ?> getFailedSinceRun() {
         JunitTestResultStorage storage = JunitTestResultStorage.find();
         if (!(storage instanceof FileJunitTestResultStorage)) {
-            Run<?, ?> run = Stapler.getCurrentRequest2().findAncestorObject(Run.class);
+            Run<?, ?> run = getRun();
+            if (run == null) {
+                return null;
+            }
             TestResultImpl pluggableStorage = storage.load(run.getParent().getFullName(), run.getNumber());
             return pluggableStorage.getFailedSinceRun(this);
         }
@@ -898,7 +930,12 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
             return null;
         }
 
-        TestResult previousResult = parent.getParent();
+        hudson.tasks.junit.TestResult currentBuildResult = parent.getParent();
+        if (currentBuildResult != null && currentBuildResult.supportsPreviousCaseResultViaStorage()) {
+            return currentBuildResult.getPreviousCaseResultViaStorage(this).orElse(null);
+        }
+
+        TestResult previousResult = currentBuildResult;
         int n = 0;
         while (previousResult != null && n < PREVIOUS_TEST_RESULT_BACKTRACK_BUILDS_MAX) {
             previousResult = previousResult.getPreviousResult();

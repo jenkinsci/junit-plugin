@@ -50,6 +50,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -468,6 +469,29 @@ public final class TestResult extends MetaTabulatedResult {
         }
 
         return super.getPreviousResult();
+    }
+
+    /**
+     * Used by {@link CaseResult#getPreviousResult()} to decide whether to try the pluggable storage's
+     * fast path (see {@link io.jenkins.plugins.junit.storage.TestResultImpl#getPreviousCaseResult(CaseResult)})
+     * instead of falling back to its own build-by-build walk. Returns {@code false} when this build's
+     * results are not backed by pluggable storage, or when the storage has no fast path.
+     */
+    boolean supportsPreviousCaseResultViaStorage() {
+        return impl != null && impl.supportsPreviousCaseResultLookup();
+    }
+
+    /**
+     * Used by {@link CaseResult#getPreviousResult()} to resolve the previous result via the pluggable
+     * storage's fast path. Only call this when {@link #supportsPreviousCaseResultViaStorage()} returns
+     * {@code true}.
+     */
+    Optional<CaseResult> getPreviousCaseResultViaStorage(CaseResult current) {
+        if (impl == null) {
+            throw new IllegalStateException(
+                    "getPreviousCaseResultViaStorage called without first checking supportsPreviousCaseResultViaStorage");
+        }
+        return impl.getPreviousCaseResult(current);
     }
 
     @Deprecated
