@@ -1,0 +1,21 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+    <f:section title="${%JUnit Test Results}">
+        <f:entry title="${%Default Custom UI Provider}" field="customUIProviderId">
+            <f:select default="">
+                <f:option value="">${%Default UI}</f:option>
+                <j:invokeStatic var="customUIProviders"
+                               className="hudson.tasks.junit.CustomUIProvider"
+                               method="all" />
+                <j:forEach var="provider" items="${customUIProviders}">
+                    <f:option value="${provider.id}">${provider.displayName}</f:option>
+                </j:forEach>
+            </f:select>
+        </f:entry>
+        <f:entry title="">
+            <div class="help">
+                ${%Select a custom UI provider to use by default for all JUnit test results across all jobs. Individual jobs can override this setting in their configuration.}
+            </div>
+        </f:entry>
+    </f:section>
+</j:jelly>
