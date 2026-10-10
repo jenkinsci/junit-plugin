@@ -92,5 +92,6 @@
     display: inline-flex;
     align-items: center;
     gap: 0.1875rem;
+    white-space: nowrap;
   }
 }
