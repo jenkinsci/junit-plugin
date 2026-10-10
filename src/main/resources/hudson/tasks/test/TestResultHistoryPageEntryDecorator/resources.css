@@ -7,6 +7,12 @@
 
   display: inline-flex;
   flex-direction: column;
+  border-radius: var(--form-input-border-radius);
+  outline: none;
+
+  &:focus-visible {
+    box-shadow: 0 0 0 0.2rem var(--text-color);
+  }
 
   /* Beat core's link colour and underline */
   &,
