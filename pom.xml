@@ -36,7 +36,7 @@
     <hpi.strictBundledArtifacts>true</hpi.strictBundledArtifacts>
     <jenkins.baseline>2.541</jenkins.baseline>
     <!-- TODO: back to ${jenkins.baseline}.x once HistoryPageEntryDecorator is released in core -->
-    <jenkins.version>2.584-SNAPSHOT</jenkins.version>
+    <jenkins.version>2.586-rc38858.0dda_b_6e98738</jenkins.version>
     <no-test-jar>false</no-test-jar>
     <spotless.check.skip>false</spotless.check.skip>
     <ban-junit4-imports.skip>false</ban-junit4-imports.skip>
