@@ -45,10 +45,10 @@ THE SOFTWARE.
     <div class="jp-history-summary__tags">
       <local:tag count="${summary.failCount}" type="failed" tooltip="${%Failed(summary.failCount)}"
                  icon="symbol-close-outline plugin-ionicons-api" />
-      <local:tag count="${summary.passCount}" type="passed" tooltip="${%Passed(summary.passCount)}"
-                 icon="symbol-checkmark-outline plugin-ionicons-api" />
       <local:tag count="${summary.skipCount}" type="skipped" tooltip="${%Skipped(summary.skipCount)}"
                  icon="symbol-skipped plugin-junit" />
+      <local:tag count="${summary.passCount}" type="passed" tooltip="${%Passed(summary.passCount)}"
+                 icon="symbol-checkmark-outline plugin-ionicons-api" />
     </div>
 
     <div class="jp-history-summary__details">
