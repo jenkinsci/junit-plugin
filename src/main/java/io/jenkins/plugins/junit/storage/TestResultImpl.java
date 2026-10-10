@@ -39,6 +39,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 import jenkins.model.Jenkins;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.Beta;
@@ -125,6 +126,40 @@ public interface TestResultImpl {
     @NonNull
     default Optional<CaseResult> getPreviousCaseResult(@NonNull CaseResult current) {
         return Optional.empty();
+    }
+
+    /**
+     * Whether this storage implementation supports {@link #forEachCaseResultSummary(int, int, Consumer)}.
+     *
+     * <p>Consumers that need per-test results across many builds of a job (e.g. a test history matrix)
+     * should check this and, when {@code true}, use that method instead of loading the full
+     * {@link TestResult} of each build, which is much more expensive for an external storage backend.
+     *
+     * @return {@code true} if {@link #forEachCaseResultSummary(int, int, Consumer)} is implemented
+     * @since TODO
+     */
+    default boolean supportsCaseResultSummaries() {
+        return false;
+    }
+
+    /**
+     * Streams a lightweight summary of every test case recorded for builds {@code fromBuild} to
+     * {@code toBuild} (both inclusive) of the job this instance belongs to, regardless of which build
+     * this instance itself represents. Only called when {@link #supportsCaseResultSummaries()} returns
+     * {@code true}.
+     *
+     * <p>Summaries are passed to the consumer grouped by build in ascending build order; within a build
+     * cases are passed in the order they were recorded. Summaries should not be retained in bulk by the
+     * consumer, the point of streaming them is that many builds' worth of cases need not be held in
+     * memory at once.
+     *
+     * @param fromBuild the lowest build number to include
+     * @param toBuild the highest build number to include
+     * @param consumer receives each case summary
+     * @since TODO
+     */
+    default void forEachCaseResultSummary(int fromBuild, int toBuild, @NonNull Consumer<CaseResultSummary> consumer) {
+        throw new UnsupportedOperationException(getClass().getName() + " does not support case result summaries");
     }
 
     @CheckForNull

@@ -39,10 +39,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.WeakHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -391,10 +389,17 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
                 taken = new WeakHashMap<>();
                 UNIQUIFIED_NAMES.put(base, taken);
             } else {
-                Set<TestObject> similars = new HashSet<>(taken.keySet());
-                similars.retainAll(new HashSet<TestObject>(siblings));
-                if (!similars.isEmpty()) {
-                    uniquified = base + '_' + (similars.size() + 1);
+                // Count the siblings that already took this name by probing the (usually small) set of
+                // siblings rather than copying every live object that ever took it: the latter grows with
+                // every build's results held in memory, making this quadratic when many builds are loaded.
+                int similars = 0;
+                for (TestObject sibling : siblings) {
+                    if (taken.containsKey(sibling)) {
+                        similars++;
+                    }
+                }
+                if (similars > 0) {
+                    uniquified = base + '_' + (similars + 1);
                 }
             }
             taken.put(this, null);
