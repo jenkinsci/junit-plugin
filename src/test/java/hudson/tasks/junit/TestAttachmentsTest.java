@@ -88,6 +88,19 @@ class TestAttachmentsTest {
         assertEquals("p/notes.txt", TestAttachments.artifactPath(artifacts, "p/", second));
     }
 
+    @Test
+    void artifactPathsAreNotBothFileAndDirectory() {
+        Map<String, String> artifacts = new java.util.HashMap<>();
+        TestAttachments.Attachment file = attachment("foo", "a/foo", 1);
+        artifacts.put(TestAttachments.artifactPath(artifacts, "p/", file), file.workspacePath());
+        TestAttachments.Attachment under = attachment("foo/bar.txt", "b/foo/bar.txt", 2);
+        assertEquals("p/2/foo/bar.txt", TestAttachments.artifactPath(artifacts, "p/", under));
+
+        artifacts.clear();
+        artifacts.put(TestAttachments.artifactPath(artifacts, "p/", under), under.workspacePath());
+        assertEquals("p/1/foo", TestAttachments.artifactPath(artifacts, "p/", file));
+    }
+
     private static TestAttachments.Attachment attachment(String path, String workspacePath, int report) {
         return new TestAttachments.Attachment("C", "t", report, path, path, workspacePath, 1, report);
     }

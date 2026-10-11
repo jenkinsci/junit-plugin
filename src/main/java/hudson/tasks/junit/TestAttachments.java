@@ -132,11 +132,28 @@ public final class TestAttachments {
      */
     static String artifactPath(Map<String, String> artifacts, String prefix, Attachment a) {
         String path = prefix + a.path();
-        for (int n = 1; artifacts.containsKey(path) && !artifacts.get(path).equals(a.workspacePath()); n++) {
+        for (int n = 1; collides(artifacts, path, a.workspacePath()); n++) {
             // the same test attached a file of the same name in several reports, or another took the path already
             path = prefix + a.report() + (n == 1 ? "" : "-" + n) + "/" + a.path();
         }
         return path;
+    }
+
+    /**
+     * Whether a path is taken by another file, or cannot be a file as another one is under it, or the other way round
+     * (e.g. {@code foo} and {@code foo/bar.txt}).
+     */
+    private static boolean collides(Map<String, String> artifacts, String path, String workspacePath) {
+        String existing = artifacts.get(path);
+        if (existing != null) {
+            return !existing.equals(workspacePath);
+        }
+        for (String other : artifacts.keySet()) {
+            if (other.startsWith(path + "/") || path.startsWith(other + "/")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
