@@ -36,6 +36,9 @@ THE SOFTWARE.
     <f:entry field="keepProperties" title="">
         <f:checkbox name="keepProperties" title="${%keep all the properties}"/>
     </f:entry>
+    <f:entry field="archiveAttachments" title="">
+        <f:checkbox title="${%Archive files attached to tests in Open Test Reporting reports}"/>
+    </f:entry>
     <f:entry field="keepTestNames" title="">
         <f:checkbox name="keepTestNames" title="${%Keep original test names, even when reporting from multiple stages}"/>
     </f:entry>
