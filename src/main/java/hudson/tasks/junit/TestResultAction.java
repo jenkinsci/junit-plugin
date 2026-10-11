@@ -364,6 +364,14 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
     }
 
     /**
+     * How often (in seconds) the results that are shown while tests run are refreshed.
+     */
+    @Restricted(NoExternalUse.class)
+    public int getLiveRefreshSeconds() {
+        return 5;
+    }
+
+    /**
      * How many tests are running besides those named by {@link #getLiveRunningTests}.
      */
     @Restricted(NoExternalUse.class)

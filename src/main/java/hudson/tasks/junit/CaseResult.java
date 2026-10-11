@@ -1058,6 +1058,10 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         return properties;
     }
 
+    void setKeepTestNames(boolean keepTestNames) {
+        this.keepTestNames = keepTestNames;
+    }
+
     /**
      * The properties shown by {@code test-output.jelly}: those not already shown otherwise, like archived attachments.
      */

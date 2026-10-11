@@ -106,7 +106,7 @@ THE SOFTWARE.
       <st:adjunct includes="io.jenkins.plugins.junit.opentest.live-refresh" />
       <div class="junit-live-status"
            data-status-url="${rootURL}/${it.run.url}liveTestReport/status"
-           data-refresh-seconds="5"
+           data-refresh-seconds="${it.parentAction.liveRefreshSeconds}"
            data-total-count="${it.parentAction.totalCount}"
            data-fail-count="${it.parentAction.failCount}"
            data-skip-count="${it.parentAction.skipCount}"

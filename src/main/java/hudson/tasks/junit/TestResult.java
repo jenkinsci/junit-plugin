@@ -555,7 +555,13 @@ public final class TestResult extends MetaTabulatedResult {
         TestResult result = new TestResult();
         for (SuiteResult suite : suites) {
             SuiteResult copy = new SuiteResult(suite);
+            // the copy constructors leave out start times
             copy.setStartTime(suite.getStartTime());
+            List<CaseResult> cases = suite.getCases();
+            List<CaseResult> copies = copy.getCases();
+            for (int i = 0; i < cases.size() && i < copies.size(); i++) {
+                copies.get(i).setStartTime(cases.get(i).getStartTime());
+            }
             result.add(copy);
         }
         result.tally();
