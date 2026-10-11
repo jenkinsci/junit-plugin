@@ -545,6 +545,35 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
                 + cleanupTruncated(stdio.subSequence(len - halfMaxSize, len));
     }
 
+    /**
+     * Flavor of {@link #possiblyTrimStdio(Collection, StdioRetention, String)} for a single test whose failure state is
+     * already known.
+     */
+    static String possiblyTrimStdio(boolean failing, StdioRetention stdioRetention, String stdio) {
+        if (stdio == null) {
+            return null;
+        }
+        if (stdioRetention == StdioRetention.ALL || (stdioRetention == StdioRetention.FAILED && failing)) {
+            return stdio;
+        }
+        int halfMaxSize = failing ? HALF_MAX_FAILING_SIZE : HALF_MAX_SIZE;
+        int len = stdio.length();
+        int middle = len - halfMaxSize * 2;
+        if (middle <= 0) {
+            return stdio;
+        }
+        return cleanupTruncated(stdio.subSequence(0, halfMaxSize)) + "\n...[truncated " + middle + " chars]...\n"
+                + cleanupTruncated(stdio.subSequence(len - halfMaxSize, len));
+    }
+
+    /**
+     * Marks a failed test as a "proper" failure (an assertion failure, {@code <failure>} in JUnit XML)
+     * rather than an error.
+     */
+    void setProperFailure(boolean properFailure) {
+        this.isProperFailure = properFailure;
+    }
+
     static String fixNULs(String stdio) { // JENKINS-71139
         return stdio == null ? null : stdio.replace("\u0000", "^@");
     }

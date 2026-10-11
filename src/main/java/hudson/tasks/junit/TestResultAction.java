@@ -24,6 +24,8 @@
 package hudson.tasks.junit;
 
 import com.thoughtworks.xstream.XStream;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Util;
@@ -56,6 +58,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.tasks.SimpleBuildStep;
 import jenkins.util.SystemProperties;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.StaplerProxy;
 
 /**
@@ -337,6 +341,26 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
     @Override
     public Object getTarget() {
         return getResult();
+    }
+
+    /**
+     * A message describing tests that are still running, for results that are shown while tests run.
+     *
+     * @return {@code null} for recorded results
+     */
+    @Restricted(NoExternalUse.class)
+    @CheckForNull
+    public String getLiveStatus() {
+        return null;
+    }
+
+    /**
+     * Names of tests that are still running, for results that are shown while tests run.
+     */
+    @Restricted(NoExternalUse.class)
+    @NonNull
+    public List<String> getLiveRunningTests() {
+        return Collections.emptyList();
     }
 
     public List<TestAction> getActions(TestObject object) {

@@ -101,6 +101,36 @@ THE SOFTWARE.
       </div>
     </l:app-bar>
 
+    <j:set var="liveStatus" value="${it.parentAction.liveStatus}" />
+    <j:if test="${liveStatus != null}">
+      <st:adjunct includes="io.jenkins.plugins.junit.opentest.live-refresh" />
+      <div class="junit-live-status"
+           data-status-url="${rootURL}/${it.run.url}liveTestReport/status"
+           data-refresh-seconds="5"
+           data-total-count="${it.parentAction.totalCount}"
+           data-fail-count="${it.parentAction.failCount}"
+           data-skip-count="${it.parentAction.skipCount}"
+           data-finished-title="${%Tests have finished}"
+           data-finished-text="${%The results have been recorded.}"
+           data-recorded-text="${%Show recorded results}">
+        <l:card title="${%Tests are running}">
+          <div class="junit-live-status__header">
+            <span class="jenkins-spinner junit-live-status__text">${liveStatus}</span>
+            <button type="button" class="jenkins-button jenkins-button--primary junit-live-status__reload" hidden="hidden">
+              <l:icon src="symbol-refresh-outline plugin-ionicons-api" />
+              <span class="junit-live-status__reload-text">${%Show latest results}</span>
+            </button>
+          </div>
+          <j:set var="liveRunningTests" value="${it.parentAction.liveRunningTests}" />
+          <ul class="junit-live-status__running">
+            <j:forEach var="runningTest" items="${liveRunningTests}">
+              <li>${runningTest}</li>
+            </j:forEach>
+          </ul>
+        </l:card>
+      </div>
+    </j:if>
+
     <t:editableDescription permission="${it.run.UPDATE}" hideButton="true" />
 
     <test:success-summary />
