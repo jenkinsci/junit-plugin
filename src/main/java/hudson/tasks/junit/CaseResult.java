@@ -41,6 +41,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -1055,6 +1056,29 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     @Override
     public Map<String, String> getProperties() {
         return properties;
+    }
+
+    /**
+     * The properties shown by {@code test-output.jelly}: those not already shown otherwise, like archived attachments.
+     */
+    @Restricted(NoExternalUse.class)
+    public Map<String, String> getDisplayedProperties() {
+        List<TestAttachments.AttachmentsAction> attachments = new ArrayList<>();
+        for (TestAction action : getTestActions()) {
+            if (action instanceof TestAttachments.AttachmentsAction a) {
+                attachments.add(a);
+            }
+        }
+        if (attachments.isEmpty()) {
+            return properties;
+        }
+        Map<String, String> displayed = new LinkedHashMap<>();
+        for (Map.Entry<String, String> p : properties.entrySet()) {
+            if (attachments.stream().noneMatch(a -> a.shows(p.getKey(), p.getValue()))) {
+                displayed.put(p.getKey(), p.getValue());
+            }
+        }
+        return displayed;
     }
 
     /**

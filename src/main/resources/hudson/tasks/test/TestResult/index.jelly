@@ -112,12 +112,14 @@ THE SOFTWARE.
            data-skip-count="${it.parentAction.skipCount}"
            data-finished-title="${%Tests have finished}"
            data-finished-text="${%The results have been recorded.}"
-           data-recorded-text="${%Show recorded results}">
+           data-recorded-text="${%Show recorded results}"
+           data-more-text="${%andMore('{0}')}">
         <l:card title="${%Tests are running}">
           <div class="junit-live-status__header">
             <span class="jenkins-spinner junit-live-status__text">${liveStatus}</span>
             <button type="button" class="jenkins-button jenkins-button--primary junit-live-status__reload" hidden="hidden">
-              <l:icon src="symbol-refresh-outline plugin-ionicons-api" />
+              <span class="junit-live-status__icon-latest"><l:icon src="symbol-refresh-outline plugin-ionicons-api" /></span>
+              <span class="junit-live-status__icon-recorded"><l:icon src="symbol-arrow-forward-outline plugin-ionicons-api" /></span>
               <span class="junit-live-status__reload-text">${%Show latest results}</span>
             </button>
           </div>
@@ -126,6 +128,10 @@ THE SOFTWARE.
             <j:forEach var="runningTest" items="${liveRunningTests}">
               <li>${runningTest}</li>
             </j:forEach>
+            <j:set var="liveMoreRunningTests" value="${it.parentAction.liveMoreRunningTests}" />
+            <j:if test="${liveMoreRunningTests > 0}">
+              <li class="junit-live-status__more">${%andMore(liveMoreRunningTests)}</li>
+            </j:if>
           </ul>
         </l:card>
       </div>

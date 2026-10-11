@@ -1,0 +1,10 @@
+<div>
+  Archives the files that tests attach with <code>TestReporter.publishFile</code> (JUnit 5.12 or later) to
+  Open Test Reporting reports, so they can be opened from the page of each test.
+  They are archived like build artifacts, under <code>test-attachments/</code>, so they are stored by the
+  configured artifact manager (for example in cloud storage) and removed together with the build.
+  <p>
+  Attached files are looked up relative to the directory of their report; files outside of it or outside of the
+  workspace are ignored. Legacy JUnit XML reports are not affected.
+  </p>
+</div>

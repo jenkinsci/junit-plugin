@@ -112,6 +112,8 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
 
     private boolean skipOldReports;
 
+    private boolean archiveAttachments;
+
     private static final String DEFAULT_CHECKS_NAME = "Tests";
 
     @DataBoundConstructor
@@ -292,6 +294,11 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                     .summarizeResult(testResults, build, pipelineTestDetails, workspace, launcher, listener, storage);
         }
 
+        TestAttachments.Data attachments = task.isArchiveAttachments()
+                ? TestAttachments.archive(
+                        testResults, task.isKeepTestNames(), pipelineTestDetails, build, workspace, launcher, listener)
+                : null;
+
         synchronized (build) {
             // TODO can the build argument be omitted now, or is it used prior to the call to addAction?
             TestResultAction action = build.getAction(TestResultAction.class);
@@ -327,6 +334,9 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                         action.addData(d);
                     }
                 }
+            }
+            if (attachments != null) {
+                action.addData(attachments);
             }
 
             if (appending) {
@@ -535,6 +545,16 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     @DataBoundSetter
     public void setSkipOldReports(boolean skipOldReports) {
         this.skipOldReports = skipOldReports;
+    }
+
+    @Override
+    public boolean isArchiveAttachments() {
+        return archiveAttachments;
+    }
+
+    @DataBoundSetter
+    public final void setArchiveAttachments(boolean archiveAttachments) {
+        this.archiveAttachments = archiveAttachments;
     }
 
     private static final long serialVersionUID = 1L;

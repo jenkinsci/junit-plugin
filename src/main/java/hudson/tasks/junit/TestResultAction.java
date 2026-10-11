@@ -363,6 +363,14 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         return Collections.emptyList();
     }
 
+    /**
+     * How many tests are running besides those named by {@link #getLiveRunningTests}.
+     */
+    @Restricted(NoExternalUse.class)
+    public int getLiveMoreRunningTests() {
+        return 0;
+    }
+
     public List<TestAction> getActions(TestObject object) {
         List<TestAction> result = new ArrayList<>();
         // Added check for null testData to avoid NPE from issue 4257.
