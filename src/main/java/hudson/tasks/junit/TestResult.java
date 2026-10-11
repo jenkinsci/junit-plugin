@@ -546,6 +546,28 @@ public final class TestResult extends MetaTabulatedResult {
         }
     }
 
+    /**
+     * Creates a result from suites that were already parsed, merging suites as parsing report files would.
+     * The suites are copied, so the given instances are left untouched.
+     */
+    @Restricted(NoExternalUse.class)
+    public static TestResult of(@NonNull Collection<SuiteResult> suites) {
+        TestResult result = new TestResult();
+        for (SuiteResult suite : suites) {
+            SuiteResult copy = new SuiteResult(suite);
+            // the copy constructors leave out start times
+            copy.setStartTime(suite.getStartTime());
+            List<CaseResult> cases = suite.getCases();
+            List<CaseResult> copies = copy.getCases();
+            for (int i = 0; i < cases.size() && i < copies.size(); i++) {
+                copies.get(i).setStartTime(cases.get(i).getStartTime());
+            }
+            result.add(copy);
+        }
+        result.tally();
+        return result;
+    }
+
     private void add(SuiteResult sr) {
         long suiteStart = sr.getStartTime();
         for (SuiteResult s : suites) {
@@ -1060,6 +1082,11 @@ public final class TestResult extends MetaTabulatedResult {
     @Override
     public AbstractTestResultAction getParentAction() {
         return this.parentAction;
+    }
+
+    @Override
+    public AbstractTestResultAction getTestResultAction() {
+        return parentAction != null ? parentAction : super.getTestResultAction();
     }
 
     /**

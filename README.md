@@ -114,6 +114,7 @@ withOpenTestReporting {
 }
 ```
 
+* Results can be followed live from the *Live Test Results* link of the build.
 * When the block ends (whether or not it succeeded), the results are recorded as if by `junit`, which accepts the same
   options (except the report pattern) and returns the same summary. Unlike `junit`, properties are kept by default; use
   `keepProperties: false` to turn that off.
