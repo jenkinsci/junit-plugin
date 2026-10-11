@@ -37,7 +37,7 @@
   align-items: center;
   gap: var(--jp-tag-gap);
   min-height: var(--jp-tag-height);
-  margin-bottom: 0.1875rem;
+  margin-bottom: 0.375rem;
 }
 
 .jp-history-summary__tag {
@@ -63,13 +63,12 @@
     stroke-width: 50px;
   }
 
-  /* *-of-type, so the tooltip div Jenkins appends to the row isn't counted as a tag */
-  &:first-of-type {
+  &:first-child {
     border-top-left-radius: var(--jp-tag-radius-outer);
     border-bottom-left-radius: var(--jp-tag-radius-outer);
   }
 
-  &:last-of-type {
+  &:last-child {
     border-top-right-radius: var(--jp-tag-radius-outer);
     border-bottom-right-radius: var(--jp-tag-radius-outer);
   }

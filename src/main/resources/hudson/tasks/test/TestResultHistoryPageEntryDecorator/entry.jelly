@@ -31,8 +31,7 @@ THE SOFTWARE.
     <d:tag name="tag">
       <j:if test="${count > 0}">
         <span class="jp-history-summary__tag jp-history-summary__tag--${type}"
-              tooltip="${tooltip}"
-              data-tooltip-append-to-parent="true">
+              tooltip="${tooltip}">
           <l:icon src="${icon}" />
           ${count}
         </span>
