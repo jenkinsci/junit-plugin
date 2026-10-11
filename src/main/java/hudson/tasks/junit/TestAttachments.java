@@ -52,19 +52,30 @@ public final class TestAttachments {
     /**
      * Archives the attachments of the Open Test Reporting reports matching {@code testResults}.
      *
+     * @param filesTimestamp reports older than this are ignored, like by the parser with {@code skipOldReports}; or
+     *                       {@link Long#MIN_VALUE}
      * @return the data linking the archived attachments from the test pages, or {@code null} if there were none
      */
     @CheckForNull
     static Data archive(
             @NonNull String testResults,
             boolean keepTestNames,
+            long filesTimestamp,
             @CheckForNull PipelineTestDetails pipelineTestDetails,
             @NonNull Run<?, ?> run,
             @NonNull FilePath workspace,
             @NonNull Launcher launcher,
             @NonNull TaskListener listener)
-            throws IOException, InterruptedException {
-        List<Attachment> found = workspace.act(new Collect(testResults, keepTestNames, pipelineTestDetails));
+            throws InterruptedException {
+        List<Attachment> found;
+        try {
+            found = workspace.act(new Collect(testResults, keepTestNames, filesTimestamp, pipelineTestDetails));
+        } catch (IOException | RuntimeException e) {
+            // the test results matter more than their attachments
+            LOGGER.log(Level.WARNING, "Could not collect test attachments of " + run, e);
+            listener.error("Could not collect test attachments: " + e);
+            return null;
+        }
         if (found.isEmpty()) {
             return null;
         }
@@ -76,14 +87,10 @@ public final class TestAttachments {
         Map<String, String> artifacts = new LinkedHashMap<>();
         Map<String, List<Archived>> byCase = new LinkedHashMap<>();
         for (Attachment a : found) {
-            String path = prefix + a.path();
-            String existing = artifacts.get(path);
-            if (existing != null && !existing.equals(a.workspacePath())) {
-                // the same test attached a file of the same name in several reports
-                path = prefix + a.report() + "/" + a.path();
-            }
+            String path = artifactPath(artifacts, prefix, a);
             artifacts.put(path, a.workspacePath());
-            List<Archived> archived = byCase.computeIfAbsent(key(a.className(), a.name()), k -> new ArrayList<>());
+            List<Archived> archived =
+                    byCase.computeIfAbsent(key(a.className(), a.name(), a.startTime()), k -> new ArrayList<>());
             String archivedPath = path;
             if (archived.stream().noneMatch(x -> x.path.equals(archivedPath))) {
                 archived.add(new Archived(path, a.property(), a.size()));
@@ -118,13 +125,47 @@ public final class TestAttachments {
         return new Data(pipelineTestDetails != null ? pipelineTestDetails.getNodeId() : null, byCase);
     }
 
-    static String key(String className, String name) {
-        return className + '#' + name;
+    /**
+     * Chooses where to archive an attachment.
+     *
+     * @param artifacts the attachments to archive so far, by artifact path
+     */
+    static String artifactPath(Map<String, String> artifacts, String prefix, Attachment a) {
+        String path = prefix + a.path();
+        for (int n = 1; artifacts.containsKey(path) && !artifacts.get(path).equals(a.workspacePath()); n++) {
+            // the same test attached a file of the same name in several reports, or another took the path already
+            path = prefix + a.report() + (n == 1 ? "" : "-" + n) + "/" + a.path();
+        }
+        return path;
+    }
+
+    /**
+     * Identifies a test run: the same test may be in several reports, e.g. of several modules, each with their own
+     * attachments. Their suites are merged, so they are told apart by when they started instead.
+     */
+    static String key(String className, String name, long startTime) {
+        return className + '#' + name + '@' + startTime;
+    }
+
+    /** Whether a property holds the path of a file attached to the test, rather than a report entry. */
+    static boolean isAttachmentProperty(String key) {
+        if (!key.startsWith(PROPERTY_PREFIX)) {
+            return false;
+        }
+        String n = key.substring(PROPERTY_PREFIX.length());
+        return !n.isEmpty() && n.charAt(0) != '0' && n.chars().allMatch(c -> c >= '0' && c <= '9');
     }
 
     /** A file attached to a test, found on the agent. */
     record Attachment(
-            String className, String name, String property, String path, String workspacePath, long size, int report)
+            String className,
+            String name,
+            long startTime,
+            String property,
+            String path,
+            String workspacePath,
+            long size,
+            int report)
             implements Serializable {}
 
     /** Copies attachments from the workspace to a staging directory, under the paths they are archived as. */
@@ -159,13 +200,19 @@ public final class TestAttachments {
 
         private final String testResults;
         private final boolean keepTestNames;
+        private final long filesTimestamp;
 
         @CheckForNull
         private final PipelineTestDetails pipelineTestDetails;
 
-        Collect(String testResults, boolean keepTestNames, @CheckForNull PipelineTestDetails pipelineTestDetails) {
+        Collect(
+                String testResults,
+                boolean keepTestNames,
+                long filesTimestamp,
+                @CheckForNull PipelineTestDetails pipelineTestDetails) {
             this.testResults = testResults;
             this.keepTestNames = keepTestNames;
+            this.filesTimestamp = filesTimestamp;
             this.pipelineTestDetails = pipelineTestDetails;
         }
 
@@ -177,6 +224,12 @@ public final class TestAttachments {
             int index = 0;
             for (String name : ds.getIncludedFiles()) {
                 File report = new File(ws, name);
+                if (filesTimestamp != Long.MIN_VALUE
+                        && Files.getLastModifiedTime(report.toPath()).toMillis()
+                                < filesTimestamp - TestResult.FILE_TIME_PRECISION_MARGIN) {
+                    // not parsed either
+                    continue;
+                }
                 if (OtrReader.detect(report) == null) {
                     continue;
                 }
@@ -188,7 +241,7 @@ public final class TestAttachments {
                     for (CaseResult c : suite.getCases()) {
                         for (Map.Entry<String, String> property :
                                 c.getProperties().entrySet()) {
-                            if (!property.getKey().startsWith(PROPERTY_PREFIX)) {
+                            if (!isAttachmentProperty(property.getKey())) {
                                 continue;
                             }
                             Path file = resolve(root, dir, property.getValue());
@@ -196,6 +249,7 @@ public final class TestAttachments {
                                 found.add(new Attachment(
                                         c.getClassName(),
                                         c.getName(),
+                                        c.getStartTime(),
                                         property.getValue(),
                                         dir.relativize(file).toString().replace(File.separatorChar, '/'),
                                         root.relativize(file).toString().replace(File.separatorChar, '/'),
@@ -274,7 +328,7 @@ public final class TestAttachments {
         @Override
         public List<? extends TestAction> getTestAction(TestObject testObject) {
             if (testObject instanceof CaseResult c && Objects.equals(nodeId, c.getFlowNodeId())) {
-                List<Archived> archived = attachments.get(key(c.getClassName(), c.getName()));
+                List<Archived> archived = attachments.get(key(c.getClassName(), c.getName(), c.getStartTime()));
                 if (archived != null) {
                     return List.of(new AttachmentsAction(c, archived));
                 }
@@ -310,7 +364,7 @@ public final class TestAttachments {
 
         /** Whether this shows the attachment kept in a property, which therefore need not be shown again. */
         boolean shows(String key, String value) {
-            return key.startsWith(PROPERTY_PREFIX) && archived.stream().anyMatch(a -> a.source.equals(value));
+            return isAttachmentProperty(key) && archived.stream().anyMatch(a -> a.source.equals(value));
         }
 
         public List<Link> getLinks() {

@@ -318,7 +318,17 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
 
         TestAttachments.Data attachments = task.isArchiveAttachments()
                 ? TestAttachments.archive(
-                        testResults, task.isKeepTestNames(), pipelineTestDetails, build, workspace, launcher, listener)
+                        testResults,
+                        task.isKeepTestNames(),
+                        // as the parser does
+                        task.isSkipOldReports()
+                                ? Math.min(build.getStartTimeInMillis(), build.getTimeInMillis())
+                                : Long.MIN_VALUE,
+                        pipelineTestDetails,
+                        build,
+                        workspace,
+                        launcher,
+                        listener)
                 : null;
 
         synchronized (build) {

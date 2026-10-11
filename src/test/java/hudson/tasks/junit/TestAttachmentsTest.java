@@ -69,6 +69,93 @@ class TestAttachmentsTest {
         assertThat(TestAttachments.resolve(root, dir, "a"), nullValue());
     }
 
+    @Test
+    void artifactPathsDoNotCollide() {
+        Map<String, String> artifacts = new java.util.HashMap<>();
+        TestAttachments.Attachment first = attachment("2/notes.txt", "a/2/notes.txt", 1);
+        artifacts.put(TestAttachments.artifactPath(artifacts, "p/", first), first.workspacePath());
+        TestAttachments.Attachment second = attachment("notes.txt", "a/notes.txt", 1);
+        artifacts.put(TestAttachments.artifactPath(artifacts, "p/", second), second.workspacePath());
+        // the same name in another report: under the report number, which the first one took already
+        TestAttachments.Attachment third = attachment("notes.txt", "b/notes.txt", 2);
+        String path = TestAttachments.artifactPath(artifacts, "p/", third);
+        assertEquals("p/2-2/notes.txt", path);
+        artifacts.put(path, third.workspacePath());
+        assertEquals(
+                java.util.Set.of("a/2/notes.txt", "a/notes.txt", "b/notes.txt"),
+                new java.util.HashSet<>(artifacts.values()));
+        // the same file again
+        assertEquals("p/notes.txt", TestAttachments.artifactPath(artifacts, "p/", second));
+    }
+
+    private static TestAttachments.Attachment attachment(String path, String workspacePath, int report) {
+        return new TestAttachments.Attachment("C", "t", report, path, path, workspacePath, 1, report);
+    }
+
+    @Test
+    void onlyNumberedPropertiesAreAttachments() {
+        assertThat(TestAttachments.isAttachmentProperty("attachment.1"), is(true));
+        assertThat(TestAttachments.isAttachmentProperty("attachment.12"), is(true));
+        assertThat(TestAttachments.isAttachmentProperty("attachment.notes"), is(false));
+        assertThat(TestAttachments.isAttachmentProperty("attachment."), is(false));
+        assertThat(TestAttachments.isAttachmentProperty("attachment.0"), is(false));
+        assertThat(TestAttachments.isAttachmentProperty("attachment.-1"), is(false));
+        assertThat(TestAttachments.isAttachmentProperty("notes"), is(false));
+    }
+
+    @Test
+    void sameTestInSeveralReportsKeepsItsOwnAttachments() throws Exception {
+        WorkflowJob job = j.createProject(WorkflowJob.class);
+        FilePath ws = j.jenkins.getWorkspaceFor(job);
+        String report;
+        try (var in =
+                TestAttachmentsTest.class.getResourceAsStream("/io/jenkins/plugins/junit/opentest/maven-events.xml")) {
+            report = new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+        }
+        for (String module : new String[] {"a", "b"}) {
+            // the modules ran one after the other
+            ws.child("reports/" + module + "/open-test-report.xml")
+                    .write(module.equals("a") ? report : report.replace("2026-10-10T", "2026-10-11T"), "UTF-8");
+            ws.child("reports/" + module + "/" + ATTACHMENT).write("notes of " + module, "UTF-8");
+        }
+        job.setDefinition(new CpsFlowDefinition(
+                "node { junit archiveAttachments: true, testResults: 'reports/**/*.xml' }", true));
+        WorkflowRun r = j.assertBuildStatus(Result.UNSTABLE, job.scheduleBuild2(0));
+        j.assertLogContains("Archiving 2 test attachments", r);
+        List<CaseResult> tests = r.getAction(TestResultAction.class).getResult().getSuites().stream()
+                .filter(s -> s.getName().equals("com.example.calc.CalculatorTest"))
+                .flatMap(s -> s.getCases().stream())
+                .filter(c -> c.getName().equals("publishesFile"))
+                .toList();
+        assertThat(tests.size(), is(2));
+        JenkinsRule.WebClient wc = j.createWebClient();
+        java.util.Set<String> contents = new java.util.HashSet<>();
+        for (CaseResult test : tests) {
+            List<String> links = links(test);
+            // only the attachment of its own report
+            assertThat(links.size(), is(1));
+            contents.add(wc.goTo(links.get(0), "text/plain").getWebResponse().getContentAsString());
+        }
+        assertEquals(java.util.Set.of("notes of a", "notes of b"), contents);
+    }
+
+    @Test
+    void attachmentsOfOldReportsAreSkippedLikeTheReports() throws Exception {
+        WorkflowJob job = j.createProject(WorkflowJob.class);
+        FilePath ws = j.jenkins.getWorkspaceFor(job);
+        FilePath report = ws.child("reports/otr-1/open-test-report.xml");
+        report.copyFrom(TestAttachmentsTest.class.getResource("/io/jenkins/plugins/junit/opentest/maven-events.xml"));
+        ws.child("reports/otr-1/" + ATTACHMENT).write("stale notes", "UTF-8");
+        report.touch(System.currentTimeMillis() - java.util.concurrent.TimeUnit.DAYS.toMillis(1));
+        job.setDefinition(new CpsFlowDefinition(
+                "node { junit archiveAttachments: true, skipOldReports: true, allowEmptyResults: true,"
+                        + " testResults: 'reports/**/*.xml' }",
+                true));
+        WorkflowRun r = j.buildAndAssertSuccess(job);
+        j.assertLogNotContains("Archiving", r);
+        assertThat(r.getArtifactManager().root().child("test-attachments").exists(), is(false));
+    }
+
     private WorkflowRun runWithReport(String junit) throws Exception {
         WorkflowJob job = j.createProject(WorkflowJob.class);
         FilePath ws = j.jenkins.getWorkspaceFor(job);
