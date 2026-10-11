@@ -86,6 +86,22 @@ stage('Ignored') {
 }
 ```
 
+### Open Test Reporting (JUnit Platform)
+
+The plugin also reads reports in the [Open Test Reporting](https://github.com/ota4j-team/open-test-reporting) format
+written by the [JUnit Platform](https://docs.junit.org/current/advanced-topics/junit-platform-reporting.html#open-test-reporting)
+(`open-test-report.xml`), in both its event-based and hierarchical forms.
+They are detected automatically, so they can be mixed with legacy JUnit XML reports in the same `junit` step:
+
+```groovy
+junit 'target/surefire-reports/**/*.xml'
+```
+
+Each test class becomes a suite named after the class, as with the legacy reports, so test history carries over.
+Unlike the legacy reports, parameterized, repeated and dynamic tests keep the name of the method they belong to,
+e.g. `add(int, int) > [1] 1, 2`. With `keepProperties`, report entries (`TestReporter.publishEntry`), tags and file
+attachments are kept as test properties.
+
 ## Contributing
 
 Refer to our [contribution guidelines](https://github.com/jenkinsci/.github/blob/master/CONTRIBUTING.md)
