@@ -116,7 +116,8 @@ THE SOFTWARE.
            data-more-text="${%andMore('{0}')}">
         <l:card title="${%Tests are running}">
           <div class="junit-live-status__header">
-            <span class="jenkins-spinner junit-live-status__text">${liveStatus}</span>
+            <!-- announced politely; the list of running tests below changes too often to be -->
+            <span class="jenkins-spinner junit-live-status__text" role="status" aria-live="polite" aria-atomic="true">${liveStatus}</span>
             <button type="button" class="jenkins-button jenkins-button--primary junit-live-status__reload" hidden="hidden">
               <span class="junit-live-status__icon-latest"><l:icon src="symbol-refresh-outline plugin-ionicons-api" /></span>
               <span class="junit-live-status__icon-recorded"><l:icon src="symbol-arrow-forward-outline plugin-ionicons-api" /></span>
