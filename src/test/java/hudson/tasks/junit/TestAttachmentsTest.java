@@ -118,6 +118,40 @@ class TestAttachmentsTest {
     }
 
     @Test
+    void attachmentsOfTheSameTestInSeveralStagesAreKeptApart() throws Exception {
+        WorkflowJob job = j.createProject(WorkflowJob.class);
+        FilePath ws = j.jenkins.getWorkspaceFor(job);
+        for (String stage : new String[] {"a", "b"}) {
+            ws.child(stage + "/otr-1/open-test-report.xml")
+                    .copyFrom(TestAttachmentsTest.class.getResource(
+                            "/io/jenkins/plugins/junit/opentest/maven-events.xml"));
+            ws.child(stage + "/otr-1/" + ATTACHMENT).write("notes of " + stage, "UTF-8");
+        }
+        job.setDefinition(new CpsFlowDefinition("""
+                node {
+                    stage('a') { junit archiveAttachments: true, testResults: 'a/**/*.xml' }
+                    stage('b') { junit archiveAttachments: true, testResults: 'b/**/*.xml' }
+                }
+                """, true));
+        WorkflowRun r = j.assertBuildStatus(Result.UNSTABLE, job.scheduleBuild2(0));
+        List<CaseResult> tests = r.getAction(TestResultAction.class).getResult().getSuites().stream()
+                .filter(s -> s.getName().equals("com.example.calc.CalculatorTest"))
+                .flatMap(s -> s.getCases().stream())
+                .filter(c -> c.getName().equals("publishesFile"))
+                .toList();
+        assertThat(tests.size(), is(2));
+        JenkinsRule.WebClient wc = j.createWebClient();
+        java.util.Set<String> contents = new java.util.HashSet<>();
+        for (CaseResult test : tests) {
+            List<String> links = links(test);
+            // only the attachment of its own stage
+            assertThat(links.size(), is(1));
+            contents.add(wc.goTo(links.get(0), "text/plain").getWebResponse().getContentAsString());
+        }
+        assertEquals(java.util.Set.of("notes of a", "notes of b"), contents);
+    }
+
+    @Test
     void junitDoesNotArchiveAttachmentsByDefault() throws Exception {
         WorkflowRun r = runWithReport("junit 'reports/**/*.xml'");
         j.assertLogNotContains("Archiving", r);

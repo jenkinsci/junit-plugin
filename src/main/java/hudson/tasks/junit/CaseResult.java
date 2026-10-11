@@ -27,6 +27,7 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.model.Run;
+import hudson.tasks.test.AbstractTestResultAction;
 import hudson.tasks.test.TestResult;
 import hudson.util.TextFile;
 import io.jenkins.plugins.junit.storage.FileJunitTestResultStorage;
@@ -697,8 +698,9 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         if (!keepTestNames && !getEnclosingFlowNodeNames().isEmpty()) {
             Run<?, ?> r = getRun();
             if (r != null) {
-                TestResultAction action = r.getAction(TestResultAction.class);
-                if (action != null && action.getResult().hasMultipleBlocks()) {
+                // through the enclosing results, as results shown while tests run are not attached to the run
+                AbstractTestResultAction<?> a = getTestResultAction();
+                if (a instanceof TestResultAction action && action.getResult().hasMultipleBlocks()) {
                     List<String> enclosingFlowNodeNames = getEnclosingFlowNodeNames();
                     Collections.reverse(enclosingFlowNodeNames);
                     return String.join(" / ", enclosingFlowNodeNames) + " / " + rawName;

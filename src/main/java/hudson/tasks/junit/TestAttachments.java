@@ -23,6 +23,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -114,7 +115,7 @@ public final class TestAttachments {
                 LOGGER.log(Level.FINE, "Could not delete " + staging, e);
             }
         }
-        return new Data(byCase);
+        return new Data(pipelineTestDetails != null ? pipelineTestDetails.getNodeId() : null, byCase);
     }
 
     static String key(String className, String name) {
@@ -255,16 +256,24 @@ public final class TestAttachments {
 
     /** Links the archived attachments of tests from their pages. */
     public static final class Data extends TestResultAction.Data {
+        /**
+         * The flow node of the step that recorded the results, as the same tests may be recorded by several steps
+         * (e.g. in parallel stages), each with their own attachments; {@code null} outside of Pipelines.
+         */
+        @CheckForNull
+        private final String nodeId;
+
         /** By {@link #key test}. */
         private final Map<String, List<Archived>> attachments;
 
-        Data(Map<String, List<Archived>> attachments) {
+        Data(@CheckForNull String nodeId, Map<String, List<Archived>> attachments) {
+            this.nodeId = nodeId;
             this.attachments = attachments;
         }
 
         @Override
         public List<? extends TestAction> getTestAction(TestObject testObject) {
-            if (testObject instanceof CaseResult c) {
+            if (testObject instanceof CaseResult c && Objects.equals(nodeId, c.getFlowNodeId())) {
                 List<Archived> archived = attachments.get(key(c.getClassName(), c.getName()));
                 if (archived != null) {
                     return List.of(new AttachmentsAction(c, archived));
