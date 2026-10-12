@@ -14,16 +14,18 @@ import hudson.tasks.test.PipelineTestDetails;
 import io.jenkins.plugins.junit.opentest.OtrReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -199,13 +201,14 @@ public final class TestAttachments {
 
         @Override
         public Void invoke(File staging, VirtualChannel channel) throws IOException {
+            Path root = Path.of(workspace).toRealPath();
             for (Map.Entry<String, String> e : artifacts.entrySet()) {
                 Path target = staging.toPath().resolve(e.getKey());
                 Path parent = target.getParent();
                 if (parent != null) {
                     Files.createDirectories(parent);
                 }
-                Files.copy(new File(workspace, e.getValue()).toPath(), target);
+                copyRegularFile(root, new File(workspace, e.getValue()).toPath(), target);
             }
             return null;
         }
@@ -309,6 +312,22 @@ public final class TestAttachments {
         }
     }
 
+    /**
+     * Copies a file found in the workspace earlier, without following a symbolic link it may have been replaced with
+     * since.
+     *
+     * @param root the real path of the workspace
+     */
+    public static void copyRegularFile(Path root, Path source, Path target) throws IOException {
+        Path parent = source.getParent();
+        if (parent == null || !parent.toRealPath().startsWith(root)) {
+            throw new IOException(source + " is not inside " + root);
+        }
+        try (InputStream in = Files.newInputStream(source, LinkOption.NOFOLLOW_LINKS)) {
+            Files.copy(in, target, StandardCopyOption.REPLACE_EXISTING);
+        }
+    }
+
     /** An archived attachment of a test. */
     static final class Archived {
         /** The artifact path. */
@@ -344,13 +363,37 @@ public final class TestAttachments {
 
         @Override
         public List<? extends TestAction> getTestAction(TestObject testObject) {
-            if (testObject instanceof CaseResult c && Objects.equals(nodeId, c.getFlowNodeId())) {
-                List<Archived> archived = attachments.get(key(c.getClassName(), c.getName(), c.getStartTime()));
-                if (archived != null) {
-                    return List.of(new AttachmentsAction(c, archived));
+            if (!(testObject instanceof CaseResult c)) {
+                return Collections.emptyList();
+            }
+            String flowNodeId = c.getFlowNodeId();
+            if (flowNodeId != null && !flowNodeId.equals(nodeId)) {
+                return Collections.emptyList();
+            }
+            List<Archived> archived = attachments.get(key(c.getClassName(), c.getName(), c.getStartTime()));
+            if (archived == null && (flowNodeId == null || c.getStartTime() < 0)) {
+                // result storage need not keep which step recorded a test, nor when it started
+                archived = byName(c.getClassName(), c.getName());
+            }
+            return archived == null ? Collections.emptyList() : List.of(new AttachmentsAction(c, archived));
+        }
+
+        /** The attachments of a test by its name only, if it ran just once. */
+        @CheckForNull
+        private List<Archived> byName(String className, String name) {
+            // the keys of its runs, by start time
+            String prefix = key(className, name, 0).replaceFirst("0$", "");
+            List<Archived> match = null;
+            for (Map.Entry<String, List<Archived>> e : attachments.entrySet()) {
+                String key = e.getKey();
+                if (key.startsWith(prefix) && key.lastIndexOf('@') == prefix.length() - 1) {
+                    if (match != null) {
+                        return null;
+                    }
+                    match = e.getValue();
                 }
             }
-            return Collections.emptyList();
+            return match;
         }
     }
 

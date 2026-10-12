@@ -6,6 +6,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import hudson.FilePath;
 import hudson.Launcher;
@@ -67,6 +68,41 @@ class TestAttachmentsTest {
         assertThat(TestAttachments.resolve(root, dir, "link.txt"), nullValue());
         assertThat(TestAttachments.resolve(root, dir, "missing.txt"), nullValue());
         assertThat(TestAttachments.resolve(root, dir, "a"), nullValue());
+    }
+
+    @Test
+    void copyDoesNotFollowSymbolicLinks(@TempDir Path tmp) throws Exception {
+        Path root = Files.createDirectories(tmp.toRealPath().resolve("ws"));
+        Files.writeString(tmp.resolve("secret.txt"), "secret");
+        Path link = Files.createSymbolicLink(root.resolve("notes.txt"), tmp.resolve("secret.txt"));
+        Path linkedDir = Files.createSymbolicLink(root.resolve("dir"), tmp.toRealPath());
+        Path target = tmp.resolve("copy.txt");
+
+        assertThrows(IOException.class, () -> TestAttachments.copyRegularFile(root, link, target));
+        assertThrows(
+                IOException.class,
+                () -> TestAttachments.copyRegularFile(root, linkedDir.resolve("secret.txt"), target));
+        assertThat(Files.exists(target), is(false));
+        Files.writeString(root.resolve("ok.txt"), "ok");
+        TestAttachments.copyRegularFile(root, root.resolve("ok.txt"), target);
+        assertEquals("ok", Files.readString(target));
+    }
+
+    @Test
+    void attachmentsAreFoundWhenResultStorageKeepsNeitherNodeNorStartTime() {
+        TestAttachments.Archived archived = new TestAttachments.Archived("test-attachments/1/a.txt", "a.txt", 1);
+        TestAttachments.Data data = new TestAttachments.Data(
+                "1",
+                Map.of(
+                        TestAttachments.key("C", "once", 5), List.of(archived),
+                        TestAttachments.key("C", "twice", 5), List.of(archived),
+                        TestAttachments.key("C", "twice", 6), List.of(archived)));
+        // as reconstructed by JunitTestResultStorage implementations
+        CaseResult once = new CaseResult(null, "C", "once", null, null, 0, "", "", null, null);
+        CaseResult twice = new CaseResult(null, "C", "twice", null, null, 0, "", "", null, null);
+        assertThat(data.getTestAction(once).size(), is(1));
+        // cannot tell which
+        assertThat(data.getTestAction(twice).size(), is(0));
     }
 
     @Test
