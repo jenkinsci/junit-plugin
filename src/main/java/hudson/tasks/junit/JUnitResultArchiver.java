@@ -326,7 +326,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                                 : Long.MIN_VALUE,
                         pipelineTestDetails,
                         build,
-                        workspace,
+                        reports,
                         launcher,
                         listener)
                 : null;
