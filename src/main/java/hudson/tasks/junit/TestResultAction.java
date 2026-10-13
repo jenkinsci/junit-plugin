@@ -372,6 +372,14 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
     }
 
     /**
+     * Changes whenever the results that are shown while tests run do, unlike when tests only start.
+     */
+    @Restricted(NoExternalUse.class)
+    public long getLiveResultsVersion() {
+        return 0;
+    }
+
+    /**
      * How many tests are running besides those named by {@link #getLiveRunningTests}.
      */
     @Restricted(NoExternalUse.class)
