@@ -100,7 +100,8 @@ junit 'target/surefire-reports/**/*.xml'
 Each test class becomes a suite named after the class, as with the legacy reports, so test history carries over.
 Unlike the legacy reports, parameterized, repeated and dynamic tests keep the name of the method they belong to,
 e.g. `add(int, int) > [1] 1, 2`. With `keepProperties`, report entries (`TestReporter.publishEntry`), tags and file
-attachments are kept as test properties.
+attachments are kept as test properties: report entries under their keys, tags as `tags` and attachments as
+`attachment.1`, `attachment.2` and so on. A report entry whose key is one of those is kept as `data.<key>`.
 
 ## Contributing
 
