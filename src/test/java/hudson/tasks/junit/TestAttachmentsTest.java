@@ -18,8 +18,11 @@ import hudson.model.Result;
 import hudson.model.Run;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SecureDirectoryStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import jenkins.model.ArtifactManager;
@@ -74,18 +77,38 @@ class TestAttachmentsTest {
     void copyDoesNotFollowSymbolicLinks(@TempDir Path tmp) throws Exception {
         Path root = Files.createDirectories(tmp.toRealPath().resolve("ws"));
         Files.writeString(tmp.resolve("secret.txt"), "secret");
-        Path link = Files.createSymbolicLink(root.resolve("notes.txt"), tmp.resolve("secret.txt"));
-        Path linkedDir = Files.createSymbolicLink(root.resolve("dir"), tmp.toRealPath());
-        Path target = tmp.resolve("copy.txt");
+        Files.createSymbolicLink(root.resolve("notes.txt"), tmp.resolve("secret.txt"));
+        Files.createSymbolicLink(root.resolve("dir"), tmp.toRealPath());
+        Files.createDirectories(root.resolve("sub"));
+        Files.writeString(root.resolve("sub/ok.txt"), "ok");
 
-        assertThrows(IOException.class, () -> TestAttachments.copyRegularFile(root, link, target));
+        List<Copier> copiers = new ArrayList<>(List.of(TestAttachments::copyRegularFile, TestAttachments::copyByPath));
+        try (DirectoryStream<Path> dir = Files.newDirectoryStream(root)) {
+            if (dir instanceof SecureDirectoryStream<Path>) {
+                copiers.add((r, relative, target) -> {
+                    try (SecureDirectoryStream<Path> secure =
+                            (SecureDirectoryStream<Path>) Files.newDirectoryStream(r)) {
+                        TestAttachments.copySecurely(secure, relative, target);
+                    }
+                });
+            }
+        }
+        for (Copier copier : copiers) {
+            Path target = tmp.resolve("copy.txt");
+            Files.deleteIfExists(target);
+            assertThrows(IOException.class, () -> copier.copy(root, Path.of("notes.txt"), target));
+            assertThrows(IOException.class, () -> copier.copy(root, Path.of("dir/secret.txt"), target));
+            assertThat(Files.exists(target), is(false));
+            copier.copy(root, Path.of("sub/ok.txt"), target);
+            assertEquals("ok", Files.readString(target));
+        }
         assertThrows(
                 IOException.class,
-                () -> TestAttachments.copyRegularFile(root, linkedDir.resolve("secret.txt"), target));
-        assertThat(Files.exists(target), is(false));
-        Files.writeString(root.resolve("ok.txt"), "ok");
-        TestAttachments.copyRegularFile(root, root.resolve("ok.txt"), target);
-        assertEquals("ok", Files.readString(target));
+                () -> TestAttachments.copyRegularFile(root, Path.of("../secret.txt"), tmp.resolve("copy.txt")));
+    }
+
+    private interface Copier {
+        void copy(Path root, Path relative, Path target) throws IOException;
     }
 
     @Test

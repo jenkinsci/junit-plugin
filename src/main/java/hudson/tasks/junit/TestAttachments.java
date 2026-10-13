@@ -16,11 +16,16 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.nio.channels.Channels;
+import java.nio.channels.SeekableByteChannel;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.LinkOption;
 import java.nio.file.Path;
+import java.nio.file.SecureDirectoryStream;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -217,7 +222,7 @@ public final class TestAttachments {
                 if (parent != null) {
                     Files.createDirectories(parent);
                 }
-                copyRegularFile(root, new File(workspace, e.getValue()).toPath(), target);
+                copyRegularFile(root, Path.of(e.getValue()), target);
             }
             return null;
         }
@@ -335,12 +340,57 @@ public final class TestAttachments {
     }
 
     /**
-     * Copies a file found in the workspace earlier, without following a symbolic link it may have been replaced with
-     * since.
+     * Copies a file found in the workspace earlier, without following a symbolic link it, or a directory above it, may
+     * have been replaced with since.
      *
      * @param root the real path of the workspace
+     * @param relative the path of the file relative to the workspace
      */
-    public static void copyRegularFile(Path root, Path source, Path target) throws IOException {
+    @Restricted(NoExternalUse.class)
+    public static void copyRegularFile(Path root, Path relative, Path target) throws IOException {
+        Path path = relative.normalize();
+        if (path.isAbsolute() || path.getNameCount() == 0 || path.startsWith("..")) {
+            throw new IOException(relative + " is not inside " + root);
+        }
+        try (DirectoryStream<Path> dir = Files.newDirectoryStream(root)) {
+            if (dir instanceof SecureDirectoryStream<Path> secure) {
+                copySecurely(secure, path, target);
+                return;
+            }
+        }
+        copyByPath(root, path, target);
+    }
+
+    /** Opens each directory relative to the one above it, so that none can be swapped for a symbolic link. */
+    static void copySecurely(SecureDirectoryStream<Path> root, Path relative, Path target) throws IOException {
+        SecureDirectoryStream<Path> dir = root;
+        try {
+            for (int i = 0; i < relative.getNameCount() - 1; i++) {
+                SecureDirectoryStream<Path> child =
+                        dir.newDirectoryStream(relative.getName(i), LinkOption.NOFOLLOW_LINKS);
+                if (dir != root) {
+                    dir.close();
+                }
+                dir = child;
+            }
+            try (SeekableByteChannel channel = dir.newByteChannel(
+                            relative.getFileName(), Set.of(StandardOpenOption.READ, LinkOption.NOFOLLOW_LINKS));
+                    InputStream in = Channels.newInputStream(channel)) {
+                Files.copy(in, target, StandardCopyOption.REPLACE_EXISTING);
+            }
+        } finally {
+            if (dir != root) {
+                dir.close();
+            }
+        }
+    }
+
+    /**
+     * Where directories cannot be opened relative to each other, e.g. on Windows: checks the directory, then opens the
+     * file, which leaves a short window to swap a directory for a symbolic link.
+     */
+    static void copyByPath(Path root, Path relative, Path target) throws IOException {
+        Path source = root.resolve(relative);
         Path parent = source.getParent();
         if (parent == null || !parent.toRealPath().startsWith(root)) {
             throw new IOException(source + " is not inside " + root);
