@@ -199,7 +199,7 @@ public abstract class TestResult extends TestObject {
                 return null;
             }
             try {
-                AbstractTestResultAction r = b.getAction(parentAction.getClass());
+                AbstractTestResultAction r = (AbstractTestResultAction) b.getAction(parentAction.getRecordedType());
                 if (r != null) {
                     TestResult result = r.findCorrespondingResult(this.getId());
                     if (result != null) {
@@ -228,7 +228,7 @@ public abstract class TestResult extends TestObject {
         if (parentAction == null) {
             return null;
         }
-        AbstractTestResultAction tra = build.getAction(parentAction.getClass());
+        AbstractTestResultAction tra = (AbstractTestResultAction) build.getAction(parentAction.getRecordedType());
         if (tra == null) {
             tra = build.getAction(AbstractTestResultAction.class);
         }
