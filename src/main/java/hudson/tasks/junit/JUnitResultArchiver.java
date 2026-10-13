@@ -225,7 +225,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                 result.freeze(action);
                 action.mergeResult(result, listener);
             }
-            action.setHealthScaleFactor(task.getHealthScaleFactor()); // overwrites previous value if appending
+            configureAction(action, task); // overwrites previous values if appending
             if (result.isEmpty()) {
                 if (build.getResult() == Result.FAILURE) {
                     // most likely a build failed before it gets to the test phase.
@@ -311,7 +311,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                 // Cannot do this above since the result has not yet been frozen.
                 summary = new TestResultSummary(result);
             }
-            action.setHealthScaleFactor(task.getHealthScaleFactor()); // overwrites previous value if appending
+            configureAction(action, task); // overwrites previous values if appending
             if (summary.getTotalCount() == 0 && /* maybe a secondary effect */ build.getResult() != Result.FAILURE) {
                 if (task.isAllowEmptyResults()) {
                     listener.getLogger().println(Messages.JUnitResultArchiver_ResultIsEmpty());
@@ -535,6 +535,24 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     @DataBoundSetter
     public void setSkipOldReports(boolean skipOldReports) {
         this.skipOldReports = skipOldReports;
+    }
+
+    /**
+     * Helper method to configure common action properties from task settings.
+     * Sets health scale factor and custom UI provider ID from global configuration.
+     *
+     * @param action the test result action to configure
+     * @param task the JUnit task containing the configuration
+     */
+    private static void configureAction(@NonNull TestResultAction action, @NonNull JUnitTask task) {
+        action.setHealthScaleFactor(task.getHealthScaleFactor());
+
+        // Use global configuration for custom UI provider
+        // CustomUIProviderGlobalConfiguration.get() has fallback logic
+        String providerId = CustomUIProviderGlobalConfiguration.get().getCustomUIProviderId();
+        if (providerId != null && !providerId.isEmpty()) {
+            action.setCustomUIProviderId(providerId);
+        }
     }
 
     private static final long serialVersionUID = 1L;

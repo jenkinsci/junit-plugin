@@ -249,4 +249,32 @@ public class TestResultProjectAction implements Action, AsyncTrendChart, AsyncCo
     public boolean isTrendVisible() {
         return true;
     }
+
+    /**
+     * Renders the custom UI for the latest test results.
+     * This redirects to the custom UI of the last build with test results.
+     *
+     * @param req the request
+     * @param rsp the response
+     * @throws IOException if rendering fails
+     * @since TBD
+     */
+    public void doRenderCustomUI(StaplerRequest2 req, StaplerResponse2 rsp) throws IOException {
+        AbstractTestResultAction<?> lastAction = getLastTestResultAction();
+
+        if (lastAction == null) {
+            rsp.sendError(404, "No test results found for this job");
+            return;
+        }
+
+        Run<?, ?> lastBuild = lastAction.run;
+        if (lastBuild == null) {
+            rsp.sendError(404, "No build found with test results");
+            return;
+        }
+
+        // Redirect to the last build's custom UI
+        String redirectUrl = req.getContextPath() + "/" + lastBuild.getUrl() + "testReport/renderCustomUI";
+        rsp.sendRedirect2(redirectUrl);
+    }
 }
