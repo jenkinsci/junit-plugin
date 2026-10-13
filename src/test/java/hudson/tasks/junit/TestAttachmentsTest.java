@@ -96,13 +96,18 @@ class TestAttachmentsTest {
                 Map.of(
                         TestAttachments.key("C", "once", 5), List.of(archived),
                         TestAttachments.key("C", "twice", 5), List.of(archived),
-                        TestAttachments.key("C", "twice", 6), List.of(archived)));
+                        TestAttachments.key("C", "twice", 6), List.of(archived),
+                        TestAttachments.key("C", "partly", 5), List.of(archived)),
+                // "partly" ran twice, attaching a file only once
+                Map.of("C#once", 1, "C#twice", 2, "C#partly", 2));
         // as reconstructed by JunitTestResultStorage implementations
         CaseResult once = new CaseResult(null, "C", "once", null, null, 0, "", "", null, null);
         CaseResult twice = new CaseResult(null, "C", "twice", null, null, 0, "", "", null, null);
+        CaseResult partly = new CaseResult(null, "C", "partly", null, null, 0, "", "", null, null);
         assertThat(data.getTestAction(once).size(), is(1));
         // cannot tell which
         assertThat(data.getTestAction(twice).size(), is(0));
+        assertThat(data.getTestAction(partly).size(), is(0));
     }
 
     @Test

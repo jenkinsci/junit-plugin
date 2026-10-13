@@ -23,9 +23,12 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -69,15 +72,16 @@ public final class TestAttachments {
             @NonNull Launcher launcher,
             @NonNull TaskListener listener)
             throws InterruptedException {
-        List<Attachment> found;
+        Collected collected;
         try {
-            found = workspace.act(new Collect(testResults, keepTestNames, filesTimestamp, pipelineTestDetails));
+            collected = workspace.act(new Collect(testResults, keepTestNames, filesTimestamp, pipelineTestDetails));
         } catch (IOException | RuntimeException e) {
             // the test results matter more than their attachments
             LOGGER.log(Level.WARNING, "Could not collect test attachments of " + run, e);
             listener.error("Could not collect test attachments: " + e);
             return null;
         }
+        List<Attachment> found = collected.attachments();
         if (found.isEmpty()) {
             return null;
         }
@@ -124,7 +128,7 @@ public final class TestAttachments {
                 LOGGER.log(Level.FINE, "Could not delete " + staging, e);
             }
         }
-        return new Data(pipelineTestDetails != null ? pipelineTestDetails.getNodeId() : null, byCase);
+        return new Data(pipelineTestDetails != null ? pipelineTestDetails.getNodeId() : null, byCase, collected.runs());
     }
 
     /**
@@ -163,7 +167,12 @@ public final class TestAttachments {
      * attachments. Their suites are merged, so they are told apart by when they started instead.
      */
     static String key(String className, String name, long startTime) {
-        return className + '#' + name + '@' + startTime;
+        return testKey(className, name) + '@' + startTime;
+    }
+
+    /** Identifies a test, whichever run of it. */
+    static String testKey(String className, String name) {
+        return className + '#' + name;
     }
 
     /** Whether a property holds the path of a file attached to the test, rather than a report entry. */
@@ -215,7 +224,13 @@ public final class TestAttachments {
     }
 
     /** Finds the attachments of the Open Test Reporting reports matching a pattern. */
-    private static final class Collect extends MasterToSlaveFileCallable<List<Attachment>> {
+    /**
+     * @param runs how many times each test with attachments ran, by {@link #testKey}, including runs without
+     *             attachments
+     */
+    record Collected(List<Attachment> attachments, Map<String, Integer> runs) implements Serializable {}
+
+    private static final class Collect extends MasterToSlaveFileCallable<Collected> {
         private static final long serialVersionUID = 1L;
 
         private final String testResults;
@@ -237,10 +252,11 @@ public final class TestAttachments {
         }
 
         @Override
-        public List<Attachment> invoke(File ws, VirtualChannel channel) throws IOException {
+        public Collected invoke(File ws, VirtualChannel channel) throws IOException {
             DirectoryScanner ds = Util.createFileSet(ws, testResults).getDirectoryScanner();
             Path root = ws.toPath().toRealPath();
             List<Attachment> found = new ArrayList<>();
+            Map<String, Integer> runs = new HashMap<>();
             int index = 0;
             for (String name : ds.getIncludedFiles()) {
                 File report = new File(ws, name);
@@ -259,6 +275,7 @@ public final class TestAttachments {
                 for (SuiteResult suite : OpenTestReportConverter.parse(
                         report, StdioRetention.NONE, true, keepTestNames, pipelineTestDetails)) {
                     for (CaseResult c : suite.getCases()) {
+                        runs.merge(testKey(c.getClassName(), c.getName()), 1, Integer::sum);
                         for (Map.Entry<String, String> property :
                                 c.getProperties().entrySet()) {
                             if (!isAttachmentProperty(property.getKey())) {
@@ -280,7 +297,12 @@ public final class TestAttachments {
                     }
                 }
             }
-            return found;
+            Set<String> attached = new HashSet<>();
+            for (Attachment a : found) {
+                attached.add(testKey(a.className(), a.name()));
+            }
+            runs.keySet().retainAll(attached);
+            return new Collected(found, runs);
         }
     }
 
@@ -353,12 +375,16 @@ public final class TestAttachments {
         @CheckForNull
         private final String nodeId;
 
-        /** By {@link #key test}. */
+        /** By {@link #key test run}. */
         private final Map<String, List<Archived>> attachments;
 
-        Data(@CheckForNull String nodeId, Map<String, List<Archived>> attachments) {
+        /** How many times each test with attachments ran, by {@link #testKey test}. */
+        private final Map<String, Integer> runs;
+
+        Data(@CheckForNull String nodeId, Map<String, List<Archived>> attachments, Map<String, Integer> runs) {
             this.nodeId = nodeId;
             this.attachments = attachments;
+            this.runs = runs;
         }
 
         @Override
@@ -381,19 +407,19 @@ public final class TestAttachments {
         /** The attachments of a test by its name only, if it ran just once. */
         @CheckForNull
         private List<Archived> byName(String className, String name) {
-            // the keys of its runs, by start time
-            String prefix = key(className, name, 0).replaceFirst("0$", "");
-            List<Archived> match = null;
+            String test = testKey(className, name);
+            if (runs == null || runs.getOrDefault(test, 0) != 1) {
+                return null;
+            }
+            // the key of its only run
+            String prefix = test + '@';
             for (Map.Entry<String, List<Archived>> e : attachments.entrySet()) {
                 String key = e.getKey();
                 if (key.startsWith(prefix) && key.lastIndexOf('@') == prefix.length() - 1) {
-                    if (match != null) {
-                        return null;
-                    }
-                    match = e.getValue();
+                    return e.getValue();
                 }
             }
-            return match;
+            return null;
         }
     }
 
