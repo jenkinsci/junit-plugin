@@ -615,6 +615,12 @@ public final class SuiteResult implements Serializable {
         }
     }
 
+    /** Sets the output, once known; e.g. as how much of it is kept depends on the cases. */
+    void setStdio(@CheckForNull String stdout, @CheckForNull String stderr) {
+        this.stdout = CaseResult.fixNULs(stdout);
+        this.stderr = CaseResult.fixNULs(stderr);
+    }
+
     /**
      * The stdout of this test.
      *
