@@ -120,7 +120,9 @@ withOpenTestReporting {
 * If a test JVM crashes or is killed, the results received so far are kept and the tests that were running are
   reported as failures.
 
-The step listens on a socket on the loopback interface of the agent, so the tests must run on the same machine.
+The step listens on a socket on the loopback interface of the agent, so the tests must run in the same network
+namespace as the agent process: being on the same machine is not enough when they run in a separate container, such as
+with `docker.image(…).inside` without `--network host`.
 `org.junit.platform:junit-platform-reporting` must be on the test runtime classpath.
 By default, the JUnit configuration parameters that turn streaming on are added to the `JAVA_TOOL_OPTIONS` environment
 variable, so no change to the build is needed. To configure it yourself instead, use `javaToolOptions: false` and pass
