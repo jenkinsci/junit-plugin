@@ -446,7 +446,9 @@ public final class TestAttachments {
             if (flowNodeId != null && !flowNodeId.equals(nodeId)) {
                 return Collections.emptyList();
             }
-            List<Archived> archived = attachments.get(key(c.getClassName(), c.getName(), c.getStartTime()));
+            // without a start time, the runs of a test cannot be told apart: their attachments share a key
+            List<Archived> archived =
+                    c.getStartTime() < 0 ? null : attachments.get(key(c.getClassName(), c.getName(), c.getStartTime()));
             if (archived == null && (flowNodeId == null || c.getStartTime() < 0)) {
                 // result storage need not keep which step recorded a test, nor when it started
                 archived = byName(c);

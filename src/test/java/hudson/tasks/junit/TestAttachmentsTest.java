@@ -140,6 +140,24 @@ class TestAttachmentsTest {
     }
 
     @Test
+    void attachmentsOfTestsWithoutStartTimesAreNotMerged() {
+        TestAttachments.Archived a = new TestAttachments.Archived("test-attachments/1/a.txt", "a.txt", 1);
+        TestAttachments.Archived b = new TestAttachments.Archived("test-attachments/2/b.txt", "b.txt", 1);
+        TestAttachments.Data data = new TestAttachments.Data(
+                "1",
+                Map.of(
+                        // two runs without a start time share a key
+                        TestAttachments.key("C", "twice", -1), List.of(a, b),
+                        TestAttachments.key("C", "once", -1), List.of(a)),
+                Map.of("C#twice", 2, "C#once", 1));
+        CaseResult twice = new CaseResult(null, "C", "twice", null, null, 0, "", "", null, null);
+        CaseResult once = new CaseResult(null, "C", "once", null, null, 0, "", "", null, null);
+        assertThat(twice.getStartTime(), is(-1L));
+        assertThat(data.getTestAction(twice).size(), is(0));
+        assertThat(data.getTestAction(once).size(), is(1));
+    }
+
+    @Test
     void artifactPathsDoNotCollide() {
         Map<String, String> artifacts = new java.util.HashMap<>();
         TestAttachments.Attachment first = attachment("2/notes.txt", "a/2/notes.txt", 1);
