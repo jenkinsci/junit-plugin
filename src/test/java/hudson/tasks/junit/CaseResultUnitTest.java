@@ -34,6 +34,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.Run;
 import io.jenkins.plugins.junit.storage.TestResultImpl;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -79,6 +80,46 @@ class CaseResultUnitTest {
         assertFalse(cr.isUrlValue("ftp://example.com"));
         assertFalse(cr.isUrlValue("https://example.com/with space"));
         assertFalse(cr.isUrlValue("https://example.com\nsecond line"));
+    }
+
+    @Test
+    void regressionAndFixedCountsOnlyLookUpPreviousResultWhenStatusAllows() {
+        SuiteResult suite = new SuiteResult("suite", null, null, null);
+        CaseResult passed = new CaseResult(suite, "Klass", "passed", null, null, 1f, null, null, null);
+        CaseResult failed = new CaseResult(suite, "Klass", "failed", "boom", null, 1f, null, null, null);
+        CaseResult skipped = new CaseResult(suite, "Klass", "skipped", null, "skip", 0f, null, null, null);
+
+        List<CaseResult> lookedUp = new ArrayList<>();
+        FakeTestResultImpl impl = new FakeTestResultImpl() {
+            @Override
+            public boolean supportsPreviousCaseResultLookup() {
+                return true;
+            }
+
+            @Override
+            public Optional<CaseResult> getPreviousCaseResult(@NonNull CaseResult queried) {
+                lookedUp.add(queried);
+                return Optional.empty();
+            }
+
+            @Override
+            public TestResult getPreviousResult() {
+                fail("should not fall back to the build-by-build walk when storage supports the fast path");
+                return null;
+            }
+        };
+        suite.setParent(new TestResult(impl));
+
+        for (CaseResult c : List.of(passed, failed, skipped)) {
+            assertEquals(0, c.getRegressionCount());
+        }
+        assertEquals(List.of(failed), lookedUp);
+
+        lookedUp.clear();
+        for (CaseResult c : List.of(passed, failed, skipped)) {
+            assertEquals(0, c.getFixedCount());
+        }
+        assertEquals(List.of(passed), lookedUp);
     }
 
     @Test
