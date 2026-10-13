@@ -32,5 +32,8 @@ THE SOFTWARE.
 
   <div class="jp-code-list jp-code-list--inline">
     <st:include page="test-output.jelly" />
+    <j:forEach var="action" items="${it.testActions}">
+      <st:include page="inline.jelly" from="${action}" optional="true" it="${action}" />
+    </j:forEach>
   </div>
 </j:jelly>

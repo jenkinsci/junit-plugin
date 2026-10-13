@@ -74,7 +74,32 @@ public abstract class TestResult extends TestObject {
      * @return action The action that points to the top level test result.
      */
     public AbstractTestResultAction getParentAction() {
+        AbstractTestResultAction action = getAncestorAction();
+        if (action != null) {
+            return action;
+        }
         return getRun().getAction(AbstractTestResultAction.class);
+    }
+
+    /**
+     * The action the closest enclosing result belongs to, which may not be attached to the run
+     * (e.g. results shown while tests are still running).
+     */
+    private AbstractTestResultAction getAncestorAction() {
+        TestObject parent = getParent();
+        if (parent instanceof TestResult) {
+            return ((TestResult) parent).getParentAction();
+        }
+        return null;
+    }
+
+    @Override
+    public AbstractTestResultAction getTestResultAction() {
+        AbstractTestResultAction action = getAncestorAction();
+        if (action != null) {
+            return action;
+        }
+        return super.getTestResultAction();
     }
 
     /**
