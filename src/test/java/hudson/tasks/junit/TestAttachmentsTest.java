@@ -108,6 +108,12 @@ class TestAttachmentsTest {
         // cannot tell which
         assertThat(data.getTestAction(twice).size(), is(0));
         assertThat(data.getTestAction(partly).size(), is(0));
+        // recorded by several steps, only one of which attached a file
+        SuiteResult suite = new SuiteResult("C", null, null, null);
+        CaseResult first = new CaseResult(suite, "C", "once", null, null, 0, "", "", null, null);
+        suite.addCase(first);
+        suite.addCase(new CaseResult(suite, "C", "once", null, null, 0, "", "", null, null));
+        assertThat(data.getTestAction(first).size(), is(0));
     }
 
     @Test

@@ -399,16 +399,40 @@ public final class TestAttachments {
             List<Archived> archived = attachments.get(key(c.getClassName(), c.getName(), c.getStartTime()));
             if (archived == null && (flowNodeId == null || c.getStartTime() < 0)) {
                 // result storage need not keep which step recorded a test, nor when it started
-                archived = byName(c.getClassName(), c.getName());
+                archived = byName(c);
             }
             return archived == null ? Collections.emptyList() : List.of(new AttachmentsAction(c, archived));
         }
 
-        /** The attachments of a test by its name only, if it ran just once. */
+        /** The attachments of a test by its name only, if it ran just once in the whole build. */
         @CheckForNull
-        private List<Archived> byName(String className, String name) {
-            String test = testKey(className, name);
+        private List<Archived> byName(CaseResult c) {
+            String test = testKey(c.getClassName(), c.getName());
             if (runs == null || runs.getOrDefault(test, 0) != 1) {
+                return null;
+            }
+            SuiteResult suite = c.getSuiteResult();
+            TestResult result = suite != null ? suite.getParent() : null;
+            if (result != null
+                    && result.getParentAction() instanceof TestResultAction action
+                    && action.getData() != null) {
+                for (TestResultAction.Data data : action.getData()) {
+                    if (data != this
+                            && data instanceof Data other
+                            && other.runs != null
+                            && other.runs.containsKey(test)) {
+                        // also attached files when recorded by another step, e.g. in another stage
+                        return null;
+                    }
+                }
+            }
+            if (suite != null
+                    && suite.getCases().stream()
+                                    .filter(o -> o.getClassName().equals(c.getClassName())
+                                            && o.getName().equals(c.getName()))
+                                    .count()
+                            > 1) {
+                // recorded by several steps, without attachments in the others
                 return null;
             }
             // the key of its only run
