@@ -250,7 +250,11 @@ public abstract class TestResult extends TestObject {
 
     private static long countCases(TestResult result, CaseResult.Status status) {
         if (result instanceof CaseResult caseResult) {
-            return caseResult.getCondition() == status ? 1 : 0;
+            // Only a failing case can have regressed and only a passing one can have been fixed. Checking
+            // that first avoids looking up the previous result (getCondition) of every other case, which
+            // for most builds means only the failing cases are looked up when counting regressions.
+            boolean candidate = status == CaseResult.Status.REGRESSION ? caseResult.isFailed() : caseResult.isPassed();
+            return candidate && caseResult.getCondition() == status ? 1 : 0;
         }
         if (result instanceof TabulatedResult tabulatedResult) {
             return tabulatedResult.getChildren().stream()
