@@ -97,11 +97,51 @@ THE SOFTWARE.
           <l:icon src="symbol-bar-chart-outline plugin-ionicons-api" />
         </a>
 
-        <t:editDescriptionButton permission="${it.run.UPDATE}" compact="true" />
+        <!-- descriptions of live results would not be kept: they are replaced by the recorded results -->
+        <j:if test="${it.parentAction.liveStatus == null}">
+          <t:editDescriptionButton permission="${it.run.UPDATE}" compact="true" />
+        </j:if>
       </div>
     </l:app-bar>
 
-    <t:editableDescription permission="${it.run.UPDATE}" hideButton="true" />
+    <j:set var="liveStatus" value="${it.parentAction.liveStatus}" />
+    <j:if test="${liveStatus != null}">
+      <st:adjunct includes="io.jenkins.plugins.junit.opentest.live-refresh" />
+      <div class="junit-live-status"
+           data-status-url="${rootURL}/${it.run.url}liveTestReport/status"
+           data-refresh-seconds="${it.parentAction.liveRefreshSeconds}"
+           data-results-version="${it.parentAction.liveResultsVersion}"
+           data-finished-title="${%Tests have finished}"
+           data-finished-text="${%The results have been recorded.}"
+           data-recorded-text="${%Show recorded results}"
+           data-more-text="${%andMore('{0}')}">
+        <l:card title="${%Tests are running}">
+          <div class="junit-live-status__header">
+            <!-- announced politely; the list of running tests below changes too often to be -->
+            <span class="jenkins-spinner junit-live-status__text" role="status" aria-live="polite" aria-atomic="true">${liveStatus}</span>
+            <button type="button" class="jenkins-button jenkins-button--primary junit-live-status__reload" hidden="hidden">
+              <span class="junit-live-status__icon-latest"><l:icon src="symbol-refresh-outline plugin-ionicons-api" /></span>
+              <span class="junit-live-status__icon-recorded"><l:icon src="symbol-arrow-forward-outline plugin-ionicons-api" /></span>
+              <span class="junit-live-status__reload-text">${%Show latest results}</span>
+            </button>
+          </div>
+          <j:set var="liveRunningTests" value="${it.parentAction.liveRunningTests}" />
+          <ul class="junit-live-status__running">
+            <j:forEach var="runningTest" items="${liveRunningTests}">
+              <li>${runningTest}</li>
+            </j:forEach>
+            <j:set var="liveMoreRunningTests" value="${it.parentAction.liveMoreRunningTests}" />
+            <j:if test="${liveMoreRunningTests > 0}">
+              <li class="junit-live-status__more">${%andMore(liveMoreRunningTests)}</li>
+            </j:if>
+          </ul>
+        </l:card>
+      </div>
+    </j:if>
+
+    <j:if test="${it.parentAction.liveStatus == null}">
+      <t:editableDescription permission="${it.run.UPDATE}" hideButton="true" />
+    </j:if>
 
     <test:success-summary />
 

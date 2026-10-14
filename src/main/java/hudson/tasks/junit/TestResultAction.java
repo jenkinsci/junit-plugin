@@ -24,6 +24,8 @@
 package hudson.tasks.junit;
 
 import com.thoughtworks.xstream.XStream;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Util;
@@ -56,6 +58,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.tasks.SimpleBuildStep;
 import jenkins.util.SystemProperties;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.StaplerProxy;
 
 /**
@@ -337,6 +341,50 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
     @Override
     public Object getTarget() {
         return getResult();
+    }
+
+    /**
+     * A message describing tests that are still running, for results that are shown while tests run.
+     *
+     * @return {@code null} for recorded results
+     */
+    @Restricted(NoExternalUse.class)
+    @CheckForNull
+    public String getLiveStatus() {
+        return null;
+    }
+
+    /**
+     * Names of tests that are still running, for results that are shown while tests run.
+     */
+    @Restricted(NoExternalUse.class)
+    @NonNull
+    public List<String> getLiveRunningTests() {
+        return Collections.emptyList();
+    }
+
+    /**
+     * How often (in seconds) the results that are shown while tests run are refreshed.
+     */
+    @Restricted(NoExternalUse.class)
+    public int getLiveRefreshSeconds() {
+        return 5;
+    }
+
+    /**
+     * Changes whenever the results that are shown while tests run do, unlike when tests only start.
+     */
+    @Restricted(NoExternalUse.class)
+    public long getLiveResultsVersion() {
+        return 0;
+    }
+
+    /**
+     * How many tests are running besides those named by {@link #getLiveRunningTests}.
+     */
+    @Restricted(NoExternalUse.class)
+    public int getLiveMoreRunningTests() {
+        return 0;
     }
 
     public List<TestAction> getActions(TestObject object) {
