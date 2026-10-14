@@ -103,6 +103,37 @@ e.g. `add(int, int) > [1] 1, 2`. With `keepProperties`, report entries (`TestRep
 attachments are kept as test properties: report entries under their keys, tags as `tags` and attachments as
 `attachment.1`, `attachment.2` and so on. A report entry whose key is one of those is kept as `data.<key>`.
 
+#### Streaming test results
+
+With JUnit Platform 6.1 or later, tests can stream their results to Jenkins while they run, without writing report
+files, using the `withOpenTestReporting` step:
+
+```groovy
+withOpenTestReporting {
+    sh 'mvn -B test'
+}
+```
+
+* When the block ends (whether or not it succeeded), the results are recorded as if by `junit`, which accepts the same
+  options (except the report pattern) and returns the same summary. Unlike `junit`, properties are kept by default; use
+  `keepProperties: false` to turn that off.
+* If a test JVM crashes or is killed, the results received so far are kept and the tests that were running are
+  reported as failures.
+
+The step listens on a socket on the loopback interface of the agent, so the tests must run in the same network
+namespace as the agent process: being on the same machine is not enough when they run in a separate container, such as
+with `docker.image(…).inside` without `--network host`.
+`org.junit.platform:junit-platform-reporting` must be on the test runtime classpath.
+By default, the JUnit configuration parameters that turn streaming on are added to the `JAVA_TOOL_OPTIONS` environment
+variable, so no change to the build is needed. To configure it yourself instead, use `javaToolOptions: false` and pass
+the port from the `JUNIT_OTR_SOCKET_PORT` environment variable:
+
+```groovy
+withOpenTestReporting(javaToolOptions: false) {
+    sh 'mvn -B test -Djunit.platform.reporting.open.xml.enabled=true -Djunit.platform.reporting.open.xml.socket=$JUNIT_OTR_SOCKET_PORT'
+}
+```
+
 ## Contributing
 
 Refer to our [contribution guidelines](https://github.com/jenkinsci/.github/blob/master/CONTRIBUTING.md)
