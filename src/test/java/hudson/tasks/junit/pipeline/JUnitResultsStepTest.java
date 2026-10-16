@@ -31,6 +31,7 @@ import java.util.List;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.Description;
+import org.htmlunit.html.HtmlPage;
 import org.jenkinsci.plugins.workflow.actions.LabelAction;
 import org.jenkinsci.plugins.workflow.actions.ThreadNameAction;
 import org.jenkinsci.plugins.workflow.actions.WarningAction;
@@ -424,6 +425,12 @@ class JUnitResultsStepTest {
                 }
             }
         }
+
+        // The Test Results page must show the stage-ancestry-prefixed display name for each failed test,
+        // not just the bare JUnit test name, so a stage like "first" stays visible when triaging failures.
+        HtmlPage reportPage = rule.createWebClient().getPage(thirdRun, "testReport");
+        assertNotNull(reportPage.getFirstByXPath(
+                "//a[contains(@class,'jp-table-row') and contains(text(),'first / testGetVendorFirmKeyForVendorRep')]"));
     }
 
     @Issue("JENKINS-48178")
