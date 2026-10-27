@@ -429,8 +429,9 @@ class JUnitResultsStepTest {
         // The Test Results page must show the stage-ancestry-prefixed display name for each failed test,
         // not just the bare JUnit test name, so a stage like "first" stays visible when triaging failures.
         HtmlPage reportPage = rule.createWebClient().getPage(thirdRun, "testReport");
-        assertNotNull(reportPage.getFirstByXPath(
-                "//a[contains(@class,'jp-table-row') and contains(text(),'first / testGetVendorFirmKeyForVendorRep')]"));
+        assertNotNull(
+                reportPage.getFirstByXPath(
+                        "//a[contains(@class,'jp-table-row') and contains(text(),'first / testGetVendorFirmKeyForVendorRep')]"));
     }
 
     @Issue("JENKINS-48178")
