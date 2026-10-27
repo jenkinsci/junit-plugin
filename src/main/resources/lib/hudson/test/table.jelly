@@ -67,7 +67,7 @@ THE SOFTWARE.
                             <div class="jp-table-row">
                                 <l:icon src="${f.iconFileName}" />
 
-                                ${f.name}
+                                ${f.displayName}
 
                                 <j:if test="${it.class.simpleName eq 'TestResult'}">
                                     <span class="jenkins-!-text-color-secondary jenkins-!-margin-left-2" style="font-family: var(--font-family-mono)">
@@ -82,7 +82,7 @@ THE SOFTWARE.
                             <a id="test-${id}-showlink" class="jp-table-row" href="${url}">
                                 <l:icon src="${f.iconFileName}" />
 
-                                ${f.name}
+                                ${f.displayName}
 
                                 <j:if test="${it.class.simpleName eq 'TestResult'}">
                                     <span class="jenkins-!-text-color-secondary jenkins-!-margin-left-2" style="font-family: var(--font-family-mono)">
