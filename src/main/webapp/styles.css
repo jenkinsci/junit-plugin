@@ -89,6 +89,19 @@ a.jp-pill, button.jp-pill {
   }
 }
 
+/* Keep the per-row link to the test page subdued until the row is interacted with */
+.jp-test-link {
+  color: var(--text-color-secondary) !important;
+  opacity: 0.45;
+  transition: opacity var(--standard-transition), color var(--standard-transition);
+}
+
+tr:hover .jp-test-link,
+tr:focus-within .jp-test-link {
+  color: var(--text-color) !important;
+  opacity: 1;
+}
+
 /* Custom table row */
 a.jp-table-row {
   cursor: pointer;
