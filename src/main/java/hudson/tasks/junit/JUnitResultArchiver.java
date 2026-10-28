@@ -63,6 +63,7 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.verb.POST;
 
 /**
  * Generates HTML report from JUnit test result XML files.
@@ -547,13 +548,15 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
         }
 
         /**
-         * Performs on-the-fly validation on the file mask wildcard.
+         * Validates the file mask wildcard on demand.
+         * Not done automatically, as scanning a large workspace can exhaust agent memory.
          * @param project Project.
-         * @param value File mask to validate.
+         * @param testResults File mask to validate.
          *
          * @return the validation result.
          * @throws IOException if an error occurs.
          */
+        @POST
         public FormValidation doValidateTestResults(
                 @AncestorInPath AbstractProject project, @QueryParameter("testResults") String testResults)
                 throws IOException {

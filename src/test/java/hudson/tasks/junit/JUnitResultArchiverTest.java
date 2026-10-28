@@ -62,6 +62,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
@@ -71,6 +72,9 @@ import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import org.apache.commons.io.FileUtils;
+import org.htmlunit.HttpMethod;
+import org.htmlunit.WebRequest;
+import org.htmlunit.WebResponse;
 import org.htmlunit.html.HtmlForm;
 import org.htmlunit.html.HtmlPage;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
@@ -123,6 +127,24 @@ class JUnitResultArchiverTest {
         wc.getPage(
                 build,
                 "testReport/hudson.security/HudsonPrivateSecurityRealmTest/testDataCompatibilityWith1_282/"); // method
+    }
+
+    @Issue("728")
+    @Test
+    void validateTestResultsRequiresPost() throws Exception {
+        archiver.setAllowEmptyResults(true);
+        j.buildAndAssertSuccess(project);
+        JenkinsRule.WebClient wc = j.createWebClient().withThrowExceptionOnFailingStatusCode(false);
+        String url = project.getUrl() + "descriptorByName/" + JUnitResultArchiver.class.getName()
+                + "/validateTestResults?testResults=nonexistent.xml";
+
+        WebResponse get = wc.goTo(url, null).getWebResponse();
+        assertEquals(404, get.getStatusCode());
+
+        WebRequest post = new WebRequest(new URL(j.getURL(), url), HttpMethod.POST);
+        WebResponse response = wc.getPage(wc.addCrumb(post)).getWebResponse();
+        assertEquals(200, response.getStatusCode());
+        assertThat(response.getContentAsString(), containsString("nonexistent.xml"));
     }
 
     @LocalData("All")
