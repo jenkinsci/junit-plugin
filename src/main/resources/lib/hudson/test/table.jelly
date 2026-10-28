@@ -37,12 +37,19 @@ THE SOFTWARE.
         <st:attribute name="id" use="optional">
             Optional ID for the table.
         </st:attribute>
+        <st:attribute name="showClassName" use="optional">
+            Optional flag controlling whether each row shows its test class name.
+            Defaults to true; pass false when the table is already scoped to a single class
+            (e.g. the per-class "All Tests" table) so the class name isn't repeated on every row.
+        </st:attribute>
     </st:documentation>
 
     <st:once>
         <link rel="stylesheet" href="${resURL}/plugin/junit/styles.css" defer="true" />
         <st:adjunct includes="lib.hudson.test.js.failureSummary" />
     </st:once>
+
+    <j:set var="showClassName" value="${attrs.showClassName == null ? true : attrs.showClassName}" />
 
     <table class="jenkins-table sortable" id="${attrs.id}">
         <thead>
@@ -57,8 +64,8 @@ THE SOFTWARE.
             </tr>
         </thead>
         <j:forEach var="f" items="${attrs.items}" varStatus="i">
-            <tr data-type="test-row" data="${f.className}.${f.name}">
-                <td>
+            <tr data-type="test-row">
+                <td data="${f.className}.${f.name}">
                     <j:set var="url" value="${attrs.baseUrl}${f.getRelativePathFrom(attrs.relativeParent ?: it)}" />
                     <j:set var="id" value="${h.htmlAttributeEscape(url)}" />
 
@@ -67,7 +74,13 @@ THE SOFTWARE.
                             <div class="jp-table-row">
                                 <l:icon src="${f.iconFileName}" />
 
-                                ${f.className}.${f.name}
+                                ${f.displayName}
+
+                                <j:if test="${showClassName}">
+                                    <span class="jenkins-!-text-color-secondary jenkins-!-margin-left-2" style="font-family: var(--font-family-mono)">
+                                        <st:out value="${f.className}" />
+                                    </span>
+                                </j:if>
 
                                 <t:condition-tag test="${f}" clazz="jenkins-!-margin-left-2 jenkins-mobile-hide" />
                             </div>
@@ -76,7 +89,13 @@ THE SOFTWARE.
                             <a id="test-${id}-showlink" class="jp-table-row" href="${url}">
                                 <l:icon src="${f.iconFileName}" />
 
-                                ${f.className}.${f.name}
+                                ${f.displayName}
+
+                                <j:if test="${showClassName}">
+                                    <span class="jenkins-!-text-color-secondary jenkins-!-margin-left-2" style="font-family: var(--font-family-mono)">
+                                        <st:out value="${f.className}" />
+                                    </span>
+                                </j:if>
 
                                 <t:condition-tag test="${f}" clazz="jenkins-!-margin-left-2 jenkins-mobile-hide" />
 
@@ -105,8 +124,8 @@ THE SOFTWARE.
                 </j:forEach>
                 <td class="jenkins-table__cell--tight jenkins-mobile-hide">
                     <div class="jenkins-table__cell__button-wrapper">
-                        <a href="${url}" class="jenkins-button jenkins-button--tertiary" tooltip="Open in new tab" target="_blank">
-                            <l:icon src="symbol-external" class="icon-sm" />
+                        <a href="${url}" class="jenkins-button jenkins-button--tertiary jp-test-link" tooltip="${%View test result}">
+                            <l:icon src="symbol-details" class="icon-sm" />
                         </a>
                     </div>
                 </td>

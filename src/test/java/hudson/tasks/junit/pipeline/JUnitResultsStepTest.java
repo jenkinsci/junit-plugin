@@ -31,6 +31,7 @@ import java.util.List;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.Description;
+import org.htmlunit.html.HtmlPage;
 import org.jenkinsci.plugins.workflow.actions.LabelAction;
 import org.jenkinsci.plugins.workflow.actions.ThreadNameAction;
 import org.jenkinsci.plugins.workflow.actions.WarningAction;
@@ -83,6 +84,10 @@ class JUnitResultsStepTest {
         st.assertRoundTrip(
                 step,
                 "junit allowEmptyResults: true, healthScaleFactor: 2.0, skipMarkingBuildUnstable: true, testDataPublishers: [[$class: 'MockTestDataPublisher', name: 'testing']], testResults: '**/target/surefire-reports/TEST-*.xml'");
+        step.setSkipMarkingStageUnstable(true);
+        st.assertRoundTrip(
+                step,
+                "junit allowEmptyResults: true, healthScaleFactor: 2.0, skipMarkingBuildUnstable: true, skipMarkingStageUnstable: true, testDataPublishers: [[$class: 'MockTestDataPublisher', name: 'testing']], testResults: '**/target/surefire-reports/TEST-*.xml'");
     }
 
     @Issue("JENKINS-48250")
@@ -420,6 +425,13 @@ class JUnitResultsStepTest {
                 }
             }
         }
+
+        // The Test Results page must show the stage-ancestry-prefixed display name for each failed test,
+        // not just the bare JUnit test name, so a stage like "first" stays visible when triaging failures.
+        HtmlPage reportPage = rule.createWebClient().getPage(thirdRun, "testReport");
+        assertNotNull(
+                reportPage.getFirstByXPath(
+                        "//a[contains(@class,'jp-table-row') and contains(text(),'first / testGetVendorFirmKeyForVendorRep')]"));
     }
 
     @Issue("JENKINS-48178")
@@ -460,6 +472,31 @@ class JUnitResultsStepTest {
         WorkflowRun r = rule.waitForCompletion(j.scheduleBuild2(0).waitForStart());
         rule.assertBuildStatus(Result.SUCCESS, r);
         assertStageResults(r, 1, 8, 3, "first");
+    }
+
+    @Test
+    void skipStageUnstable() throws Exception {
+        WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "skipStageUnstable");
+        j.setDefinition(new CpsFlowDefinition(
+                "stage('first') {\n" + "  node {\n"
+                        + "    touch 'test-result.xml'\n"
+                        + "    def results = junit(skipMarkingStageUnstable: true, testResults: '*.xml')\n"
+                        + "    assert results.totalCount == 8\n"
+                        + "    assert currentBuild.result == null\n"
+                        + "  }\n"
+                        + "}\n",
+                true));
+        copyToWorkspace(
+                j, JUnitResultsStepTest.class.getResource("junit-report-testTrends-first-2.xml"), "test-result.xml");
+        WorkflowRun r = rule.waitForCompletion(j.scheduleBuild2(0).waitForStart());
+        rule.assertBuildStatus(Result.SUCCESS, r);
+
+        // Neither the build nor the stage should be marked unstable: the junit step attaches no WarningAction.
+        FlowExecution execution = r.getExecution();
+        BlockStartNode stage =
+                (BlockStartNode) new DepthFirstScanner().findFirstMatch(execution, stageForName("first"));
+        assertNotNull(stage);
+        assertThat(findJUnitSteps(stage), CoreMatchers.not(CoreMatchers.hasItem(hasWarningAction())));
     }
 
     @Test

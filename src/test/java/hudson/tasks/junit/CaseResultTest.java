@@ -216,6 +216,12 @@ class CaseResultTest {
         assertEquals(
                 cr.annotate(cr.getErrorStackTrace()).replaceAll("&lt;", "<").replace("\r\n", "\n"),
                 errorStackTrace.getTextContent());
+
+        // Only Java stack traces get stack trace highlighting
+        assertEquals("", ((HtmlElement) errorMsg.getFirstByXPath(".//code")).getAttribute("class"));
+        assertEquals(
+                "language-javastacktrace",
+                ((HtmlElement) errorStackTrace.getFirstByXPath(".//code")).getAttribute("class"));
     }
 
     /**
@@ -357,6 +363,40 @@ class CaseResultTest {
             CaseResult cr2 = tr2.getFailedTests().get(0);
             assertEquals(2, cr2.getAge()); // At second execution, failing test age should be 2
         }
+    }
+
+    @Test
+    void testRegressionAndFixedCounts() throws Exception {
+        FreeStyleProject p = rule.createFreeStyleProject();
+        p.getBuildersList().add(new TouchBuilder());
+        p.getPublishersList().add(new JUnitResultArchiver("x.xml"));
+        FilePath report = rule.jenkins.getWorkspaceFor(p).child("x.xml");
+
+        report.write(
+                "<testsuite>"
+                        + "<testcase classname='A' name='fixed'><failure/></testcase>"
+                        + "<testcase classname='A' name='regressed'/>"
+                        + "<testcase classname='A' name='stillFailing'><failure/></testcase>"
+                        + "</testsuite>",
+                null);
+        TestResult tr1 = rule.assertBuildStatus(Result.UNSTABLE, p.scheduleBuild2(0))
+                .getAction(TestResultAction.class)
+                .getResult();
+        assertEquals(0, tr1.getRegressionCount());
+        assertEquals(0, tr1.getFixedCount());
+
+        report.write(
+                "<testsuite>"
+                        + "<testcase classname='A' name='fixed'/>"
+                        + "<testcase classname='A' name='regressed'><failure/></testcase>"
+                        + "<testcase classname='A' name='stillFailing'><failure/></testcase>"
+                        + "</testsuite>",
+                null);
+        TestResult tr2 = rule.assertBuildStatus(Result.UNSTABLE, p.scheduleBuild2(0))
+                .getAction(TestResultAction.class)
+                .getResult();
+        assertEquals(1, tr2.getRegressionCount());
+        assertEquals(1, tr2.getFixedCount());
     }
 
     private FreeStyleBuild configureTestBuild(String projectName) throws Exception {

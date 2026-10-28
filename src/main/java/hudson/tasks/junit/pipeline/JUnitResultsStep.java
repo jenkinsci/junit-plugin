@@ -70,7 +70,14 @@ public class JUnitResultsStep extends Step implements JUnitTask {
      */
     private boolean skipMarkingBuildUnstable;
 
+    /**
+     * If true, failing tests will not mark the stage (pipeline node) or the overall build as unstable.
+     */
+    private boolean skipMarkingStageUnstable;
+
     private boolean skipOldReports;
+
+    private boolean archiveAttachments;
 
     @DataBoundConstructor
     public JUnitResultsStep(String testResults) {
@@ -227,6 +234,15 @@ public class JUnitResultsStep extends Step implements JUnitTask {
         this.skipMarkingBuildUnstable = skipMarkingBuildUnstable;
     }
 
+    public boolean isSkipMarkingStageUnstable() {
+        return skipMarkingStageUnstable;
+    }
+
+    @DataBoundSetter
+    public void setSkipMarkingStageUnstable(boolean skipMarkingStageUnstable) {
+        this.skipMarkingStageUnstable = skipMarkingStageUnstable;
+    }
+
     @Override
     public boolean isSkipOldReports() {
         return this.skipOldReports;
@@ -235,6 +251,16 @@ public class JUnitResultsStep extends Step implements JUnitTask {
     @DataBoundSetter
     public void setSkipOldReports(boolean skipOldReports) {
         this.skipOldReports = skipOldReports;
+    }
+
+    @Override
+    public boolean isArchiveAttachments() {
+        return archiveAttachments;
+    }
+
+    @DataBoundSetter
+    public final void setArchiveAttachments(boolean archiveAttachments) {
+        this.archiveAttachments = archiveAttachments;
     }
 
     @Override

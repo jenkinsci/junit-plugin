@@ -376,17 +376,17 @@ public class TestResultTest {
         PackageResult pkg = testResult.byPackage("(root)");
         assertEquals(1704281235000L, pkg.getStartTime());
 
-        ClassResult class1 = pkg.getClassResult("contents adjust properly when resizing test");
+        ClassResult class1 = pkg.getClassResult("contents_adjust_properly_when_resizing_test");
         CaseResult case1 = class1.getCaseResult("testResize");
         assertEquals(1704288431210L, class1.getStartTime());
         assertEquals(1704288431210L, case1.getStartTime());
 
-        ClassResult class2 = pkg.getClassResult("date reflects offset test");
+        ClassResult class2 = pkg.getClassResult("date_reflects_offset_test");
         CaseResult case2 = class2.getCaseResult("testDate");
         assertEquals(-1, class2.getStartTime());
         assertEquals(-1, case2.getStartTime());
 
-        ClassResult class3 = pkg.getClassResult("get test");
+        ClassResult class3 = pkg.getClassResult("get_test");
         CaseResult case3 = class3.getCaseResult("testGet");
         assertEquals(-1, class3.getStartTime());
         assertEquals(-1, case3.getStartTime());
@@ -407,22 +407,22 @@ public class TestResultTest {
         assertEquals(1704284831000L, case7.getStartTime());
         assertEquals(1704284838000L, case8.getStartTime());
 
-        ClassResult class6 = pkg.getClassResult("pages load in under ten seconds under ideal conditions test");
+        ClassResult class6 = pkg.getClassResult("pages_load_in_under_ten_seconds_under_ideal_conditions_test");
         CaseResult case9 = class6.getCaseResult("testExperience");
         assertEquals(1704284864000L, class6.getStartTime());
         assertEquals(1704284864000L, case9.getStartTime());
 
-        ClassResult class7 = pkg.getClassResult("popups triggered when hovering test");
+        ClassResult class7 = pkg.getClassResult("popups_triggered_when_hovering_test");
         CaseResult case10 = class7.getCaseResult("testPopup");
         assertEquals(-1, class7.getStartTime());
         assertEquals(-1, case10.getStartTime());
 
-        ClassResult class8 = pkg.getClassResult("proper images displayed when items added");
+        ClassResult class8 = pkg.getClassResult("proper_images_displayed_when_items_added");
         CaseResult case11 = class8.getCaseResult("testShop");
         assertEquals(1704281235000L, class8.getStartTime());
         assertEquals(1704281235000L, case11.getStartTime());
 
-        ClassResult class9 = pkg.getClassResult("time offset is correct test");
+        ClassResult class9 = pkg.getClassResult("time_offset_is_correct_test");
         CaseResult case12 = class9.getCaseResult("testOffset");
         assertEquals(-1, class9.getStartTime());
         assertEquals(-1, case12.getStartTime());

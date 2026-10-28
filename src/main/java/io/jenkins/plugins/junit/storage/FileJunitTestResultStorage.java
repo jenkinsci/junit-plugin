@@ -8,7 +8,6 @@ import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.Beta;
 import org.kohsuke.stapler.DataBoundConstructor;
 
-@Extension
 @Restricted(Beta.class)
 public class FileJunitTestResultStorage extends JunitTestResultStorage {
 

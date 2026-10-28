@@ -44,7 +44,7 @@ THE SOFTWARE.
                             </j:when>
                             <j:otherwise>
                                 <pre class="jdl-component-code__code">
-                                    <code class="language-javastacktrace">
+                                    <code class="${it.isJavaStackTrace(value) ? 'language-javastacktrace' : null}">
                                         ${value}
                                     </code>
                                 </pre>
@@ -58,7 +58,7 @@ THE SOFTWARE.
 
     <local:item id="${id}" name="error" title="${%Error Details}" value="${it.errorDetails}" />
     <local:item id="${id}" name="skipmessage" title="${%Skip Message}" value="${it.skippedMessage}" />
-    <j:forEach var="p" items="${it.properties}">
+    <j:forEach var="p" items="${it.displayedProperties}">
         <local:item id="${id}" name="${p.key}" title="${p.key}" value="${p.value}" link="${it.isUrlValue(p.value)}" />
     </j:forEach>
     <local:item id="${id}" name="stacktrace" title="${%Stack Trace}" value="${it.errorStackTrace}" />

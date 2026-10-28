@@ -27,6 +27,7 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.model.Run;
+import hudson.tasks.test.AbstractTestResultAction;
 import hudson.tasks.test.TestResult;
 import hudson.util.TextFile;
 import io.jenkins.plugins.junit.storage.FileJunitTestResultStorage;
@@ -41,9 +42,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import org.apache.commons.io.FileUtils;
@@ -52,7 +55,6 @@ import org.jvnet.localizer.Localizable;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.Beta;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
-import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.export.Exported;
 
 /**
@@ -159,6 +161,28 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
             String stdout,
             String stderr,
             String stacktrace) {
+        this(parent, className, testName, errorDetails, skippedMessage, duration, stdout, stderr, stacktrace, null);
+    }
+
+    /**
+     * Used by {@code JunitTestResultStorage} implementations to reconstruct a {@link CaseResult}
+     * from storage, including any test case properties that were retained at publish time (see
+     * {@link JUnitParser#JUnitParser(boolean, boolean, boolean, boolean)}'s {@code keepProperties}).
+     *
+     * @since TODO
+     */
+    @Restricted(Beta.class)
+    public CaseResult(
+            SuiteResult parent,
+            String className,
+            String testName,
+            String errorDetails,
+            String skippedMessage,
+            float duration,
+            String stdout,
+            String stderr,
+            String stacktrace,
+            @CheckForNull Map<String, String> properties) {
         this.className = className;
         this.testName = testName;
         this.errorStackTrace = stacktrace;
@@ -172,7 +196,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         this.isProperFailure = false;
         this.skipped = skippedMessage != null;
         this.skippedMessage = skippedMessage;
-        this.properties = Collections.emptyMap();
+        this.properties = properties == null ? Collections.emptyMap() : properties;
         this.keepTestNames = false;
     }
 
@@ -524,6 +548,35 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
                 + cleanupTruncated(stdio.subSequence(len - halfMaxSize, len));
     }
 
+    /**
+     * Flavor of {@link #possiblyTrimStdio(Collection, StdioRetention, String)} for a single test whose failure state is
+     * already known.
+     */
+    static String possiblyTrimStdio(boolean failing, StdioRetention stdioRetention, String stdio) {
+        if (stdio == null) {
+            return null;
+        }
+        if (stdioRetention == StdioRetention.ALL || (stdioRetention == StdioRetention.FAILED && failing)) {
+            return stdio;
+        }
+        int halfMaxSize = failing ? HALF_MAX_FAILING_SIZE : HALF_MAX_SIZE;
+        int len = stdio.length();
+        int middle = len - halfMaxSize * 2;
+        if (middle <= 0) {
+            return stdio;
+        }
+        return cleanupTruncated(stdio.subSequence(0, halfMaxSize)) + "\n...[truncated " + middle + " chars]...\n"
+                + cleanupTruncated(stdio.subSequence(len - halfMaxSize, len));
+    }
+
+    /**
+     * Marks a failed test as a "proper" failure (an assertion failure, {@code <failure>} in JUnit XML)
+     * rather than an error.
+     */
+    void setProperFailure(boolean properFailure) {
+        this.isProperFailure = properFailure;
+    }
+
     static String fixNULs(String stdio) { // JENKINS-71139
         return stdio == null ? null : stdio.replace("\u0000", "^@");
     }
@@ -531,7 +584,6 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     /**
      * Flavor of {@link #possiblyTrimStdio(Collection, StdioRetention, String)} that doesn't try to read the whole thing into memory.
      */
-    @SuppressFBWarnings(value = "DM_DEFAULT_ENCODING", justification = "Expected behavior")
     static String possiblyTrimStdio(Collection<CaseResult> results, StdioRetention stdioRetention, File stdio)
             throws IOException {
         long len = stdio.length();
@@ -646,8 +698,9 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         if (!keepTestNames && !getEnclosingFlowNodeNames().isEmpty()) {
             Run<?, ?> r = getRun();
             if (r != null) {
-                TestResultAction action = r.getAction(TestResultAction.class);
-                if (action != null && action.getResult().hasMultipleBlocks()) {
+                // through the enclosing results, as results shown while tests run are not attached to the run
+                AbstractTestResultAction<?> a = getTestResultAction();
+                if (a instanceof TestResultAction action && action.getResult().hasMultipleBlocks()) {
                     List<String> enclosingFlowNodeNames = getEnclosingFlowNodeNames();
                     Collections.reverse(enclosingFlowNodeNames);
                     return String.join(" / ", enclosingFlowNodeNames) + " / " + rawName;
@@ -802,6 +855,14 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
 
     private void recomputeFailedSinceIfNeeded() {
         if (failedSince == 0 && getFailCount() == 1) {
+            JunitTestResultStorage storage = JunitTestResultStorage.find();
+            if (!(storage instanceof FileJunitTestResultStorage)) {
+                Run<?, ?> run = getFailedSinceRun();
+                if (run != null) {
+                    this.failedSince = run.getNumber();
+                    return;
+                }
+            }
             CaseResult prev = getPreviousResult();
             if (prev != null && prev.isFailed()) {
                 this.failedSince = prev.getFailedSince();
@@ -818,7 +879,10 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     public Run<?, ?> getFailedSinceRun() {
         JunitTestResultStorage storage = JunitTestResultStorage.find();
         if (!(storage instanceof FileJunitTestResultStorage)) {
-            Run<?, ?> run = Stapler.getCurrentRequest2().findAncestorObject(Run.class);
+            Run<?, ?> run = getRun();
+            if (run == null) {
+                return null;
+            }
             TestResultImpl pluggableStorage = storage.load(run.getParent().getFullName(), run.getNumber());
             return pluggableStorage.getFailedSinceRun(this);
         }
@@ -898,7 +962,12 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
             return null;
         }
 
-        TestResult previousResult = parent.getParent();
+        hudson.tasks.junit.TestResult currentBuildResult = parent.getParent();
+        if (currentBuildResult != null && currentBuildResult.supportsPreviousCaseResultViaStorage()) {
+            return currentBuildResult.getPreviousCaseResultViaStorage(this).orElse(null);
+        }
+
+        TestResult previousResult = currentBuildResult;
         int n = 0;
         while (previousResult != null && n < PREVIOUS_TEST_RESULT_BACKTRACK_BUILDS_MAX) {
             previousResult = previousResult.getPreviousResult();
@@ -991,6 +1060,33 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         return properties;
     }
 
+    void setKeepTestNames(boolean keepTestNames) {
+        this.keepTestNames = keepTestNames;
+    }
+
+    /**
+     * The properties shown by {@code test-output.jelly}: those not already shown otherwise, like archived attachments.
+     */
+    @Restricted(NoExternalUse.class)
+    public Map<String, String> getDisplayedProperties() {
+        List<TestAttachments.AttachmentsAction> attachments = new ArrayList<>();
+        for (TestAction action : getTestActions()) {
+            if (action instanceof TestAttachments.AttachmentsAction a) {
+                attachments.add(a);
+            }
+        }
+        if (attachments.isEmpty()) {
+            return properties;
+        }
+        Map<String, String> displayed = new LinkedHashMap<>();
+        for (Map.Entry<String, String> p : properties.entrySet()) {
+            if (attachments.stream().noneMatch(a -> a.shows(p.getKey(), p.getValue()))) {
+                displayed.put(p.getKey(), p.getValue());
+            }
+        }
+        return displayed;
+    }
+
     /**
      * Used by {@code test-output.jelly} to decide whether a property value should be rendered as a hyperlink.
      */
@@ -1005,6 +1101,16 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         } catch (URISyntaxException x) {
             return false;
         }
+    }
+
+    private static final Pattern JAVA_STACK_FRAME = Pattern.compile("^[ \\t]+at \\S+\\(", Pattern.MULTILINE);
+
+    /**
+     * Used by {@code test-output.jelly} to decide whether a value should be highlighted as a Java stack trace.
+     */
+    @Restricted(NoExternalUse.class)
+    public boolean isJavaStackTrace(String value) {
+        return value != null && JAVA_STACK_FRAME.matcher(value).find();
     }
 
     /**

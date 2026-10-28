@@ -184,7 +184,7 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
 
     @Override
     public String getIconFileName() {
-        return "symbol-flask-outline plugin-ionicons-api";
+        return "symbol-checkbox-outline plugin-ionicons-api";
     }
 
     @Override
@@ -250,6 +250,14 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
      * return <code>this</code>.
      */
     public abstract Object getResult();
+
+    /**
+     * The type of the actions holding the results of other builds to compare with: normally this one's.
+     */
+    @Restricted(NoExternalUse.class)
+    public Class<? extends AbstractTestResultAction> getRecordedType() {
+        return getClass();
+    }
 
     /**
      * Gets the test result of the previous build, if it's recorded, or null.

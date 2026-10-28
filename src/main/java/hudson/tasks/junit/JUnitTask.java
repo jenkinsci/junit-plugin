@@ -29,4 +29,11 @@ public interface JUnitTask {
     String getChecksName();
 
     boolean isSkipOldReports();
+
+    /**
+     * Whether to archive the files attached to tests in Open Test Reporting reports as build artifacts.
+     */
+    default boolean isArchiveAttachments() {
+        return false;
+    }
 }

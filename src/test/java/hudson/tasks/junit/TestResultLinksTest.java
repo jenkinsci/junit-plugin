@@ -36,6 +36,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.concurrent.TimeUnit;
+import jenkins.model.Jenkins;
 import org.htmlunit.Page;
 import org.htmlunit.html.HtmlAnchor;
 import org.htmlunit.html.HtmlPage;
@@ -54,6 +55,11 @@ import org.jvnet.hudson.test.recipes.LocalData;
  */
 @WithJenkins
 class TestResultLinksTest {
+
+    static {
+        // TODO @LocalData based on OLD_DEFAULT_WORKSPACES_DIR
+        System.setProperty(Jenkins.class.getName() + ".workspacesDir", "${ITEM_ROOTDIR}/workspace");
+    }
 
     private FreeStyleProject project;
     private JUnitResultArchiver archiver;

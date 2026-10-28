@@ -8,7 +8,6 @@ import net.sf.json.JSONObject;
 import org.jenkinsci.Symbol;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.Beta;
-import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.StaplerRequest2;
 
@@ -19,7 +18,6 @@ public class JunitTestResultStorageConfiguration extends GlobalConfiguration {
 
     private JunitTestResultStorage storage = new FileJunitTestResultStorage();
 
-    @DataBoundConstructor
     public JunitTestResultStorageConfiguration() {
         load();
     }

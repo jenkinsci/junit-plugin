@@ -95,12 +95,17 @@ THE SOFTWARE.
             <l:icon src="symbol-bar-chart-outline plugin-ionicons-api" />
           </a>
 
-          <t:editDescriptionButton permission="${it.run.UPDATE}" compact="true" />
+          <!-- descriptions of live results would not be kept: they are replaced by the recorded results -->
+          <j:if test="${it.parentAction.liveStatus == null}">
+            <t:editDescriptionButton permission="${it.run.UPDATE}" compact="true" />
+          </j:if>
         </div>
       </div>
     </div>
 
-    <t:editableDescription permission="${it.run.UPDATE}" hideButton="true" />
+    <j:if test="${it.parentAction.liveStatus == null}">
+      <t:editableDescription permission="${it.run.UPDATE}" hideButton="true" />
+    </j:if>
 
     <table>
       <j:forEach var="action" items="${it.testActions}">

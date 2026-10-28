@@ -50,6 +50,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -470,6 +471,29 @@ public final class TestResult extends MetaTabulatedResult {
         return super.getPreviousResult();
     }
 
+    /**
+     * Used by {@link CaseResult#getPreviousResult()} to decide whether to try the pluggable storage's
+     * fast path (see {@link io.jenkins.plugins.junit.storage.TestResultImpl#getPreviousCaseResult(CaseResult)})
+     * instead of falling back to its own build-by-build walk. Returns {@code false} when this build's
+     * results are not backed by pluggable storage, or when the storage has no fast path.
+     */
+    boolean supportsPreviousCaseResultViaStorage() {
+        return impl != null && impl.supportsPreviousCaseResultLookup();
+    }
+
+    /**
+     * Used by {@link CaseResult#getPreviousResult()} to resolve the previous result via the pluggable
+     * storage's fast path. Only call this when {@link #supportsPreviousCaseResultViaStorage()} returns
+     * {@code true}.
+     */
+    Optional<CaseResult> getPreviousCaseResultViaStorage(CaseResult current) {
+        if (impl == null) {
+            throw new IllegalStateException(
+                    "getPreviousCaseResultViaStorage called without first checking supportsPreviousCaseResultViaStorage");
+        }
+        return impl.getPreviousCaseResult(current);
+    }
+
     @Deprecated
     public void parse(long filesTimestamp, Iterable<File> reportFiles) throws IOException {
         parse(filesTimestamp, null, reportFiles);
@@ -520,6 +544,28 @@ public final class TestResult extends MetaTabulatedResult {
         } else {
             parse(reportFile, pipelineTestDetails);
         }
+    }
+
+    /**
+     * Creates a result from suites that were already parsed, merging suites as parsing report files would.
+     * The suites are copied, so the given instances are left untouched.
+     */
+    @Restricted(NoExternalUse.class)
+    public static TestResult of(@NonNull Collection<SuiteResult> suites) {
+        TestResult result = new TestResult();
+        for (SuiteResult suite : suites) {
+            SuiteResult copy = new SuiteResult(suite);
+            // the copy constructors leave out start times
+            copy.setStartTime(suite.getStartTime());
+            List<CaseResult> cases = suite.getCases();
+            List<CaseResult> copies = copy.getCases();
+            for (int i = 0; i < cases.size() && i < copies.size(); i++) {
+                copies.get(i).setStartTime(cases.get(i).getStartTime());
+            }
+            result.add(copy);
+        }
+        result.tally();
+        return result;
     }
 
     private void add(SuiteResult sr) {
@@ -1036,6 +1082,11 @@ public final class TestResult extends MetaTabulatedResult {
     @Override
     public AbstractTestResultAction getParentAction() {
         return this.parentAction;
+    }
+
+    @Override
+    public AbstractTestResultAction getTestResultAction() {
+        return parentAction != null ? parentAction : super.getTestResultAction();
     }
 
     /**

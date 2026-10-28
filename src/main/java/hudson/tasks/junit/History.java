@@ -659,7 +659,18 @@ public class History {
                 }
                 List<HistoryTestResultSummary> historySummary = pluggableStorage.getHistorySummary(offset);
 
-                parseResult = new HistoryParseResult(historySummary, end - start + 1, start, end);
+                // Unlike the file-storage path below, storage already returns exactly the builds
+                // with test results for this page (no separate "parsed but no result" builds to
+                // distinguish), so both counts are simply how many rows came back.
+                parseResult = new HistoryParseResult(
+                        historySummary,
+                        end - start + 1,
+                        historySummary.size(),
+                        historySummary.size(),
+                        false,
+                        start,
+                        end,
+                        1);
             } else {
                 parseResult = getHistoryFromFileStorage(start, end, interval);
             }
