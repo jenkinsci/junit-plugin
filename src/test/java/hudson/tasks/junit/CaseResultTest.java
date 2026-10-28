@@ -216,6 +216,12 @@ class CaseResultTest {
         assertEquals(
                 cr.annotate(cr.getErrorStackTrace()).replaceAll("&lt;", "<").replace("\r\n", "\n"),
                 errorStackTrace.getTextContent());
+
+        // Only Java stack traces get stack trace highlighting
+        assertEquals("", ((HtmlElement) errorMsg.getFirstByXPath(".//code")).getAttribute("class"));
+        assertEquals(
+                "language-javastacktrace",
+                ((HtmlElement) errorStackTrace.getFirstByXPath(".//code")).getAttribute("class"));
     }
 
     /**
