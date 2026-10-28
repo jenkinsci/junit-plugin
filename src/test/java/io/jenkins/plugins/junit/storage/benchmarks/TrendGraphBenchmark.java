@@ -3,6 +3,7 @@ package io.jenkins.plugins.junit.storage.benchmarks;
 import hudson.model.queue.QueueTaskFuture;
 import hudson.tasks.test.TestResultProjectAction;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import jenkins.benchmark.jmh.JmhBenchmark;
 import jenkins.benchmark.jmh.JmhBenchmarkState;
@@ -15,29 +16,29 @@ import org.openjdk.jmh.annotations.Scope;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.infra.Blackhole;
 
-import static java.util.Objects.requireNonNull;
-
 @JmhBenchmark
 public class TrendGraphBenchmark {
+
     @State(Scope.Benchmark)
     public static class JenkinsState extends JmhBenchmarkState {
 
         WorkflowJob lastJob;
 
-        public static final String SIMPLE_TEST_RESULT = "node {\n" +
-            "  writeFile file: 'x.xml', text: '''<testsuite name='sweet' time='200.0'>" +
-            "<testcase classname='Klazz' name='test1' time='198.0'><error message='failure'/></testcase>" +
-            "<testcase classname='Klazz' name='test2' time='2.0'/>" +
-            "<testcase classname='other.Klazz' name='test3'><skipped message='Not actually run.'/></testcase>" +
-            "</testsuite>'''\n" +
-            "  def s = junit 'x.xml'\n" +
-            "  echo(/summary: fail=$s.failCount skip=$s.skipCount pass=$s.passCount total=$s.totalCount/)\n" +
-            "  writeFile file: 'x.xml', text: '''<testsuite name='supersweet'>" +
-            "<testcase classname='another.Klazz' name='test1'><error message='another failure'/></testcase>" +
-            "</testsuite>'''\n" +
-            "  s = junit 'x.xml'\n" +
-            "  echo(/next summary: fail=$s.failCount skip=$s.skipCount pass=$s.passCount total=$s.totalCount/)\n" +
-            "}";
+        public static final String SIMPLE_TEST_RESULT = """
+                        node {
+                          writeFile file: 'x.xml', text: '''<testsuite name='sweet' time='200.0'>
+                        <testcase classname='Klazz' name='test1' time='198.0'><error message='failure'/></testcase>
+                        <testcase classname='Klazz' name='test2' time='2.0'/>
+                        <testcase classname='other.Klazz' name='test3'><skipped message='Not actually run.'/></testcase>
+                        </testsuite>'''
+                          def s = junit 'x.xml'
+                          echo(/summary: fail=$s.failCount skip=$s.skipCount pass=$s.passCount total=$s.totalCount/)
+                          writeFile file: 'x.xml', text: '''<testsuite name='supersweet'>
+                        <testcase classname='another.Klazz' name='test1'><error message='another failure'/></testcase>
+                        </testsuite>'''
+                          s = junit 'x.xml'
+                          echo(/next summary: fail=$s.failCount skip=$s.skipCount pass=$s.passCount total=$s.totalCount/)
+                        }""";
 
         @Override
         public void setup() throws Exception {
@@ -46,19 +47,18 @@ public class TrendGraphBenchmark {
             createLotsOfRuns("b", 1000);
             createLotsOfRuns("c", 1000);
             createLotsOfRuns("d", 1000);
-            
+
             System.out.println("Next build number: " + lastJob.getNextBuildNumber());
         }
 
-        private void createLotsOfRuns(String jobName, int runCount) throws java.io.IOException, InterruptedException, ExecutionException {
+        private void createLotsOfRuns(String jobName, int runCount) throws Exception {
             Jenkins jenkins = Jenkins.get();
             lastJob = jenkins.createProject(WorkflowJob.class, jobName);
-            lastJob.setDefinition(new CpsFlowDefinition(
-                    SIMPLE_TEST_RESULT, true));
+            lastJob.setDefinition(new CpsFlowDefinition(SIMPLE_TEST_RESULT, true));
             List<QueueTaskFuture<WorkflowRun>> queueTaskFutures = new java.util.ArrayList<>(runCount);
             for (int i = 0; i < runCount; i++) {
                 QueueTaskFuture<WorkflowRun> e = lastJob.scheduleBuild2(0);
-                requireNonNull(e).waitForStart();
+                Objects.requireNonNull(e).waitForStart();
                 queueTaskFutures.add(e);
                 if (i % 10 == 0) {
                     Thread.sleep(100);
@@ -73,9 +73,8 @@ public class TrendGraphBenchmark {
                 }
             });
         }
-
     }
-    
+
     @Benchmark
     public void benchmark(JenkinsState cascState, Blackhole blackhole) {
         TestResultProjectAction action = cascState.lastJob.getAction(TestResultProjectAction.class);

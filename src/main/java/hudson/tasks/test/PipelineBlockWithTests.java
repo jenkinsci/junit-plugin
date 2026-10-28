@@ -1,6 +1,6 @@
 package hudson.tasks.test;
 
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Set;
@@ -9,37 +9,37 @@ import java.util.TreeSet;
 
 public class PipelineBlockWithTests implements Serializable {
     private final String blockId;
-    private final Map<String,PipelineBlockWithTests> childBlocks = new TreeMap<>();
+    private final Map<String, PipelineBlockWithTests> childBlocks = new TreeMap<>();
     private final Set<String> leafNodes = new TreeSet<>();
 
-    public PipelineBlockWithTests(@Nonnull String blockId) {
+    public PipelineBlockWithTests(@NonNull String blockId) {
         this.blockId = blockId;
     }
 
-    @Nonnull
+    @NonNull
     public String getBlockId() {
         return blockId;
     }
 
-    @Nonnull
-    public Map<String,PipelineBlockWithTests> getChildBlocks() {
+    @NonNull
+    public Map<String, PipelineBlockWithTests> getChildBlocks() {
         return childBlocks;
     }
 
-    @Nonnull
+    @NonNull
     public Set<String> getLeafNodes() {
         return leafNodes;
     }
 
-    public void addChildBlock(@Nonnull PipelineBlockWithTests child) {
+    public void addChildBlock(@NonNull PipelineBlockWithTests child) {
         childBlocks.put(child.getBlockId(), child);
     }
 
-    public void addLeafNode(@Nonnull String leafNode)  {
+    public void addLeafNode(@NonNull String leafNode) {
         leafNodes.add(leafNode);
     }
 
-    public void merge(@Nonnull PipelineBlockWithTests toMerge) {
+    public void merge(@NonNull PipelineBlockWithTests toMerge) {
         if (toMerge.getBlockId().equals(blockId)) {
             if (!this.equals(toMerge)) {
                 for (String childId : toMerge.getChildBlocks().keySet()) {
@@ -67,9 +67,9 @@ public class PipelineBlockWithTests implements Serializable {
         }
         PipelineBlockWithTests that = (PipelineBlockWithTests) o;
 
-        return that.getBlockId().equals(getBlockId()) &&
-                that.getChildBlocks().equals(getChildBlocks()) &&
-                that.getLeafNodes().equals(getLeafNodes());
+        return that.getBlockId().equals(getBlockId())
+                && that.getChildBlocks().equals(getChildBlocks())
+                && that.getLeafNodes().equals(getLeafNodes());
     }
 
     @Override
@@ -82,7 +82,7 @@ public class PipelineBlockWithTests implements Serializable {
         return result;
     }
 
-    @Nonnull
+    @NonNull
     public Set<String> nodesWithTests() {
         Set<String> nodes = new TreeSet<>();
 

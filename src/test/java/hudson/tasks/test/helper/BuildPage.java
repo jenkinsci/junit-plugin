@@ -1,10 +1,8 @@
 package hudson.tasks.test.helper;
 
-import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import org.xml.sax.SAXException;
-
 import java.io.IOException;
+import org.htmlunit.html.HtmlPage;
+import org.xml.sax.SAXException;
 
 public class BuildPage extends AbstractPage {
 
@@ -16,7 +14,6 @@ public class BuildPage extends AbstractPage {
     protected String getHrefFromTestUrl(String testUrl) {
         return testUrl + "/";
     }
-
 
     public TestResultLink getAggregatedTestReportLink() throws IOException, SAXException {
         return new TestResultLink(getTestReportAnchor(AGGREGATED_TEST_REPORT_URL));

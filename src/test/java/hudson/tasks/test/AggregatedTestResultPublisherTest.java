@@ -1,6 +1,8 @@
 package hudson.tasks.test;
 
-import com.google.common.collect.ImmutableList;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
+
 import hudson.Functions;
 import hudson.model.AbstractBuild;
 import hudson.model.FreeStyleBuild;
@@ -13,86 +15,96 @@ import hudson.tasks.Shell;
 import hudson.tasks.junit.JUnitResultArchiver;
 import hudson.tasks.test.helper.BuildPage;
 import hudson.tasks.test.helper.ProjectPage;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import hudson.tasks.test.helper.WebClientFactory;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
+import jenkins.model.Jenkins;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TouchBuilder;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.jvnet.hudson.test.recipes.LocalData;
 
-import java.util.List;
+@WithJenkins
+class AggregatedTestResultPublisherTest {
 
-import static org.hamcrest.Matchers.hasSize;
-import static org.junit.Assert.assertThat;
+    static {
+        // TODO @LocalData based on OLD_DEFAULT_WORKSPACES_DIR
+        System.setProperty(Jenkins.class.getName() + ".workspacesDir", "${ITEM_ROOTDIR}/workspace");
+    }
 
-public class AggregatedTestResultPublisherTest {
     public static final String TEST_PROJECT_NAME = "junit";
     public static final String AGGREGATION_PROJECT_NAME = "aggregated";
-    @Rule
-    public JenkinsRule j = new JenkinsRule();
+
     private FreeStyleProject upstreamProject;
     private FreeStyleProject downstreamProject;
 
     private FreeStyleBuild build;
     private JenkinsRule.WebClient wc;
-    private static final String[] singleContents = {
-            "abcdef"
-    };
-    private static final String[] singleFiles = {
-            "test.txt"
-    };
+    private static final String[] singleContents = {"abcdef"};
+    private static final String[] singleFiles = {"test.txt"};
     private BuildPage buildPage;
     private ProjectPage projectPage;
 
-    @Before
-    public void setup() {
-        wc = j.createWebClient();
+    private JenkinsRule j;
+
+    @BeforeEach
+    void setUp(JenkinsRule rule) {
+        j = rule;
+        wc = WebClientFactory.createWebClientWithDisabledJavaScript(j);
     }
 
     @LocalData
     @Test
-    public void aggregatedTestResultsOnly() throws Exception {
+    void aggregatedTestResultsOnly() throws Exception {
         createUpstreamProjectWithNoTests();
         createDownstreamProjectWithTests();
 
         buildAndSetupPageObjects();
 
-        projectPage.getLatestAggregatedTestReportLink()
+        projectPage
+                .getLatestAggregatedTestReportLink()
                 .assertHasLatestAggregatedTestResultText()
                 .assertHasTests()
-                .follow().hasLinkToTestResultOfBuild(TEST_PROJECT_NAME, 1);
+                .follow()
+                .hasLinkToTestResultOfBuild(TEST_PROJECT_NAME, 1);
 
         projectPage.assertNoTestReportLink();
 
-        buildPage.getAggregatedTestReportLink()
+        buildPage
+                .getAggregatedTestReportLink()
                 .assertHasAggregatedTestResultText()
                 .assertHasTests()
-                .follow().hasLinkToTestResultOfBuild(TEST_PROJECT_NAME, 1);
+                .follow()
+                .hasLinkToTestResultOfBuild(TEST_PROJECT_NAME, 1);
         buildPage.assertNoTestReportLink();
     }
 
     @LocalData
     @Test
-    public void testResultsOnly() throws Exception {
+    void testResultsOnly() throws Exception {
         createUpstreamProjectWithTests();
         createDownstreamProjectWithNoTests();
 
         buildAndSetupPageObjects();
 
-        projectPage.getLatestTestReportLink()
+        projectPage
+                .getLatestTestReportLink()
                 .assertHasLatestTestResultText()
                 .assertHasTests()
                 .follow();
-        projectPage.getLatestAggregatedTestReportLink()
+        projectPage
+                .getLatestAggregatedTestReportLink()
                 .assertHasLatestAggregatedTestResultText()
                 .assertNoTests()
                 .follow();
 
-        buildPage.getTestReportLink()
-                .assertHasTestResultText()
-                .assertHasTests()
-                .follow();
-        buildPage.getAggregatedTestReportLink()
+        buildPage.getTestReportLink().assertHasTestResultText().assertHasTests().follow();
+        buildPage
+                .getAggregatedTestReportLink()
                 .assertHasAggregatedTestResultText()
                 .assertNoTests()
                 .follow();
@@ -100,26 +112,26 @@ public class AggregatedTestResultPublisherTest {
 
     @LocalData
     @Test
-    public void testResultsAndAggregatedTestResults() throws Exception {
+    void testResultsAndAggregatedTestResults() throws Exception {
         createUpstreamProjectWithTests();
         createDownstreamProjectWithTests();
 
         buildAndSetupPageObjects();
 
-        projectPage.getLatestTestReportLink()
+        projectPage
+                .getLatestTestReportLink()
                 .assertHasLatestTestResultText()
                 .assertHasTests()
                 .follow();
-        projectPage.getLatestAggregatedTestReportLink()
+        projectPage
+                .getLatestAggregatedTestReportLink()
                 .assertHasLatestAggregatedTestResultText()
                 .assertHasTests()
                 .follow();
 
-        buildPage.getTestReportLink()
-                .assertHasTestResultText()
-                .assertHasTests()
-                .follow();
-        buildPage.getAggregatedTestReportLink()
+        buildPage.getTestReportLink().assertHasTestResultText().assertHasTests().follow();
+        buildPage
+                .getAggregatedTestReportLink()
                 .assertHasAggregatedTestResultText()
                 .assertHasTests()
                 .follow()
@@ -140,10 +152,11 @@ public class AggregatedTestResultPublisherTest {
         build = j.buildAndAssertSuccess(upstreamProject);
         j.waitUntilNoActivity();
 
-        List<AbstractBuild<?, ?>> downstreamBuilds = ImmutableList.copyOf(build.getDownstreamBuilds(downstreamProject));
+        List<AbstractBuild<?, ?>> downstreamBuilds = StreamSupport.stream(
+                        build.getDownstreamBuilds(downstreamProject).spliterator(), false)
+                .collect(Collectors.toList());
         assertThat(downstreamBuilds, hasSize(numberOfDownstreamBuilds));
     }
-
 
     private void createUpstreamProjectWithTests() throws Exception {
         createUpstreamProjectWithNoTests();
@@ -168,7 +181,9 @@ public class AggregatedTestResultPublisherTest {
         downstreamProject.setQuietPeriod(0);
         addFingerprinterToProject(downstreamProject, singleContents, singleFiles);
 
-        upstreamProject.getPublishersList().add(new BuildTrigger(ImmutableList.of(downstreamProject), Result.SUCCESS));
+        upstreamProject
+                .getPublishersList()
+                .add(new BuildTrigger(Collections.singletonList(downstreamProject), Result.SUCCESS));
         upstreamProject.getPublishersList().add(new AggregatedTestResultPublisher(null));
 
         j.jenkins.rebuildDependencyGraph();
@@ -180,7 +195,7 @@ public class AggregatedTestResultPublisherTest {
         project.getBuildersList().add(new TouchBuilder());
     }
 
-    private void addFingerprinterToProject(FreeStyleProject project, String[] contents, String[] files) throws Exception {
+    private void addFingerprinterToProject(FreeStyleProject project, String[] contents, String[] files) {
         StringBuilder targets = new StringBuilder();
         for (int i = 0; i < contents.length; i++) {
             String command = "echo $BUILD_NUMBER " + contents[i] + " > " + files[i];

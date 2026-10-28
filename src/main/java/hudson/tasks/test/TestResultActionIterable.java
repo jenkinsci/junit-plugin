@@ -9,7 +9,7 @@ import java.util.NoSuchElementException;
 
 public class TestResultActionIterable implements Iterable<BuildResult<AbstractTestResultAction<?>>> {
     private final AbstractTestResultAction<?> latestAction;
-    
+
     /**
      * Creates a new iterator that selects action of the given type {@code actionType}.
      *
@@ -19,7 +19,7 @@ public class TestResultActionIterable implements Iterable<BuildResult<AbstractTe
     public TestResultActionIterable(final AbstractTestResultAction<?> baseline) {
         this.latestAction = baseline;
     }
-    
+
     @NonNull
     @Override
     public Iterator<BuildResult<AbstractTestResultAction<?>>> iterator() {
@@ -48,11 +48,11 @@ public class TestResultActionIterable implements Iterable<BuildResult<AbstractTe
             if (initialValue != null) {
                 return true;
             }
-            
+
             if (cursor == null) {
                 return false;
             }
-            
+
             AbstractTestResultAction<?> previousBuild = cursor.getPreviousResult(AbstractTestResultAction.class, true);
             return previousBuild != null;
         }
@@ -87,5 +87,4 @@ public class TestResultActionIterable implements Iterable<BuildResult<AbstractTe
             return run;
         }
     }
-
 }

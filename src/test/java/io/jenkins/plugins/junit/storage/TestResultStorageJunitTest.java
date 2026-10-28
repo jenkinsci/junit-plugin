@@ -24,7 +24,16 @@
 
 package io.jenkins.plugins.junit.storage;
 
-import com.google.common.collect.ImmutableSet;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasProperty;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.core.Is.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import com.thoughtworks.xstream.XStream;
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
@@ -38,6 +47,7 @@ import hudson.model.TaskListener;
 import hudson.slaves.DumbSlave;
 import hudson.tasks.junit.CaseResult;
 import hudson.tasks.junit.ClassResult;
+import hudson.tasks.junit.HistoryTestResultSummary;
 import hudson.tasks.junit.PackageResult;
 import hudson.tasks.junit.SuiteResult;
 import hudson.tasks.junit.TestDurationResultSummary;
@@ -45,6 +55,7 @@ import hudson.tasks.junit.TestResult;
 import hudson.tasks.junit.TestResultAction;
 import hudson.tasks.junit.TestResultSummary;
 import hudson.tasks.junit.TrendTestResultSummary;
+import hudson.util.XStream2;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -57,6 +68,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Types;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -64,10 +76,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.xml.parsers.DocumentBuilderFactory;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.jenkinsci.plugins.database.Database;
 import org.jenkinsci.plugins.database.GlobalDatabaseConfiguration;
 import org.jenkinsci.plugins.database.h2.LocalH2Database;
@@ -75,67 +88,66 @@ import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
 import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.jenkinsci.remoting.SerializableOnlyOverRemoting;
-
-import static java.util.Objects.requireNonNull;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.jvnet.hudson.test.BuildWatcher;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TestExtension;
+import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-public class TestResultStorageJunitTest {
-    
-    @ClassRule public static BuildWatcher buildWatcher = new BuildWatcher();
-    
-    @Rule public JenkinsRule r = new JenkinsRule();
+@WithJenkins
+class TestResultStorageJunitTest {
+
+    private static final Logger LOGGER = Logger.getLogger(TestResultStorageJunitTest.class.getName());
+
+    private JenkinsRule r;
 
     /**
      * Need {@link LocalH2Database#getAutoServer} so that {@link Impl} can make connections from an agent JVM.
      * @see <a href="http://www.h2database.com/html/features.html#auto_mixed_mode">Automatic Mixed Mode</a>
      */
-    @Before public void autoServer() throws Exception {
-        LocalH2Database database = (LocalH2Database) GlobalDatabaseConfiguration.get().getDatabase();
-        GlobalDatabaseConfiguration.get().setDatabase(new LocalH2Database(database.getPath(), true));
+    @BeforeEach
+    void setUp(JenkinsRule rule) {
+        r = rule;
+        GlobalDatabaseConfiguration gdc = GlobalDatabaseConfiguration.get();
+        gdc.setDatabase(null);
+        LocalH2Database.setDefaultGlobalDatabase();
+        LocalH2Database database = (LocalH2Database) gdc.getDatabase();
+        gdc.setDatabase(new LocalH2Database(database.getPath(), true));
         JunitTestResultStorageConfiguration.get().setStorage(new Impl());
     }
 
-    @Test public void smokes() throws Exception {
+    @Test
+    void smokes() throws Exception {
         DumbSlave remote = r.createOnlineSlave(Label.get("remote"));
-        //((Channel) remote.getChannel()).addListener(new LoggingChannelListener(Logger.getLogger(TestResultStorageTest.class.getName()), Level.INFO));
+        // ((Channel) remote.getChannel()).addListener(new
+        // LoggingChannelListener(Logger.getLogger(TestResultStorageTest.class.getName()), Level.INFO));
         WorkflowJob p = r.createProject(WorkflowJob.class, "p");
-        p.setDefinition(new CpsFlowDefinition(
-                "node('remote') {\n" +
-                "  writeFile file: 'x.xml', text: '''<testsuite name='sweet' time='200.0'>" +
-                    "<testcase classname='Klazz' name='test1' time='198.0'><error message='failure'/></testcase>" +
-                    "<testcase classname='Klazz' name='test2' time='2.0'/>" +
-                    "<testcase classname='other.Klazz' name='test3'><skipped message='Not actually run.'/></testcase>" +
-                    "</testsuite>'''\n" +
-                "  def s = junit testResults: 'x.xml', skipPublishingChecks: true\n" +
-                "  echo(/summary: fail=$s.failCount skip=$s.skipCount pass=$s.passCount total=$s.totalCount/)\n" +
-                "  writeFile file: 'x.xml', text: '''<testsuite name='supersweet'>" +
-                    "<testcase classname='another.Klazz' name='test1'><error message='another failure'/></testcase>" +
-                    "</testsuite>'''\n" +
-                "  s = junit testResults: 'x.xml', skipPublishingChecks: true\n" +
-                "  echo(/next summary: fail=$s.failCount skip=$s.skipCount pass=$s.passCount total=$s.totalCount/)\n" +
-                "}", true));
+        p.setDefinition(new CpsFlowDefinition("""
+                        node('remote') {
+                          writeFile file: 'x.xml', text: '''<testsuite name='sweet' time='200.0'>
+                        <testcase classname='Klazz' name='test1' time='198.0'><error message='failure'/></testcase>
+                        <testcase classname='Klazz' name='test2' time='2.0'/>
+                        <testcase classname='other.Klazz' name='test3'><skipped message='Not actually run.'/></testcase>
+                        </testsuite>'''
+                          def s = junit testResults: 'x.xml', skipPublishingChecks: true
+                          echo(/summary: fail=$s.failCount skip=$s.skipCount pass=$s.passCount total=$s.totalCount/)
+                          writeFile file: 'x.xml', text: '''<testsuite name='supersweet'>\
+                        <testcase classname='another.Klazz' name='test1'><error message='another failure'/></testcase>
+                        </testsuite>'''
+                          s = junit testResults: 'x.xml', skipPublishingChecks: true
+                          echo(/next summary: fail=$s.failCount skip=$s.skipCount pass=$s.passCount total=$s.totalCount/)
+                        }""", true));
         WorkflowRun b = p.scheduleBuild2(0).get();
-        try (Connection connection = requireNonNull(GlobalDatabaseConfiguration.get().getDatabase()).getDataSource().getConnection();
-             PreparedStatement statement = connection.prepareStatement("SELECT * FROM " + Impl.CASE_RESULTS_TABLE);
-             ResultSet result = statement.executeQuery()) {
+        try (Connection connection = Objects.requireNonNull(
+                                GlobalDatabaseConfiguration.get().getDatabase())
+                        .getDataSource()
+                        .getConnection();
+                PreparedStatement statement = connection.prepareStatement("SELECT * FROM " + Impl.CASE_RESULTS_TABLE);
+                ResultSet result = statement.executeQuery()) {
             printResultSet(result);
         }
         // TODO verify table structure
@@ -145,9 +157,11 @@ public class TestResultStorageJunitTest {
         assertFalse(new File(b.getRootDir(), "junitResult.xml").isFile());
         {
             String buildXml = FileUtils.readFileToString(new File(b.getRootDir(), "build.xml"));
-            Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(new ByteArrayInputStream(buildXml.getBytes(StandardCharsets.UTF_8)));
+            Document doc = DocumentBuilderFactory.newInstance()
+                    .newDocumentBuilder()
+                    .parse(new ByteArrayInputStream(buildXml.getBytes(StandardCharsets.UTF_8)));
             NodeList testResultActionList = doc.getElementsByTagName("hudson.tasks.junit.TestResultAction");
-            assertEquals(buildXml, 1, testResultActionList.getLength());
+            assertEquals(1, testResultActionList.getLength(), buildXml);
             Element testResultAction = (Element) testResultActionList.item(0);
             NodeList childNodes = testResultAction.getChildNodes();
             Set<String> childNames = new TreeSet<>();
@@ -157,7 +171,7 @@ public class TestResultStorageJunitTest {
                     childNames.add(((Element) item).getTagName());
                 }
             }
-            assertEquals(buildXml, ImmutableSet.of("healthScaleFactor", "testData", "descriptions"), childNames);
+            assertThat(buildXml, childNames, containsInAnyOrder("healthScaleFactor", "testData", "descriptions"));
         }
         Impl.queriesPermitted = true;
         {
@@ -170,6 +184,7 @@ public class TestResultStorageJunitTest {
             assertEquals(1, a.getResult().getSkipCount());
             assertEquals(4, a.getResult().getTotalCount());
             assertEquals(1, a.getResult().getPassCount());
+            assertEquals(2, a.getResult().getSuites().size());
             List<CaseResult> failedTests = a.getFailedTests();
             assertEquals(2, failedTests.size());
             final CaseResult klazzTest1 = failedTests.get(0);
@@ -191,7 +206,7 @@ public class TestResultStorageJunitTest {
             assertEquals(1, passedTests.size());
             assertEquals("Klazz", passedTests.get(0).getClassName());
             assertEquals("test2", passedTests.get(0).getName());
-            
+
             PackageResult another = a.getResult().byPackage("another");
             List<CaseResult> packageFailedTests = another.getFailedTests();
             assertEquals(1, packageFailedTests.size());
@@ -208,7 +223,8 @@ public class TestResultStorageJunitTest {
             assertEquals(1, rootPassedTests.size());
             assertEquals("Klazz", rootPassedTests.get(0).getClassName());
 
-            TestResultImpl pluggableStorage = requireNonNull(a.getResult().getPluggableStorage());
+            TestResultImpl pluggableStorage =
+                    Objects.requireNonNull(a.getResult().getPluggableStorage());
             List<TrendTestResultSummary> trendTestResultSummary = pluggableStorage.getTrendTestResultSummary();
             assertThat(trendTestResultSummary, hasSize(1));
             TestResultSummary testResultSummary = trendTestResultSummary.get(0).getTestResultSummary();
@@ -216,13 +232,32 @@ public class TestResultStorageJunitTest {
             assertThat(testResultSummary.getPassCount(), equalTo(1));
             assertThat(testResultSummary.getSkipCount(), equalTo(1));
             assertThat(testResultSummary.getTotalCount(), equalTo(4));
+            assertThat(testResultSummary.getDuration(), equalTo(200.0f));
 
             int countOfBuildsWithTestResults = pluggableStorage.getCountOfBuildsWithTestResults();
             assertThat(countOfBuildsWithTestResults, is(1));
 
-            final List<TestDurationResultSummary> testDurationResultSummary = pluggableStorage.getTestDurationResultSummary();
+            final List<TestDurationResultSummary> testDurationResultSummary =
+                    pluggableStorage.getTestDurationResultSummary();
             assertThat(testDurationResultSummary.get(0).getDuration(), is(200));
-            
+
+            // check storage getSuites method
+            Collection<SuiteResult> suiteResults = pluggableStorage.getSuites();
+            assertThat(suiteResults, hasSize(2));
+            // check the two suites name
+            assertThat(
+                    suiteResults,
+                    containsInAnyOrder(
+                            hasProperty("name", equalTo("supersweet")), hasProperty("name", equalTo("sweet"))));
+
+            // check one suite detail
+            SuiteResult supersweetSuite = suiteResults.stream()
+                    .filter(suite -> suite.getName().equals("supersweet"))
+                    .findFirst()
+                    .orElseThrow();
+            assertThat(supersweetSuite.getCases(), hasSize(1));
+            assertThat(supersweetSuite.getCases().get(0).getName(), equalTo("test1"));
+            assertThat(supersweetSuite.getCases().get(0).getClassName(), equalTo("another.Klazz"));
             // TODO test result summary i.e. failure content
             // TODO getFailedSinceRun, TestResult#getChildren, TestObject#getTestResultAction
             // TODO more detailed Java queries incl. ClassResult
@@ -233,7 +268,8 @@ public class TestResultStorageJunitTest {
         }
     }
 
-    @TestExtension public static class Impl extends JunitTestResultStorage {
+    @TestExtension
+    public static class Impl extends JunitTestResultStorage {
 
         static final String CASE_RESULTS_TABLE = "caseResults";
 
@@ -241,7 +277,8 @@ public class TestResultStorageJunitTest {
 
         private final ConnectionSupplier connectionSupplier = new LocalConnectionSupplier();
 
-        @Override public RemotePublisher createRemotePublisher(Run<?, ?> build) throws IOException {
+        @Override
+        public RemotePublisher createRemotePublisher(Run<?, ?> build) throws IOException {
             try {
                 connectionSupplier.connection(); // make sure we start a local server and create table first
             } catch (SQLException x) {
@@ -257,14 +294,15 @@ public class TestResultStorageJunitTest {
             public String getDisplayName() {
                 return "Test SQL";
             }
-
         }
 
         @FunctionalInterface
         private interface Querier<T> {
             T run(Connection connection) throws SQLException;
         }
-        @Override public TestResultImpl load(String job, int build) {
+
+        @Override
+        public TestResultImpl load(String job, int build) {
             return new TestResultImpl() {
                 private <T> T query(Querier<T> querier) {
                     if (!queriesPermitted) {
@@ -277,9 +315,11 @@ public class TestResultStorageJunitTest {
                         throw new RuntimeException(x);
                     }
                 }
+
                 private int getCaseCount(String and) {
                     return query(connection -> {
-                        try (PreparedStatement statement = connection.prepareStatement("SELECT COUNT(*) FROM " + Impl.CASE_RESULTS_TABLE + " WHERE job = ? AND build = ?" + and)) {
+                        try (PreparedStatement statement = connection.prepareStatement("SELECT COUNT(*) FROM "
+                                + Impl.CASE_RESULTS_TABLE + " WHERE job = ? AND build = ?" + and)) {
                             statement.setString(1, job);
                             statement.setInt(2, build);
                             try (ResultSet result = statement.executeQuery()) {
@@ -293,7 +333,10 @@ public class TestResultStorageJunitTest {
 
                 private List<CaseResult> retrieveCaseResult(String whereCondition) {
                     return query(connection -> {
-                        try (PreparedStatement statement = connection.prepareStatement("SELECT suite, package, testname, classname, errordetails, skipped, duration, stdout, stderr, stacktrace FROM " + Impl.CASE_RESULTS_TABLE + " WHERE job = ? AND build = ? AND " + whereCondition)) {
+                        try (PreparedStatement statement = connection.prepareStatement(
+                                "SELECT suite, package, testname, classname, errordetails, skipped, duration, stdout, stderr, stacktrace FROM "
+                                        + Impl.CASE_RESULTS_TABLE + " WHERE job = ? AND build = ? AND "
+                                        + whereCondition)) {
                             statement.setString(1, job);
                             statement.setInt(2, build);
                             try (ResultSet result = statement.executeQuery()) {
@@ -315,10 +358,20 @@ public class TestResultStorageJunitTest {
 
                                     SuiteResult suiteResult = new SuiteResult(suite, null, null, null);
                                     suiteResult.setParent(parent);
-                                    CaseResult caseResult = new CaseResult(suiteResult, className, testName, errorDetails, skipped, duration, stdout, stderr, stacktrace);
+                                    CaseResult caseResult = new CaseResult(
+                                            suiteResult,
+                                            className,
+                                            testName,
+                                            errorDetails,
+                                            skipped,
+                                            duration,
+                                            stdout,
+                                            stderr,
+                                            stacktrace);
                                     ClassResult classResult = classResults.get(className);
                                     if (classResult == null) {
-                                        classResult = new ClassResult(new PackageResult(new TestResult(this), packageName), className);
+                                        classResult = new ClassResult(
+                                                new PackageResult(new TestResult(this), packageName), className);
                                     }
                                     classResult.add(caseResult);
                                     caseResult.setClass(classResult);
@@ -335,7 +388,9 @@ public class TestResultStorageJunitTest {
                 @Override
                 public List<PackageResult> getAllPackageResults() {
                     return query(connection -> {
-                        try (PreparedStatement statement = connection.prepareStatement("SELECT suite, testname, package, classname, errordetails, skipped, duration, stdout, stderr, stacktrace FROM " + Impl.CASE_RESULTS_TABLE + " WHERE job = ? AND build = ?")) {
+                        try (PreparedStatement statement = connection.prepareStatement(
+                                "SELECT suite, testname, package, classname, errordetails, skipped, duration, stdout, stderr, stacktrace FROM "
+                                        + Impl.CASE_RESULTS_TABLE + " WHERE job = ? AND build = ?")) {
                             statement.setString(1, job);
                             statement.setInt(2, build);
                             try (ResultSet result = statement.executeQuery()) {
@@ -357,21 +412,31 @@ public class TestResultStorageJunitTest {
 
                                     SuiteResult suiteResult = new SuiteResult(suite, null, null, null);
                                     suiteResult.setParent(parent);
-                                    CaseResult caseResult = new CaseResult(suiteResult, className, testName, errorDetails, skipped, duration, stdout, stderr, stacktrace);
+                                    CaseResult caseResult = new CaseResult(
+                                            suiteResult,
+                                            className,
+                                            testName,
+                                            errorDetails,
+                                            skipped,
+                                            duration,
+                                            stdout,
+                                            stderr,
+                                            stacktrace);
                                     PackageResult packageResult = results.get(packageName);
                                     if (packageResult == null) {
                                         packageResult = new PackageResult(parent, packageName);
                                     }
                                     ClassResult classResult = classResults.get(className);
                                     if (classResult == null) {
-                                        classResult = new ClassResult(new PackageResult(parent, packageName), className);
+                                        classResult =
+                                                new ClassResult(new PackageResult(parent, packageName), className);
                                     }
                                     caseResult.setClass(classResult);
                                     classResult.add(caseResult);
 
                                     classResults.put(className, classResult);
                                     packageResult.add(caseResult);
-                                    
+
                                     results.put(packageName, packageResult);
                                 }
                                 classResults.values().forEach(ClassResult::tally);
@@ -387,7 +452,9 @@ public class TestResultStorageJunitTest {
                 @Override
                 public List<TrendTestResultSummary> getTrendTestResultSummary() {
                     return query(connection -> {
-                        try (PreparedStatement statement = connection.prepareStatement("SELECT build, sum(case when errorDetails is not null then 1 else 0 end) as failCount, sum(case when skipped is not null then 1 else 0 end) as skipCount, sum(case when errorDetails is null and skipped is null then 1 else 0 end) as passCount FROM " +  Impl.CASE_RESULTS_TABLE +  " WHERE job = ? group by build order by build;")) {
+                        try (PreparedStatement statement = connection.prepareStatement(
+                                "SELECT build, sum(case when errorDetails is not null then 1 else 0 end) as failCount, sum(case when skipped is not null then 1 else 0 end) as skipCount, sum(case when errorDetails is null and skipped is null then 1 else 0 end) as passCount, sum(duration) as duration FROM "
+                                        + Impl.CASE_RESULTS_TABLE + " WHERE job = ? group by build order by build;")) {
                             statement.setString(1, job);
                             try (ResultSet result = statement.executeQuery()) {
 
@@ -398,8 +465,11 @@ public class TestResultStorageJunitTest {
                                     int failed = result.getInt("failCount");
                                     int skipped = result.getInt("skipCount");
                                     int total = passed + failed + skipped;
+                                    float duration = result.getFloat("duration");
 
-                                    trendTestResultSummaries.add(new TrendTestResultSummary(buildNumber, new TestResultSummary(failed, skipped, passed, total)));
+                                    trendTestResultSummaries.add(new TrendTestResultSummary(
+                                            buildNumber,
+                                            new TestResultSummary(failed, skipped, passed, total, duration)));
                                 }
                                 return trendTestResultSummaries;
                             }
@@ -410,7 +480,9 @@ public class TestResultStorageJunitTest {
                 @Override
                 public List<TestDurationResultSummary> getTestDurationResultSummary() {
                     return query(connection -> {
-                        try (PreparedStatement statement = connection.prepareStatement("SELECT build, sum(duration) as duration FROM " +  Impl.CASE_RESULTS_TABLE +  " WHERE job = ? group by build order by build;")) {
+                        try (PreparedStatement statement =
+                                connection.prepareStatement("SELECT build, sum(duration) as duration FROM "
+                                        + Impl.CASE_RESULTS_TABLE + " WHERE job = ? group by build order by build;")) {
                             statement.setString(1, job);
                             try (ResultSet result = statement.executeQuery()) {
 
@@ -419,7 +491,8 @@ public class TestResultStorageJunitTest {
                                     int buildNumber = result.getInt("build");
                                     int duration = result.getInt("duration");
 
-                                    testDurationResultSummaries.add(new TestDurationResultSummary(buildNumber, duration));
+                                    testDurationResultSummaries.add(
+                                            new TestDurationResultSummary(buildNumber, duration));
                                 }
                                 return testDurationResultSummaries;
                             }
@@ -428,9 +501,43 @@ public class TestResultStorageJunitTest {
                 }
 
                 @Override
+                public List<HistoryTestResultSummary> getHistorySummary(int offset) {
+                    return query(connection -> {
+                        try (PreparedStatement statement = connection.prepareStatement(
+                                "SELECT build, sum(duration) as duration, sum(case when errorDetails is not null then 1 else 0 end) as failCount, sum(case when skipped is not null then 1 else 0 end) as skipCount, sum(case when errorDetails is null and skipped is null then 1 else 0 end) as passCount"
+                                        + " FROM "
+                                        + Impl.CASE_RESULTS_TABLE
+                                        + " WHERE job = ? GROUP BY build ORDER BY build DESC LIMIT 25 OFFSET ?;")) {
+                            statement.setString(1, job);
+                            statement.setInt(2, 0);
+                            try (ResultSet result = statement.executeQuery()) {
+
+                                List<HistoryTestResultSummary> historyTestResultSummaries = new ArrayList<>();
+                                while (result.next()) {
+                                    int buildNumber = result.getInt("build");
+                                    int duration = result.getInt("duration");
+                                    int passed = result.getInt("passCount");
+                                    int failed = result.getInt("failCount");
+                                    int skipped = result.getInt("skipCount");
+
+                                    Job<?, ?> theJob = Jenkins.get().getItemByFullName(getJobName(), Job.class);
+                                    if (theJob != null) {
+                                        Run<?, ?> run = theJob.getBuildByNumber(buildNumber);
+                                        historyTestResultSummaries.add(
+                                                new HistoryTestResultSummary(run, duration, failed, skipped, passed));
+                                    }
+                                }
+                                return historyTestResultSummaries;
+                            }
+                        }
+                    });
+                }
+
+                @Override
                 public int getCountOfBuildsWithTestResults() {
                     return query(connection -> {
-                        try (PreparedStatement statement = connection.prepareStatement("SELECT COUNT(DISTINCT build) as count FROM caseResults WHERE job = ?;")) {
+                        try (PreparedStatement statement = connection.prepareStatement(
+                                "SELECT COUNT(DISTINCT build) as count FROM caseResults WHERE job = ?;")) {
                             statement.setString(1, job);
                             try (ResultSet result = statement.executeQuery()) {
                                 result.next();
@@ -444,7 +551,9 @@ public class TestResultStorageJunitTest {
                 @Override
                 public PackageResult getPackageResult(String packageName) {
                     return query(connection -> {
-                        try (PreparedStatement statement = connection.prepareStatement("SELECT suite, testname, classname, errordetails, skipped, duration, stdout, stderr, stacktrace FROM " + Impl.CASE_RESULTS_TABLE + " WHERE job = ? AND build = ? AND package = ?")) {
+                        try (PreparedStatement statement = connection.prepareStatement(
+                                "SELECT suite, testname, classname, errordetails, skipped, duration, stdout, stderr, stacktrace FROM "
+                                        + Impl.CASE_RESULTS_TABLE + " WHERE job = ? AND build = ? AND package = ?")) {
                             statement.setString(1, job);
                             statement.setInt(2, build);
                             statement.setString(3, packageName);
@@ -465,8 +574,17 @@ public class TestResultStorageJunitTest {
 
                                     SuiteResult suiteResult = new SuiteResult(suite, null, null, null);
                                     suiteResult.setParent(new TestResult(this));
-                                    CaseResult caseResult = new CaseResult(suiteResult, className, testName, errorDetails, skipped, duration, stdout, stderr, stacktrace);
-                                    
+                                    CaseResult caseResult = new CaseResult(
+                                            suiteResult,
+                                            className,
+                                            testName,
+                                            errorDetails,
+                                            skipped,
+                                            duration,
+                                            stdout,
+                                            stderr,
+                                            stacktrace);
+
                                     ClassResult classResult = classResults.get(className);
                                     if (classResult == null) {
                                         classResult = new ClassResult(packageResult, className);
@@ -474,7 +592,7 @@ public class TestResultStorageJunitTest {
                                     classResult.add(caseResult);
                                     classResults.put(className, classResult);
                                     caseResult.setClass(classResult);
-                                    
+
                                     packageResult.add(caseResult);
                                 }
                                 classResults.values().forEach(ClassResult::tally);
@@ -483,27 +601,23 @@ public class TestResultStorageJunitTest {
                             }
                         }
                     });
-
                 }
-                
+
                 @Override
                 public Run<?, ?> getFailedSinceRun(CaseResult caseResult) {
                     return query(connection -> {
                         int lastPassingBuildNumber;
                         Job<?, ?> theJob = Objects.requireNonNull(Jenkins.get().getItemByFullName(job, Job.class));
-                        try (PreparedStatement statement = connection.prepareStatement(
-                                "SELECT build " +
-                                        "FROM " + Impl.CASE_RESULTS_TABLE + " " +
-                                        "WHERE job = ? " +
-                                        "AND build < ? " +
-                                        "AND suite = ? " +
-                                        "AND package = ? " +
-                                        "AND classname = ? " +
-                                        "AND testname = ? " +
-                                        "AND errordetails IS NULL " +
-                                        "ORDER BY BUILD DESC " +
-                                        "LIMIT 1"
-                        )) {
+                        try (PreparedStatement statement = connection.prepareStatement("SELECT build " + "FROM "
+                                + Impl.CASE_RESULTS_TABLE + " " + "WHERE job = ? "
+                                + "AND build < ? "
+                                + "AND suite = ? "
+                                + "AND package = ? "
+                                + "AND classname = ? "
+                                + "AND testname = ? "
+                                + "AND errordetails IS NULL "
+                                + "ORDER BY BUILD DESC "
+                                + "LIMIT 1")) {
                             statement.setString(1, job);
                             statement.setInt(2, build);
                             statement.setString(3, caseResult.getSuiteResult().getName());
@@ -515,24 +629,20 @@ public class TestResultStorageJunitTest {
                                 if (!hasPassed) {
                                     return theJob.getBuildByNumber(1);
                                 }
-                                
+
                                 lastPassingBuildNumber = result.getInt("build");
                             }
                         }
-                        try (PreparedStatement statement = connection.prepareStatement(
-                                "SELECT build " +
-                                        "FROM " + Impl.CASE_RESULTS_TABLE + " " +
-                                        "WHERE job = ? " +
-                                        "AND build > ? " +
-                                        "AND suite = ? " +
-                                        "AND package = ? " +
-                                        "AND classname = ? " +
-                                        "AND testname = ? " +
-                                        "AND errordetails is NOT NULL " +
-                                        "ORDER BY BUILD ASC " +
-                                        "LIMIT 1"
-                        )
-                        ) {
+                        try (PreparedStatement statement = connection.prepareStatement("SELECT build " + "FROM "
+                                + Impl.CASE_RESULTS_TABLE + " " + "WHERE job = ? "
+                                + "AND build > ? "
+                                + "AND suite = ? "
+                                + "AND package = ? "
+                                + "AND classname = ? "
+                                + "AND testname = ? "
+                                + "AND errordetails is NOT NULL "
+                                + "ORDER BY BUILD ASC "
+                                + "LIMIT 1")) {
                             statement.setString(1, job);
                             statement.setInt(2, lastPassingBuildNumber);
                             statement.setString(3, caseResult.getSuiteResult().getName());
@@ -548,9 +658,8 @@ public class TestResultStorageJunitTest {
                             }
                         }
                     });
-
                 }
-                
+
                 @Override
                 public String getJobName() {
                     return job;
@@ -568,7 +677,10 @@ public class TestResultStorageJunitTest {
 
                 private List<CaseResult> getByPackage(String packageName, String filter) {
                     return query(connection -> {
-                        try (PreparedStatement statement = connection.prepareStatement("SELECT suite, testname, classname, errordetails, duration, skipped, stdout, stderr, stacktrace FROM " + Impl.CASE_RESULTS_TABLE + " WHERE job = ? AND build = ? AND package = ? " + filter)) {
+                        try (PreparedStatement statement = connection.prepareStatement(
+                                "SELECT suite, testname, classname, errordetails, duration, skipped, stdout, stderr, stacktrace FROM "
+                                        + Impl.CASE_RESULTS_TABLE + " WHERE job = ? AND build = ? AND package = ? "
+                                        + filter)) {
                             statement.setString(1, job);
                             statement.setInt(2, build);
                             statement.setString(3, packageName);
@@ -588,7 +700,16 @@ public class TestResultStorageJunitTest {
 
                                     SuiteResult suiteResult = new SuiteResult(suite, null, null, null);
                                     suiteResult.setParent(new TestResult(this));
-                                    results.add(new CaseResult(suiteResult, className, testName, errorDetails, skipped, duration, stdout, stderr, stacktrace));
+                                    results.add(new CaseResult(
+                                            suiteResult,
+                                            className,
+                                            testName,
+                                            errorDetails,
+                                            skipped,
+                                            duration,
+                                            stdout,
+                                            stderr,
+                                            stacktrace));
                                 }
                                 return results;
                             }
@@ -596,15 +717,16 @@ public class TestResultStorageJunitTest {
                     });
                 }
 
-
                 private List<CaseResult> getCaseResults(String column) {
                     return retrieveCaseResult(column + " IS NOT NULL");
                 }
-                
+
                 @Override
                 public SuiteResult getSuite(String name) {
                     return query(connection -> {
-                        try (PreparedStatement statement = connection.prepareStatement("SELECT testname, package, classname, errordetails, skipped, duration, stdout, stderr, stacktrace FROM " + Impl.CASE_RESULTS_TABLE + " WHERE job = ? AND build = ? AND suite = ?")) {
+                        try (PreparedStatement statement = connection.prepareStatement(
+                                "SELECT testname, package, classname, errordetails, skipped, duration, stdout, stderr, stacktrace FROM "
+                                        + Impl.CASE_RESULTS_TABLE + " WHERE job = ? AND build = ? AND suite = ?")) {
                             statement.setString(1, job);
                             statement.setInt(2, build);
                             statement.setString(3, name);
@@ -623,7 +745,16 @@ public class TestResultStorageJunitTest {
                                     float duration = result.getFloat("duration");
 
                                     suiteResult.setParent(parent);
-                                    CaseResult caseResult = new CaseResult(suiteResult, className, resultTestName, errorDetails, skipped, duration, stdout, stderr, stacktrace);
+                                    CaseResult caseResult = new CaseResult(
+                                            suiteResult,
+                                            className,
+                                            resultTestName,
+                                            errorDetails,
+                                            skipped,
+                                            duration,
+                                            stdout,
+                                            stderr,
+                                            stacktrace);
                                     final PackageResult packageResult = new PackageResult(parent, packageName);
                                     packageResult.add(caseResult);
                                     ClassResult classResult = new ClassResult(packageResult, className);
@@ -635,13 +766,68 @@ public class TestResultStorageJunitTest {
                             }
                         }
                     });
+                }
 
+                @Override
+                public Collection<SuiteResult> getSuites() {
+                    return query(connection -> {
+                        try (PreparedStatement statement = connection.prepareStatement(
+                                "SELECT suite, testname, package, classname, errordetails, skipped, duration, stdout, stderr, stacktrace FROM "
+                                        + Impl.CASE_RESULTS_TABLE + " WHERE job = ? AND build = ? ORDER BY suite")) {
+                            statement.setString(1, job);
+                            statement.setInt(2, build);
+                            try (ResultSet result = statement.executeQuery()) {
+                                SuiteResult suiteResult = null;
+                                TestResult parent = new TestResult(this);
+                                boolean isFirst = true;
+                                List<SuiteResult> suites = new ArrayList<>();
+                                while (result.next()) {
+                                    String suiteName = result.getString("suite");
+                                    if (isFirst || !suiteResult.getName().equals(suiteName)) {
+                                        suiteResult = new SuiteResult(suiteName, null, null, null);
+                                        suites.add(suiteResult);
+                                        isFirst = false;
+                                    }
+                                    String resultTestName = result.getString("testname");
+                                    String errorDetails = result.getString("errordetails");
+                                    String packageName = result.getString("package");
+                                    String className = result.getString("classname");
+                                    String skipped = result.getString("skipped");
+                                    String stdout = result.getString("stdout");
+                                    String stderr = result.getString("stderr");
+                                    String stacktrace = result.getString("stacktrace");
+                                    float duration = result.getFloat("duration");
+
+                                    suiteResult.setParent(parent);
+                                    CaseResult caseResult = new CaseResult(
+                                            suiteResult,
+                                            className,
+                                            resultTestName,
+                                            errorDetails,
+                                            skipped,
+                                            duration,
+                                            stdout,
+                                            stderr,
+                                            stacktrace);
+                                    final PackageResult packageResult = new PackageResult(parent, packageName);
+                                    packageResult.add(caseResult);
+                                    ClassResult classResult = new ClassResult(packageResult, className);
+                                    classResult.add(caseResult);
+                                    caseResult.setClass(classResult);
+                                    suiteResult.addCase(caseResult);
+                                }
+                                return suites;
+                            }
+                        }
+                    });
                 }
 
                 @Override
                 public float getTotalTestDuration() {
                     return query(connection -> {
-                        try (PreparedStatement statement = connection.prepareStatement("SELECT sum(duration) as duration FROM " +  Impl.CASE_RESULTS_TABLE +  " WHERE job = ? and build = ?;")) {
+                        try (PreparedStatement statement =
+                                connection.prepareStatement("SELECT sum(duration) as duration FROM "
+                                        + Impl.CASE_RESULTS_TABLE + " WHERE job = ? and build = ?;")) {
                             statement.setString(1, job);
                             statement.setInt(2, build);
                             try (ResultSet result = statement.executeQuery()) {
@@ -654,19 +840,26 @@ public class TestResultStorageJunitTest {
                     });
                 }
 
-                @Override public int getFailCount() {
+                @Override
+                public int getFailCount() {
                     int caseCount = getCaseCount(" AND errorDetails IS NOT NULL");
                     return caseCount;
                 }
-                @Override public int getSkipCount() {
+
+                @Override
+                public int getSkipCount() {
                     int caseCount = getCaseCount(" AND skipped IS NOT NULL");
                     return caseCount;
                 }
-                @Override public int getPassCount() {
+
+                @Override
+                public int getPassCount() {
                     int caseCount = getCaseCount(" AND errorDetails IS NULL AND skipped IS NULL");
                     return caseCount;
                 }
-                @Override public int getTotalCount() {
+
+                @Override
+                public int getTotalCount() {
                     int caseCount = getCaseCount("");
                     return caseCount;
                 }
@@ -703,7 +896,9 @@ public class TestResultStorageJunitTest {
                 @CheckForNull
                 public TestResult getPreviousResult() {
                     return query(connection -> {
-                        try (PreparedStatement statement = connection.prepareStatement("SELECT build FROM " + Impl.CASE_RESULTS_TABLE + " WHERE job = ? AND build < ? ORDER BY build DESC LIMIT 1")) {
+                        try (PreparedStatement statement =
+                                connection.prepareStatement("SELECT build FROM " + Impl.CASE_RESULTS_TABLE
+                                        + " WHERE job = ? AND build < ? ORDER BY build DESC LIMIT 1")) {
                             statement.setString(1, job);
                             statement.setInt(2, build);
                             try (ResultSet result = statement.executeQuery()) {
@@ -720,7 +915,7 @@ public class TestResultStorageJunitTest {
                 }
 
                 @NonNull
-                @Override 
+                @Override
                 public TestResult getResultByNodes(@NonNull List<String> nodeIds) {
                     return new TestResult(this); // TODO
                 }
@@ -731,7 +926,8 @@ public class TestResultStorageJunitTest {
 
             private final String job;
             private final int build;
-            // TODO keep the same supplier and thus Connection open across builds, so long as the database config remains unchanged
+            // TODO keep the same supplier and thus Connection open across builds, so long as the database config
+            // remains unchanged
             private final ConnectionSupplier connectionSupplier;
 
             RemotePublisherImpl(String job, int build) {
@@ -740,10 +936,13 @@ public class TestResultStorageJunitTest {
                 connectionSupplier = new RemoteConnectionSupplier();
             }
 
-            @Override public void publish(TestResult result, TaskListener listener) throws IOException {
+            @Override
+            public void publish(TestResult result, TaskListener listener) throws IOException {
                 try {
                     Connection connection = connectionSupplier.connection();
-                    try (PreparedStatement statement = connection.prepareStatement("INSERT INTO " + CASE_RESULTS_TABLE + " (job, build, suite, package, className, testName, errorDetails, skipped, duration, stdout, stderr, stacktrace) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                    try (PreparedStatement statement = connection.prepareStatement(
+                            "INSERT INTO " + CASE_RESULTS_TABLE
+                                    + " (job, build, suite, package, className, testName, errorDetails, skipped, duration, stdout, stderr, stacktrace) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                         int count = 0;
                         for (SuiteResult suiteResult : result.getSuites()) {
                             for (CaseResult caseResult : suiteResult.getCases()) {
@@ -765,17 +964,20 @@ public class TestResultStorageJunitTest {
                                     statement.setNull(8, Types.VARCHAR);
                                 }
                                 statement.setFloat(9, caseResult.getDuration());
-                                if (StringUtils.isNotEmpty(caseResult.getStdout())) {
+                                if (caseResult.getStdout() != null
+                                        && !caseResult.getStdout().isEmpty()) {
                                     statement.setString(10, caseResult.getStdout());
                                 } else {
                                     statement.setNull(10, Types.VARCHAR);
                                 }
-                                if (StringUtils.isNotEmpty(caseResult.getStderr())) {
+                                if (caseResult.getStderr() != null
+                                        && !caseResult.getStderr().isEmpty()) {
                                     statement.setString(11, caseResult.getStderr());
                                 } else {
                                     statement.setNull(11, Types.VARCHAR);
                                 }
-                                if (StringUtils.isNotEmpty(caseResult.getErrorStackTrace())) {
+                                if (caseResult.getErrorStackTrace() != null
+                                        && !caseResult.getErrorStackTrace().isEmpty()) {
                                     statement.setString(12, caseResult.getErrorStackTrace());
                                 } else {
                                     statement.setNull(12, Types.VARCHAR);
@@ -790,10 +992,9 @@ public class TestResultStorageJunitTest {
                     throw new IOException(x);
                 }
             }
-
         }
 
-        static abstract class ConnectionSupplier { // TODO AutoCloseable
+        abstract static class ConnectionSupplier { // TODO AutoCloseable
 
             private transient Connection connection;
 
@@ -809,18 +1010,20 @@ public class TestResultStorageJunitTest {
                 }
                 return connection;
             }
-
         }
 
         static class LocalConnectionSupplier extends ConnectionSupplier {
 
-            @Override protected Database database() {
+            @Override
+            protected Database database() {
                 return GlobalDatabaseConfiguration.get().getDatabase();
             }
 
-            @Override protected void initialize(Connection connection) throws SQLException {
+            @Override
+            protected void initialize(Connection connection) throws SQLException {
                 boolean exists = false;
-                try (ResultSet rs = connection.getMetaData().getTables(null, null, CASE_RESULTS_TABLE, new String[] {"TABLE"})) {
+                try (ResultSet rs =
+                        connection.getMetaData().getTables(null, null, CASE_RESULTS_TABLE, new String[] {"TABLE"})) {
                     while (rs.next()) {
                         if (rs.getString("TABLE_NAME").equalsIgnoreCase(CASE_RESULTS_TABLE)) {
                             exists = true;
@@ -831,11 +1034,12 @@ public class TestResultStorageJunitTest {
                 if (!exists) {
                     try (Statement statement = connection.createStatement()) {
                         // TODO this and joined tables: nodeId, enclosingBlocks, enclosingBlockNames, etc.
-                        statement.execute("CREATE TABLE " + CASE_RESULTS_TABLE + "(job varchar(255), build int, suite varchar(255), package varchar(255), className varchar(255), testName varchar(255), errorDetails varchar(255), skipped varchar(255), duration numeric, stdout varchar(100000), stderr varchar(100000), stacktrace varchar(100000))");
+                        statement.execute(
+                                "CREATE TABLE " + CASE_RESULTS_TABLE
+                                        + "(job varchar(255), build int, suite varchar(255), package varchar(255), className varchar(255), testName varchar(255), errorDetails varchar(255), skipped varchar(255), duration numeric, stdout varchar(100000), stderr varchar(100000), stacktrace varchar(100000))");
                     }
                 }
             }
-
         }
 
         /**
@@ -843,41 +1047,45 @@ public class TestResultStorageJunitTest {
          */
         static class RemoteConnectionSupplier extends ConnectionSupplier implements SerializableOnlyOverRemoting {
 
-            private static final XStream XSTREAM = new XStream();
+            private static final XStream XSTREAM = new XStream2();
             private final String databaseXml;
+
+            static {
+                XSTREAM.allowTypes(new Class[] {LocalH2Database.class});
+            }
 
             RemoteConnectionSupplier() {
                 databaseXml = XSTREAM.toXML(GlobalDatabaseConfiguration.get().getDatabase());
             }
 
-            @Override protected Database database() {
+            @Override
+            protected Database database() {
                 return (Database) XSTREAM.fromXML(databaseXml);
             }
-
         }
-
     }
 
     // https://gist.github.com/mikbuch/299568988fa7997cb28c7c84309232b1
     private static void printResultSet(ResultSet rs) throws SQLException {
+        StringBuilder sb = new StringBuilder();
         ResultSetMetaData rsmd = rs.getMetaData();
         int columnsNumber = rsmd.getColumnCount();
         for (int i = 1; i <= columnsNumber; i++) {
             if (i > 1) {
-                System.out.print("\t|\t");
+                sb.append("\t|\t");
             }
-            System.out.print(rsmd.getColumnName(i));
+            sb.append(rsmd.getColumnName(i));
         }
-        System.out.println();
+        sb.append('\n');
         while (rs.next()) {
             for (int i = 1; i <= columnsNumber; i++) {
                 if (i > 1) {
-                    System.out.print("\t|\t");
+                    sb.append("\t|\t");
                 }
-                System.out.print(rs.getString(i));
+                sb.append(rs.getString(i));
             }
-            System.out.println();
+            sb.append('\n');
         }
+        LOGGER.log(Level.INFO, sb.toString());
     }
-
 }

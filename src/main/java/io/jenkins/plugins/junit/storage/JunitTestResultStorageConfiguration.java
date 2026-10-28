@@ -8,18 +8,16 @@ import net.sf.json.JSONObject;
 import org.jenkinsci.Symbol;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.Beta;
-import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
-import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.StaplerRequest2;
 
 @Extension
 @Restricted(Beta.class)
 @Symbol("junitTestResultStorage")
 public class JunitTestResultStorageConfiguration extends GlobalConfiguration {
-    
+
     private JunitTestResultStorage storage = new FileJunitTestResultStorage();
 
-    @DataBoundConstructor
     public JunitTestResultStorageConfiguration() {
         load();
     }
@@ -34,7 +32,7 @@ public class JunitTestResultStorageConfiguration extends GlobalConfiguration {
     }
 
     @Override
-    public boolean configure(StaplerRequest req, JSONObject json) {
+    public boolean configure(StaplerRequest2 req, JSONObject json) {
         req.bindJSON(this, json);
         save();
         return true;

@@ -1,6 +1,6 @@
 package hudson.tasks.junit.pipeline;
 
-import com.google.common.collect.ImmutableSet;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
@@ -10,9 +10,16 @@ import hudson.model.Saveable;
 import hudson.model.TaskListener;
 import hudson.tasks.junit.JUnitTask;
 import hudson.tasks.junit.Messages;
+import hudson.tasks.junit.StdioRetention;
 import hudson.tasks.junit.TestDataPublisher;
 import hudson.util.DescribableList;
 import hudson.util.FormValidation;
+import hudson.util.ListBoxModel;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import org.apache.tools.ant.types.FileSet;
 import org.jenkinsci.plugins.workflow.graph.FlowNode;
 import org.jenkinsci.plugins.workflow.steps.Step;
@@ -22,11 +29,7 @@ import org.jenkinsci.plugins.workflow.steps.StepExecution;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
-
-import javax.annotation.Nonnull;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import org.kohsuke.stapler.verb.POST;
 
 public class JUnitResultsStep extends Step implements JUnitTask {
     /**
@@ -35,10 +38,16 @@ public class JUnitResultsStep extends Step implements JUnitTask {
     private final String testResults;
 
     /**
-     * If true, retain a suite's complete stdout/stderr even if this is huge and the suite passed.
-     * @since 1.358
+     * Whether to complete test stdout/stderr even if this is huge.
      */
-    private boolean keepLongStdio;
+    private String stdioRetention;
+
+    private boolean keepProperties;
+
+    /**
+     * If true, do not mangle test names in case running in multiple stages or parallel steps.
+     */
+    private boolean keepTestNames;
 
     /**
      * {@link TestDataPublisher}s configured for this archiver, to process the recorded data.
@@ -53,18 +62,34 @@ public class JUnitResultsStep extends Step implements JUnitTask {
      * If true, don't throw exception on missing test results or no files found.
      */
     private boolean allowEmptyResults;
+
     private boolean skipPublishingChecks;
     private String checksName;
+    /**
+     * If true, the run won't be marked as unstable if there are failing tests. Only the stage will be marked as unstable.
+     */
+    private boolean skipMarkingBuildUnstable;
+
+    /**
+     * If true, failing tests will not mark the stage (pipeline node) or the overall build as unstable.
+     */
+    private boolean skipMarkingStageUnstable;
+
+    private boolean skipOldReports;
+
+    private boolean archiveAttachments;
 
     @DataBoundConstructor
     public JUnitResultsStep(String testResults) {
         this.testResults = testResults;
     }
 
+    @Override
     public String getTestResults() {
         return testResults;
     }
 
+    @Override
     public double getHealthScaleFactor() {
         return healthScaleFactor == null ? 1.0 : healthScaleFactor;
     }
@@ -79,9 +104,10 @@ public class JUnitResultsStep extends Step implements JUnitTask {
         this.healthScaleFactor = Math.max(0.0, healthScaleFactor);
     }
 
-    public @Nonnull
-    List<TestDataPublisher> getTestDataPublishers() {
-        return testDataPublishers == null ? Collections.<TestDataPublisher>emptyList() : testDataPublishers;
+    @NonNull
+    @Override
+    public List<TestDataPublisher> getTestDataPublishers() {
+        return testDataPublishers == null ? Collections.emptyList() : testDataPublishers;
     }
 
     /**
@@ -89,16 +115,10 @@ public class JUnitResultsStep extends Step implements JUnitTask {
      *
      * @since 1.2
      */
-    @DataBoundSetter public final void setTestDataPublishers(@Nonnull List<TestDataPublisher> testDataPublishers) {
-        this.testDataPublishers = new DescribableList<TestDataPublisher,Descriptor<TestDataPublisher>>(Saveable.NOOP);
+    @DataBoundSetter
+    public final void setTestDataPublishers(@NonNull List<TestDataPublisher> testDataPublishers) {
+        this.testDataPublishers = new DescribableList<>(Saveable.NOOP);
         this.testDataPublishers.addAll(testDataPublishers);
-    }
-
-    /**
-     * @return the keepLongStdio.
-     */
-    public boolean isKeepLongStdio() {
-        return keepLongStdio;
     }
 
     /**
@@ -106,14 +126,71 @@ public class JUnitResultsStep extends Step implements JUnitTask {
      *
      * @since 1.2-beta-1
      */
-    @DataBoundSetter public final void setKeepLongStdio(boolean keepLongStdio) {
-        this.keepLongStdio = keepLongStdio;
+    @Deprecated
+    @DataBoundSetter
+    public final void setKeepLongStdio(boolean keepLongStdio) {
+        this.stdioRetention = StdioRetention.fromKeepLongStdio(keepLongStdio).name();
+    }
+
+    @Override
+    @Deprecated
+    public boolean isKeepLongStdio() {
+        return StdioRetention.ALL == getParsedStdioRetention();
+    }
+
+    /**
+     * @return the stdioRetention
+     */
+    @Override
+    public String getStdioRetention() {
+        return stdioRetention == null ? StdioRetention.DEFAULT.name() : stdioRetention;
+    }
+
+    /**
+     * @param stdioRetention How to keep long stdio.
+     */
+    @DataBoundSetter
+    public final void setStdioRetention(String stdioRetention) {
+        this.stdioRetention = stdioRetention;
+    }
+
+    /**
+     * @return the keepProperties.
+     */
+    @Override
+    public boolean isKeepProperties() {
+        return keepProperties;
+    }
+
+    /**
+     * @param keepProperties Whether to keep the properties
+     */
+    @DataBoundSetter
+    public final void setKeepProperties(boolean keepProperties) {
+        this.keepProperties = keepProperties;
+    }
+
+    /**
+     * @return the keepTestNames.
+     */
+    @Override
+    public boolean isKeepTestNames() {
+        return keepTestNames;
+    }
+
+    /**
+     * @param keepTestNames Whether to avoid adding parallel stage name into test name.
+     */
+    @DataBoundSetter
+    public final void setKeepTestNames(boolean keepTestNames) {
+        this.keepTestNames = keepTestNames;
     }
 
     /**
      *
      * @return the allowEmptyResults
      */
+    @Override
     public boolean isAllowEmptyResults() {
         return allowEmptyResults;
     }
@@ -121,7 +198,7 @@ public class JUnitResultsStep extends Step implements JUnitTask {
     /**
      * Should we skip publishing checks to the checks API plugin.
      *
-     * @return if publishing checks should be skipped, {@code false} otherwise 
+     * @return if publishing checks should be skipped, {@code false} otherwise
      */
     @Override
     public boolean isSkipPublishingChecks() {
@@ -143,8 +220,47 @@ public class JUnitResultsStep extends Step implements JUnitTask {
         this.checksName = checksName;
     }
 
-    @DataBoundSetter public final void setAllowEmptyResults(boolean allowEmptyResults) {
+    @DataBoundSetter
+    public final void setAllowEmptyResults(boolean allowEmptyResults) {
         this.allowEmptyResults = allowEmptyResults;
+    }
+
+    public boolean isSkipMarkingBuildUnstable() {
+        return skipMarkingBuildUnstable;
+    }
+
+    @DataBoundSetter
+    public void setSkipMarkingBuildUnstable(boolean skipMarkingBuildUnstable) {
+        this.skipMarkingBuildUnstable = skipMarkingBuildUnstable;
+    }
+
+    public boolean isSkipMarkingStageUnstable() {
+        return skipMarkingStageUnstable;
+    }
+
+    @DataBoundSetter
+    public void setSkipMarkingStageUnstable(boolean skipMarkingStageUnstable) {
+        this.skipMarkingStageUnstable = skipMarkingStageUnstable;
+    }
+
+    @Override
+    public boolean isSkipOldReports() {
+        return this.skipOldReports;
+    }
+
+    @DataBoundSetter
+    public void setSkipOldReports(boolean skipOldReports) {
+        this.skipOldReports = skipOldReports;
+    }
+
+    @Override
+    public boolean isArchiveAttachments() {
+        return archiveAttachments;
+    }
+
+    @DataBoundSetter
+    public final void setArchiveAttachments(boolean archiveAttachments) {
+        this.archiveAttachments = archiveAttachments;
     }
 
     @Override
@@ -160,25 +276,40 @@ public class JUnitResultsStep extends Step implements JUnitTask {
         }
 
         @Override
-        @Nonnull
+        @NonNull
         public String getDisplayName() {
             return "Archive JUnit-formatted test results";
         }
 
         @Override
         public Set<? extends Class<?>> getRequiredContext() {
-            return ImmutableSet.of(FilePath.class, FlowNode.class, TaskListener.class, Launcher.class);
+            Set<Class<?>> context = new HashSet<>();
+            Collections.addAll(context, FilePath.class, FlowNode.class, TaskListener.class, Launcher.class);
+            return Collections.unmodifiableSet(context);
+        }
+
+        @POST
+        @SuppressWarnings("unused")
+        public ListBoxModel doFillStdioRetentionItems() {
+            ListBoxModel options = new ListBoxModel();
+            options.add(StdioRetention.DEFAULT.getDisplayName(), StdioRetention.DEFAULT.name());
+
+            List<ListBoxModel.Option> stdioRetentions = Arrays.stream(StdioRetention.values())
+                    .filter(retention -> retention != StdioRetention.DEFAULT)
+                    .map(option -> new ListBoxModel.Option(option.getDisplayName(), option.name()))
+                    .toList();
+            options.addAll(stdioRetentions);
+
+            return options;
         }
 
         public FormValidation doCheckHealthScaleFactor(@QueryParameter double value) {
-            if (value < 1e-7) return FormValidation.warning("Test health reporting disabled");
+            if (value < 1e-7) {
+                return FormValidation.warning("Test health reporting disabled");
+            }
             return FormValidation.ok(Messages.JUnitResultArchiver_HealthScaleFactorAnalysis(
-                    1,
-                    (int) (100.0 - Math.max(0.0, Math.min(100.0, 1 * value))),
-                    5,
-                    (int) (100.0 - Math.max(0.0, Math.min(100.0, 5 * value)))
-            ));
+                    1, (int) (100.0 - Math.max(0.0, Math.min(100.0, 1 * value))), 5, (int)
+                            (100.0 - Math.max(0.0, Math.min(100.0, 5 * value)))));
         }
-
     }
 }

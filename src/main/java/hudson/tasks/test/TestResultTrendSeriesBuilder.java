@@ -1,7 +1,6 @@
 package hudson.tasks.test;
 
 import edu.hm.hafner.echarts.SeriesBuilder;
-import hudson.tasks.junit.TestResultAction;
 import java.util.HashMap;
 import java.util.Map;
 import org.kohsuke.accmod.Restricted;

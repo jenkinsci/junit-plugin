@@ -1,0 +1,18 @@
+<div>
+    Controls how standard output or error from a test suite will be retained
+    in the test results after the build completes. (This refers only to additional
+    messages printed to console, not to a failure stack trace.) Some output is
+    always retained for tests, but by default, excessively long output is truncated
+    to save disk space. This property can be used to control whether that truncation
+    takes place:
+    <ul>
+        <li>If set to 'all', then no truncation will take place and the complete output from
+        every test will be stored.</li>
+        <li>If set to 'failed', then the complete output from all failed tests will be stored,
+        but long output from passing tests will be truncated.</li>
+        <li>If set to 'none', then long output from every test will be truncated, regardless
+        of whether they passed or failed.</li>
+    </ul>
+    Beware that storing large output can cause Jenkins's memory consumption to
+    substantially increase, even if you never look at the test results.
+</div>

@@ -14,7 +14,6 @@ import jenkins.util.JenkinsJVM;
  *
  * @since 1.515
  */
-
 public abstract class TestNameTransformer implements ExtensionPoint {
     /**
      * Transform the class/package/method name.
@@ -27,7 +26,7 @@ public abstract class TestNameTransformer implements ExtensionPoint {
      *      need to be changed.
      */
     public abstract String transformName(String name);
-    
+
     public static String getTransformedName(String name) {
         if (!JenkinsJVM.isJenkinsJVM()) {
             // TODO JENKINS-61787 should this be serialized and passed along in the callable?

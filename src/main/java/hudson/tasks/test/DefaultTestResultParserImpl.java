@@ -30,7 +30,6 @@ import hudson.Util;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.remoting.VirtualChannel;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
@@ -44,7 +43,7 @@ import jenkins.MasterToSlaveFileCallable;
  *
  * <p>
  * The instance of the parser will be serialized to the node that performed the build and the parsing will be done
- * remotely on that slave.
+ * remotely on that agent.
  *
  * @since 1.343
  * @author Kohsuke Kawaguchi
@@ -53,7 +52,7 @@ import jenkins.MasterToSlaveFileCallable;
 @Deprecated
 public abstract class DefaultTestResultParserImpl extends TestResultParser implements Serializable {
     /**
-     * This method is executed on the slave that has the report files to parse test reports and builds {@link TestResult}.
+     * This method is executed on the agent that has the report files to parse test reports and builds {@link TestResult}.
      *
      * @param reportFiles
      *      List of files to be parsed. Never be empty nor null.
@@ -72,15 +71,24 @@ public abstract class DefaultTestResultParserImpl extends TestResultParser imple
      *      If you encounter an error that you handled gracefully, throw this exception and Hudson
      *      will not show a stack trace.
      */
-    protected abstract TestResult parse(List<File> reportFiles, Launcher launcher, TaskListener listener) throws InterruptedException, IOException;
+    protected abstract TestResult parse(List<File> reportFiles, Launcher launcher, TaskListener listener)
+            throws InterruptedException, IOException;
 
     @Override
-    public TestResult parseResult(final String testResultLocations, final Run<?,?> build, FilePath workspace, final Launcher launcher, final TaskListener listener) throws InterruptedException, IOException {
+    public TestResult parseResult(
+            final String testResultLocations,
+            final Run<?, ?> build,
+            FilePath workspace,
+            final Launcher launcher,
+            final TaskListener listener)
+            throws InterruptedException, IOException {
         return workspace.act(new MasterToSlaveFileCallable<TestResult>() {
-            final boolean ignoreTimestampCheck = IGNORE_TIMESTAMP_CHECK; // so that the property can be set on the master
+            final boolean ignoreTimestampCheck =
+                    IGNORE_TIMESTAMP_CHECK; // so that the property can be set on the controller
             final long buildTime = build.getTimestamp().getTimeInMillis();
             final long nowMaster = System.currentTimeMillis();
 
+            @Override
             public TestResult invoke(File dir, VirtualChannel channel) throws IOException, InterruptedException {
                 final long nowSlave = System.currentTimeMillis();
 
@@ -88,14 +96,18 @@ public abstract class DefaultTestResultParserImpl extends TestResultParser imple
                 long localBuildTime = buildTime + (nowSlave - nowMaster);
 
                 FilePath[] paths = new FilePath(dir).list(testResultLocations);
-                if (paths.length==0)
-                    throw new AbortException("No test reports that matches "+testResultLocations+" found. Configuration error?");
+                if (paths.length == 0) {
+                    throw new AbortException(
+                            "No test reports that matches " + testResultLocations + " found. Configuration error?");
+                }
 
                 // since dir is local, paths all point to the local files
-                List<File> files = new ArrayList<File>(paths.length);
+                List<File> files = new ArrayList<>(paths.length);
                 for (FilePath path : paths) {
                     File report = new File(path.getRemote());
-                    if (ignoreTimestampCheck || localBuildTime - 3000 /*error margin*/ < report.lastModified()) {
+                    if (ignoreTimestampCheck
+                            || localBuildTime - hudson.tasks.junit.TestResult.FILE_TIME_PRECISION_MARGIN
+                                    < report.lastModified()) {
                         // this file is created during this build
                         files.add(report);
                     }
@@ -103,19 +115,19 @@ public abstract class DefaultTestResultParserImpl extends TestResultParser imple
 
                 if (files.isEmpty()) {
                     // none of the files were new
-                    throw new AbortException(
-                        String.format(
-                        "Test reports were found but none of them are new. Did tests run? %n"+
-                        "For example, %s is %s old%n", paths[0].getRemote(),
-                        Util.getTimeSpanString(localBuildTime-paths[0].lastModified())));
+                    throw new AbortException(String.format(
+                            "Test reports were found but none of them are new. Did tests run? %n"
+                                    + "For example, %s is %s old%n",
+                            paths[0].getRemote(), Util.getTimeSpanString(localBuildTime - paths[0].lastModified())));
                 }
 
-                return parse(files,launcher,listener);
+                return parse(files, launcher, listener);
             }
         });
     }
 
     private static final long serialVersionUID = 1L;
 
-    public static final boolean IGNORE_TIMESTAMP_CHECK = Boolean.getBoolean(TestResultParser.class.getName()+".ignoreTimestampCheck");
+    public static final boolean IGNORE_TIMESTAMP_CHECK =
+            Boolean.getBoolean(TestResultParser.class.getName() + ".ignoreTimestampCheck");
 }

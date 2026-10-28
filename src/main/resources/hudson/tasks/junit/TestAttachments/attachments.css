@@ -1,0 +1,35 @@
+/* the test page lays out test actions in a table */
+table:has(> tbody > tr.junit-attachments),
+tr.junit-attachments > td {
+  width: 100%;
+}
+
+tr.junit-attachments > td {
+  padding: 0 0 var(--section-padding);
+}
+
+.junit-attachments__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.junit-attachments__item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.junit-attachments__icon {
+  width: 1.125rem;
+  height: 1.125rem;
+  color: var(--text-color-secondary);
+}
+
+.junit-attachments__size {
+  color: var(--text-color-secondary);
+  font-size: var(--font-size-sm);
+}

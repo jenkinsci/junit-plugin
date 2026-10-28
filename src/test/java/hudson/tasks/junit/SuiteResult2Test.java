@@ -21,8 +21,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-
 package hudson.tasks.junit;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.File;
@@ -30,16 +31,14 @@ import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.util.List;
-import static org.jvnet.hudson.test.MemoryAssert.*;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.Test;
+import org.jvnet.hudson.test.MemoryAssert;
 
-import hudson.tasks.test.PipelineTestDetails;
-import org.junit.Test;
-
-public class SuiteResult2Test {
+class SuiteResult2Test {
 
     @SuppressFBWarnings({"DM_DEFAULT_ENCODING", "OS_OPEN_STREAM", "RV_RETURN_VALUE_IGNORED_BAD_PRACTICE"})
-    @Test public void sizeSurefire() throws Exception {
+    @Test
+    void sizeSurefire() throws Exception {
         File data = File.createTempFile("TEST-", ".xml");
         try {
             Writer w = new FileWriter(data);
@@ -72,7 +71,8 @@ public class SuiteResult2Test {
             } finally {
                 w.close();
             }
-            File data2 = new File(data.getParentFile(), data.getName().replaceFirst("^TEST-(.+)[.]xml$", "$1-output.txt"));
+            File data2 =
+                    new File(data.getParentFile(), data.getName().replaceFirst("^TEST-(.+)[.]xml$", "$1-output.txt"));
             try {
                 w = new FileWriter(data2);
                 try {
@@ -88,7 +88,16 @@ public class SuiteResult2Test {
                     w.close();
                 }
                 SuiteResult sr = parseOne(data);
-                assertHeapUsage(sr, 1100 + /* Unicode overhead */2 * (int) (/*259946*/data.length() + /*495600*/data2.length() + /* SuiteResult.file */data.getAbsolutePath().length()));
+                MemoryAssert.assertHeapUsage(
+                        sr,
+                        1100
+                                + /* Unicode overhead */ 2
+                                        * (int)
+                                                (
+                                                /*259946*/ data.length()
+                                                        + /*495600*/ data2.length()
+                                                        + /* SuiteResult.file */ data.getAbsolutePath()
+                                                                .length()));
                 // TODO serialize using TestResultAction.XSTREAM and verify that round-tripped object has same size
             } finally {
                 data2.delete();
@@ -99,9 +108,8 @@ public class SuiteResult2Test {
     }
 
     private SuiteResult parseOne(File file) throws Exception {
-        List<SuiteResult> results = SuiteResult.parse(file, false, null);
-        assertEquals(1,results.size());
+        List<SuiteResult> results = SuiteResult.parse(file, false, false, null);
+        assertEquals(1, results.size());
         return results.get(0);
     }
-
 }

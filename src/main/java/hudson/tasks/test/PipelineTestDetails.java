@@ -1,7 +1,7 @@
 package hudson.tasks.test;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,25 +19,25 @@ public class PipelineTestDetails implements Serializable {
         return nodeId;
     }
 
-    public void setNodeId(@Nonnull String nodeId) {
+    public void setNodeId(@NonNull String nodeId) {
         this.nodeId = nodeId;
     }
 
-    @Nonnull
+    @NonNull
     public List<String> getEnclosingBlocks() {
         return enclosingBlocks;
     }
 
-    public void setEnclosingBlocks(@Nonnull List<String> enclosingBlocks) {
+    public void setEnclosingBlocks(@NonNull List<String> enclosingBlocks) {
         this.enclosingBlocks.addAll(enclosingBlocks);
     }
 
-    @Nonnull
+    @NonNull
     public List<String> getEnclosingBlockNames() {
         return enclosingBlockNames;
     }
 
-    public void setEnclosingBlockNames(@Nonnull List<String> enclosingBlockNames) {
+    public void setEnclosingBlockNames(@NonNull List<String> enclosingBlockNames) {
         this.enclosingBlockNames.addAll(enclosingBlockNames);
     }
 

@@ -1,16 +1,14 @@
 package hudson.tasks.test.helper;
 
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import org.xml.sax.SAXException;
-
 import java.io.IOException;
+import org.htmlunit.html.HtmlPage;
+import org.xml.sax.SAXException;
 
 public class ProjectPage extends AbstractPage {
 
     public ProjectPage(HtmlPage projectPage) {
         super(projectPage);
     }
-
 
     public LatestTestResultLink getLatestTestReportLink() throws IOException, SAXException {
         return new LatestTestResultLink(getTestReportAnchor(TEST_REPORT_URL));
@@ -20,6 +18,7 @@ public class ProjectPage extends AbstractPage {
         return new LatestTestResultLink(getTestReportAnchor(AGGREGATED_TEST_REPORT_URL));
     }
 
+    @Override
     protected String getHrefFromTestUrl(String testUrl) {
         return "lastCompletedBuild/" + testUrl + "/";
     }
@@ -31,5 +30,4 @@ public class ProjectPage extends AbstractPage {
     public void assertNoAggregatedTestReportLink() {
         assertNoLink(AGGREGATED_TEST_REPORT_URL);
     }
-
 }
