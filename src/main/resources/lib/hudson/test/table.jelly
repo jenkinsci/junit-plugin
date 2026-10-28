@@ -37,12 +37,19 @@ THE SOFTWARE.
         <st:attribute name="id" use="optional">
             Optional ID for the table.
         </st:attribute>
+        <st:attribute name="showClassName" use="optional">
+            Optional flag controlling whether each row shows its test class name.
+            Defaults to true; pass false when the table is already scoped to a single class
+            (e.g. the per-class "All Tests" table) so the class name isn't repeated on every row.
+        </st:attribute>
     </st:documentation>
 
     <st:once>
         <link rel="stylesheet" href="${resURL}/plugin/junit/styles.css" defer="true" />
         <st:adjunct includes="lib.hudson.test.js.failureSummary" />
     </st:once>
+
+    <j:set var="showClassName" value="${attrs.showClassName == null ? true : attrs.showClassName}" />
 
     <table class="jenkins-table sortable" id="${attrs.id}">
         <thead>
@@ -69,7 +76,7 @@ THE SOFTWARE.
 
                                 ${f.displayName}
 
-                                <j:if test="${it.class.simpleName eq 'TestResult'}">
+                                <j:if test="${showClassName}">
                                     <span class="jenkins-!-text-color-secondary jenkins-!-margin-left-2" style="font-family: var(--font-family-mono)">
                                         <st:out value="${f.className}" />
                                     </span>
@@ -84,7 +91,7 @@ THE SOFTWARE.
 
                                 ${f.displayName}
 
-                                <j:if test="${it.class.simpleName eq 'TestResult'}">
+                                <j:if test="${showClassName}">
                                     <span class="jenkins-!-text-color-secondary jenkins-!-margin-left-2" style="font-family: var(--font-family-mono)">
                                         <st:out value="${f.className}" />
                                     </span>
