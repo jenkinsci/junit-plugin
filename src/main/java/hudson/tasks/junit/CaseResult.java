@@ -46,6 +46,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import org.apache.commons.io.FileUtils;
@@ -1101,6 +1102,16 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         } catch (URISyntaxException x) {
             return false;
         }
+    }
+
+    private static final Pattern JAVA_STACK_FRAME = Pattern.compile("^[ \\t]+at \\S+\\(", Pattern.MULTILINE);
+
+    /**
+     * Used by {@code test-output.jelly} to decide whether a value should be highlighted as a Java stack trace.
+     */
+    @Restricted(NoExternalUse.class)
+    public boolean isJavaStackTrace(String value) {
+        return value != null && JAVA_STACK_FRAME.matcher(value).find();
     }
 
     /**

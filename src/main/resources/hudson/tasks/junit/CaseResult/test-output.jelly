@@ -44,7 +44,7 @@ THE SOFTWARE.
                             </j:when>
                             <j:otherwise>
                                 <pre class="jdl-component-code__code">
-                                    <code class="language-javastacktrace">
+                                    <code class="${it.isJavaStackTrace(value) ? 'language-javastacktrace' : null}">
                                         ${value}
                                     </code>
                                 </pre>

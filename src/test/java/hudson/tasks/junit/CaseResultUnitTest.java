@@ -82,6 +82,25 @@ class CaseResultUnitTest {
         assertFalse(cr.isUrlValue("https://example.com\nsecond line"));
     }
 
+    @Issue("https://github.com/jenkinsci/junit-plugin/issues/753")
+    @Test
+    void isJavaStackTrace() {
+        CaseResult cr = new CaseResult(null, "testName", null);
+        assertTrue(
+                cr.isJavaStackTrace(
+                        "java.lang.AssertionError: boom\n\tat org.junit.Assert.fail(Assert.java:89)\n\tat com.example.FooTest.test(FooTest.java:12)"));
+        assertTrue(cr.isJavaStackTrace(
+                "Caused by: java.io.IOException\n    at java.base/java.io.File.open(Native Method)"));
+        assertFalse(cr.isJavaStackTrace(null));
+        assertFalse(cr.isJavaStackTrace(""));
+        assertFalse(cr.isJavaStackTrace("expected:<1> but was:<2>"));
+        // must stay linear; a pattern whose leading whitespace can span lines is quadratic here
+        assertFalse(cr.isJavaStackTrace("\n".repeat(100_000)));
+        assertFalse(
+                cr.isJavaStackTrace(
+                        "Viesti: Search results not found.\n09:50:55|ETW activity ID: 00000000-0000-0000-0000-000000000000\nClientConnectionId:ddbaac42-b437-47ee-8dd0-edfbbc84b310"));
+    }
+
     @Test
     void regressionAndFixedCountsOnlyLookUpPreviousResultWhenStatusAllows() {
         SuiteResult suite = new SuiteResult("suite", null, null, null);
