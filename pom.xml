@@ -39,6 +39,8 @@
     <no-test-jar>false</no-test-jar>
     <spotless.check.skip>false</spotless.check.skip>
     <ban-junit4-imports.skip>false</ban-junit4-imports.skip>
+    <!-- TODO remove once the bom includes it, needed for https://github.com/jenkinsci/checks-api-plugin/pull/350 -->
+    <checks-api.version>434.va_a_3dd79d7723</checks-api.version>
   </properties>
 
   <dependencyManagement>
@@ -46,7 +48,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-${jenkins.baseline}.x</artifactId>
-        <version>6931.vea_a_b_c6fd017d</version>
+        <version>7237.v5071b_f4589f1</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -74,6 +76,7 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>checks-api</artifactId>
+      <version>${checks-api.version}</version>
     </dependency>
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
@@ -128,6 +131,7 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>checks-api</artifactId>
+      <version>${checks-api.version}</version>
       <classifier>tests</classifier>
       <scope>test</scope>
     </dependency>

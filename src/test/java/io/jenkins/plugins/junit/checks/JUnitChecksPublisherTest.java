@@ -19,8 +19,10 @@ import io.jenkins.plugins.checks.util.CapturingChecksPublisher;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
+import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -171,7 +173,7 @@ public class JUnitChecksPublisherTest {
         FilePath ws = rule.jenkins.getWorkspaceFor(j);
         Objects.requireNonNull(ws).child("test-result.xml").write(xml.toString(), "UTF-8");
 
-        rule.buildAndAssertStatus(Result.UNSTABLE, j);
+        WorkflowRun run = rule.buildAndAssertStatus(Result.UNSTABLE, j);
 
         ChecksOutput output = getDetail().getOutput().get();
 
@@ -184,8 +186,8 @@ public class JUnitChecksPublisherTest {
         assertThat(truncated, not(containsString("## `big.Test.test99`")));
         assertThat(
                 truncated,
-                endsWith("more test results are not shown here, view them on [Jenkins](" + rule.getURL()
-                        + "job/singleStep/1/testReport/)"));
+                endsWith("more test results are not shown here, view them on [Jenkins]("
+                        + DisplayURLProvider.get().getTestsURL(run) + ")"));
     }
 
     @Test
