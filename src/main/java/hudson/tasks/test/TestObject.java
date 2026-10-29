@@ -1,19 +1,19 @@
 /*
  * The MIT License
- * 
+ *
  * Copyright (c) 2004-2010, Sun Microsystems, Inc., Kohsuke Kawaguchi,
  * Tom Huybrechts, Yahoo!, Inc.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -25,34 +25,42 @@
 package hudson.tasks.test;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import hudson.Util;
 import hudson.Functions;
-import hudson.model.*;
-import hudson.tasks.junit.Helper;
+import hudson.Util;
+import hudson.model.AbstractBuild;
+import hudson.model.Action;
+import hudson.model.Api;
+import hudson.model.Item;
+import hudson.model.Run;
 import hudson.tasks.junit.History;
 import hudson.tasks.junit.TestAction;
 import hudson.tasks.junit.TestResultAction;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.WeakHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import jenkins.model.Jenkins;
-
-import org.apache.commons.lang.StringUtils;
-import org.kohsuke.stapler.*;
+import org.kohsuke.stapler.HttpRedirect;
+import org.kohsuke.stapler.HttpResponse;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.Stapler;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.export.Exported;
 import org.kohsuke.stapler.export.ExportedBean;
-
-import com.google.common.collect.MapMaker;
 import org.kohsuke.stapler.interceptor.RequirePOST;
-
-import javax.servlet.ServletException;
-import java.io.IOException;
-import java.util.*;
-import java.util.logging.Logger;
 
 /**
  * Base class for all test result objects.
  * For compatibility with code that expects this class to be in hudson.tasks.junit,
  * we've created a pure-abstract class, hudson.tasks.junit.TestObject. That
- * stub class is deprecated; instead, people should use this class.  
- * 
+ * stub class is deprecated; instead, people should use this class.
+ *
  * @author Kohsuke Kawaguchi
  */
 @ExportedBean
@@ -60,13 +68,14 @@ import java.util.logging.Logger;
 public abstract class TestObject extends hudson.tasks.junit.TestObject {
 
     private static final Logger LOGGER = Logger.getLogger(TestObject.class.getName());
-    private volatile transient String id;
+    private transient volatile String id;
 
     /**
      * Reverse pointer of {@link TabulatedResult#getChildren()}.
      *
      * @return the parent {@link TestObject}.
      */
+    @Override
     public abstract TestObject getParent();
 
     @Override
@@ -88,12 +97,9 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
         return id;
     }
 
-    /**
-     * Returns url relative to TestResult
-     */
     @Override
     public String getUrl() {
-        return '/' + getId();
+        return getRun().getUrl() + getTestResultAction().getUrlName() + "/" + getId();
     }
 
     public String getFullDisplayName() {
@@ -106,6 +112,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
      * @deprecated This method returns a JUnit specific class. Use
      * {@link #getTopLevelTestResult()} instead for a more general interface.
      */
+    @Deprecated
     @Override
     public hudson.tasks.junit.TestResult getTestResult() {
         TestObject parent = getParent();
@@ -117,13 +124,13 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
      * Returns the top level test result data.
      *
      * @return the top level test result data.
-     */    
+     */
     public TestResult getTopLevelTestResult() {
         TestObject parent = getParent();
 
         return parent == null ? null : getParent().getTopLevelTestResult();
     }
-    
+
     /**
      * Computes the relative path to get to this test object from <code>it</code>. If
      * <code>it</code> does not appear in the parent chain for this object, a
@@ -135,80 +142,80 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
      */
     public String getRelativePathFrom(TestObject it) {
 
-
         // if (it is one of my ancestors) {
         //    return a relative path from it
         // } else {
         //    return a complete path starting with "/"
         // }
-       if (it==this) {
+        if (it == this) {
             return ".";
         }
 
         StringBuilder buf = new StringBuilder();
         TestObject next = this;
-        TestObject cur = this;  
+        TestObject cur = this;
         // Walk up my ancestors from leaf to root, looking for "it"
         // and accumulating a relative url as I go
-        while (next!=null && it!=next) {
+        while (next != null && it != next) {
             cur = next;
-            buf.insert(0,'/');
-            buf.insert(0,cur.getSafeName());
+            buf.insert(0, '/');
+            buf.insert(0, Util.rawEncode(cur.getSafeName()));
             next = cur.getParent();
         }
-        if (it==next) {
+        if (it == next) {
             return buf.toString();
         } else {
             // Keep adding on to the string we've built so far
 
             // Start with the test result action
             AbstractTestResultAction action = getTestResultAction();
-            if (action==null) {
+            if (action == null) {
                 LOGGER.warning("trying to get relative path, but we can't determine the action that owns this result.");
                 return ""; // this won't take us to the right place, but it also won't 404.
             }
-            buf.insert(0,'/');
-            buf.insert(0,action.getUrlName());
+            buf.insert(0, '/');
+            buf.insert(0, action.getUrlName());
 
             // Now the build
-            Run<?,?> myBuild = cur.getRun();
-            if (myBuild ==null) {
+            Run<?, ?> myBuild = cur.getRun();
+            if (myBuild == null) {
                 LOGGER.warning("trying to get relative path, but we can't determine the build that owns this result.");
-                return ""; // this won't take us to the right place, but it also won't 404. 
+                return ""; // this won't take us to the right place, but it also won't 404.
             }
-            buf.insert(0,'/');
-            buf.insert(0,myBuild.getUrl());
+            buf.insert(0, '/');
+            buf.insert(0, myBuild.getUrl());
 
             // If we're inside a stapler request, just delegate to Hudson.Functions to get the relative path!
-            StaplerRequest req = Stapler.getCurrentRequest();
-            if (req!=null && myBuild instanceof Item) {
+            StaplerRequest2 req = Stapler.getCurrentRequest2();
+            if (req != null && myBuild instanceof Item) {
                 buf.insert(0, '/');
                 // Ugly but I don't see how else to convince the compiler that myBuild is an Item
                 Item myBuildAsItem = (Item) myBuild;
                 buf.insert(0, Functions.getRelativeLinkTo(myBuildAsItem));
             } else {
                 // We're not in a stapler request. Okay, give up.
-                LOGGER.info("trying to get relative path, but it is not my ancestor, and we're not in a stapler request. Trying absolute hudson url...");
-                String hudsonRootUrl = Helper.getActiveInstance().getRootUrl();
-                if (hudsonRootUrl==null||hudsonRootUrl.length()==0) {
-                    LOGGER.warning("Can't find anything like a decent hudson url. Punting, returning empty string."); 
+                LOGGER.fine(
+                        "trying to get relative path, but it is not my ancestor, and we are not in a stapler request. Trying absolute jenkins url...");
+                String jenkinsUrl = Jenkins.get().getRootUrl();
+                if (jenkinsUrl == null || jenkinsUrl.length() == 0) {
+                    LOGGER.warning("Can't find anything like a decent hudson url. Punting, returning empty string.");
                     return "";
-
                 }
-                buf.insert(0, '/');
-                buf.insert(0, hudsonRootUrl);
+                if (!jenkinsUrl.endsWith("/")) {
+                    buf.insert(0, '/');
+                }
+                buf.insert(0, jenkinsUrl);
             }
 
-            LOGGER.info("Here's our relative path: " + buf.toString()); 
-            return buf.toString(); 
+            LOGGER.log(Level.FINE, "Here is our relative path: {0}", buf);
+            return buf.toString();
         }
-
     }
 
     /**
      * Subclasses may override this method if they are
      * associated with a particular subclass of
-     * AbstractTestResultAction. 
+     * AbstractTestResultAction.
      *
      * @return  the test result action that connects this test result to a particular build
      */
@@ -218,13 +225,17 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
         if (owner != null) {
             return owner.getAction(AbstractTestResultAction.class);
         } else {
+            Run<?, ?> run = Stapler.getCurrentRequest2().findAncestorObject(Run.class);
+            if (run != null) {
+                return run.getAction(AbstractTestResultAction.class);
+            }
             LOGGER.warning("owner is null when trying to getTestResultAction.");
             return null;
         }
     }
 
     /**
-     * Get a list of all TestActions associated with this TestObject. 
+     * Get a list of all TestActions associated with this TestObject.
      */
     @Override
     @Exported(visibility = 3)
@@ -234,12 +245,12 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
             TestResultAction tra = (TestResultAction) atra;
             return tra.getActions(this);
         } else {
-            return new ArrayList<TestAction>();
+            return new ArrayList<>();
         }
     }
 
     /**
-     * Gets a test action of the class passed in. 
+     * Gets a test action of the class passed in.
      * @param klazz Type of the action to return.
      * @param <T> an instance of the class passed in
      */
@@ -258,9 +269,11 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
      *
      * @return null if no such counter part exists.
      */
+    @Override
     public abstract TestResult getPreviousResult();
 
     @Deprecated
+    @Override
     public TestResult getResultInBuild(AbstractBuild<?, ?> build) {
         return (TestResult) super.getResultInBuild(build);
     }
@@ -270,7 +283,8 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
      *
      * @return null if no such counter part exists.
      */
-    @Override public TestResult getResultInRun(Run<?,?> run) {
+    @Override
+    public TestResult getResultInRun(Run<?, ?> run) {
         return (TestResult) super.getResultInRun(run);
     }
 
@@ -287,6 +301,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
     /**
      * Time took to run this test. In seconds.
      */
+    @Override
     public abstract float getDuration();
 
     /**
@@ -327,7 +342,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
      * Gets the name of this object.
      */
     @Override
-    public/* abstract */ String getName() {
+    public /* abstract */ String getName() {
         return "";
     }
 
@@ -345,7 +360,6 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
         }
         return sb.toString();
     }
-
 
     /**
      * Gets the version of {@link #getName()} that's URL-safe.
@@ -370,22 +384,40 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
     protected final String uniquifyName(Collection<? extends TestObject> siblings, String base) {
         synchronized (UNIQUIFIED_NAMES) {
             String uniquified = base;
-            Map<TestObject,Void> taken = UNIQUIFIED_NAMES.get(base);
+            Map<TestObject, Void> taken = UNIQUIFIED_NAMES.get(base);
             if (taken == null) {
-                taken = new WeakHashMap<TestObject,Void>();
+                taken = new WeakHashMap<>();
                 UNIQUIFIED_NAMES.put(base, taken);
             } else {
-                Set<TestObject> similars = new HashSet<TestObject>(taken.keySet());
-                similars.retainAll(new HashSet<TestObject>(siblings));
-                if (!similars.isEmpty()) {
-                    uniquified = base + '_' + (similars.size() + 1);
+                // Count the siblings that already took this name by probing the (usually small) set of
+                // siblings rather than copying every live object that ever took it: the latter grows with
+                // every build's results held in memory, making this quadratic when many builds are loaded.
+                int similars = 0;
+                for (TestObject sibling : siblings) {
+                    if (taken.containsKey(sibling)) {
+                        similars++;
+                    }
+                }
+                if (similars > 0) {
+                    uniquified = base + '_' + (similars + 1);
                 }
             }
             taken.put(this, null);
             return uniquified;
         }
     }
-    private static final Map<String,Map<TestObject,Void>> UNIQUIFIED_NAMES = new MapMaker().makeMap();
+
+    private static final Map<String, Map<TestObject, Void>> UNIQUIFIED_NAMES = new HashMap<>();
+
+    /**
+     * Characters that {@link #safe(String)} replaces, in addition to the space, the control
+     * characters and {@code DEL}.
+     *
+     * <p>These are the printable ASCII characters that RFC 3986 does not permit to appear
+     * literally in a URL path segment, plus {@code /} (the separator {@link #getId()} builds
+     * paths with) and {@code :} (replaced ever since this method was introduced).
+     */
+    private static final String UNSAFE_CHARS = "\"#%/:<>?[\\]^`{|}";
 
     /**
      * Replaces URL-unsafe characters.
@@ -396,29 +428,52 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
      * @return the string with the unsafe characters replaced.
      */
     public static String safe(String s) {
-        if (StringUtils.isEmpty(s)) {
+        if (s == null || s.isEmpty()) {
             return "(empty)";
-        } else {
-            // this still seems to be a bit faster than a single replace with regexp
-            return s.replace('/', '_').replace('\\', '_').replace(':', '_').replace('?', '_').replace('#', '_').replace('%', '_').replace('<', '_').replace('>', '_');
-            // Note: we probably should some helpers like Commons URIEscapeUtils here to escape all invalid URL chars, but then we
-            // still would have to escape /, ? and so on
         }
+        // A single pass over the characters is faster than either a regexp or a chain of
+        // String#replace calls, and allocates nothing when there is nothing to replace.
+        StringBuilder buf = null;
+        for (int i = 0; i < s.length(); i++) {
+            if (isUnsafe(s.charAt(i))) {
+                if (buf == null) {
+                    buf = new StringBuilder(s);
+                }
+                buf.setCharAt(i, '_');
+            }
+        }
+        return buf == null ? s : buf.toString();
+    }
+
+    /**
+     * Whether the given character has to be replaced by {@link #safe(String)} for the result to be
+     * usable as a URL path segment.
+     *
+     * <p>Non-ASCII characters are left alone: they are percent-encoded as UTF-8 by the browser and
+     * survive the round trip, so replacing them would needlessly mangle test names that are not
+     * written in English.
+     */
+    private static boolean isUnsafe(char c) {
+        // c <= ' ' covers the C0 control characters as well as the space
+        return c <= ' ' || c == 0x7F || UNSAFE_CHARS.indexOf(c) >= 0;
     }
 
     /**
      * Gets the total number of passed tests.
      */
+    @Override
     public abstract int getPassCount();
 
     /**
      * Gets the total number of failed tests.
      */
+    @Override
     public abstract int getFailCount();
 
     /**
      * Gets the total number of skipped tests.
      */
+    @Override
     public abstract int getSkipCount();
 
     /**
@@ -434,8 +489,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
         return new History(this);
     }
 
-    public Object getDynamic(String token, StaplerRequest req,
-            StaplerResponse rsp) {
+    public Object getDynamic(String token, StaplerRequest2 req, StaplerResponse2 rsp) {
         for (Action a : getTestActions()) {
             if (a == null) {
                 continue; // be defensive
@@ -452,9 +506,7 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
     }
 
     @RequirePOST
-    public synchronized HttpResponse doSubmitDescription(
-            @QueryParameter String description) throws IOException,
-            ServletException {
+    public synchronized HttpResponse doSubmitDescription(@QueryParameter String description) throws IOException {
         Run<?, ?> run = getRun();
         if (run == null) {
             LOGGER.severe("getRun() is null, can't save description.");
@@ -466,5 +518,6 @@ public abstract class TestObject extends hudson.tasks.junit.TestObject {
 
         return new HttpRedirect(".");
     }
+
     private static final long serialVersionUID = 1L;
 }

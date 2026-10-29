@@ -23,31 +23,113 @@ THE SOFTWARE.
 -->
 
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:test="/lib/test">
-  <l:layout title="${it.run} ${it.displayName}">
-    <st:include page="sidepanel.jelly" />
-    <l:main-panel>
-      <h1><st:out value="${it.title}" /></h1>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:p="/prism" xmlns:t="/lib/hudson" xmlns:test="/lib/hudson/test">
+  <j:set var="test" value="${it}" />
+  <j:set var="it" value="${it.parentAction}" />
 
-      <j:set var="prev" value="${it.previousResult}" />
+  <l:run-subpage>
+    <j:set var="it" value="${test}" />
 
-      <test:bar />
+    <p:prism configuration="${it.prismConfiguration}" />
 
-      <div style="text-align:right;">
-        <a href="history">
+    <st:once>
+      <link rel="stylesheet" href="${resURL}/plugin/junit/styles.css" defer="true" />
+      <st:adjunct includes="lib.hudson.test.js.failureSummary" />
+    </st:once>
+
+    <l:app-bar title="${it.title}" subtitle="${it.totalCount}">
+      <div class="jenkins-details">
+        <test:count-pills failCount="${it.failCount}" skipCount="${it.skipCount}" passCount="${it.passCount}" />
+
+        <j:set var="regressionCount" value="${it.regressionCount}" />
+        <j:set var="fixedCount" value="${it.fixedCount}" />
+        <j:if test="${regressionCount gt 0 or fixedCount gt 0}">
+          <div class="jp-pills">
+            <j:if test="${regressionCount gt 0}">
+              <a href="history"
+                 class="jp-pill jenkins-!-error-color"
+                 tooltip="${%regressions(regressionCount)}">
+                <l:icon src="symbol-trending-down-outline plugin-ionicons-api" />
+                ${regressionCount}
+              </a>
+            </j:if>
+
+            <j:if test="${fixedCount gt 0}">
+              <a href="history"
+                 class="jp-pill jenkins-!-success-color"
+                 tooltip="${%fixed(fixedCount)}">
+                <l:icon src="symbol-trending-up-outline plugin-ionicons-api" />
+                ${fixedCount}
+              </a>
+            </j:if>
+          </div>
+        </j:if>
+
+        <div class="jenkins-details__item" aria-label="${%took(it.durationString)}">
+          <div class="jenkins-details__item__icon">
+            <l:icon src="symbol-timer-outline plugin-ionicons-api" />
+          </div>
           ${%took(it.durationString)}
+        </div>
+
+        <a tooltip="${%History}"
+           href="history"
+           class="jenkins-button jenkins-details__button">
+          <l:icon src="symbol-bar-chart-outline plugin-ionicons-api" />
         </a>
+
+        <!-- descriptions of live results would not be kept: they are replaced by the recorded results -->
+        <j:if test="${it.parentAction.liveStatus == null}">
+          <t:editDescriptionButton permission="${it.run.UPDATE}" compact="true" />
+        </j:if>
       </div>
+    </l:app-bar>
 
-      <t:editableDescription permission="${it.run.UPDATE}"/>
+    <j:set var="liveStatus" value="${it.parentAction.liveStatus}" />
+    <j:if test="${liveStatus != null}">
+      <st:adjunct includes="io.jenkins.plugins.junit.opentest.live-refresh" />
+      <div class="junit-live-status"
+           data-status-url="${rootURL}/${it.run.url}liveTestReport/status"
+           data-refresh-seconds="${it.parentAction.liveRefreshSeconds}"
+           data-results-version="${it.parentAction.liveResultsVersion}"
+           data-finished-title="${%Tests have finished}"
+           data-finished-text="${%The results have been recorded.}"
+           data-recorded-text="${%Show recorded results}"
+           data-more-text="${%andMore('{0}')}">
+        <l:card title="${%Tests are running}">
+          <div class="junit-live-status__header">
+            <!-- announced politely; the list of running tests below changes too often to be -->
+            <span class="jenkins-spinner junit-live-status__text" role="status" aria-live="polite" aria-atomic="true">${liveStatus}</span>
+            <button type="button" class="jenkins-button jenkins-button--primary junit-live-status__reload" hidden="hidden">
+              <span class="junit-live-status__icon-latest"><l:icon src="symbol-refresh-outline plugin-ionicons-api" /></span>
+              <span class="junit-live-status__icon-recorded"><l:icon src="symbol-arrow-forward-outline plugin-ionicons-api" /></span>
+              <span class="junit-live-status__reload-text">${%Show latest results}</span>
+            </button>
+          </div>
+          <j:set var="liveRunningTests" value="${it.parentAction.liveRunningTests}" />
+          <ul class="junit-live-status__running">
+            <j:forEach var="runningTest" items="${liveRunningTests}">
+              <li>${runningTest}</li>
+            </j:forEach>
+            <j:set var="liveMoreRunningTests" value="${it.parentAction.liveMoreRunningTests}" />
+            <j:if test="${liveMoreRunningTests > 0}">
+              <li class="junit-live-status__more">${%andMore(liveMoreRunningTests)}</li>
+            </j:if>
+          </ul>
+        </l:card>
+      </div>
+    </j:if>
 
-      <table style="margin-top: 1em; margin-left:0em;">
-	  <j:forEach var="action" items="${it.testActions}">
-          <st:include page="summary.jelly" from="${action}" optional="true" it="${action}" />
-	  </j:forEach>
-      </table>
+    <j:if test="${it.parentAction.liveStatus == null}">
+      <t:editableDescription permission="${it.run.UPDATE}" hideButton="true" />
+    </j:if>
 
-      <st:include page="body.jelly" />
-    </l:main-panel>
-  </l:layout>
+    <test:success-summary />
+
+    <j:forEach var="action" items="${it.testActions}">
+      <st:include page="summary.jelly" from="${action}" optional="true" it="${action}" />
+    </j:forEach>
+
+    <st:include page="body.jelly" />
+  </l:run-subpage>
 </j:jelly>

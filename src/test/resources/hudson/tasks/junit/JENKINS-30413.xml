@@ -1,0 +1,9 @@
+<!-- https://issues.jenkins-ci.org/browse/JENKINS-30413 -->
+<testsuites>
+    <testsuite name="MyTestSuitename" >
+        <testcase classname="test.classname1" name="DuplicateTestName">
+            <failure message="FAILED"/>
+        </testcase>
+        <testcase classname="test.classname2" name="DuplicateTestName"/>
+    </testsuite>
+</testsuites>

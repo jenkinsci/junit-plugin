@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Frontend Tests" tests="8" errors="0" failures="0" ignored="0" timestamp="2024-01-03T11:23:00.00">
+    <testsuite name="datetime tests" time="2503.1">
+      <testcase name="testOffset" classname="time offset is correct test" time="10.45"/>
+      <testcase name="testDate" classname="date reflects offset test" time="11"/>
+    </testsuite>
+    <testsuite name="password validation tests" timestamp="2024-01-03T12:27:11">
+      <testcase name="invalid if password does not match test" classname="testPassword" time="1" timestamp="2024-01-03T12:27:11"/>
+      <testcase name="invalid if password is weak test" classname="testPassword" time="0.32" timestamp="2024-01-03T12:27:18"/>
+    </testsuite>
+    <testsuite name="functional tests" >
+      <testsuite name="test.RestMethods" time="40" timestamp="2024-01-03T 12:40:13">
+        <testcase name="home button redirects to home test" classname="testButtons" time="4"/>
+        <testcase name="sign out button ends session test" classname="testButtons" time="11"/>
+        <testcase name="sign out button redirects to sign in test" classname="testButtons" time="13"/>
+      </testsuite>
+    </testsuite>
+    <testsuite name="ui tests" timestamp="2024-01-03T12:27:44Z">
+      <testcase name="testExperience" classname="pages load in under ten seconds under ideal conditions test" time="11"/>
+    </testsuite>
+    <testsuite name="api tests" timestamp="2024-01-03 12:27:54Z">
+      <testcase name="testGet" classname="get test" time="133.01"/>
+    </testsuite>
+    <testsuite name="javascript tests" timestamp="2024-01-03">
+      <testcase name="testPopup" classname="popups triggered when hovering test" time="23"/>
+    </testsuite>
+    <testsuite name="flexbox tests" timestamp="2024-01-03T12:27:11.21-01:00">
+      <testcase name="testResize" classname="contents adjust properly when resizing test" time="41"/>
+    </testsuite>
+    <testsuite name="misc tests" timestamp="2024-01-03T12:27:15+01:00">
+      <testcase name="testShop" classname="proper images displayed when items added" time="29"/>
+    </testsuite>
+</testsuites>

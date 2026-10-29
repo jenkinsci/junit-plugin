@@ -25,7 +25,7 @@ THE SOFTWARE.
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
   <st:documentation>
-    Evaluates to a sstring that reports the test result number in text, like "(5 failures / +3)".
+    Evaluates to a string that reports the test result number in text, like "(5 failures / +3)".
     <st:attribute name="it" type="AbstractTestResultAction">
       Either the "it" has to be available in the context or specified as an attribute.
     </st:attribute>

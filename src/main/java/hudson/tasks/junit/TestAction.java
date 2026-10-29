@@ -27,14 +27,18 @@ import hudson.model.Action;
 import org.kohsuke.stapler.export.ExportedBean;
 
 /**
- * 
+ *
  * Jelly (all optional):
  * <ul>
  * <li>index.jelly: included at the top of the test page</li>
  * <li>summary.jelly: included in a collapsed panel on the test parent page</li>
  * <li>badge.jelly: shown after the test link on the test parent page</li>
+ * <li>casetableheader.jelly: allows additional table headers to be shown in tables that list test methods</li>
+ * <li>classtableheader.jelly: allows additional table headers to be shown in tables that list test classes</li>
+ * <li>packagetableheader.jelly: allows additional table headers to be shown in tables that list test packages</li>
+ * <li>tablerow.jelly: allows additional table cells to be shown in tables that list test methods, classes and packages</li>
  * </ul>
- * 
+ *
  * @author tom
  * @since 1.320
  * @see TestDataPublisher
@@ -42,14 +46,13 @@ import org.kohsuke.stapler.export.ExportedBean;
 @ExportedBean
 public abstract class TestAction implements Action {
 
-	/**
-	 * Returns text with annotations.
-	 * @param text Text to annotate.
-	 *
-	 * @return the text with the annotations.
-	 */
-	public String annotate(String text) {
-		return text;
-	}
-
+    /**
+     * Returns text with annotations.
+     * @param text Text to annotate.
+     *
+     * @return the text with the annotations.
+     */
+    public String annotate(String text) {
+        return text;
+    }
 }

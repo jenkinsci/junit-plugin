@@ -12,3 +12,4 @@ work/
 .project
 .settings/
 build/
+jmh-report.json

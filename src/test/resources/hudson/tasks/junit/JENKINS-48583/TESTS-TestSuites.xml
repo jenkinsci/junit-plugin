@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuites>
+  <testsuite errors="0" failures="0" hostname="myhost" id="0" name="TestMessage" package="com.sample.test" skipped="0" tests="1" time="0.063" timestamp="2015-01-13T07:23:07">
+      <properties>
+      </properties>
+      <testcase classname="com.sample.test.TestMessage" name="test_welcome_message" time="0.002" />
+      <system-out><![CDATA[]]></system-out>
+      <system-err><![CDATA[]]></system-err>
+  </testsuite>
+  <testsuite errors="0" failures="0" hostname="myhost" id="1" name="TestMessage2" package="com.sample.test" skipped="0" tests="2" time="0.06" timestamp="2015-01-13T07:23:08">
+      <properties>
+      </properties>
+      <testcase classname="com.sample.test.TestMessage2" name="test_welcome_message_2" time="0.001" />
+      <testcase classname="com.sample.test.TestMessage2" name="test_welcome_message_3" time="0.003" />
+      <system-out><![CDATA[]]></system-out>
+      <system-err><![CDATA[]]></system-err>
+  </testsuite>
+</testsuites>

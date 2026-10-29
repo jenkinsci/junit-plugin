@@ -1,18 +1,18 @@
 /*
  * The MIT License
- * 
+ *
  * Copyright (c) 2004-2009, Sun Microsystems, Inc., Kohsuke Kawaguchi, Daniel Dyer, id:cactusman, Tom Huybrechts, Yahoo!, Inc.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -26,11 +26,16 @@ package hudson.tasks.junit;
 import hudson.model.Run;
 import hudson.tasks.test.MetaTabulatedResult;
 import hudson.tasks.test.TestResult;
-import org.kohsuke.stapler.StaplerRequest;
-import org.kohsuke.stapler.StaplerResponse;
+import io.jenkins.plugins.junit.storage.TestResultImpl;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import org.kohsuke.stapler.StaplerRequest2;
+import org.kohsuke.stapler.StaplerResponse2;
 import org.kohsuke.stapler.export.Exported;
-
-import java.util.*;
 
 /**
  * Cumulative test result for a package.
@@ -44,26 +49,31 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
     /**
      * All {@link ClassResult}s keyed by their short name.
      */
-    private final Map<String,ClassResult> classes = new TreeMap<String,ClassResult>();
-    private int passCount,failCount,skipCount;
-    private final hudson.tasks.junit.TestResult parent;
-    private float duration; 
+    private final Map<String, ClassResult> classes = new TreeMap<>();
 
-    PackageResult(hudson.tasks.junit.TestResult parent, String packageName) {
+    private int passCount, failCount, skipCount;
+    private final hudson.tasks.junit.TestResult parent;
+    private float duration;
+    private long startTime;
+
+    public PackageResult(hudson.tasks.junit.TestResult parent, String packageName) {
         this.packageName = packageName;
         this.parent = parent;
+        this.startTime = -1;
     }
-    
+
     @Override
-    public Run<?,?> getRun() {
+    public Run<?, ?> getRun() {
         return parent == null ? null : parent.getRun();
     }
 
+    @Override
     public hudson.tasks.junit.TestResult getParent() {
-    	return parent;
+        return parent;
     }
 
-    @Exported(visibility=999)
+    @Exported(visibility = 999)
+    @Override
     public String getName() {
         return packageName;
     }
@@ -73,10 +83,8 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
         if (safeName != null) {
             return safeName;
         }
-        Collection<PackageResult> siblings = parent == null ? Collections.EMPTY_LIST : parent.getChildren();
-        return safeName = uniquifyName(
-                siblings,
-                safe(getName()));
+        Collection<PackageResult> siblings = parent == null ? Collections.emptyList() : parent.getChildren();
+        return safeName = uniquifyName(siblings, safe(getName()));
     }
 
     @Override
@@ -87,8 +95,9 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
         String className = id; // fall back value
         if (base > 0) {
             int classNameStart = base + myID.length() + 1;
-            if (classNameStart<id.length())
+            if (classNameStart < id.length()) {
                 className = id.substring(classNameStart);
+            }
         }
 
         String subId = null;
@@ -102,8 +111,9 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
         }
 
         ClassResult child = getClassResult(className);
-        if (child != null && subId != null)
+        if (child != null && subId != null) {
             return child.findCorrespondingResult(subId);
+        }
 
         return child;
     }
@@ -118,12 +128,21 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
         return Messages.PackageResult_getChildTitle();
     }
 
+    @Override
+    public String getChildType() {
+        return "class";
+    }
+
     // TODO: wait until stapler 1.60 to do this @Exported
     @Override
     public float getDuration() {
-        return duration; 
+        return duration;
     }
-    
+
+    public long getStartTime() {
+        return startTime;
+    }
+
     @Exported
     @Override
     public int getPassCount() {
@@ -143,20 +162,21 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
     }
 
     @Override
-    public Object getDynamic(String name, StaplerRequest req, StaplerResponse rsp) {
+    public Object getDynamic(String name, StaplerRequest2 req, StaplerResponse2 rsp) {
         ClassResult result = getClassResult(name);
         if (result != null) {
-        	return result;
+            return result;
         } else {
-        	return super.getDynamic(name, req, rsp);
+            return super.getDynamic(name, req, rsp);
         }
     }
 
-	public ClassResult getClassResult(String name) {
-		return classes.get(name);
-	}
+    public ClassResult getClassResult(String name) {
+        return classes.get(name);
+    }
 
-    @Exported(name="child")
+    @Exported(name = "child")
+    @Override
     public Collection<ClassResult> getChildren() {
         return classes.values();
     }
@@ -174,14 +194,20 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
      * Returns a list of the failed cases, in no particular
      * sort order
      */
+    @Override
     public List<CaseResult> getFailedTests() {
-        List<CaseResult> r = new ArrayList<CaseResult>();
+        TestResultImpl pluggableStorage = parent.getPluggableStorage();
+        if (pluggableStorage != null) {
+            return pluggableStorage.getFailedTestsByPackage(packageName);
+        }
+
+        List<CaseResult> r = new ArrayList<>();
         for (ClassResult clr : classes.values()) {
             for (CaseResult cr : clr.getChildren()) {
                 if (cr.isFailed()) {
                     r.add(cr);
+                }
             }
-        }
         }
         return r;
     }
@@ -193,7 +219,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
      */
     public List<CaseResult> getFailedTestsSortedByAge() {
         List<CaseResult> failedTests = getFailedTests();
-        Collections.sort(failedTests, CaseResult.BY_AGE);
+        failedTests.sort(CaseResult.BY_AGE);
         return failedTests;
     }
 
@@ -204,7 +230,12 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
      */
     @Override
     public List<CaseResult> getPassedTests() {
-        List<CaseResult> r = new ArrayList<CaseResult>();
+        TestResultImpl pluggableStorage = parent.getPluggableStorage();
+        if (pluggableStorage != null) {
+            return pluggableStorage.getPassedTestsByPackage(packageName);
+        }
+
+        List<CaseResult> r = new ArrayList<>();
         for (ClassResult clr : classes.values()) {
             for (CaseResult cr : clr.getChildren()) {
                 if (cr.isPassed()) {
@@ -212,7 +243,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
                 }
             }
         }
-        Collections.sort(r,CaseResult.BY_AGE);
+        r.sort(CaseResult.BY_AGE);
         return r;
     }
 
@@ -223,7 +254,12 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
      */
     @Override
     public List<CaseResult> getSkippedTests() {
-        List<CaseResult> r = new ArrayList<CaseResult>();
+        TestResultImpl pluggableStorage = parent.getPluggableStorage();
+        if (pluggableStorage != null) {
+            return pluggableStorage.getSkippedTestsByPackage(packageName);
+        }
+
+        List<CaseResult> r = new ArrayList<>();
         for (ClassResult clr : classes.values()) {
             for (CaseResult cr : clr.getChildren()) {
                 if (cr.isSkipped()) {
@@ -231,26 +267,26 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
                 }
             }
         }
-        Collections.sort(r, CaseResult.BY_AGE);
+        r.sort(CaseResult.BY_AGE);
         return r;
     }
 
-//    /**
-//     * If this test failed, then return the build number
-//     * when this test started failing.
-//     */
-//    @Override
-//    TODO: implement! public int getFailedSince() {
-//        return 0;  // (FIXME: generated)
-//    }
-//    /**
-//     * If this test failed, then return the run
-//     * when this test started failing.
-//     */
-//    TODO: implement! @Override
-//    public Run<?, ?> getFailedSinceRun() {
-//        return null;  // (FIXME: generated)
-//    }
+    //    /**
+    //     * If this test failed, then return the build number
+    //     * when this test started failing.
+    //     */
+    //    @Override
+    //    TODO: implement! public int getFailedSince() {
+    //        return 0;  // (FIXME: generated)
+    //    }
+    //    /**
+    //     * If this test failed, then return the run
+    //     * when this test started failing.
+    //     */
+    //    TODO: implement! @Override
+    //    public Run<?, ?> getFailedSinceRun() {
+    //        return null;  // (FIXME: generated)
+    //    }
     /**
      * @return true if every test was not skipped and every test did not fail, false otherwise.
      */
@@ -259,14 +295,14 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
         return failCount == 0 && skipCount == 0;
     }
 
-    void add(CaseResult r) {
+    public void add(CaseResult r) {
         String n = r.getSimpleName(), sn = safe(n);
         ClassResult c = getClassResult(sn);
         if (c == null) {
-            classes.put(sn,c=new ClassResult(this,n));
+            classes.put(sn, c = new ClassResult(this, n));
         }
         c.add(r);
-        duration += r.getDuration(); 
+        duration += r.getDuration();
     }
 
     /**
@@ -298,6 +334,7 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
         }
     }
 
+    @Override
     public int compareTo(PackageResult that) {
         if (this.equals(that)) {
             return 0;
@@ -324,8 +361,13 @@ public final class PackageResult extends MetaTabulatedResult implements Comparab
         return System.identityHashCode(this);
     }
 
+    @Override
     public String getDisplayName() {
         return TestNameTransformer.getTransformedName(packageName);
+    }
+
+    public void setStartTime(long time) {
+        startTime = time;
     }
 
     private static final long serialVersionUID = 1L;

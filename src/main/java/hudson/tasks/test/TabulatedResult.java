@@ -1,18 +1,18 @@
 /*
  * The MIT License
- * 
+ *
  * Copyright (c) 2004-2009, Sun Microsystems, Inc., Kohsuke Kawaguchi, Daniel Dyer, Tom Huybrechts, Yahoo!, Inc.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -23,10 +23,9 @@
  */
 package hudson.tasks.test;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nonnull;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -44,7 +43,7 @@ public abstract class TabulatedResult extends TestResult {
     /**
      * TODO: javadoc
      */
-    protected transient Map<String,PipelineBlockWithTests> testsByBlock;
+    protected transient Map<String, PipelineBlockWithTests> testsByBlock;
 
     /**
      * Gets the child test result objects.
@@ -72,15 +71,15 @@ public abstract class TabulatedResult extends TestResult {
     }
 
     @CheckForNull
-    public PipelineBlockWithTests getPipelineBlockWithTests(@Nonnull String blockId) {
+    public PipelineBlockWithTests getPipelineBlockWithTests(@NonNull String blockId) {
         if (testsByBlock.containsKey(blockId)) {
             return testsByBlock.get(blockId);
         }
         return null;
     }
 
-    protected final void populateBlocks(@Nonnull List<String> innermostFirst, @Nonnull String nodeId,
-                                        @CheckForNull PipelineBlockWithTests nested) {
+    protected final void populateBlocks(
+            @NonNull List<String> innermostFirst, @NonNull String nodeId, @CheckForNull PipelineBlockWithTests nested) {
         if (innermostFirst.isEmpty()) {
             if (nested != null) {
                 addOrMergeBlock(nested);
@@ -101,7 +100,7 @@ public abstract class TabulatedResult extends TestResult {
         }
     }
 
-    private void addOrMergeBlock(@Nonnull PipelineBlockWithTests b) {
+    private void addOrMergeBlock(@NonNull PipelineBlockWithTests b) {
         if (testsByBlock.containsKey(b.getBlockId())) {
             testsByBlock.get(b.getBlockId()).merge(b);
         } else {
@@ -114,12 +113,23 @@ public abstract class TabulatedResult extends TestResult {
      *
      * Default implementation just returns the original.
      */
-    @Nonnull
-    public TabulatedResult blockToTestResult(@Nonnull PipelineBlockWithTests block, @Nonnull TabulatedResult fullResult) {
+    @NonNull
+    public TabulatedResult blockToTestResult(
+            @NonNull PipelineBlockWithTests block, @NonNull TabulatedResult fullResult) {
         return fullResult;
     }
 
     public String getChildTitle() {
+        return "";
+    }
+
+    /**
+     * Get a simple name for the type of children the {@link #getChildren()} method returns, for example "case", "class"
+     * or "package".
+     *
+     * @return the type of children this result has, all lowercase.
+     */
+    public String getChildType() {
         return "";
     }
 }

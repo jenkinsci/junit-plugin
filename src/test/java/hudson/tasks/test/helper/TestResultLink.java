@@ -1,13 +1,13 @@
 package hudson.tasks.test.helper;
 
-import com.gargoylesoftware.htmlunit.html.HtmlAnchor;
-
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertThat;
+
+import org.htmlunit.html.HtmlAnchor;
 
 public class TestResultLink extends AbstractTestResultLink<TestResultLink> {
 
-    public static final String TEST_RESULT_STRING = "Test Result";
+    public static final String TEST_RESULT_STRING = "Tests";
     public static final String AGGREGATED_TEST_RESULT_STRING = "Aggregated Test Result";
 
     TestResultLink(HtmlAnchor testResultLink) {
@@ -23,5 +23,4 @@ public class TestResultLink extends AbstractTestResultLink<TestResultLink> {
         assertThat(testResultLink.getTextContent(), containsString(AGGREGATED_TEST_RESULT_STRING));
         return this;
     }
-
 }

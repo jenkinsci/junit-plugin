@@ -1,0 +1,61 @@
+<!--
+The MIT License
+
+Copyright (c) 2026, Jenkins contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+-->
+
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout">
+    <st:documentation>
+        Failing, skipped and passing test counts as a group of pills, for use in an app bar.
+        Counts of zero are left out.
+        <st:attribute name="failCount" use="required">
+            Number of failing tests.
+        </st:attribute>
+        <st:attribute name="skipCount" use="required">
+            Number of skipped tests.
+        </st:attribute>
+        <st:attribute name="passCount" use="required">
+            Number of passing tests.
+        </st:attribute>
+    </st:documentation>
+
+    <div class="jp-pills">
+        <j:if test="${attrs.failCount gt 0}">
+            <div class="jp-pill jenkins-!-error-color" tooltip="${%failing(attrs.failCount)}">
+                <l:icon src="symbol-close-outline plugin-ionicons-api" />
+                ${attrs.failCount}
+            </div>
+        </j:if>
+        <j:if test="${attrs.skipCount gt 0}">
+            <div class="jp-pill jenkins-!-skipped-color" tooltip="${%skipped(attrs.skipCount)}">
+                <l:icon src="symbol-skipped plugin-junit" />
+                ${attrs.skipCount}
+            </div>
+        </j:if>
+        <j:if test="${attrs.passCount gt 0}">
+            <div class="jp-pill jenkins-!-success-color" tooltip="${%passing(attrs.passCount)}">
+                <l:icon src="symbol-checkmark-outline plugin-ionicons-api" />
+                ${attrs.passCount}
+            </div>
+        </j:if>
+    </div>
+</j:jelly>

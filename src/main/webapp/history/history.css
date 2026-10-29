@@ -1,0 +1,39 @@
+.card-chart-carousel {
+    width: 100%;
+    min-height: 180px;
+    min-width: 256px;
+    display: block;
+    margin-top: 0px;
+}
+
+.card-chart-carousel-2 {
+    width: 100%;
+    min-height: 400px;
+    min-width: 256px;
+    display: block;
+    margin-top: 0px;
+}
+
+.jenkins-table > tbody > tr > td {
+    vertical-align: middle;
+    padding: var(--table-padding) 0 var(--table-padding) var(--table-padding);
+    height: 10px;
+    font-weight: 0;
+}
+
+.icon-border {
+    display: none !important
+}
+
+.card-header {
+    display: none !important
+}
+
+details > summary > * {
+    display: inline;
+}
+
+.test-result-table-row {
+    background: transparent !important;
+    text-align: center;
+}

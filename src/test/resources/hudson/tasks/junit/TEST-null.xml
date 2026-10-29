@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuite errors="1" failures="0" name="x" tests="1">
+  <testcase classname="X" name="x">
+    <error message="x">xxx</error>
+  </testcase>
+  <!--
+  <system-out><![CDATA[foo&amp#0;bar]]></system-out>
+  <system-out><![CDATA[foo&#x0;bar]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+  -->
+</testsuite>
