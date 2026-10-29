@@ -13,14 +13,14 @@
 
   .jp-pill:not(.jenkins-button--primary) {
     &:not(:first-of-type) {
-      border-top-left-radius: 2px;
-      border-bottom-left-radius: 2px;
+      border-top-left-radius: 0.25rem;
+      border-bottom-left-radius: 0.25rem;
       padding-left: 0.75rem;
     }
 
     &:not(:last-of-type) {
-      border-top-right-radius: 2px;
-      border-bottom-right-radius: 2px;
+      border-top-right-radius: 0.25rem;
+      border-bottom-right-radius: 0.25rem;
       padding-right: 0.75rem;
     }
   }
@@ -31,17 +31,19 @@
 }
 
 .jp-pill {
+  --jp-pill-height: 1.875rem;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.375rem;
-  border-radius: 100px;
+  border-radius: calc(var(--jp-pill-height) / 2);
   padding: 0 0.75rem;
-  min-height: 1.875rem;
+  min-height: var(--jp-pill-height);
   text-box: cap alphabetic;
   font-weight: 450;
   background: color-mix(in srgb, var(--color, var(--text-color-secondary)) 10%, transparent);
-  border: var(--jenkins-border-width) solid var(--jenkins-border-color--inherit-subtle);
+  border: var(--jenkins-border--inherit-subtle);
   color: var(--color, var(--text-color)) !important;
   text-decoration: none !important;
   transition: var(--standard-transition);
@@ -80,8 +82,9 @@ a.jp-pill, button.jp-pill {
 
 .jenkins-table {
   .jp-pill {
+    --jp-pill-height: 1.5625rem;
+
     padding: 0 0.625rem;
-    min-height: 1.5625rem;
   }
 
   .jenkins-copy-button {
