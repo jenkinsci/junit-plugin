@@ -62,6 +62,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
@@ -69,11 +70,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import jenkins.model.Jenkins;
 import org.apache.commons.io.FileUtils;
+import org.htmlunit.HttpMethod;
+import org.htmlunit.WebRequest;
+import org.htmlunit.WebResponse;
+import org.htmlunit.html.DomElement;
+import org.htmlunit.html.HtmlButton;
 import org.htmlunit.html.HtmlForm;
 import org.htmlunit.html.HtmlPage;
+import org.htmlunit.html.HtmlTextInput;
+import org.htmlunit.util.NameValuePair;
+import org.htmlunit.util.WebConnectionWrapper;
 import org.jenkinsci.plugins.structs.describable.DescribableModel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -129,6 +139,92 @@ class JUnitResultArchiverTest {
         wc.getPage(
                 build,
                 "testReport/hudson.security/HudsonPrivateSecurityRealmTest/testDataCompatibilityWith1_282/"); // method
+    }
+
+    @Issue("728")
+    @Test
+    void validateTestResultsRequiresPost() throws Exception {
+        archiver.setAllowEmptyResults(true);
+        j.buildAndAssertSuccess(project);
+        JenkinsRule.WebClient wc = j.createWebClient().withThrowExceptionOnFailingStatusCode(false);
+        String url = project.getUrl() + "descriptorByName/" + JUnitResultArchiver.class.getName()
+                + "/validateTestResults?testResults=nonexistent.xml";
+
+        WebResponse get = wc.goTo(url, null).getWebResponse();
+        assertEquals(404, get.getStatusCode());
+
+        WebRequest post = new WebRequest(new URL(j.getURL(), url), HttpMethod.POST);
+        WebResponse response = wc.getPage(wc.addCrumb(post)).getWebResponse();
+        assertEquals(200, response.getStatusCode());
+        assertThat(response.getContentAsString(), containsString("nonexistent.xml"));
+    }
+
+    @Issue("728")
+    @Test
+    void validateTestResultsReportsOutcome() throws Exception {
+        JenkinsRule.WebClient wc = j.createWebClient();
+
+        assertThat(
+                validateTestResults(wc, "*.xml"),
+                containsString("<div class=\"warning\">" + Messages.JUnitResultArchiver_NoWorkspace()));
+
+        archiver.setAllowEmptyResults(true);
+        j.buildAndAssertSuccess(project);
+        project.getSomeWorkspace().child("reports/TEST-a.xml").write("<testsuite/>", "UTF-8");
+
+        assertThat(validateTestResults(wc, " "), containsString("<div class=\"error\">"));
+        assertThat(
+                validateTestResults(wc, "reports/*.xml"),
+                containsString("<div class=\"ok\">" + Messages.JUnitResultArchiver_PatternMatches()));
+        assertThat(validateTestResults(wc, "missing/*.xml"), containsString("<div class=\"error\">"));
+    }
+
+    @Issue("728")
+    @Test
+    void validateButtonOnConfigurePage() throws Exception {
+        archiver.setAllowEmptyResults(true);
+        j.buildAndAssertSuccess(project);
+        project.getSomeWorkspace().child("reports/TEST-a.xml").write("<testsuite/>", "UTF-8");
+
+        JenkinsRule.WebClient wc = j.createWebClient();
+        AtomicInteger validationRequests = new AtomicInteger();
+        new WebConnectionWrapper(wc) {
+            @Override
+            public WebResponse getResponse(WebRequest request) throws IOException {
+                String path = request.getUrl().getPath();
+                if (path.endsWith("/validateTestResults") || path.endsWith("/checkTestResults")) {
+                    validationRequests.incrementAndGet();
+                }
+                return super.getResponse(request);
+            }
+        };
+
+        HtmlPage page = wc.getPage(project, "configure");
+        HtmlTextInput testResults = page.querySelector("input[name='_.testResults']");
+        testResults.setValue("");
+        testResults.type("TEST-*.xml");
+        testResults.blur();
+        wc.waitForBackgroundJavaScript(5_000);
+        assertEquals(0, validationRequests.get(), "pattern should not be validated automatically");
+
+        HtmlButton validate = page.querySelector("button.validate-button");
+        validate.click();
+        wc.waitForBackgroundJavaScript(5_000);
+        assertEquals(1, validationRequests.get());
+
+        DomElement status = validate.getParentNode().querySelector(".jenkins-validate-button__container__status");
+        assertThat(status.getTextContent(), containsString("reports/TEST-*.xml"));
+    }
+
+    private String validateTestResults(JenkinsRule.WebClient wc, String testResults) throws Exception {
+        WebRequest post = new WebRequest(
+                new URL(
+                        j.getURL(),
+                        project.getUrl() + "descriptorByName/" + JUnitResultArchiver.class.getName()
+                                + "/validateTestResults"),
+                HttpMethod.POST);
+        post.setRequestParameters(List.of(new NameValuePair("testResults", testResults)));
+        return wc.getPage(wc.addCrumb(post)).getWebResponse().getContentAsString();
     }
 
     @LocalData("All")

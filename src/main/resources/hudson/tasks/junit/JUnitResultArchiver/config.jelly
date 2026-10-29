@@ -30,6 +30,9 @@ THE SOFTWARE.
         description="${%description('http://ant.apache.org/manual/Types/fileset.html')}">
         <f:textbox />
     </f:entry>
+    <j:if test="${!hideValidateButton}">
+        <f:validateButton title="${%Validate Pattern}" method="validateTestResults" with="testResults" />
+    </j:if>
     <f:entry field="stdioRetention" title="${%Test output retention}">
         <f:select />
     </f:entry>

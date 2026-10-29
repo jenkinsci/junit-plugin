@@ -65,6 +65,7 @@ import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.verb.POST;
 
 /**
  * Generates HTML report from JUnit test result XML files.
@@ -599,19 +600,33 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
         }
 
         /**
-         * Performs on-the-fly validation on the file mask wildcard.
+         * Validates the file mask wildcard on demand.
+         * Not done automatically, as scanning a large workspace can exhaust agent memory.
          * @param project Project.
-         * @param value File mask to validate.
+         * @param testResults File mask to validate.
          *
          * @return the validation result.
          * @throws IOException if an error occurs.
          */
-        public FormValidation doCheckTestResults(@AncestorInPath AbstractProject project, @QueryParameter String value)
+        @POST
+        public FormValidation doValidateTestResults(
+                @AncestorInPath AbstractProject project, @QueryParameter("testResults") String testResults)
                 throws IOException {
             if (project == null || !project.hasPermission(Item.WORKSPACE)) {
                 return FormValidation.ok();
             }
-            return FilePath.validateFileMask(project.getSomeWorkspace(), value);
+            if (Util.fixEmptyAndTrim(testResults) == null) {
+                return FormValidation.error(Messages.JUnitResultArchiver_PatternRequired());
+            }
+            FilePath workspace = project.getSomeWorkspace();
+            if (workspace == null) {
+                return FormValidation.warning(Messages.JUnitResultArchiver_NoWorkspace());
+            }
+            FormValidation result = FilePath.validateFileMask(workspace, testResults);
+            if (result.kind == FormValidation.Kind.OK && result.getMessage() == null) {
+                return FormValidation.ok(Messages.JUnitResultArchiver_PatternMatches());
+            }
+            return result;
         }
 
         @Override
