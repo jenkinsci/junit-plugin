@@ -116,6 +116,13 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      */
     private int failedSince;
 
+    /**
+     * This test has been skipped since this build number (not id.)
+     *
+     * If not {@link #isSkipped() skipped}, this field is left unused to 0.
+     */
+    private int skippedSince;
+
     private static float parseTime(Element testCase) {
         String time = testCase.attributeValue("time");
         return new TimeToFloat(time).parse();
@@ -295,6 +302,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         this.errorStackTrace = src.errorStackTrace;
         this.errorDetails = src.errorDetails;
         this.failedSince = src.failedSince;
+        this.skippedSince = src.skippedSince;
         this.stdout = src.stdout;
         this.stderr = src.stderr;
         this.properties = new HashMap<>();
@@ -382,6 +390,9 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
                         break;
                     case "failedSince":
                         r.failedSince = Integer.parseInt(reader.getElementText());
+                        break;
+                    case "skippedSince":
+                        r.skippedSince = Integer.parseInt(reader.getElementText());
                         break;
                     case "stdout":
                         r.stdout = reader.getElementText();
@@ -892,17 +903,52 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     }
 
     /**
+     * If this test was skipped, then return the build number
+     * when this test was first skipped.
+     */
+    @Exported(visibility = 9)
+    public int getSkippedSince() {
+        // If we haven't calculated skippedSince yet, and we should,
+        // do it now.
+        recomputeSkippedSinceIfNeeded();
+        return skippedSince;
+    }
+
+    private void recomputeSkippedSinceIfNeeded() {
+        if (skippedSince == 0 && getSkipCount() == 1) {
+            CaseResult prev = getPreviousResult();
+            if (prev != null && prev.isSkipped()) {
+                this.skippedSince = prev.getSkippedSince();
+            } else if (getRun() != null) {
+                this.skippedSince = getRun().getNumber();
+            } else {
+                LOGGER.warning("trouble calculating getSkippedSince. We've got prev, but no owner.");
+                // skippedSince will be 0, which isn't correct.
+            }
+        }
+    }
+
+    public Run<?, ?> getSkippedSinceRun() {
+        Run<?, ?> run = getRun();
+        if (run == null) {
+            return null;
+        }
+        return run.getParent().getBuildByNumber(getSkippedSince());
+    }
+
+    /**
      * Gets the number of consecutive builds (including this)
-     * that this test case has been failing.
+     * that this test case has been failing or skipped.
      *
-     * @return the number of consecutive failing builds.
+     * @return the number of consecutive failing or skipped builds.
      */
     @Exported(visibility = 9)
     public int getAge() {
         if (isPassed()) {
             return 0;
         } else if (getRun() != null) {
-            return getRun().getNumber() - getFailedSince() + 1;
+            int since = isSkipped() ? getSkippedSince() : getFailedSince();
+            return getRun().getNumber() - since + 1;
         } else {
             LOGGER.fine("Trying to get age of a CaseResult without an owner");
             return 0;
@@ -1206,6 +1252,8 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     public void freeze(SuiteResult parent) {
         this.parent = parent;
         // some old test data doesn't have failedSince value set, so for those compute them.
+        // skippedSince is computed lazily instead: eagerly computing it would load previous builds
+        // even when no test failed (JENKINS-31660).
         recomputeFailedSinceIfNeeded();
     }
 

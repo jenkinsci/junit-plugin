@@ -24,11 +24,25 @@ THE SOFTWARE.
 -->
 
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:t="/lib/hudson/test" xmlns:f="/lib/form">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:t="/lib/hudson/test" xmlns:f="/lib/form">
   <j:if test="${it.failCount!=0}">
     <f:section title="${%All Failed Tests}">
       <t:table items="${it.failedTests}" id="failedtestresult" />
     </f:section>
+  </j:if>
+
+  <j:if test="${it.skipCount!=0}">
+    <j:set var="skippedTests" value="${it.skippedTests}" />
+    <!-- collapsed by default, as skipped tests are usually expected and the list can be long -->
+    <j:if test="${!empty(skippedTests)}">
+      <details class="jenkins-section jp-skipped-tests" id="skipped">
+        <summary class="jenkins-section__title">
+          ${%All Skipped Tests}
+          <l:icon src="symbol-chevron-forward-outline plugin-ionicons-api" />
+        </summary>
+        <t:table items="${skippedTests}" id="skippedtestresult" />
+      </details>
+    </j:if>
   </j:if>
 
   <j:if test="${it.totalCount!=0}">

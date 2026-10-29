@@ -128,6 +128,78 @@ class HistoryTest {
 
     @LocalData
     @Test
+    void testSkippedSince() throws Exception {
+        assertNotNull(project, "project should exist");
+
+        // Check the status of a few builds
+        FreeStyleBuild build8 = project.getBuildByNumber(8);
+        assertNotNull(build8, "build8");
+        rule.assertBuildStatus(Result.SUCCESS, build8);
+
+        FreeStyleBuild build10 = project.getBuildByNumber(10);
+        assertNotNull(build10, "build10");
+        rule.assertBuildStatus(Result.FAILURE, build10);
+
+        // In builds 8 and 9, org.jvnet.hudson.examples.small.deep.DeepTest.testScubaOnlyInRedSea is skipped since 8
+        CaseResult scubaCase = getScubaOnlyInRedSeaCase(8);
+        assertTrue(scubaCase.isSkipped(), "scubaCase case is skipped");
+        assertEquals(8, scubaCase.getSkippedSince(), "scubaCase should have skipped since build 8");
+        assertEquals(1, scubaCase.getAge());
+        assertEquals(build8, scubaCase.getSkippedSinceRun());
+
+        scubaCase = getScubaOnlyInRedSeaCase(9);
+        assertTrue(scubaCase.isSkipped(), "scubaCase case is skipped");
+        assertEquals(8, scubaCase.getSkippedSince(), "scubaCase should have skipped since build 8");
+        assertEquals(2, scubaCase.getAge());
+        assertEquals(build8, scubaCase.getSkippedSinceRun());
+
+        // In build 10 the test begins to fail
+        TestResult tr10 = build10.getAction(TestResultAction.class).getResult();
+        assertEquals(1, tr10.getFailedTests().size());
+        scubaCase = getScubaOnlyInRedSeaCase(10);
+        assertTrue(scubaCase.isFailed(), "scubaCase case is failed");
+        assertEquals(0, scubaCase.getSkippedSince(), "scubaCase is not skipped");
+        assertEquals(10, scubaCase.getFailedSince(), "scubaCase should have failed since build 10");
+        assertEquals(1, scubaCase.getAge());
+
+        // In build 11 the test is skipped again, so skippedSince restarts
+        TestResult tr11 =
+                project.getBuildByNumber(11).getAction(TestResultAction.class).getResult();
+        assertEquals(0, tr11.getFailedTests().size());
+        assertEquals(1, tr11.getSkippedTests().size());
+        scubaCase = getScubaOnlyInRedSeaCase(11);
+        assertTrue(scubaCase.isSkipped(), "scubaCase case is skipped");
+        assertEquals(11, scubaCase.getSkippedSince(), "scubaCase should have skipped since build 11");
+        assertEquals(1, scubaCase.getAge());
+    }
+
+    private CaseResult getScubaOnlyInRedSeaCase(int buildNumber) {
+        TestResult tr = project.getBuildByNumber(buildNumber)
+                .getAction(TestResultAction.class)
+                .getResult();
+        PackageResult deepPackage = tr.byPackage("org.jvnet.hudson.examples.small.deep");
+        assertNotNull(deepPackage, "deepPackage");
+        ClassResult deepClass = deepPackage.getClassResult("DeepTest");
+        assertNotNull(deepClass, "deepClass");
+        CaseResult scubaCase = deepClass.getCaseResult("testScubaOnlyInRedSea");
+        assertNotNull(scubaCase, "testScubaOnlyInRedSea");
+        return scubaCase;
+    }
+
+    @LocalData
+    @Test
+    void testSkippedTestsSection() throws Exception {
+        FreeStyleBuild build9 = project.getBuildByNumber(9);
+        try (JenkinsRule.WebClient webClient = rule.createWebClient()) {
+            HtmlPage page = webClient.getPage(build9, "testReport/");
+            HtmlTable table = (HtmlTable) page.getElementById("skippedtestresult");
+            assertNotNull(table, "skipped tests table should be shown");
+            assertTrue(table.getTextContent().contains("testScubaOnlyInRedSea"));
+        }
+    }
+
+    @LocalData
+    @Test
     @Issue("SECURITY-2760")
     void testXSS() throws Exception {
         assertNotNull(project, "project should exist");

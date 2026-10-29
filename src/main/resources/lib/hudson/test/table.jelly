@@ -110,7 +110,10 @@ THE SOFTWARE.
                 </td>
                 <td class="jenkins-mobile-hide">
                     <j:choose>
-                        <j:when test="${f.age == 0 or f.skipped}">0</j:when>
+                        <j:when test="${f.age == 0}">0</j:when>
+                        <j:when test="${f.skipped}">
+                            <a href="${rootURL}/${f.skippedSinceRun.url}">${f.age}</a>
+                        </j:when>
                         <j:otherwise>
                             <a href="${rootURL}/${f.failedSinceRun.url}">${f.age}</a>
                         </j:otherwise>

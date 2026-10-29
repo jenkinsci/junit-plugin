@@ -73,7 +73,7 @@ THE SOFTWARE.
                 </j:otherwise>
               </j:choose>
               ${%since.before}
-              #${it.failedSince}
+              #${it.skipped ? it.skippedSince : it.failedSince}
               ${%since.after}
             </a>
           </j:if>

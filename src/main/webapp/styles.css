@@ -248,6 +248,31 @@ a.jp-table-row {
   }
 }
 
+.jp-skipped-tests {
+  summary {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    list-style: none;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+
+    > svg {
+      width: 1rem;
+      height: 1rem;
+      color: var(--text-color-secondary);
+      transition: rotate var(--standard-transition);
+    }
+  }
+
+  &[open] summary > svg {
+    rotate: 90deg;
+  }
+}
+
 /* Remove the fixed height from the table foldout */
 .failure-summary {
   height: unset !important;
