@@ -141,6 +141,7 @@ public final class SuiteResult implements Serializable {
         this.name = src.name;
         this.id = src.id;
         this.duration = src.duration;
+        this.startTime = src.startTime;
         this.timestamp = src.timestamp;
         this.time = src.time;
         this.nodeId = src.nodeId;
