@@ -136,6 +136,7 @@ public class AggregatedTestResultPublisher extends Recorder {
         private static volatile Object lastChangedReference = new Object();
 
         private transient int failCount;
+        private transient int skipCount;
         private transient int totalCount;
         private transient List<AbstractTestResultAction> individuals;
         /**
@@ -196,6 +197,12 @@ public class AggregatedTestResultPublisher extends Recorder {
         public int getFailCount() {
             upToDateCheck();
             return failCount;
+        }
+
+        @Override
+        public int getSkipCount() {
+            upToDateCheck();
+            return skipCount;
         }
 
         @Override
@@ -274,6 +281,7 @@ public class AggregatedTestResultPublisher extends Recorder {
             lastRecomputedReference = lastChangedReference;
 
             int failCount = 0;
+            int skipCount = 0;
             int totalCount = 0;
             List<AbstractTestResultAction> individuals = new ArrayList<>();
             List<AbstractProject> didntRun = new ArrayList<>();
@@ -316,6 +324,7 @@ public class AggregatedTestResultPublisher extends Recorder {
 
                         for (AbstractTestResultAction ta : b.getActions(AbstractTestResultAction.class)) {
                             failCount += ta.getFailCount();
+                            skipCount += ta.getSkipCount();
                             totalCount += ta.getTotalCount();
                             individuals.add(ta);
                         }
@@ -325,6 +334,7 @@ public class AggregatedTestResultPublisher extends Recorder {
             }
 
             this.failCount = failCount;
+            this.skipCount = skipCount;
             this.totalCount = totalCount;
             this.individuals = individuals;
             this.didntRun = didntRun;

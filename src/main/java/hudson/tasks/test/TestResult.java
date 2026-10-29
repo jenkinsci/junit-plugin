@@ -74,7 +74,32 @@ public abstract class TestResult extends TestObject {
      * @return action The action that points to the top level test result.
      */
     public AbstractTestResultAction getParentAction() {
+        AbstractTestResultAction action = getAncestorAction();
+        if (action != null) {
+            return action;
+        }
         return getRun().getAction(AbstractTestResultAction.class);
+    }
+
+    /**
+     * The action the closest enclosing result belongs to, which may not be attached to the run
+     * (e.g. results shown while tests are still running).
+     */
+    private AbstractTestResultAction getAncestorAction() {
+        TestObject parent = getParent();
+        if (parent instanceof TestResult) {
+            return ((TestResult) parent).getParentAction();
+        }
+        return null;
+    }
+
+    @Override
+    public AbstractTestResultAction getTestResultAction() {
+        AbstractTestResultAction action = getAncestorAction();
+        if (action != null) {
+            return action;
+        }
+        return super.getTestResultAction();
     }
 
     /**
@@ -174,7 +199,7 @@ public abstract class TestResult extends TestObject {
                 return null;
             }
             try {
-                AbstractTestResultAction r = b.getAction(parentAction.getClass());
+                AbstractTestResultAction r = (AbstractTestResultAction) b.getAction(parentAction.getRecordedType());
                 if (r != null) {
                     TestResult result = r.findCorrespondingResult(this.getId());
                     if (result != null) {
@@ -203,7 +228,7 @@ public abstract class TestResult extends TestObject {
         if (parentAction == null) {
             return null;
         }
-        AbstractTestResultAction tra = build.getAction(parentAction.getClass());
+        AbstractTestResultAction tra = (AbstractTestResultAction) build.getAction(parentAction.getRecordedType());
         if (tra == null) {
             tra = build.getAction(AbstractTestResultAction.class);
         }
@@ -250,7 +275,11 @@ public abstract class TestResult extends TestObject {
 
     private static long countCases(TestResult result, CaseResult.Status status) {
         if (result instanceof CaseResult caseResult) {
-            return caseResult.getCondition() == status ? 1 : 0;
+            // Only a failing case can have regressed and only a passing one can have been fixed. Checking
+            // that first avoids looking up the previous result (getCondition) of every other case, which
+            // for most builds means only the failing cases are looked up when counting regressions.
+            boolean candidate = status == CaseResult.Status.REGRESSION ? caseResult.isFailed() : caseResult.isPassed();
+            return candidate && caseResult.getCondition() == status ? 1 : 0;
         }
         if (result instanceof TabulatedResult tabulatedResult) {
             return tabulatedResult.getChildren().stream()

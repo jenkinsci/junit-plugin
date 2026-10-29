@@ -30,11 +30,17 @@ THE SOFTWARE.
         description="${%description('http://ant.apache.org/manual/Types/fileset.html')}">
         <f:textbox />
     </f:entry>
+    <j:if test="${!hideValidateButton}">
+        <f:validateButton title="${%Validate Pattern}" method="validateTestResults" with="testResults" />
+    </j:if>
     <f:entry field="stdioRetention" title="${%Test output retention}">
         <f:select />
     </f:entry>
     <f:entry field="keepProperties" title="">
         <f:checkbox name="keepProperties" title="${%keep all the properties}"/>
+    </f:entry>
+    <f:entry field="archiveAttachments" title="">
+        <f:checkbox title="${%Archive files attached to tests in Open Test Reporting reports}"/>
     </f:entry>
     <f:entry field="keepTestNames" title="">
         <f:checkbox name="keepTestNames" title="${%Keep original test names, even when reporting from multiple stages}"/>

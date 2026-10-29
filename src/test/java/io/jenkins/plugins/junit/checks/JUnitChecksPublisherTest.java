@@ -1,7 +1,12 @@
 package io.jenkins.plugins.junit.checks;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.endsWith;
+import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.lessThanOrEqualTo;
+import static org.hamcrest.Matchers.not;
 
 import hudson.FilePath;
 import hudson.model.Result;
@@ -11,10 +16,13 @@ import io.jenkins.plugins.checks.api.ChecksDetails;
 import io.jenkins.plugins.checks.api.ChecksOutput;
 import io.jenkins.plugins.checks.api.ChecksStatus;
 import io.jenkins.plugins.checks.util.CapturingChecksPublisher;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
+import org.jenkinsci.plugins.displayurlapi.DisplayURLProvider;
 import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
 import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -137,6 +145,49 @@ public class JUnitChecksPublisherTest {
 
         assertThat(output.getTitle().get(), is("failed: 3, passed: 5"));
         assertThat(output.getSummary().get(), is("failed: 3, passed: 5"));
+    }
+
+    @Test
+    @SuppressWarnings("OptionalGetWithoutIsPresent")
+    void extractChecksDetailsTruncatesLongText() throws Exception {
+        WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "singleStep");
+        j.setDefinition(new CpsFlowDefinition("""
+                        stage('first') {
+                          node {
+                            junit(testResults: '*.xml')
+                          }
+                        }
+                        """, true));
+        StringBuilder xml = new StringBuilder("<testsuite name=\"big\" tests=\"100\" failures=\"100\">");
+        String stackTrace = "at some.Frame.method(Frame.java:1)\n".repeat(50);
+        for (int i = 0; i < 100; i++) {
+            xml.append("<testcase classname=\"big.Test\" name=\"test")
+                    .append(i)
+                    .append("\"><failure message=\"boom ")
+                    .append(i)
+                    .append("\">")
+                    .append(stackTrace)
+                    .append("</failure></testcase>");
+        }
+        xml.append("</testsuite>");
+        FilePath ws = rule.jenkins.getWorkspaceFor(j);
+        Objects.requireNonNull(ws).child("test-result.xml").write(xml.toString(), "UTF-8");
+
+        WorkflowRun run = rule.buildAndAssertStatus(Result.UNSTABLE, j);
+
+        ChecksOutput output = getDetail().getOutput().get();
+
+        int maxSize = 65_535;
+        assertThat(output.getText().get().getBytes(StandardCharsets.UTF_8).length, greaterThan(maxSize));
+
+        String truncated = output.getText(maxSize).get();
+        assertThat(truncated.getBytes(StandardCharsets.UTF_8).length, lessThanOrEqualTo(maxSize));
+        assertThat(truncated, containsString("## `big.Test.test0`"));
+        assertThat(truncated, not(containsString("## `big.Test.test99`")));
+        assertThat(
+                truncated,
+                endsWith("more test results are not shown here, view them on [Jenkins]("
+                        + DisplayURLProvider.get().getTestsURL(run) + ")"));
     }
 
     @Test

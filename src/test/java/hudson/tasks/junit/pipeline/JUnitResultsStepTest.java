@@ -1,6 +1,8 @@
 package hudson.tasks.junit.pipeline;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.not;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -31,6 +33,9 @@ import java.util.List;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.Description;
+import org.htmlunit.html.HtmlOption;
+import org.htmlunit.html.HtmlPage;
+import org.htmlunit.html.HtmlSelect;
 import org.jenkinsci.plugins.workflow.actions.LabelAction;
 import org.jenkinsci.plugins.workflow.actions.ThreadNameAction;
 import org.jenkinsci.plugins.workflow.actions.WarningAction;
@@ -87,6 +92,24 @@ class JUnitResultsStepTest {
         st.assertRoundTrip(
                 step,
                 "junit allowEmptyResults: true, healthScaleFactor: 2.0, skipMarkingBuildUnstable: true, skipMarkingStageUnstable: true, testDataPublishers: [[$class: 'MockTestDataPublisher', name: 'testing']], testResults: '**/target/surefire-reports/TEST-*.xml'");
+    }
+
+    @Issue("728")
+    @Test
+    void noValidateButtonInSnippetGenerator() throws Exception {
+        WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "snippets");
+        JenkinsRule.WebClient wc = rule.createWebClient();
+        HtmlPage page = wc.getPage(j, "pipeline-syntax");
+        HtmlSelect sampleStep = page.querySelector("select.dropdownList");
+        HtmlOption junit = sampleStep.getOptions().stream()
+                .filter(o -> o.getText().startsWith("junit:"))
+                .findFirst()
+                .orElseThrow();
+        sampleStep.setSelectedAttribute(junit, true);
+        wc.waitForBackgroundJavaScript(10_000);
+
+        assertThat(page.querySelectorAll("input[name='_.testResults']"), not(empty()));
+        assertThat(page.querySelectorAll(".validate-button"), empty());
     }
 
     @Issue("JENKINS-48250")
@@ -424,6 +447,13 @@ class JUnitResultsStepTest {
                 }
             }
         }
+
+        // The Test Results page must show the stage-ancestry-prefixed display name for each failed test,
+        // not just the bare JUnit test name, so a stage like "first" stays visible when triaging failures.
+        HtmlPage reportPage = rule.createWebClient().getPage(thirdRun, "testReport");
+        assertNotNull(
+                reportPage.getFirstByXPath(
+                        "//a[contains(@class,'jp-table-row') and contains(text(),'first / testGetVendorFirmKeyForVendorRep')]"));
     }
 
     @Issue("JENKINS-48178")

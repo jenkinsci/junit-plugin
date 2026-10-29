@@ -27,6 +27,7 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.model.Run;
+import hudson.tasks.test.AbstractTestResultAction;
 import hudson.tasks.test.TestResult;
 import hudson.util.TextFile;
 import io.jenkins.plugins.junit.storage.FileJunitTestResultStorage;
@@ -41,9 +42,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import org.apache.commons.io.FileUtils;
@@ -282,6 +285,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
 
     public CaseResult(CaseResult src) {
         this.duration = src.duration;
+        this.startTime = src.startTime;
         this.className = src.className;
         this.testName = src.testName;
         this.skippedMessage = src.skippedMessage;
@@ -545,6 +549,35 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
                 + cleanupTruncated(stdio.subSequence(len - halfMaxSize, len));
     }
 
+    /**
+     * Flavor of {@link #possiblyTrimStdio(Collection, StdioRetention, String)} for a single test whose failure state is
+     * already known.
+     */
+    static String possiblyTrimStdio(boolean failing, StdioRetention stdioRetention, String stdio) {
+        if (stdio == null) {
+            return null;
+        }
+        if (stdioRetention == StdioRetention.ALL || (stdioRetention == StdioRetention.FAILED && failing)) {
+            return stdio;
+        }
+        int halfMaxSize = failing ? HALF_MAX_FAILING_SIZE : HALF_MAX_SIZE;
+        int len = stdio.length();
+        int middle = len - halfMaxSize * 2;
+        if (middle <= 0) {
+            return stdio;
+        }
+        return cleanupTruncated(stdio.subSequence(0, halfMaxSize)) + "\n...[truncated " + middle + " chars]...\n"
+                + cleanupTruncated(stdio.subSequence(len - halfMaxSize, len));
+    }
+
+    /**
+     * Marks a failed test as a "proper" failure (an assertion failure, {@code <failure>} in JUnit XML)
+     * rather than an error.
+     */
+    void setProperFailure(boolean properFailure) {
+        this.isProperFailure = properFailure;
+    }
+
     static String fixNULs(String stdio) { // JENKINS-71139
         return stdio == null ? null : stdio.replace("\u0000", "^@");
     }
@@ -552,7 +585,6 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     /**
      * Flavor of {@link #possiblyTrimStdio(Collection, StdioRetention, String)} that doesn't try to read the whole thing into memory.
      */
-    @SuppressFBWarnings(value = "DM_DEFAULT_ENCODING", justification = "Expected behavior")
     static String possiblyTrimStdio(Collection<CaseResult> results, StdioRetention stdioRetention, File stdio)
             throws IOException {
         long len = stdio.length();
@@ -667,8 +699,9 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         if (!keepTestNames && !getEnclosingFlowNodeNames().isEmpty()) {
             Run<?, ?> r = getRun();
             if (r != null) {
-                TestResultAction action = r.getAction(TestResultAction.class);
-                if (action != null && action.getResult().hasMultipleBlocks()) {
+                // through the enclosing results, as results shown while tests run are not attached to the run
+                AbstractTestResultAction<?> a = getTestResultAction();
+                if (a instanceof TestResultAction action && action.getResult().hasMultipleBlocks()) {
                     List<String> enclosingFlowNodeNames = getEnclosingFlowNodeNames();
                     Collections.reverse(enclosingFlowNodeNames);
                     return String.join(" / ", enclosingFlowNodeNames) + " / " + rawName;
@@ -1028,6 +1061,33 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         return properties;
     }
 
+    void setKeepTestNames(boolean keepTestNames) {
+        this.keepTestNames = keepTestNames;
+    }
+
+    /**
+     * The properties shown by {@code test-output.jelly}: those not already shown otherwise, like archived attachments.
+     */
+    @Restricted(NoExternalUse.class)
+    public Map<String, String> getDisplayedProperties() {
+        List<TestAttachments.AttachmentsAction> attachments = new ArrayList<>();
+        for (TestAction action : getTestActions()) {
+            if (action instanceof TestAttachments.AttachmentsAction a) {
+                attachments.add(a);
+            }
+        }
+        if (attachments.isEmpty()) {
+            return properties;
+        }
+        Map<String, String> displayed = new LinkedHashMap<>();
+        for (Map.Entry<String, String> p : properties.entrySet()) {
+            if (attachments.stream().noneMatch(a -> a.shows(p.getKey(), p.getValue()))) {
+                displayed.put(p.getKey(), p.getValue());
+            }
+        }
+        return displayed;
+    }
+
     /**
      * Used by {@code test-output.jelly} to decide whether a property value should be rendered as a hyperlink.
      */
@@ -1042,6 +1102,16 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         } catch (URISyntaxException x) {
             return false;
         }
+    }
+
+    private static final Pattern JAVA_STACK_FRAME = Pattern.compile("^[ \\t]+at \\S+\\(", Pattern.MULTILINE);
+
+    /**
+     * Used by {@code test-output.jelly} to decide whether a value should be highlighted as a Java stack trace.
+     */
+    @Restricted(NoExternalUse.class)
+    public boolean isJavaStackTrace(String value) {
+        return value != null && JAVA_STACK_FRAME.matcher(value).find();
     }
 
     /**
