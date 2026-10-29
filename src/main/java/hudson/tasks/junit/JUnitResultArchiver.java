@@ -615,7 +615,18 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
             if (project == null || !project.hasPermission(Item.WORKSPACE)) {
                 return FormValidation.ok();
             }
-            return FilePath.validateFileMask(project.getSomeWorkspace(), testResults);
+            if (Util.fixEmptyAndTrim(testResults) == null) {
+                return FormValidation.error(Messages.JUnitResultArchiver_PatternRequired());
+            }
+            FilePath workspace = project.getSomeWorkspace();
+            if (workspace == null) {
+                return FormValidation.warning(Messages.JUnitResultArchiver_NoWorkspace());
+            }
+            FormValidation result = FilePath.validateFileMask(workspace, testResults);
+            if (result.kind == FormValidation.Kind.OK && result.getMessage() == null) {
+                return FormValidation.ok(Messages.JUnitResultArchiver_PatternMatches());
+            }
+            return result;
         }
 
         @Override
