@@ -285,6 +285,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
 
     public CaseResult(CaseResult src) {
         this.duration = src.duration;
+        this.startTime = src.startTime;
         this.className = src.className;
         this.testName = src.testName;
         this.skippedMessage = src.skippedMessage;
