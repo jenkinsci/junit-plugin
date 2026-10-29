@@ -71,6 +71,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
+import jenkins.model.Jenkins;
 import org.apache.commons.io.FileUtils;
 import org.htmlunit.HttpMethod;
 import org.htmlunit.WebRequest;
@@ -93,6 +94,11 @@ import org.kohsuke.stapler.HttpResponse;
 
 @WithJenkins
 class JUnitResultArchiverTest {
+
+    static {
+        // TODO @LocalData based on OLD_DEFAULT_WORKSPACES_DIR
+        System.setProperty(Jenkins.class.getName() + ".workspacesDir", "${ITEM_ROOTDIR}/workspace");
+    }
 
     private final LogRecorder logging = new LogRecorder().recordPackage(JUnitResultArchiver.class, Level.FINE);
 
@@ -454,7 +460,7 @@ class JUnitResultArchiverTest {
         wc.waitForBackgroundJavaScript(10000L);
         assertThat(page.asNormalizedText(), containsString(EXPECTED));
 
-        page.getElementById(ID_PREFIX + "-hidelink").click();
+        page.getElementById(ID_PREFIX + "-showlink").click();
         wc.waitForBackgroundJavaScript(10000L);
         assertThat(page.asNormalizedText(), not(containsString(EXPECTED)));
     }

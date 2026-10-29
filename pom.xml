@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>5.24</version>
+    <version>6.2236.v12dd4c483242</version>
     <relativePath />
   </parent>
 
@@ -32,7 +32,9 @@
   <properties>
     <changelist>999999-SNAPSHOT</changelist>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
-    <jenkins.baseline>2.479</jenkins.baseline>
+    <hpi.bundledArtifacts>parallel-collectors</hpi.bundledArtifacts>
+    <hpi.strictBundledArtifacts>true</hpi.strictBundledArtifacts>
+    <jenkins.baseline>2.555</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
     <no-test-jar>false</no-test-jar>
     <spotless.check.skip>false</spotless.check.skip>
@@ -44,7 +46,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-${jenkins.baseline}.x</artifactId>
-        <version>5054.v620b_5d2b_d5e6</version>
+        <version>6931.vea_a_b_c6fd017d</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -52,7 +54,7 @@
       <dependency>
         <groupId>org.jetbrains.kotlin</groupId>
         <artifactId>kotlin-bom</artifactId>
-        <version>2.2.10</version>
+        <version>2.4.21</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -83,15 +85,23 @@
     </dependency>
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
+      <artifactId>jackson3-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.jenkins.plugins</groupId>
       <artifactId>plugin-util-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>prism-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>antisamy-markup-formatter</artifactId>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
       <artifactId>display-url-api</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>org.jenkins-ci.plugins</groupId>
-      <artifactId>jackson2-api</artifactId>
     </dependency>
     <dependency>
       <groupId>org.jenkins-ci.plugins</groupId>
@@ -124,7 +134,6 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>github-checks</artifactId>
-      <version>602.v264a_83610da_6</version>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -192,6 +201,12 @@
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-core</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.xmlunit</groupId>
+      <artifactId>xmlunit-core</artifactId>
+      <version>2.14.0</version>
       <scope>test</scope>
     </dependency>
   </dependencies>

@@ -101,19 +101,40 @@ class CaseResultTest {
 
         // piggy back tests for annotate methods
         assertOutput(cr, "plain text", "plain text");
-        assertOutput(cr, "line #1\nhttp://nowhere.net/\nline #2\n", "line #1\nhttp://nowhere.net/\nline #2\n");
-        assertOutput(cr, "failed; see http://nowhere.net/", "failed; see http://nowhere.net/");
-        assertOutput(cr, "failed (see http://nowhere.net/)", "failed (see http://nowhere.net/)");
+        assertOutput(
+                cr,
+                "line #1\nhttp://nowhere.net/\nline #2\n",
+                "line #1\n" + "<a href=\"http://nowhere.net/\">http://nowhere.net/</a>\n" + "line #2\n");
+        assertOutput(
+                cr,
+                "failed; see http://nowhere.net/",
+                "failed; see <a href=\"http://nowhere.net/\">http://nowhere.net/</a>");
+        assertOutput(
+                cr,
+                "failed (see http://nowhere.net/)",
+                "failed (see <a href=\"http://nowhere.net/\">http://nowhere.net/</a>)");
         assertOutput(
                 cr,
                 "http://nowhere.net/ - failed: http://elsewhere.net/",
-                "http://nowhere.net/ - failed: " + "http://elsewhere.net/");
-        assertOutput(cr, "https://nowhere.net/", "https://nowhere.net/");
+                "<a href=\"http://nowhere.net/\">http://nowhere.net/</a> - failed: <a href=\"http://elsewhere.net/\">http://elsewhere.net/</a>");
+        assertOutput(cr, "https://nowhere.net/", "<a href=\"https://nowhere.net/\">https://nowhere.net/</a>");
+        assertOutput(cr, "HTTPS://nowhere.net/", "<a href=\"HTTPS://nowhere.net/\">HTTPS://nowhere.net/</a>");
         assertOutput(cr, "stuffhttp://nowhere.net/", "stuffhttp://nowhere.net/");
         assertOutput(cr, "a < b && c < d", "a &lt; b &amp;&amp; c &lt; d");
-        assertOutput(cr, "see <http://nowhere.net/>", "see &lt;http://nowhere.net/>");
-        assertOutput(cr, "http://google.com/?q=stuff&lang=en", "http://google.com/?q=stuff&amp;lang=en");
-        assertOutput(cr, "http://localhost:8080/stuff/", "http://localhost:8080/stuff/");
+        assertOutput(
+                cr, "see <http://nowhere.net/>", "see &lt;<a href=\"http://nowhere.net/\">http://nowhere.net/</a>>");
+        assertOutput(
+                cr,
+                "http://google.com/?q=stuff&lang=en",
+                "<a href=\"http://google.com/?q&#61;stuff&amp;lang&#61;en\">http://google.com/?q&#61;stuff&amp;lang&#61;en</a>");
+        assertOutput(
+                cr,
+                "http://localhost:8080/stuff/",
+                "<a href=\"http://localhost:8080/stuff/\">http://localhost:8080/stuff/</a>");
+        assertOutput(
+                cr,
+                "https://google.com\"onclick=alert(1)\"",
+                "<a href=\"https://google.com\">https://google.com</a>\"onclick=alert(1)\"");
     }
 
     /**
@@ -183,16 +204,24 @@ class CaseResultTest {
 
         HtmlPage page = rule.createWebClient().goTo("job/render-test/1/testReport/" + testUrl);
 
-        HtmlElement errorMsg = (HtmlElement) page.getByXPath("//h3[text()='Error Message']/following-sibling::*")
-                .get(0);
+        HtmlElement errorMsg =
+                (HtmlElement) page.getByXPath("//summary[normalize-space(.)='Error Details']/following-sibling::*")
+                        .get(0);
 
         assertEquals(cr.annotate(cr.getErrorDetails()).replaceAll("&lt;", "<"), errorMsg.getTextContent());
-        HtmlElement errorStackTrace = (HtmlElement) page.getByXPath("//h3[text()='Stacktrace']/following-sibling::*")
-                .get(0);
+        HtmlElement errorStackTrace =
+                (HtmlElement) page.getByXPath("//summary[normalize-space(.)='Stack Trace']/following-sibling::*")
+                        .get(0);
         // Have to do some annoying replacing here to get the same text Jelly produces in the end.
         assertEquals(
                 cr.annotate(cr.getErrorStackTrace()).replaceAll("&lt;", "<").replace("\r\n", "\n"),
                 errorStackTrace.getTextContent());
+
+        // Only Java stack traces get stack trace highlighting
+        assertEquals("", ((HtmlElement) errorMsg.getFirstByXPath(".//code")).getAttribute("class"));
+        assertEquals(
+                "language-javastacktrace",
+                ((HtmlElement) errorStackTrace.getFirstByXPath(".//code")).getAttribute("class"));
     }
 
     /**
@@ -334,6 +363,40 @@ class CaseResultTest {
             CaseResult cr2 = tr2.getFailedTests().get(0);
             assertEquals(2, cr2.getAge()); // At second execution, failing test age should be 2
         }
+    }
+
+    @Test
+    void testRegressionAndFixedCounts() throws Exception {
+        FreeStyleProject p = rule.createFreeStyleProject();
+        p.getBuildersList().add(new TouchBuilder());
+        p.getPublishersList().add(new JUnitResultArchiver("x.xml"));
+        FilePath report = rule.jenkins.getWorkspaceFor(p).child("x.xml");
+
+        report.write(
+                "<testsuite>"
+                        + "<testcase classname='A' name='fixed'><failure/></testcase>"
+                        + "<testcase classname='A' name='regressed'/>"
+                        + "<testcase classname='A' name='stillFailing'><failure/></testcase>"
+                        + "</testsuite>",
+                null);
+        TestResult tr1 = rule.assertBuildStatus(Result.UNSTABLE, p.scheduleBuild2(0))
+                .getAction(TestResultAction.class)
+                .getResult();
+        assertEquals(0, tr1.getRegressionCount());
+        assertEquals(0, tr1.getFixedCount());
+
+        report.write(
+                "<testsuite>"
+                        + "<testcase classname='A' name='fixed'/>"
+                        + "<testcase classname='A' name='regressed'><failure/></testcase>"
+                        + "<testcase classname='A' name='stillFailing'><failure/></testcase>"
+                        + "</testsuite>",
+                null);
+        TestResult tr2 = rule.assertBuildStatus(Result.UNSTABLE, p.scheduleBuild2(0))
+                .getAction(TestResultAction.class)
+                .getResult();
+        assertEquals(1, tr2.getRegressionCount());
+        assertEquals(1, tr2.getFixedCount());
     }
 
     private FreeStyleBuild configureTestBuild(String projectName) throws Exception {

@@ -59,6 +59,8 @@ import java.util.logging.Logger;
 import jenkins.tasks.SimpleBuildStep;
 import org.apache.tools.ant.DirectoryScanner;
 import org.apache.tools.ant.types.FileSet;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.AncestorInPath;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
@@ -112,6 +114,8 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     private boolean skipMarkingBuildUnstable;
 
     private boolean skipOldReports;
+
+    private boolean archiveAttachments;
 
     private static final String DEFAULT_CHECKS_NAME = "Tests";
 
@@ -270,6 +274,26 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
             Launcher launcher,
             TaskListener listener)
             throws InterruptedException, IOException {
+        return parseAndSummarize(task, pipelineTestDetails, build, workspace, workspace, launcher, listener);
+    }
+
+    /**
+     * Like {@link #parseAndSummarize(JUnitTask, PipelineTestDetails, Run, FilePath, Launcher, TaskListener)}, for
+     * reports outside the workspace.
+     *
+     * @param reports where to look for the reports
+     * @param workspace the workspace, for {@link TestDataPublisher}s
+     */
+    @Restricted(NoExternalUse.class)
+    public static TestResultSummary parseAndSummarize(
+            @NonNull JUnitTask task,
+            PipelineTestDetails pipelineTestDetails,
+            Run<?, ?> build,
+            FilePath reports,
+            FilePath workspace,
+            Launcher launcher,
+            TaskListener listener)
+            throws InterruptedException, IOException {
         JunitTestResultStorage storage = JunitTestResultStorage.find();
         if (storage instanceof FileJunitTestResultStorage) {
             listener.getLogger().println(Messages.JUnitResultArchiver_Recording());
@@ -280,7 +304,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
         TestResult result;
         TestResultSummary summary;
         if (storage instanceof FileJunitTestResultStorage) {
-            result = parse(task, pipelineTestDetails, testResults, build, workspace, launcher, listener);
+            result = parse(task, pipelineTestDetails, testResults, build, reports, launcher, listener);
             summary = null; // see below
         } else {
             result = new TestResult(storage.load(build.getParent().getFullName(), build.getNumber())); // irrelevant
@@ -290,8 +314,23 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                             task.isAllowEmptyResults(),
                             task.isSkipOldReports(),
                             task.isKeepTestNames())
-                    .summarizeResult(testResults, build, pipelineTestDetails, workspace, launcher, listener, storage);
+                    .summarizeResult(testResults, build, pipelineTestDetails, reports, launcher, listener, storage);
         }
+
+        TestAttachments.Data attachments = task.isArchiveAttachments()
+                ? TestAttachments.archive(
+                        testResults,
+                        task.isKeepTestNames(),
+                        // as the parser does
+                        task.isSkipOldReports()
+                                ? Math.min(build.getStartTimeInMillis(), build.getTimeInMillis())
+                                : Long.MIN_VALUE,
+                        pipelineTestDetails,
+                        build,
+                        reports,
+                        launcher,
+                        listener)
+                : null;
 
         synchronized (build) {
             // TODO can the build argument be omitted now, or is it used prior to the call to addAction?
@@ -328,6 +367,9 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                         action.addData(d);
                     }
                 }
+            }
+            if (attachments != null) {
+                action.addData(attachments);
             }
 
             if (appending) {
@@ -536,6 +578,16 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
     @DataBoundSetter
     public void setSkipOldReports(boolean skipOldReports) {
         this.skipOldReports = skipOldReports;
+    }
+
+    @Override
+    public boolean isArchiveAttachments() {
+        return archiveAttachments;
+    }
+
+    @DataBoundSetter
+    public final void setArchiveAttachments(boolean archiveAttachments) {
+        this.archiveAttachments = archiveAttachments;
     }
 
     private static final long serialVersionUID = 1L;

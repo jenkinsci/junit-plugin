@@ -65,10 +65,12 @@ public class JUnitResultsStepExecution extends SynchronousNonBlockingStepExecuti
             if (summary.getFailCount() > 0) {
                 int testFailures = summary.getFailCount();
                 if (testFailures > 0) {
-                    node.addOrReplaceAction(
-                            new WarningAction(Result.UNSTABLE).withMessage(testFailures + " tests failed"));
-                    if (!step.isSkipMarkingBuildUnstable()) {
-                        run.setResult(Result.UNSTABLE);
+                    if (!step.isSkipMarkingStageUnstable()) {
+                        node.addOrReplaceAction(
+                                new WarningAction(Result.UNSTABLE).withMessage(testFailures + " tests failed"));
+                        if (!step.isSkipMarkingBuildUnstable()) {
+                            run.setResult(Result.UNSTABLE);
+                        }
                     }
                 }
             }

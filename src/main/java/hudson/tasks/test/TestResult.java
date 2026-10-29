@@ -26,12 +26,19 @@ package hudson.tasks.test;
 import hudson.model.Job;
 import hudson.model.Result;
 import hudson.model.Run;
+import hudson.tasks.junit.CaseResult;
+import hudson.tasks.junit.Failure;
 import hudson.tasks.junit.TestAction;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import org.owasp.html.HtmlPolicyBuilder;
+import org.owasp.html.PolicyFactory;
 
 /**
  * A class that represents a general concept of a test result, without any
@@ -42,6 +49,16 @@ import java.util.logging.Logger;
  */
 public abstract class TestResult extends TestObject {
     private static final Logger LOGGER = Logger.getLogger(TestResult.class.getName());
+
+    private static final PolicyFactory POLICY_DEFINITION = new HtmlPolicyBuilder()
+            .allowElements("a")
+            .allowUrlProtocols("https", "http")
+            .allowAttributes("href")
+            .onElements("a")
+            .toFactory();
+
+    private static final Pattern LINK_REGEX_PATTERN =
+            Pattern.compile("\\b(https?://[^\\s)<>\"]+)", Pattern.CASE_INSENSITIVE);
 
     /**
      * If the concept of a parent action is important to a subclass, then it should
@@ -57,7 +74,32 @@ public abstract class TestResult extends TestObject {
      * @return action The action that points to the top level test result.
      */
     public AbstractTestResultAction getParentAction() {
+        AbstractTestResultAction action = getAncestorAction();
+        if (action != null) {
+            return action;
+        }
         return getRun().getAction(AbstractTestResultAction.class);
+    }
+
+    /**
+     * The action the closest enclosing result belongs to, which may not be attached to the run
+     * (e.g. results shown while tests are still running).
+     */
+    private AbstractTestResultAction getAncestorAction() {
+        TestObject parent = getParent();
+        if (parent instanceof TestResult) {
+            return ((TestResult) parent).getParentAction();
+        }
+        return null;
+    }
+
+    @Override
+    public AbstractTestResultAction getTestResultAction() {
+        AbstractTestResultAction action = getAncestorAction();
+        if (action != null) {
+            return action;
+        }
+        return super.getTestResultAction();
     }
 
     /**
@@ -140,6 +182,16 @@ public abstract class TestResult extends TestObject {
         if (b == null) {
             return null;
         }
+        // getParentAction() returns null when no AbstractTestResultAction is attached
+        // to this run yet — notably while JUnitResultArchiver.parseAndSummarize is
+        // invoking TestDataPublishers (the action is constructed but only added to
+        // the build *after* the publisher loop). Without a known action class we
+        // can't find a corresponding result on a previous build, so just stop here
+        // instead of NPEing on .getClass() inside the loop below.
+        AbstractTestResultAction parentAction = getParentAction();
+        if (parentAction == null) {
+            return null;
+        }
         Job<?, ?> job = b.getParent();
         while (true) {
             b = b.getPreviousBuild();
@@ -147,7 +199,7 @@ public abstract class TestResult extends TestObject {
                 return null;
             }
             try {
-                AbstractTestResultAction r = b.getAction(getParentAction().getClass());
+                AbstractTestResultAction r = (AbstractTestResultAction) b.getAction(parentAction.getRecordedType());
                 if (r != null) {
                     TestResult result = r.findCorrespondingResult(this.getId());
                     if (result != null) {
@@ -172,7 +224,11 @@ public abstract class TestResult extends TestObject {
      */
     @Override
     public TestResult getResultInRun(Run<?, ?> build) {
-        AbstractTestResultAction tra = build.getAction(getParentAction().getClass());
+        AbstractTestResultAction parentAction = getParentAction();
+        if (parentAction == null) {
+            return null;
+        }
+        AbstractTestResultAction tra = (AbstractTestResultAction) build.getAction(parentAction.getRecordedType());
         if (tra == null) {
             tra = build.getAction(AbstractTestResultAction.class);
         }
@@ -201,6 +257,36 @@ public abstract class TestResult extends TestObject {
      */
     public Collection<? extends TestResult> getSkippedTests() {
         return Collections.emptyList();
+    }
+
+    /**
+     * Gets the number of test cases under this result that failed in this build but passed in the previous one
+     */
+    public long getRegressionCount() {
+        return countCases(this, CaseResult.Status.REGRESSION);
+    }
+
+    /**
+     * Gets the number of test cases under this result that passed in this build but failed in the previous one
+     */
+    public long getFixedCount() {
+        return countCases(this, CaseResult.Status.FIXED);
+    }
+
+    private static long countCases(TestResult result, CaseResult.Status status) {
+        if (result instanceof CaseResult caseResult) {
+            // Only a failing case can have regressed and only a passing one can have been fixed. Checking
+            // that first avoids looking up the previous result (getCondition) of every other case, which
+            // for most builds means only the failing cases are looked up when counting regressions.
+            boolean candidate = status == CaseResult.Status.REGRESSION ? caseResult.isFailed() : caseResult.isPassed();
+            return candidate && caseResult.getCondition() == status ? 1 : 0;
+        }
+        if (result instanceof TabulatedResult tabulatedResult) {
+            return tabulatedResult.getChildren().stream()
+                    .mapToLong(e -> countCases(e, status))
+                    .sum();
+        }
+        return 0;
     }
 
     /**
@@ -263,6 +349,14 @@ public abstract class TestResult extends TestObject {
         return Collections.emptyMap();
     }
 
+    public List<Failure> getFlakyFailures() {
+        return Collections.emptyList();
+    }
+
+    public List<Failure> getRerunFailures() {
+        return Collections.emptyList();
+    }
+
     /**
      * @return true if the test was not skipped and did not fail, false otherwise.
      */
@@ -284,16 +378,72 @@ public abstract class TestResult extends TestObject {
     }
 
     /**
-     * Annotate some text -- what does this do?
-     * @param text Text to use to annotate the actions.
+     * Escapes "&" and "<" characters in the provided text, with the goal of preventing any HTML tags present
+     * in the text from being rendered / interpreted as HTML.
      *
-     * @return the provided text HTML-escaped.
+     * @param text The text to sanitize
+     * @return The sanitized text
+     */
+    private static String naiveHtmlSanitize(String text) {
+        return text.replace("&", "&amp;").replace("<", "&lt;");
+    }
+
+    private static String escapeHtmlAndMakeLinksClickable(String text) {
+        StringBuilder annotatedTxtBuilder = new StringBuilder();
+
+        Matcher linkMatcher = LINK_REGEX_PATTERN.matcher(text);
+
+        // Goal: Find all the things that look like URLs in the text, and convert them to clickable
+        // <a> tags so they render as clickable links when viewing test output.
+
+        int lastMatchEndIdxExclusive = 0;
+        while (linkMatcher.find()) {
+            // Group 1 in the regex is just the URL
+            String linkUrl = linkMatcher.group(1);
+
+            // Sanitize the final HTML tag we produce to make sure there's nothing malicious in there
+            String sanitizedLinkHtmlTag =
+                    POLICY_DEFINITION.sanitize(String.format("<a href=\"%s\">%s</a>", linkUrl, linkUrl));
+
+            annotatedTxtBuilder
+                    // Append all the chars in-between the last link and this current one, and run that substring
+                    // through naive HTML sanitization since we don't want anything other than the <a> tags we're
+                    // spawning to actually render as HTML.
+                    .append(naiveHtmlSanitize(text.substring(lastMatchEndIdxExclusive, linkMatcher.start())))
+                    // Append our clickable <a> tag
+                    .append(sanitizedLinkHtmlTag);
+
+            lastMatchEndIdxExclusive = linkMatcher.end();
+        }
+
+        // Finish up by sanitizing + appending all the remaining text after the last URL we found
+        annotatedTxtBuilder.append(naiveHtmlSanitize(text.substring(lastMatchEndIdxExclusive)));
+
+        return annotatedTxtBuilder.toString();
+    }
+
+    /**
+     * All JUnit test output (error message, stack trace, std out, std err) shown on the single test case result page
+     * is passed through this method when the page is rendered, which processes / sanitizes the text to make it
+     * suitable for HTML rendering. Attempts to auto-detect URLs in the test output and convert them to clickable
+     * links for convenience. All other HTML will be escaped.
+     * <p>
+     * Additionally, passes the test output through all the TestActions associated with this result, giving them a
+     * chance to apply their own custom rendering / transformations.
+     * <p>
+     * Note: The test output shown when expanding cases on the full "testReport" page is *not* passed through this
+     * method, and instead relies on the Jelly "escape-by-default" flag to escape test output for HTML rendering,
+     * which is why links are not clickable in that context.
+     *
+     * @param text Text to use to annotate the actions.
+     * @return the provided text with URLs converted to sanitized {@code <a>} tags and all other HTML escaped.
      */
     public String annotate(String text) {
         if (text == null) {
             return null;
         }
-        text = text.replace("&", "&amp;").replace("<", "&lt;");
+
+        text = escapeHtmlAndMakeLinksClickable(text);
 
         for (TestAction action : getTestActions()) {
             text = action.annotate(text);

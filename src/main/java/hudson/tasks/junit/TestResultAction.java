@@ -24,6 +24,8 @@
 package hudson.tasks.junit;
 
 import com.thoughtworks.xstream.XStream;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Util;
@@ -56,6 +58,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.tasks.SimpleBuildStep;
 import jenkins.util.SystemProperties;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.StaplerProxy;
 
 /**
@@ -159,7 +163,9 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         long started = System.nanoTime();
         JunitTestResultStorage storage = JunitTestResultStorage.find();
         if (!(storage instanceof FileJunitTestResultStorage)) {
-            return new TestResult(storage.load(run.getParent().getFullName(), run.getNumber()));
+            TestResult result = new TestResult(storage.load(run.getParent().getFullName(), run.getNumber()));
+            result.setParentAction(this);
+            return result;
         }
         TestResult r;
         if (result == null) {
@@ -261,13 +267,13 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
 
     static ConcurrentHashMap<String, SoftReference<TestResult>> resultCache = new ConcurrentHashMap<>();
     static Object syncObj = new Object();
-    static long lastCleanupNs = 0;
+    static volatile long lastCleanupNs = 0;
 
-    static long LARGE_RESULT_CACHE_CLEANUP_INTERVAL_NS =
-            SystemProperties.getLong(TestResultAction.class.getName() + ".LARGE_RESULT_CACHE_CLEANUP_INTERVAL_MS", 500L)
-                    * 1000000L;
+    static long LARGE_RESULT_CACHE_CLEANUP_INTERVAL_NS = SystemProperties.getLong(
+                    TestResultAction.class.getName() + ".LARGE_RESULT_CACHE_CLEANUP_INTERVAL_MS", 30000L)
+            * 1000000L;
     static int LARGE_RESULT_CACHE_THRESHOLD =
-            SystemProperties.getInteger(TestResultAction.class.getName() + ".LARGE_RESULT_CACHE_THRESHOLD", 1000);
+            SystemProperties.getInteger(TestResultAction.class.getName() + ".LARGE_RESULT_CACHE_THRESHOLD", 10000);
     static boolean RESULT_CACHE_ENABLED =
             SystemProperties.getBoolean(TestResultAction.class.getName() + ".RESULT_CACHE_ENABLED", true);
 
@@ -301,16 +307,21 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
      */
     private TestResult loadCached() {
         if (resultCache.size() > LARGE_RESULT_CACHE_THRESHOLD) {
-            synchronized (syncObj) {
-                if (resultCache.size() > LARGE_RESULT_CACHE_THRESHOLD
-                        && (System.nanoTime() - lastCleanupNs) > LARGE_RESULT_CACHE_CLEANUP_INTERVAL_NS) {
-                    lastCleanupNs = System.nanoTime();
-                    resultCache.forEach((String k, SoftReference<TestResult> v) -> {
-                        if (v.get() == null) {
-                            resultCache.remove(k);
-                        }
-                    });
+            boolean doCleanup = false;
+            if ((System.nanoTime() - lastCleanupNs) > LARGE_RESULT_CACHE_CLEANUP_INTERVAL_NS) {
+                synchronized (syncObj) {
+                    if ((System.nanoTime() - lastCleanupNs) > LARGE_RESULT_CACHE_CLEANUP_INTERVAL_NS) {
+                        lastCleanupNs = System.nanoTime();
+                        doCleanup = true;
+                    }
                 }
+            }
+            if (doCleanup) {
+                resultCache.forEach((String k, SoftReference<TestResult> v) -> {
+                    if (v.refersTo(null)) {
+                        resultCache.remove(k, v);
+                    }
+                });
             }
         }
         TestResult r;
@@ -330,6 +341,50 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
     @Override
     public Object getTarget() {
         return getResult();
+    }
+
+    /**
+     * A message describing tests that are still running, for results that are shown while tests run.
+     *
+     * @return {@code null} for recorded results
+     */
+    @Restricted(NoExternalUse.class)
+    @CheckForNull
+    public String getLiveStatus() {
+        return null;
+    }
+
+    /**
+     * Names of tests that are still running, for results that are shown while tests run.
+     */
+    @Restricted(NoExternalUse.class)
+    @NonNull
+    public List<String> getLiveRunningTests() {
+        return Collections.emptyList();
+    }
+
+    /**
+     * How often (in seconds) the results that are shown while tests run are refreshed.
+     */
+    @Restricted(NoExternalUse.class)
+    public int getLiveRefreshSeconds() {
+        return 5;
+    }
+
+    /**
+     * Changes whenever the results that are shown while tests run do, unlike when tests only start.
+     */
+    @Restricted(NoExternalUse.class)
+    public long getLiveResultsVersion() {
+        return 0;
+    }
+
+    /**
+     * How many tests are running besides those named by {@link #getLiveRunningTests}.
+     */
+    @Restricted(NoExternalUse.class)
+    public int getLiveMoreRunningTests() {
+        return 0;
     }
 
     public List<TestAction> getActions(TestObject object) {
@@ -415,6 +470,10 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         return this;
     }
 
+    public Widget getWidget() {
+        return new Widget(getResult());
+    }
+
     private static final Logger logger = Logger.getLogger(TestResultAction.class.getName());
 
     static final XStream XSTREAM = new XStream2();
@@ -423,6 +482,7 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         XSTREAM.alias("result", TestResult.class);
         XSTREAM.alias("suite", SuiteResult.class);
         XSTREAM.alias("case", CaseResult.class);
+        XSTREAM.alias("failure", Failure.class);
         XSTREAM.registerConverter(new HeapSpaceStringConverter(), 100);
     }
 }

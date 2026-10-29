@@ -126,8 +126,7 @@ class TestResultStorageJunitTest {
         // ((Channel) remote.getChannel()).addListener(new
         // LoggingChannelListener(Logger.getLogger(TestResultStorageTest.class.getName()), Level.INFO));
         WorkflowJob p = r.createProject(WorkflowJob.class, "p");
-        p.setDefinition(new CpsFlowDefinition(
-                """
+        p.setDefinition(new CpsFlowDefinition("""
                         node('remote') {
                           writeFile file: 'x.xml', text: '''<testsuite name='sweet' time='200.0'>
                         <testcase classname='Klazz' name='test1' time='198.0'><error message='failure'/></testcase>
@@ -141,8 +140,7 @@ class TestResultStorageJunitTest {
                         </testsuite>'''
                           s = junit testResults: 'x.xml', skipPublishingChecks: true
                           echo(/next summary: fail=$s.failCount skip=$s.skipCount pass=$s.passCount total=$s.totalCount/)
-                        }""",
-                true));
+                        }""", true));
         WorkflowRun b = p.scheduleBuild2(0).get();
         try (Connection connection = Objects.requireNonNull(
                                 GlobalDatabaseConfiguration.get().getDatabase())
@@ -234,6 +232,7 @@ class TestResultStorageJunitTest {
             assertThat(testResultSummary.getPassCount(), equalTo(1));
             assertThat(testResultSummary.getSkipCount(), equalTo(1));
             assertThat(testResultSummary.getTotalCount(), equalTo(4));
+            assertThat(testResultSummary.getDuration(), equalTo(200.0f));
 
             int countOfBuildsWithTestResults = pluggableStorage.getCountOfBuildsWithTestResults();
             assertThat(countOfBuildsWithTestResults, is(1));
@@ -454,7 +453,7 @@ class TestResultStorageJunitTest {
                 public List<TrendTestResultSummary> getTrendTestResultSummary() {
                     return query(connection -> {
                         try (PreparedStatement statement = connection.prepareStatement(
-                                "SELECT build, sum(case when errorDetails is not null then 1 else 0 end) as failCount, sum(case when skipped is not null then 1 else 0 end) as skipCount, sum(case when errorDetails is null and skipped is null then 1 else 0 end) as passCount FROM "
+                                "SELECT build, sum(case when errorDetails is not null then 1 else 0 end) as failCount, sum(case when skipped is not null then 1 else 0 end) as skipCount, sum(case when errorDetails is null and skipped is null then 1 else 0 end) as passCount, sum(duration) as duration FROM "
                                         + Impl.CASE_RESULTS_TABLE + " WHERE job = ? group by build order by build;")) {
                             statement.setString(1, job);
                             try (ResultSet result = statement.executeQuery()) {
@@ -466,9 +465,11 @@ class TestResultStorageJunitTest {
                                     int failed = result.getInt("failCount");
                                     int skipped = result.getInt("skipCount");
                                     int total = passed + failed + skipped;
+                                    float duration = result.getFloat("duration");
 
                                     trendTestResultSummaries.add(new TrendTestResultSummary(
-                                            buildNumber, new TestResultSummary(failed, skipped, passed, total)));
+                                            buildNumber,
+                                            new TestResultSummary(failed, skipped, passed, total, duration)));
                                 }
                                 return trendTestResultSummaries;
                             }

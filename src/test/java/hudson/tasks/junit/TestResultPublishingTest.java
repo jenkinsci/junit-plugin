@@ -46,6 +46,7 @@ import hudson.tasks.Builder;
 import hudson.tasks.test.helper.WebClientFactory;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
+import jenkins.model.Jenkins;
 import org.htmlunit.Page;
 import org.htmlunit.html.DomElement;
 import org.htmlunit.html.HtmlAnchor;
@@ -64,6 +65,11 @@ import org.xml.sax.SAXException;
 
 @WithJenkins
 class TestResultPublishingTest {
+
+    static {
+        // TODO @LocalData based on OLD_DEFAULT_WORKSPACES_DIR
+        System.setProperty(Jenkins.class.getName() + ".workspacesDir", "${ITEM_ROOTDIR}/workspace");
+    }
 
     private FreeStyleProject project;
     private JUnitResultArchiver archiver;
@@ -378,9 +384,12 @@ class TestResultPublishingTest {
         HtmlPage testResultPage = wc.getPage(run, restOfUrl);
 
         // Verify inter-build diffs in html table
-        String xpathToFailDiff = "//table[@id='testresult']//tr[td//span[text()=\"" + packageName + "\"]]/td[4]";
-        String xpathToSkipDiff = "//table[@id='testresult']//tr[td//span[text()=\"" + packageName + "\"]]/td[6]";
-        String xpathToTotalDiff = "//table[@id='testresult']//tr[td//span[text()=\"" + packageName + "\"]]/td[last()]";
+        String xpathToFailDiff =
+                "//table[@id='testresult']//tr[td//span[text()=\"" + packageName + "\"]]/td[2]/span[last()]";
+        String xpathToSkipDiff =
+                "//table[@id='testresult']//tr[td//span[text()=\"" + packageName + "\"]]/td[3]/span[last()]";
+        String xpathToTotalDiff =
+                "//table[@id='testresult']//tr[td//span[text()=\"" + packageName + "\"]]/td[5]/span[last()]";
 
         Object totalDiffObj = testResultPage.getFirstByXPath(xpathToTotalDiff);
         assertPaneDiffText("total diff", expectedTotalDiff, totalDiffObj);

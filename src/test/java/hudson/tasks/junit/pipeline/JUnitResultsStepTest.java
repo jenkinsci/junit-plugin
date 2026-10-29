@@ -31,6 +31,7 @@ import java.util.List;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.Description;
+import org.htmlunit.html.HtmlPage;
 import org.jenkinsci.plugins.workflow.actions.LabelAction;
 import org.jenkinsci.plugins.workflow.actions.ThreadNameAction;
 import org.jenkinsci.plugins.workflow.actions.WarningAction;
@@ -83,6 +84,10 @@ class JUnitResultsStepTest {
         st.assertRoundTrip(
                 step,
                 "junit allowEmptyResults: true, healthScaleFactor: 2.0, skipMarkingBuildUnstable: true, testDataPublishers: [[$class: 'MockTestDataPublisher', name: 'testing']], testResults: '**/target/surefire-reports/TEST-*.xml'");
+        step.setSkipMarkingStageUnstable(true);
+        st.assertRoundTrip(
+                step,
+                "junit allowEmptyResults: true, healthScaleFactor: 2.0, skipMarkingBuildUnstable: true, skipMarkingStageUnstable: true, testDataPublishers: [[$class: 'MockTestDataPublisher', name: 'testing']], testResults: '**/target/surefire-reports/TEST-*.xml'");
     }
 
     @Issue("JENKINS-48250")
@@ -288,8 +293,7 @@ class JUnitResultsStepTest {
         copyToWorkspace(j, TestResultTest.class.getResource("junit-report-2874.xml"), "second-result.xml");
         copyToWorkspace(j, TestResultTest.class.getResource("junit-report-nested-testsuites.xml"), "third-result.xml");
 
-        j.setDefinition(new CpsFlowDefinition(
-                """
+        j.setDefinition(new CpsFlowDefinition("""
                         stage('first') {
                           node {
                             touch 'first-result.xml'
@@ -300,8 +304,7 @@ class JUnitResultsStepTest {
                                      c: { def third = junit(testResults: 'third-result.xml', keepTestNames: true); assert third.totalCount == 3 })
                           }
                         }
-                        """,
-                true));
+                        """, true));
         WorkflowRun r = rule.assertBuildStatus(
                 Result.UNSTABLE, rule.waitForCompletion(j.scheduleBuild2(0).waitForStart()));
         TestResultAction action = r.getAction(TestResultAction.class);
@@ -323,8 +326,7 @@ class JUnitResultsStepTest {
         copyToWorkspace(j, TestResultTest.class.getResource("junit-report-2874.xml"), "second-result.xml");
         copyToWorkspace(j, TestResultTest.class.getResource("junit-report-nested-testsuites.xml"), "third-result.xml");
 
-        j.setDefinition(new CpsFlowDefinition(
-                """
+        j.setDefinition(new CpsFlowDefinition("""
                         stage('outer') {
                           node {
                             touch 'first-result.xml'
@@ -335,8 +337,7 @@ class JUnitResultsStepTest {
                                      c: { stage('d') { def third = junit(testResults: 'third-result.xml', keepTestNames: true); assert third.totalCount == 3 } })
                           }
                         }
-                        """,
-                true));
+                        """, true));
         WorkflowRun r = rule.assertBuildStatus(
                 Result.UNSTABLE, rule.waitForCompletion(j.scheduleBuild2(0).waitForStart()));
         TestResultAction action = r.getAction(TestResultAction.class);
@@ -358,8 +359,7 @@ class JUnitResultsStepTest {
     @Test
     void testTrends() throws Exception {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "testTrends");
-        j.setDefinition(new CpsFlowDefinition(
-                """
+        j.setDefinition(new CpsFlowDefinition("""
                         node {
                           stage('first') {
                             touch 'junit-report-testTrends-first.xml'
@@ -370,8 +370,7 @@ class JUnitResultsStepTest {
                             def second = junit(testResults: "junit-report-testTrends-second.xml")
                           }
                         }
-                        """,
-                true));
+                        """, true));
         FilePath ws = rule.jenkins.getWorkspaceFor(j);
         FilePath firstFile = ws.child("junit-report-testTrends-first.xml");
         FilePath secondFile = ws.child("junit-report-testTrends-second.xml");
@@ -426,6 +425,13 @@ class JUnitResultsStepTest {
                 }
             }
         }
+
+        // The Test Results page must show the stage-ancestry-prefixed display name for each failed test,
+        // not just the bare JUnit test name, so a stage like "first" stays visible when triaging failures.
+        HtmlPage reportPage = rule.createWebClient().getPage(thirdRun, "testReport");
+        assertNotNull(
+                reportPage.getFirstByXPath(
+                        "//a[contains(@class,'jp-table-row') and contains(text(),'first / testGetVendorFirmKeyForVendorRep')]"));
     }
 
     @Issue("JENKINS-48178")
@@ -469,10 +475,34 @@ class JUnitResultsStepTest {
     }
 
     @Test
+    void skipStageUnstable() throws Exception {
+        WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "skipStageUnstable");
+        j.setDefinition(new CpsFlowDefinition(
+                "stage('first') {\n" + "  node {\n"
+                        + "    touch 'test-result.xml'\n"
+                        + "    def results = junit(skipMarkingStageUnstable: true, testResults: '*.xml')\n"
+                        + "    assert results.totalCount == 8\n"
+                        + "    assert currentBuild.result == null\n"
+                        + "  }\n"
+                        + "}\n",
+                true));
+        copyToWorkspace(
+                j, JUnitResultsStepTest.class.getResource("junit-report-testTrends-first-2.xml"), "test-result.xml");
+        WorkflowRun r = rule.waitForCompletion(j.scheduleBuild2(0).waitForStart());
+        rule.assertBuildStatus(Result.SUCCESS, r);
+
+        // Neither the build nor the stage should be marked unstable: the junit step attaches no WarningAction.
+        FlowExecution execution = r.getExecution();
+        BlockStartNode stage =
+                (BlockStartNode) new DepthFirstScanner().findFirstMatch(execution, stageForName("first"));
+        assertNotNull(stage);
+        assertThat(findJUnitSteps(stage), CoreMatchers.not(CoreMatchers.hasItem(hasWarningAction())));
+    }
+
+    @Test
     void ageResetSameTestSuiteName() throws Exception {
         WorkflowJob j = rule.jenkins.createProject(WorkflowJob.class, "p");
-        j.setDefinition(new CpsFlowDefinition(
-                """
+        j.setDefinition(new CpsFlowDefinition("""
                         stage('stage 1') {
                           node {
                             touch 'ageReset-1.xml'
@@ -485,8 +515,7 @@ class JUnitResultsStepTest {
                             junit(testResults: '*-2.xml')
                           }
                         }
-                        """,
-                true));
+                        """, true));
         copyToWorkspace(j, JUnitResultsStepTest.class.getResource("ageReset-1.xml"), "ageReset-1.xml");
         copyToWorkspace(j, JUnitResultsStepTest.class.getResource("ageReset-2.xml"), "ageReset-2.xml");
         WorkflowRun r = rule.waitForCompletion(j.scheduleBuild2(0).waitForStart());

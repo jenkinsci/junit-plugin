@@ -24,7 +24,6 @@
 package hudson.tasks.junit;
 
 import hudson.AbortException;
-import hudson.Extension;
 import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Util;
@@ -47,7 +46,6 @@ import org.apache.tools.ant.types.FileSet;
  * Parse some JUnit xml files and generate a TestResult containing all the
  * results parsed.
  */
-@Extension // see TestResultParser.all
 public class JUnitParser extends TestResultParser {
 
     private static final Logger LOGGER = Logger.getLogger(JUnitParser.class.getName());
@@ -134,6 +132,49 @@ public class JUnitParser extends TestResultParser {
         return parseResult(testResultLocations, build, null, workspace, launcher, listener);
     }
 
+    /**
+     * Parses the specified set of files and builds a {@link TestResult} object that represents them.
+     *
+     * <p>
+     * The implementation is encouraged to do the following:
+     *
+     * <ul>
+     * <li>
+     * If the build is successful but GLOB didn't match anything, report that as an error. This is
+     * to detect the error in GLOB. But don't do this if the build has already failed (for example,
+     * think of a failure in SCM checkout.)
+     *
+     * <li>
+     * Examine time stamp of test report files and if those are younger than the build, ignore them.
+     * This is to ignore test reports created by earlier executions. Take the possible timestamp
+     * difference in the controller/agent into account.
+     * </ul>
+     *
+     * @param testResultLocations
+     *      GLOB pattern relative to the {@code workspace} that
+     *      specifies the locations of the test result files. Never null.
+     * @param build
+     *      Build for which these tests are parsed. Never null.
+     * @param pipelineTestDetails A {@link PipelineTestDetails} instance containing Pipeline-related additional arguments.
+     * @param workspace the workspace in which tests can be found
+     * @param launcher
+     *      Can be used to fork processes on the machine where the build is running. Never null.
+     * @param listener
+     *      Use this to report progress and other problems. Never null.
+     *
+     * @return a {@link TestResult} object representing the provided files and builds.
+     *
+     * @throws InterruptedException
+     *      If the user cancels the build, it will be received as a thread interruption. Do not catch
+     *      it, and instead just forward that through the call stack.
+     * @throws IOException
+     *      If you don't care about handling exceptions gracefully, you can just throw IOException
+     *      and let the default exception handling in Hudson takes care of it.
+     * @throws AbortException
+     *      If you encounter an error that you handled gracefully, throw this exception and Hudson
+     *      will not show a stack trace.
+     * @since 1.22
+     */
     @Override
     public TestResult parseResult(
             String testResultLocations,

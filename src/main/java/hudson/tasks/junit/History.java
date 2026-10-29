@@ -23,9 +23,6 @@
  */
 package hudson.tasks.junit;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.pivovarit.collectors.ParallelCollectors;
 import edu.hm.hafner.echarts.ChartModelConfiguration;
 import edu.hm.hafner.echarts.JacksonFacade;
@@ -49,6 +46,9 @@ import jenkins.util.SystemProperties;
 import org.kohsuke.accmod.Restricted;
 import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.bind.JavaScriptMethod;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ArrayNode;
+import tools.jackson.databind.node.ObjectNode;
 
 /**
  * History of {@link hudson.tasks.test.TestObject} over time.
@@ -659,7 +659,18 @@ public class History {
                 }
                 List<HistoryTestResultSummary> historySummary = pluggableStorage.getHistorySummary(offset);
 
-                parseResult = new HistoryParseResult(historySummary, end - start + 1, start, end);
+                // Unlike the file-storage path below, storage already returns exactly the builds
+                // with test results for this page (no separate "parsed but no result" builds to
+                // distinguish), so both counts are simply how many rows came back.
+                parseResult = new HistoryParseResult(
+                        historySummary,
+                        end - start + 1,
+                        historySummary.size(),
+                        historySummary.size(),
+                        false,
+                        start,
+                        end,
+                        1);
             } else {
                 parseResult = getHistoryFromFileStorage(start, end, interval);
             }
