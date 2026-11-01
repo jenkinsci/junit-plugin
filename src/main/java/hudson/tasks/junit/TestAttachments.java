@@ -262,7 +262,8 @@ public final class TestAttachments {
             Path root = ws.toPath().toRealPath();
             List<Attachment> found = new ArrayList<>();
             Map<String, Integer> runs = new HashMap<>();
-            int index = 0;
+            List<Path> dirs = new ArrayList<>();
+            List<OpenTestReportConverter.TestRun> reports = new ArrayList<>();
             for (String name : ds.getIncludedFiles()) {
                 File report = new File(ws, name);
                 if (filesTimestamp != Long.MIN_VALUE
@@ -274,13 +275,23 @@ public final class TestAttachments {
                 if (OtrReader.detect(report) == null) {
                     continue;
                 }
-                index++;
-                Path dir = report.getParentFile().toPath().toRealPath();
+                dirs.add(report.getParentFile().toPath().toRealPath());
                 // converted just like the results, so that the test names match
-                for (SuiteResult suite : OpenTestReportConverter.parse(
-                        report, StdioRetention.NONE, true, keepTestNames, pipelineTestDetails)) {
+                reports.add(new OpenTestReportConverter.TestRun(OpenTestReportConverter.parse(
+                        report, StdioRetention.NONE, true, keepTestNames, pipelineTestDetails)));
+            }
+            OpenTestReportConverter.Reruns reruns = OpenTestReportConverter.mergeReruns(reports);
+            for (SuiteResult suite : reruns.suites()) {
+                for (CaseResult c : suite.getCases()) {
+                    runs.merge(testKey(c.getClassName(), c.getName()), 1, Integer::sum);
+                }
+            }
+            for (int index = 0; index < reports.size(); index++) {
+                Path dir = dirs.get(index);
+                for (SuiteResult suite : reports.get(index).suites()) {
                     for (CaseResult c : suite.getCases()) {
-                        runs.merge(testKey(c.getClassName(), c.getName()), 1, Integer::sum);
+                        // the attachments of every attempt of a test that was rerun go with the result kept
+                        long startTime = reruns.attempts().getOrDefault(c, c).getStartTime();
                         for (Map.Entry<String, String> property :
                                 c.getProperties().entrySet()) {
                             if (!isAttachmentProperty(property.getKey())) {
@@ -291,12 +302,12 @@ public final class TestAttachments {
                                 found.add(new Attachment(
                                         c.getClassName(),
                                         c.getName(),
-                                        c.getStartTime(),
+                                        startTime,
                                         property.getValue(),
                                         dir.relativize(file).toString().replace(File.separatorChar, '/'),
                                         root.relativize(file).toString().replace(File.separatorChar, '/'),
                                         Files.size(file),
-                                        index));
+                                        index + 1));
                             }
                         }
                     }
