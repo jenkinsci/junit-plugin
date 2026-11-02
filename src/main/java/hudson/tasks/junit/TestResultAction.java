@@ -133,6 +133,7 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         skipCount = result.getSkipCount();
 
         if (run != null) {
+            result.computeSkippedSince();
             // persist the data
             try {
                 resultCache.put(getDataFilePath(), new SoftReference<TestResult>(result));

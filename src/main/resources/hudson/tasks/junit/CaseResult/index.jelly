@@ -51,7 +51,7 @@ THE SOFTWARE.
         <div class="jenkins-details">
           <test:condition-tag test="${it}" />
 
-          <j:if test="${!it.passed}">
+          <j:if test="${!it.passed and it.age != 0}">
             <j:set var="sinceRun" value="${it.skipped ? it.skippedSinceRun : it.failedSinceRun}" />
             <j:set var="sinceRun" value="${sinceRun ?: it.run}" />
             <a href="${rootURL}/${sinceRun.url}" class="jenkins-details__item">

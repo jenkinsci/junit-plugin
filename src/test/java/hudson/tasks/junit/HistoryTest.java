@@ -173,6 +173,21 @@ class HistoryTest {
         assertEquals(1, scubaCase.getAge());
     }
 
+    @LocalData
+    @Test
+    void testSkippedSinceWalkIsCapped() {
+        int max = CaseResult.SKIPPED_SINCE_BACKTRACK_BUILDS_MAX;
+        CaseResult.SKIPPED_SINCE_BACKTRACK_BUILDS_MAX = 0;
+        try {
+            // skipped since build 8, but no previous build is walked back, so the age is a lower bound
+            CaseResult scubaCase = getScubaOnlyInRedSeaCase(9);
+            assertEquals(9, scubaCase.getSkippedSince());
+            assertEquals(1, scubaCase.getAge());
+        } finally {
+            CaseResult.SKIPPED_SINCE_BACKTRACK_BUILDS_MAX = max;
+        }
+    }
+
     private CaseResult getScubaOnlyInRedSeaCase(int buildNumber) {
         TestResult tr = project.getBuildByNumber(buildNumber)
                 .getAction(TestResultAction.class)

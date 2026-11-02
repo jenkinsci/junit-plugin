@@ -885,6 +885,17 @@ public final class TestResult extends MetaTabulatedResult {
     }
 
     /**
+     * Computes {@link CaseResult#getSkippedSince()} of all skipped tests, so that it is saved with the result.
+     */
+    void computeSkippedSince() {
+        for (SuiteResult s : suites) {
+            for (CaseResult cr : s.getCases()) {
+                cr.getSkippedSince();
+            }
+        }
+    }
+
+    /**
      * If this test failed, then return the build number
      * when this test started failing.
      */

@@ -64,6 +64,7 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -498,34 +499,26 @@ class JUnitResultArchiverTest {
     }
 
     @Test
-    void skippedSinceWalkIsCapped() throws Exception {
+    void skippedSincePersisted() throws Exception {
         FreeStyleProject freeStyleProject = j.createFreeStyleProject();
         freeStyleProject.getBuildersList().add(new SkippedTestResultFileBuilder());
         freeStyleProject.getPublishersList().add(new JUnitResultArchiver("TEST-*.xml"));
         j.buildAndAssertSuccess(freeStyleProject);
         FreeStyleBuild build2 = j.buildAndAssertSuccess(freeStyleProject);
-        FreeStyleBuild build3 = j.buildAndAssertSuccess(freeStyleProject);
 
-        int max = CaseResult.SKIPPED_SINCE_BACKTRACK_BUILDS_MAX;
-        CaseResult.SKIPPED_SINCE_BACKTRACK_BUILDS_MAX = 1;
-        try {
-            CaseResult skipped3 = build3.getAction(TestResultAction.class)
-                    .getResult()
-                    .getSkippedTests()
-                    .get(0);
-            // only one build is walked back, so the age is a lower bound
-            assertEquals(2, skipped3.getSkippedSince());
-            assertEquals(2, skipped3.getAge());
-        } finally {
-            CaseResult.SKIPPED_SINCE_BACKTRACK_BUILDS_MAX = max;
-        }
+        String junitResult = Files.readString(new File(build2.getRootDir(), "junitResult.xml").toPath());
+        assertThat(junitResult, containsString("<skippedSince>1</skippedSince>"));
 
-        CaseResult skipped2 = build2.getAction(TestResultAction.class)
+        reloadJenkins();
+        build2 = j.jenkins
+                .getItemByFullName(freeStyleProject.getFullName(), FreeStyleProject.class)
+                .getBuildByNumber(2);
+        CaseResult skipped = build2.getAction(TestResultAction.class)
                 .getResult()
                 .getSkippedTests()
                 .get(0);
-        assertEquals(1, skipped2.getSkippedSince());
-        assertEquals(2, skipped2.getAge());
+        assertEquals(1, skipped.getSkippedSince());
+        assertEquals(2, skipped.getAge());
     }
 
     public static final class SkippedTestResultFileBuilder extends Builder {

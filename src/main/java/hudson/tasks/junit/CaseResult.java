@@ -916,7 +916,11 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      * Walks back through previous builds while this test stays skipped, stopping at a build that already
      * knows its {@link #skippedSince} or after {@link #SKIPPED_SINCE_BACKTRACK_BUILDS_MAX} builds, in which
      * case the age shown is a lower bound.
-     * Computed lazily, so that loading a result does not load previous builds (JENKINS-31660).
+     * Computed when the result is saved, see {@link TestResult#computeSkippedSince()}, or on first use for
+     * results saved without it; not in {@link #freeze(SuiteResult)}, so that loading a result does not load
+     * previous builds (JENKINS-31660).
+     * Pluggable storage provides it through {@link TestResultImpl#getSkippedSinceRun(CaseResult)} instead, and
+     * it stays unknown (0) when that is not supported.
      */
     private void recomputeSkippedSinceIfNeeded() {
         if (skippedSince != 0 || !isSkipped()) {
@@ -925,6 +929,16 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         Run<?, ?> run = getRun();
         if (run == null) {
             LOGGER.fine("Trying to compute skippedSince of a CaseResult without an owner");
+            return;
+        }
+        JunitTestResultStorage storage = JunitTestResultStorage.find();
+        if (!(storage instanceof FileJunitTestResultStorage)) {
+            // results are not cached or saved, so walking back would query the storage on every use
+            Run<?, ?> sinceRun =
+                    storage.load(run.getParent().getFullName(), run.getNumber()).getSkippedSinceRun(this);
+            if (sinceRun != null) {
+                this.skippedSince = sinceRun.getNumber();
+            }
             return;
         }
         int since = run.getNumber();
@@ -968,6 +982,10 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
             return 0;
         } else if (getRun() != null) {
             int since = isSkipped() ? getSkippedSince() : getFailedSince();
+            if (since == 0) {
+                // unknown, see getSkippedSince
+                return 0;
+            }
             return getRun().getNumber() - since + 1;
         } else {
             LOGGER.fine("Trying to get age of a CaseResult without an owner");
@@ -1027,7 +1045,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      * Maximum number of previous builds to walk back through when computing {@link #skippedSince}.
      */
     static int SKIPPED_SINCE_BACKTRACK_BUILDS_MAX = Integer.parseInt(
-            System.getProperty(CaseResult.class.getName() + ".SKIPPED_SINCE_BACKTRACK_BUILDS_MAX", "100"));
+            System.getProperty(CaseResult.class.getName() + ".SKIPPED_SINCE_BACKTRACK_BUILDS_MAX", "10"));
 
     @Override
     public CaseResult getPreviousResult() {

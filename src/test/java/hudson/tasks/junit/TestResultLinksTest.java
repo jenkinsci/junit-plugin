@@ -36,6 +36,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import jenkins.model.Jenkins;
 import org.htmlunit.Page;
 import org.htmlunit.html.HtmlAnchor;
@@ -145,7 +146,38 @@ class TestResultLinksTest {
                 return null;
             }
         };
-        testResult.freeze(new TestResultAction(build, testResult, null));
+        // as when loading a result saved without skippedSince
+        testResult.freeze(new TestResultAction(build, new TestResult(), null));
+    }
+
+    @Test
+    void testSkippedSinceStopsAtSavedValue() throws IOException, URISyntaxException {
+        File dataFile = TestResultTest.getDataFile("SKIPPED_MESSAGE/skippedTestResult.xml");
+        AtomicBoolean published = new AtomicBoolean();
+        TestResult testResult1 = new TestResult();
+        testResult1.parse(dataFile, null);
+        FreeStyleBuild build1 = new FreeStyleBuild(project) {
+            @Override
+            public FreeStyleBuild getPreviousBuild() {
+                if (published.get()) {
+                    fail("skippedSince of the previous build is saved, so builds before it are not needed");
+                }
+                return null;
+            }
+        };
+        build1.addAction(new TestResultAction(build1, testResult1, null));
+        published.set(true);
+
+        TestResult testResult2 = new TestResult();
+        testResult2.parse(dataFile, null);
+        FreeStyleBuild build2 = new FreeStyleBuild(project) {
+            @Override
+            public FreeStyleBuild getPreviousBuild() {
+                return build1;
+            }
+        };
+        build2.addAction(new TestResultAction(build2, testResult2, null));
+        assertEquals(build1.getNumber(), testResult2.getSkippedTests().get(0).getSkippedSince());
     }
 
     @Test
