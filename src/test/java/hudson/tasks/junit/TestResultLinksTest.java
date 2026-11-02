@@ -136,12 +136,12 @@ class TestResultLinksTest {
     @Test
     void testPreviousBuildNotLoaded() throws IOException, URISyntaxException {
         TestResult testResult = new TestResult();
-        File dataFile = TestResultTest.getDataFile("SKIPPED_MESSAGE/passedTestResult.xml");
+        File dataFile = TestResultTest.getDataFile("SKIPPED_MESSAGE/skippedTestResult.xml");
         testResult.parse(dataFile, null);
         FreeStyleBuild build = new FreeStyleBuild(project) {
             @Override
             public FreeStyleBuild getPreviousBuild() {
-                fail("When no tests fail or are skipped, we don't need to load previous builds (expensive)");
+                fail("When no tests fail, we don't need to load previous builds (expensive)");
                 return null;
             }
         };

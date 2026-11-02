@@ -111,11 +111,15 @@ THE SOFTWARE.
                 <td class="jenkins-mobile-hide">
                     <j:choose>
                         <j:when test="${f.age == 0}">0</j:when>
-                        <j:when test="${f.skipped}">
-                            <a href="${rootURL}/${f.skippedSinceRun.url}">${f.age}</a>
-                        </j:when>
                         <j:otherwise>
-                            <a href="${rootURL}/${f.failedSinceRun.url}">${f.age}</a>
+                            <j:set var="sinceRun" value="${f.skipped ? f.skippedSinceRun : f.failedSinceRun}" />
+                            <j:choose>
+                                <!-- the build where the streak started may have been discarded -->
+                                <j:when test="${sinceRun == null}">${f.age}</j:when>
+                                <j:otherwise>
+                                    <a href="${rootURL}/${sinceRun.url}">${f.age}</a>
+                                </j:otherwise>
+                            </j:choose>
                         </j:otherwise>
                     </j:choose>
                 </td>

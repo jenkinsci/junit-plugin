@@ -908,51 +908,44 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      */
     @Exported(visibility = 9)
     public int getSkippedSince() {
-        // If we haven't calculated skippedSince yet, and we should,
-        // do it now.
         recomputeSkippedSinceIfNeeded();
         return skippedSince;
     }
 
     /**
-     * Current recursion depth of {@link #recomputeSkippedSinceIfNeeded()}. The recursion also passes through
-     * {@link #freeze(SuiteResult)} of each previous build as its result is loaded, so the depth cannot be
-     * passed as a parameter (JENKINS-31660).
+     * Walks back through previous builds while this test stays skipped, stopping at a build that already
+     * knows its {@link #skippedSince} or after {@link #SKIPPED_SINCE_BACKTRACK_BUILDS_MAX} builds, in which
+     * case the age shown is a lower bound.
+     * Computed lazily, so that loading a result does not load previous builds (JENKINS-31660).
      */
-    private static final ThreadLocal<Integer> SKIPPED_SINCE_DEPTH = ThreadLocal.withInitial(() -> 0);
-
     private void recomputeSkippedSinceIfNeeded() {
-        if (skippedSince != 0 || getSkipCount() != 1) {
+        if (skippedSince != 0 || !isSkipped()) {
             return;
         }
         Run<?, ?> run = getRun();
         if (run == null) {
-            LOGGER.warning("trouble calculating getSkippedSince. We've got no owner.");
-            // skippedSince will be 0, which isn't correct.
+            LOGGER.fine("Trying to compute skippedSince of a CaseResult without an owner");
             return;
         }
-        int depth = SKIPPED_SINCE_DEPTH.get();
-        if (depth >= SKIPPED_SINCE_BACKTRACK_BUILDS_MAX) {
-            // Results recorded before skippedSince was persisted can form long chains; assume the
-            // streak starts here, so the age shown is a lower bound.
-            this.skippedSince = run.getNumber();
-            return;
-        }
-        SKIPPED_SINCE_DEPTH.set(depth + 1);
-        try {
-            CaseResult prev = getPreviousResult();
-            if (prev != null && prev.isSkipped()) {
-                this.skippedSince = prev.getSkippedSince();
-            } else {
-                this.skippedSince = run.getNumber();
+        int since = run.getNumber();
+        CaseResult current = this;
+        for (int i = 0; i < SKIPPED_SINCE_BACKTRACK_BUILDS_MAX; i++) {
+            CaseResult prev = current.getPreviousResult();
+            if (prev == null || !prev.isSkipped()) {
+                break;
             }
-        } finally {
-            if (depth == 0) {
-                SKIPPED_SINCE_DEPTH.remove();
-            } else {
-                SKIPPED_SINCE_DEPTH.set(depth);
+            if (prev.skippedSince != 0) {
+                since = prev.skippedSince;
+                break;
             }
+            Run<?, ?> prevRun = prev.getRun();
+            if (prevRun == null) {
+                break;
+            }
+            since = prevRun.getNumber();
+            current = prev;
         }
+        this.skippedSince = since;
     }
 
     public Run<?, ?> getSkippedSinceRun() {
@@ -1031,8 +1024,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
             History.HistoryTableResult.class.getName() + ".PREVIOUS_TEST_RESULT_BACKTRACK_BUILDS_MAX", "25"));
 
     /**
-     * Maximum recursion depth (consecutive skipped builds) when computing {@link #skippedSince} for results
-     * that do not have it persisted (i.e. results recorded before it was introduced).
+     * Maximum number of previous builds to walk back through when computing {@link #skippedSince}.
      */
     static int SKIPPED_SINCE_BACKTRACK_BUILDS_MAX = Integer.parseInt(
             System.getProperty(CaseResult.class.getName() + ".SKIPPED_SINCE_BACKTRACK_BUILDS_MAX", "100"));
@@ -1287,9 +1279,6 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         this.parent = parent;
         // some old test data doesn't have failedSince value set, so for those compute them.
         recomputeFailedSinceIfNeeded();
-        // compute skippedSince now so it is persisted with the result, and later builds only need to
-        // look one build back instead of walking the whole skipped streak.
-        recomputeSkippedSinceIfNeeded();
     }
 
     @Override

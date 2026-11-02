@@ -497,6 +497,50 @@ class JUnitResultArchiverTest {
         j.assertLogContains(Messages.JUnitResultArchiver_ResultIsEmpty(), build);
     }
 
+    @Test
+    void skippedSinceWalkIsCapped() throws Exception {
+        FreeStyleProject freeStyleProject = j.createFreeStyleProject();
+        freeStyleProject.getBuildersList().add(new SkippedTestResultFileBuilder());
+        freeStyleProject.getPublishersList().add(new JUnitResultArchiver("TEST-*.xml"));
+        j.buildAndAssertSuccess(freeStyleProject);
+        FreeStyleBuild build2 = j.buildAndAssertSuccess(freeStyleProject);
+        FreeStyleBuild build3 = j.buildAndAssertSuccess(freeStyleProject);
+
+        int max = CaseResult.SKIPPED_SINCE_BACKTRACK_BUILDS_MAX;
+        CaseResult.SKIPPED_SINCE_BACKTRACK_BUILDS_MAX = 1;
+        try {
+            CaseResult skipped3 = build3.getAction(TestResultAction.class)
+                    .getResult()
+                    .getSkippedTests()
+                    .get(0);
+            // only one build is walked back, so the age is a lower bound
+            assertEquals(2, skipped3.getSkippedSince());
+            assertEquals(2, skipped3.getAge());
+        } finally {
+            CaseResult.SKIPPED_SINCE_BACKTRACK_BUILDS_MAX = max;
+        }
+
+        CaseResult skipped2 = build2.getAction(TestResultAction.class)
+                .getResult()
+                .getSkippedTests()
+                .get(0);
+        assertEquals(1, skipped2.getSkippedSince());
+        assertEquals(2, skipped2.getAge());
+    }
+
+    public static final class SkippedTestResultFileBuilder extends Builder {
+        @Override
+        public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
+                throws InterruptedException, IOException {
+            String fileContent = "<testsuite name=\"foo\" failures=\"0\" errors=\"0\" skipped=\"1\" tests=\"2\">"
+                    + "<testcase classname=\"foo\" name=\"passes\"/>"
+                    + "<testcase classname=\"foo\" name=\"skipped\"><skipped/></testcase>"
+                    + "</testsuite>";
+            build.getWorkspace().child("TEST-foo.xml").write(fileContent, "UTF-8");
+            return true;
+        }
+    }
+
     public static final class NoResultsInTestResultFileBuilder extends Builder {
         @Override
         public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
