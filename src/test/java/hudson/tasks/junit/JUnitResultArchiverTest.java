@@ -92,6 +92,7 @@ import org.jvnet.hudson.test.Issue;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.LogRecorder;
 import org.jvnet.hudson.test.SingleFileSCM;
+import org.jvnet.hudson.test.TestBuilder;
 import org.jvnet.hudson.test.TestExtension;
 import org.jvnet.hudson.test.TouchBuilder;
 import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
@@ -519,6 +520,52 @@ class JUnitResultArchiverTest {
                 .get(0);
         assertEquals(1, skipped.getSkippedSince());
         assertEquals(2, skipped.getAge());
+    }
+
+    @Test
+    void skippedSinceBuildBudgetCountsBuildsWithoutTestResults() throws Exception {
+        assertEquals(5, skippedSinceAfterBuildsWithoutTestResults(2));
+        assertEquals(1, skippedSinceAfterBuildsWithoutTestResults(3));
+    }
+
+    /**
+     * Reports a skipped test in builds 1, 2 and 5 but no test results in builds 3 and 4, and returns the
+     * skippedSince saved by build 5 when it may visit {@code budget} previous builds.
+     */
+    private int skippedSinceAfterBuildsWithoutTestResults(int budget) throws Exception {
+        FreeStyleProject freeStyleProject = j.createFreeStyleProject();
+        freeStyleProject.getBuildersList().add(new TestBuilder() {
+            @Override
+            public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
+                    throws InterruptedException, IOException {
+                FilePath report = build.getWorkspace().child("TEST-foo.xml");
+                if (build.getNumber() == 3 || build.getNumber() == 4) {
+                    report.delete();
+                    return true;
+                }
+                return new SkippedTestResultFileBuilder().perform(build, launcher, listener);
+            }
+        });
+        JUnitResultArchiver archiver = new JUnitResultArchiver("TEST-*.xml");
+        archiver.setAllowEmptyResults(true);
+        freeStyleProject.getPublishersList().add(archiver);
+        for (int i = 1; i <= 4; i++) {
+            j.buildAndAssertSuccess(freeStyleProject);
+        }
+        assertNull(freeStyleProject.getBuildByNumber(4).getAction(TestResultAction.class));
+
+        int max = CaseResult.SKIPPED_SINCE_BACKTRACK_BUILDS_MAX;
+        CaseResult.SKIPPED_SINCE_BACKTRACK_BUILDS_MAX = budget;
+        try {
+            FreeStyleBuild build5 = j.buildAndAssertSuccess(freeStyleProject);
+            return build5.getAction(TestResultAction.class)
+                    .getResult()
+                    .getSkippedTests()
+                    .get(0)
+                    .getSkippedSince();
+        } finally {
+            CaseResult.SKIPPED_SINCE_BACKTRACK_BUILDS_MAX = max;
+        }
     }
 
     public static final class SkippedTestResultFileBuilder extends Builder {

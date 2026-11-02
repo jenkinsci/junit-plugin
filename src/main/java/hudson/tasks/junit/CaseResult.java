@@ -45,6 +45,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import javax.xml.stream.XMLStreamException;
@@ -915,7 +916,8 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     /**
      * Walks back through previous builds while this test stays skipped, stopping at a build that already
      * knows its {@link #skippedSince} or after {@link #SKIPPED_SINCE_BACKTRACK_BUILDS_MAX} builds, in which
-     * case the age shown is a lower bound.
+     * case the age shown is a lower bound. Builds without test results or without this test count towards
+     * that limit but do not end the streak.
      * Computed when the result is saved, see {@link TestResult#computeSkippedSince()}, or on first use for
      * results saved without it; not in {@link #freeze(SuiteResult)}, so that loading a result does not load
      * previous builds (JENKINS-31660).
@@ -941,23 +943,45 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
             }
             return;
         }
+        // walks builds directly rather than through getPreviousResult, which passes over any number of builds
+        // without test results and up to PREVIOUS_TEST_RESULT_BACKTRACK_BUILDS_MAX without this test
         int since = run.getNumber();
-        CaseResult current = this;
+        String suiteName = parent.getName();
+        String name = getTransformedFullDisplayName();
+        Run<?, ?> build = run;
         for (int i = 0; i < SKIPPED_SINCE_BACKTRACK_BUILDS_MAX; i++) {
-            CaseResult prev = current.getPreviousResult();
-            if (prev == null || !prev.isSkipped()) {
+            build = build.getPreviousBuild();
+            if (build == null) {
+                break;
+            }
+            CaseResult prev;
+            try {
+                TestResultAction action = build.getAction(TestResultAction.class);
+                if (action == null) {
+                    continue;
+                }
+                prev = action.getResult().getCase(suiteName, name);
+            } catch (RuntimeException e) {
+                Run<?, ?> loggedBuild = build;
+                LOGGER.log(
+                        Level.WARNING,
+                        e,
+                        () -> "Failed to load (corrupt?) build "
+                                + loggedBuild.getParent().getFullName() + " #" + loggedBuild.getNumber()
+                                + ", skipping");
+                continue;
+            }
+            if (prev == null) {
+                continue;
+            }
+            if (!prev.isSkipped()) {
                 break;
             }
             if (prev.skippedSince != 0) {
                 since = prev.skippedSince;
                 break;
             }
-            Run<?, ?> prevRun = prev.getRun();
-            if (prevRun == null) {
-                break;
-            }
-            since = prevRun.getNumber();
-            current = prev;
+            since = build.getNumber();
         }
         this.skippedSince = since;
     }
@@ -1042,7 +1066,8 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
             History.HistoryTableResult.class.getName() + ".PREVIOUS_TEST_RESULT_BACKTRACK_BUILDS_MAX", "25"));
 
     /**
-     * Maximum number of previous builds to walk back through when computing {@link #skippedSince}.
+     * Maximum number of previous builds to visit when computing {@link #skippedSince}, including builds without
+     * test results or without the test.
      */
     static int SKIPPED_SINCE_BACKTRACK_BUILDS_MAX = Integer.parseInt(
             System.getProperty(CaseResult.class.getName() + ".SKIPPED_SINCE_BACKTRACK_BUILDS_MAX", "10"));
