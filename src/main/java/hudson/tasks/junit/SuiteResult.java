@@ -559,6 +559,21 @@ public final class SuiteResult implements Serializable {
     }
 
     /**
+     * Replaces a case, e.g. by its result once rerun.
+     */
+    void replaceCase(int index, CaseResult cr) {
+        CaseResult old = cases.set(index, cr);
+        cr.replaceParent(this);
+        synchronized (this) {
+            casesByName = null;
+        }
+        // if suite time was not specified use sum of the cases' times
+        if (!hasTimeAttr()) {
+            duration += cr.getDuration() - old.getDuration();
+        }
+    }
+
+    /**
      * Returns true if the time attribute is present in this Suite.
      */
     private boolean hasTimeAttr() {
