@@ -118,6 +118,7 @@ class TestResultStorageJunitTest {
         LocalH2Database database = (LocalH2Database) gdc.getDatabase();
         gdc.setDatabase(new LocalH2Database(database.getPath(), true));
         JunitTestResultStorageConfiguration.get().setStorage(new Impl());
+        Impl.skippedSinceSupported = true;
     }
 
     @Test
@@ -201,6 +202,16 @@ class TestResultStorageJunitTest {
             assertEquals("other.Klazz", skippedTests.get(0).getClassName());
             assertEquals("test3", skippedTests.get(0).getName());
             assertEquals("Not actually run.", skippedTests.get(0).getSkippedMessage());
+            assertEquals(b.getNumber(), skippedTests.get(0).getSkippedSince());
+            assertEquals(1, skippedTests.get(0).getAge());
+            assertEquals(b, skippedTests.get(0).getSkippedSinceRun());
+
+            // without storage support it stays unknown rather than walking back through previous builds
+            Impl.skippedSinceSupported = false;
+            CaseResult unsupported = a.getSkippedTests().get(0);
+            assertEquals(0, unsupported.getSkippedSince());
+            assertEquals(0, unsupported.getAge());
+            Impl.skippedSinceSupported = true;
 
             List<CaseResult> passedTests = a.getPassedTests();
             assertEquals(1, passedTests.size());
@@ -274,6 +285,8 @@ class TestResultStorageJunitTest {
         static final String CASE_RESULTS_TABLE = "caseResults";
 
         static boolean queriesPermitted;
+
+        static boolean skippedSinceSupported = true;
 
         private final ConnectionSupplier connectionSupplier = new LocalConnectionSupplier();
 
@@ -598,6 +611,40 @@ class TestResultStorageJunitTest {
                                 classResults.values().forEach(ClassResult::tally);
                                 packageResult.tally();
                                 return packageResult;
+                            }
+                        }
+                    });
+                }
+
+                @Override
+                public Run<?, ?> getSkippedSinceRun(CaseResult caseResult) {
+                    if (!Impl.skippedSinceSupported) {
+                        return null;
+                    }
+                    return query(connection -> {
+                        String sameTest = "job = ? AND suite = ? AND package = ? AND classname = ? AND testname = ? ";
+                        // the first skipped build after the last build in which the test was not skipped
+                        try (PreparedStatement statement =
+                                connection.prepareStatement("SELECT MIN(build) AS build FROM "
+                                        + Impl.CASE_RESULTS_TABLE + " WHERE " + sameTest
+                                        + "AND skipped IS NOT NULL AND build <= ? AND build > COALESCE((SELECT MAX(build) FROM "
+                                        + Impl.CASE_RESULTS_TABLE + " WHERE " + sameTest
+                                        + "AND skipped IS NULL AND build < ?), 0)")) {
+                            for (int offset : new int[] {0, 6}) {
+                                statement.setString(offset + 1, job);
+                                statement.setString(
+                                        offset + 2, caseResult.getSuiteResult().getName());
+                                statement.setString(offset + 3, caseResult.getPackageName());
+                                statement.setString(offset + 4, caseResult.getClassName());
+                                statement.setString(offset + 5, caseResult.getName());
+                                statement.setInt(offset + 6, build);
+                            }
+                            try (ResultSet result = statement.executeQuery()) {
+                                if (!result.next() || result.getInt("build") == 0) {
+                                    return null;
+                                }
+                                return Objects.requireNonNull(Jenkins.get().getItemByFullName(job, Job.class))
+                                        .getBuildByNumber(result.getInt("build"));
                             }
                         }
                     });
