@@ -60,13 +60,19 @@ function initializeLazySections() {
             const content = details.querySelector('.jp-lazy-content');
             fetch(details.dataset.lazyUrl)
                 .then(rsp => {
-                    if (!rsp.ok) {
+                    if (!rsp.ok || rsp.redirected) {
                         throw new Error(rsp.statusText);
                     }
                     return rsp.text();
                 })
                 .then(html => {
-                    content.innerHTML = html;
+                    // e.g. a login page after the session expired, rather than the table
+                    const template = document.createElement('template');
+                    template.innerHTML = html;
+                    if (!template.content.querySelector('table')) {
+                        throw new Error('Unexpected response');
+                    }
+                    content.replaceChildren(template.content);
                     Behaviour.applySubtree(content, true);
                     initializeShowHideLinks(content);
                 })

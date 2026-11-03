@@ -910,7 +910,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      */
     @Exported(visibility = 9)
     public int getSkippedSince() {
-        recomputeSkippedSinceIfNeeded();
+        recomputeSkippedSinceIfNeeded(new HashMap<>());
         return skippedSince != null ? skippedSince : 0;
     }
 
@@ -925,13 +925,12 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      * Pluggable storage provides it through {@link TestResultImpl#getSkippedSinceRun(CaseResult)} instead, and
      * it stays unknown (0) when that is not supported.
      */
-    private void recomputeSkippedSinceIfNeeded() {
+    void recomputeSkippedSinceIfNeeded(Map<Run<?, ?>, hudson.tasks.junit.TestResult> previousResults) {
         if (skippedSince != null || !isSkipped()) {
             return;
         }
         Run<?, ?> run = getRun();
         if (run == null) {
-            LOGGER.fine("Trying to compute skippedSince of a CaseResult without an owner");
             return;
         }
         JunitTestResultStorage storage = JunitTestResultStorage.find();
@@ -939,39 +938,17 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
             // results are not cached or saved, so walking back would query the storage on every use
             Run<?, ?> sinceRun =
                     storage.load(run.getParent().getFullName(), run.getNumber()).getSkippedSinceRun(this);
-            if (sinceRun != null) {
-                this.skippedSince = sinceRun.getNumber();
-            }
+            skippedSince = sinceRun != null ? sinceRun.getNumber() : null;
             return;
         }
         // walks builds directly rather than through getPreviousResult, which passes over any number of builds
         // without test results and up to PREVIOUS_TEST_RESULT_BACKTRACK_BUILDS_MAX without this test
         int since = run.getNumber();
-        String suiteName = parent.getName();
-        String name = getTransformedFullDisplayName();
-        Run<?, ?> build = run;
-        for (int i = 0; i < SKIPPED_SINCE_BACKTRACK_BUILDS_MAX; i++) {
-            build = build.getPreviousBuild();
-            if (build == null) {
-                break;
-            }
-            CaseResult prev;
-            try {
-                TestResultAction action = build.getAction(TestResultAction.class);
-                if (action == null) {
-                    continue;
-                }
-                prev = action.getResult().getCase(suiteName, name);
-            } catch (RuntimeException e) {
-                Run<?, ?> loggedBuild = build;
-                LOGGER.log(
-                        Level.WARNING,
-                        e,
-                        () -> "Failed to load (corrupt?) build "
-                                + loggedBuild.getParent().getFullName() + " #" + loggedBuild.getNumber()
-                                + ", skipping");
-                continue;
-            }
+        Run<?, ?> build = run.getPreviousBuild();
+        for (int i = 0;
+                i < SKIPPED_SINCE_BACKTRACK_BUILDS_MAX && build != null;
+                i++, build = build.getPreviousBuild()) {
+            CaseResult prev = findCorrespondingCase(build, previousResults);
             if (prev == null) {
                 continue;
             }
@@ -984,7 +961,25 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
             }
             since = build.getNumber();
         }
-        this.skippedSince = since;
+        skippedSince = since;
+    }
+
+    private CaseResult findCorrespondingCase(
+            Run<?, ?> build, Map<Run<?, ?>, hudson.tasks.junit.TestResult> previousResults) {
+        try {
+            hudson.tasks.junit.TestResult result = previousResults.computeIfAbsent(build, b -> {
+                TestResultAction action = b.getAction(TestResultAction.class);
+                return action != null ? action.getResult() : null;
+            });
+            return result != null ? result.getCase(parent.getName(), getTransformedFullDisplayName()) : null;
+        } catch (RuntimeException e) {
+            LOGGER.log(
+                    Level.WARNING,
+                    e,
+                    () -> "Failed to load (corrupt?) build " + build.getParent().getFullName() + " #"
+                            + build.getNumber() + ", skipping");
+            return null;
+        }
     }
 
     public Run<?, ?> getSkippedSinceRun() {
