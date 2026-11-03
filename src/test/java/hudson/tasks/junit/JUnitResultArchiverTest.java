@@ -509,6 +509,8 @@ class JUnitResultArchiverTest {
 
         String junitResult = Files.readString(new File(build2.getRootDir(), "junitResult.xml").toPath());
         assertThat(junitResult, containsString("<skippedSince>1</skippedSince>"));
+        // only saved for skipped tests
+        assertEquals(1, junitResult.split("<skippedSince>", -1).length - 1);
 
         reloadJenkins();
         build2 = j.jenkins
@@ -520,6 +522,26 @@ class JUnitResultArchiverTest {
                 .get(0);
         assertEquals(1, skipped.getSkippedSince());
         assertEquals(2, skipped.getAge());
+    }
+
+    @Test
+    void skippedSinceOfDiscardedBuildIsNotLinked() throws Exception {
+        FreeStyleProject freeStyleProject = j.createFreeStyleProject();
+        freeStyleProject.getBuildersList().add(new SkippedTestResultFileBuilder());
+        freeStyleProject.getPublishersList().add(new JUnitResultArchiver("TEST-*.xml"));
+        FreeStyleBuild build1 = j.buildAndAssertSuccess(freeStyleProject);
+        FreeStyleBuild build2 = j.buildAndAssertSuccess(freeStyleProject);
+        build1.delete();
+
+        try (JenkinsRule.WebClient webClient = j.createWebClient()) {
+            HtmlPage page = webClient.getPage(build2, "testReport/(root)/foo/skipped/");
+            DomElement since = page.querySelectorAll(".jenkins-details__item").stream()
+                    .map(DomElement.class::cast)
+                    .filter(e -> e.getTextContent().contains("#1"))
+                    .findFirst()
+                    .orElseThrow();
+            assertEquals("div", since.getTagName());
+        }
     }
 
     @Test

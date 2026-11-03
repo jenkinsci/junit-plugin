@@ -120,9 +120,9 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     /**
      * This test has been skipped since this build number (not id.)
      *
-     * If not {@link #isSkipped() skipped}, this field is left unused to 0.
+     * Null when not {@link #isSkipped() skipped} or not known yet, so that it is only saved for skipped tests.
      */
-    private int skippedSince;
+    private Integer skippedSince;
 
     private static float parseTime(Element testCase) {
         String time = testCase.attributeValue("time");
@@ -393,7 +393,8 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
                         r.failedSince = Integer.parseInt(reader.getElementText());
                         break;
                     case "skippedSince":
-                        r.skippedSince = Integer.parseInt(reader.getElementText());
+                        int skippedSince = Integer.parseInt(reader.getElementText());
+                        r.skippedSince = skippedSince > 0 ? skippedSince : null;
                         break;
                     case "stdout":
                         r.stdout = reader.getElementText();
@@ -910,7 +911,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     @Exported(visibility = 9)
     public int getSkippedSince() {
         recomputeSkippedSinceIfNeeded();
-        return skippedSince;
+        return skippedSince != null ? skippedSince : 0;
     }
 
     /**
@@ -925,7 +926,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      * it stays unknown (0) when that is not supported.
      */
     private void recomputeSkippedSinceIfNeeded() {
-        if (skippedSince != 0 || !isSkipped()) {
+        if (skippedSince != null || !isSkipped()) {
             return;
         }
         Run<?, ?> run = getRun();
@@ -977,7 +978,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
             if (!prev.isSkipped()) {
                 break;
             }
-            if (prev.skippedSince != 0) {
+            if (prev.skippedSince != null) {
                 since = prev.skippedSince;
                 break;
             }

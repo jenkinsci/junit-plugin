@@ -32,17 +32,20 @@ THE SOFTWARE.
   </j:if>
 
   <j:if test="${it.skipCount!=0}">
-    <j:set var="skippedTests" value="${it.skippedTests}" />
-    <!-- collapsed by default, as skipped tests are usually expected and the list can be long -->
-    <j:if test="${!empty(skippedTests)}">
-      <details class="jenkins-section jp-skipped-tests" id="skipped">
-        <summary class="jenkins-section__title">
-          ${%All Skipped Tests}
-          <l:icon src="symbol-chevron-forward-outline plugin-ionicons-api" />
-        </summary>
-        <t:table items="${skippedTests}" id="skippedtestresult" />
-      </details>
-    </j:if>
+    <st:adjunct includes="lib.hudson.test.js.failureSummary" />
+    <!-- collapsed by default, and only loaded when opened, as skipped tests are usually expected and the list
+         can be long -->
+    <details class="jenkins-section jp-skipped-tests" id="skipped"
+             data-lazy-url="${h.getNearestAncestorUrl(request2, it)}/skippedTestsTable"
+             data-error-text="${%loadFailed}">
+      <summary class="jenkins-section__title">
+        ${%All Skipped Tests}
+        <l:icon src="symbol-chevron-forward-outline plugin-ionicons-api" />
+      </summary>
+      <div class="jp-lazy-content">
+        <span class="jenkins-spinner">${%Loading...}</span>
+      </div>
+    </details>
   </j:if>
 
   <j:if test="${it.totalCount!=0}">

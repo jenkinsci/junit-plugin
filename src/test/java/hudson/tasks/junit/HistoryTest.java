@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Optional;
 import org.htmlunit.AlertHandler;
 import org.htmlunit.Page;
+import org.htmlunit.html.DomElement;
 import org.htmlunit.html.HtmlPage;
 import org.htmlunit.html.HtmlTable;
 import org.htmlunit.html.HtmlTableCell;
@@ -207,9 +208,17 @@ class HistoryTest {
         FreeStyleBuild build9 = project.getBuildByNumber(9);
         try (JenkinsRule.WebClient webClient = rule.createWebClient()) {
             HtmlPage page = webClient.getPage(build9, "testReport/");
-            HtmlTable table = (HtmlTable) page.getElementById("skippedtestresult");
-            assertNotNull(table, "skipped tests table should be shown");
-            assertTrue(table.getTextContent().contains("testScubaOnlyInRedSea"));
+            DomElement skipped = page.getElementById("skipped");
+            assertNotNull(skipped, "skipped tests section should be shown");
+            // the table is only loaded when the section is opened
+            assertNull(page.getElementById("skippedtestresult"));
+            String url = skipped.getAttribute("data-lazy-url");
+            assertEquals(rule.contextPath + "/" + build9.getUrl() + "testReport/skippedTestsTable", url);
+
+            HtmlPage table = webClient.goTo(url.substring(rule.contextPath.length() + 1));
+            assertNotNull(table.getElementById("skippedtestresult"));
+            assertTrue(
+                    table.getElementById("skippedtestresult").getTextContent().contains("testScubaOnlyInRedSea"));
         }
     }
 
