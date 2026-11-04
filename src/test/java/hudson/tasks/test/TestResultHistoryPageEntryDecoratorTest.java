@@ -9,9 +9,13 @@ import hudson.FilePath;
 import hudson.model.FreeStyleBuild;
 import hudson.model.FreeStyleProject;
 import hudson.model.Result;
+import hudson.model.Run;
 import hudson.tasks.junit.JUnitResultArchiver;
 import hudson.widgets.HistoryWidget;
 import jenkins.widgets.HistoryPageEntryDecorator;
+import org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition;
+import org.jenkinsci.plugins.workflow.job.WorkflowJob;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
 import org.jvnet.hudson.test.TouchBuilder;
@@ -91,6 +95,42 @@ class TestResultHistoryPageEntryDecoratorTest {
     }
 
     @Test
+    void countsAcrossSeparatelyRecordedResults(JenkinsRule rule) throws Exception {
+        WorkflowJob p = rule.createProject(WorkflowJob.class);
+        // Each stage records its own results, so the counts must cover both once they're merged
+        p.setDefinition(new CpsFlowDefinition("""
+                def unit = [1: "<testcase classname='U' name='a'><failure/></testcase><testcase classname='U' name='b'/>",
+                            2: "<testcase classname='U' name='a'/><testcase classname='U' name='b'><failure/></testcase>"]
+                def integration = [1: "<testcase classname='I' name='x'/><testcase classname='I' name='y'><failure/></testcase>",
+                                   2: "<testcase classname='I' name='x'><failure/></testcase><testcase classname='I' name='y'/>"]
+                def n = env.BUILD_NUMBER as int
+                parallel unit: {
+                    stage('Unit') {
+                        node {
+                            writeFile file: 'unit.xml', text: "<testsuite name='unit'>" + unit[n] + "</testsuite>"
+                            junit 'unit.xml'
+                        }
+                    }
+                }, integration: {
+                    stage('Integration') {
+                        node {
+                            writeFile file: 'integration.xml', text: "<testsuite name='integration'>" + integration[n] + "</testsuite>"
+                            junit 'integration.xml'
+                        }
+                    }
+                }
+                """, true));
+        rule.assertBuildStatus(Result.UNSTABLE, p.scheduleBuild2(0));
+        WorkflowRun build = rule.assertBuildStatus(Result.UNSTABLE, p.scheduleBuild2(0));
+
+        TestResultHistoryPageEntryDecorator.Summary summary = summary(build);
+        assertEquals(2, summary.getFailCount());
+        assertEquals(2, summary.getPassCount());
+        assertEquals(2, summary.getRegressionCount());
+        assertEquals(2, summary.getFixedCount());
+    }
+
+    @Test
     void doesNotMatchTestsWhoseIdsCollide(JenkinsRule rule) throws Exception {
         FreeStyleProject p = createProject(rule);
         FilePath report = rule.jenkins.getWorkspaceFor(p).child("x.xml");
@@ -136,7 +176,7 @@ class TestResultHistoryPageEntryDecoratorTest {
         return p;
     }
 
-    private static TestResultHistoryPageEntryDecorator.Summary summary(FreeStyleBuild build) {
+    private static TestResultHistoryPageEntryDecorator.Summary summary(Run<?, ?> build) {
         return HistoryPageEntryDecorator.all()
                 .get(TestResultHistoryPageEntryDecorator.class)
                 .getSummary(build);
