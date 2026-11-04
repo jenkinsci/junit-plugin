@@ -45,6 +45,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import javax.xml.stream.XMLStreamException;
@@ -115,6 +116,13 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      * If {@link #isPassed() passing}, this field is left unused to 0.
      */
     private int failedSince;
+
+    /**
+     * This test has been skipped since this build number (not id.)
+     *
+     * Null when not {@link #isSkipped() skipped} or not known yet, so that it is only saved for skipped tests.
+     */
+    private Integer skippedSince;
 
     private static float parseTime(Element testCase) {
         String time = testCase.attributeValue("time");
@@ -295,6 +303,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         this.errorStackTrace = src.errorStackTrace;
         this.errorDetails = src.errorDetails;
         this.failedSince = src.failedSince;
+        this.skippedSince = src.skippedSince;
         this.stdout = src.stdout;
         this.stderr = src.stderr;
         this.properties = new HashMap<>();
@@ -412,6 +421,10 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
                         break;
                     case "failedSince":
                         r.failedSince = Integer.parseInt(reader.getElementText());
+                        break;
+                    case "skippedSince":
+                        int skippedSince = Integer.parseInt(reader.getElementText());
+                        r.skippedSince = skippedSince > 0 ? skippedSince : null;
                         break;
                     case "stdout":
                         r.stdout = reader.getElementText();
@@ -922,17 +935,108 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     }
 
     /**
+     * If this test was skipped, then return the build number
+     * when this test was first skipped.
+     */
+    @Exported(visibility = 9)
+    public int getSkippedSince() {
+        recomputeSkippedSinceIfNeeded(new HashMap<>());
+        return skippedSince != null ? skippedSince : 0;
+    }
+
+    /**
+     * Walks back through previous builds while this test stays skipped, stopping at a build that already
+     * knows its {@link #skippedSince} or after {@link #SKIPPED_SINCE_BACKTRACK_BUILDS_MAX} builds, in which
+     * case the age shown is a lower bound. Builds without test results or without this test count towards
+     * that limit but do not end the streak.
+     * Computed when the result is saved, see {@link TestResult#computeSkippedSince()}, or on first use for
+     * results saved without it; not in {@link #freeze(SuiteResult)}, so that loading a result does not load
+     * previous builds (JENKINS-31660).
+     * Pluggable storage provides it through {@link TestResultImpl#getSkippedSinceRun(CaseResult)} instead, and
+     * it stays unknown (0) when that is not supported.
+     */
+    void recomputeSkippedSinceIfNeeded(Map<Run<?, ?>, hudson.tasks.junit.TestResult> previousResults) {
+        if (skippedSince != null || !isSkipped()) {
+            return;
+        }
+        Run<?, ?> run = getRun();
+        if (run == null) {
+            return;
+        }
+        JunitTestResultStorage storage = JunitTestResultStorage.find();
+        if (!(storage instanceof FileJunitTestResultStorage)) {
+            // results are not cached or saved, so walking back would query the storage on every use
+            Run<?, ?> sinceRun =
+                    storage.load(run.getParent().getFullName(), run.getNumber()).getSkippedSinceRun(this);
+            skippedSince = sinceRun != null ? sinceRun.getNumber() : null;
+            return;
+        }
+        // walks builds directly rather than through getPreviousResult, which passes over any number of builds
+        // without test results and up to PREVIOUS_TEST_RESULT_BACKTRACK_BUILDS_MAX without this test
+        int since = run.getNumber();
+        Run<?, ?> build = run.getPreviousBuild();
+        for (int i = 0;
+                i < SKIPPED_SINCE_BACKTRACK_BUILDS_MAX && build != null;
+                i++, build = build.getPreviousBuild()) {
+            CaseResult prev = findCorrespondingCase(build, previousResults);
+            if (prev == null) {
+                continue;
+            }
+            if (!prev.isSkipped()) {
+                break;
+            }
+            if (prev.skippedSince != null) {
+                since = prev.skippedSince;
+                break;
+            }
+            since = build.getNumber();
+        }
+        skippedSince = since;
+    }
+
+    private CaseResult findCorrespondingCase(
+            Run<?, ?> build, Map<Run<?, ?>, hudson.tasks.junit.TestResult> previousResults) {
+        try {
+            hudson.tasks.junit.TestResult result = previousResults.computeIfAbsent(build, b -> {
+                TestResultAction action = b.getAction(TestResultAction.class);
+                return action != null ? action.getResult() : null;
+            });
+            return result != null ? result.getCase(parent.getName(), getTransformedFullDisplayName()) : null;
+        } catch (RuntimeException e) {
+            LOGGER.log(
+                    Level.WARNING,
+                    e,
+                    () -> "Failed to load (corrupt?) build " + build.getParent().getFullName() + " #"
+                            + build.getNumber() + ", skipping");
+            return null;
+        }
+    }
+
+    public Run<?, ?> getSkippedSinceRun() {
+        Run<?, ?> run = getRun();
+        if (run == null) {
+            return null;
+        }
+        return run.getParent().getBuildByNumber(getSkippedSince());
+    }
+
+    /**
      * Gets the number of consecutive builds (including this)
-     * that this test case has been failing.
+     * that this test case has been failing or skipped.
      *
-     * @return the number of consecutive failing builds.
+     * @return the number of consecutive failing or skipped builds.
      */
     @Exported(visibility = 9)
     public int getAge() {
         if (isPassed()) {
             return 0;
         } else if (getRun() != null) {
-            return getRun().getNumber() - getFailedSince() + 1;
+            int since = isSkipped() ? getSkippedSince() : getFailedSince();
+            if (since == 0) {
+                // unknown, see getSkippedSince
+                return 0;
+            }
+            return getRun().getNumber() - since + 1;
         } else {
             LOGGER.fine("Trying to get age of a CaseResult without an owner");
             return 0;
@@ -986,6 +1090,13 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
 
     static int PREVIOUS_TEST_RESULT_BACKTRACK_BUILDS_MAX = Integer.parseInt(System.getProperty(
             History.HistoryTableResult.class.getName() + ".PREVIOUS_TEST_RESULT_BACKTRACK_BUILDS_MAX", "25"));
+
+    /**
+     * Maximum number of previous builds to visit when computing {@link #skippedSince}, including builds without
+     * test results or without the test.
+     */
+    static int SKIPPED_SINCE_BACKTRACK_BUILDS_MAX = Integer.parseInt(
+            System.getProperty(CaseResult.class.getName() + ".SKIPPED_SINCE_BACKTRACK_BUILDS_MAX", "10"));
 
     @Override
     public CaseResult getPreviousResult() {

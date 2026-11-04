@@ -97,6 +97,16 @@ public interface TestResultImpl {
     Run<?, ?> getFailedSinceRun(CaseResult caseResult);
 
     /**
+     * Returns the build in which the given skipped test started being skipped.
+     *
+     * @return the build, or {@code null} if not supported, in which case the age of skipped tests is unknown
+     */
+    @CheckForNull
+    default Run<?, ?> getSkippedSinceRun(CaseResult caseResult) {
+        return null;
+    }
+
+    /**
      * Whether this storage implementation provides a fast path for {@link CaseResult#getPreviousResult()}
      * via {@link #getPreviousCaseResult(CaseResult)}. The default (file-based) implementation of that
      * method walks up to {@code PREVIOUS_TEST_RESULT_BACKTRACK_BUILDS_MAX} historical builds one at a

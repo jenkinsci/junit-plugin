@@ -2,12 +2,13 @@ const PREFIX = "test-";
 const CACHE = {};
 
 document.addEventListener('DOMContentLoaded', () => {
-    initializeShowHideLinks();
+    initializeShowHideLinks(document);
+    initializeLazySections();
     tryShowConfetti();
 });
 
-function initializeShowHideLinks() {
-    document.querySelectorAll('[id$="-showlink"]').forEach(link => {
+function initializeShowHideLinks(root) {
+    root.querySelectorAll('[id$="-showlink"]').forEach(link => {
         link.addEventListener('click', (e) => {
             if (window.innerWidth <= 800) {
                 return;
@@ -45,6 +46,41 @@ function initializeShowHideLinks() {
             }
 
             tryEnableSortheader();
+        });
+    });
+}
+
+function initializeLazySections() {
+    document.querySelectorAll('details[data-lazy-url]').forEach(details => {
+        details.addEventListener('toggle', () => {
+            if (!details.open || details.dataset.loaded) {
+                return;
+            }
+            details.dataset.loaded = 'true';
+            const content = details.querySelector('.jp-lazy-content');
+            fetch(details.dataset.lazyUrl)
+                .then(rsp => {
+                    if (!rsp.ok || rsp.redirected) {
+                        throw new Error(rsp.statusText);
+                    }
+                    return rsp.text();
+                })
+                .then(html => {
+                    // e.g. a login page after the session expired, rather than the table
+                    const template = document.createElement('template');
+                    template.innerHTML = html;
+                    if (!template.content.querySelector('table')) {
+                        throw new Error('Unexpected response');
+                    }
+                    content.replaceChildren(template.content);
+                    Behaviour.applySubtree(content, true);
+                    initializeShowHideLinks(content);
+                })
+                .catch(() => {
+                    // allow another attempt the next time the section is opened
+                    delete details.dataset.loaded;
+                    content.textContent = details.dataset.errorText;
+                });
         });
     });
 }

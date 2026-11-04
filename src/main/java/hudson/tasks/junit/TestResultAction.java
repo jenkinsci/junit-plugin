@@ -137,6 +137,7 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         skipCount = result.getSkipCount();
 
         if (run != null) {
+            result.computeSkippedSince();
             // Looking up the previous results needs the run
             regressionCount = Math.toIntExact(result.getRegressionCount());
             fixedCount = Math.toIntExact(result.getFixedCount());
