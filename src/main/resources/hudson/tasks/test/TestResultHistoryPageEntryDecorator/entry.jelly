@@ -32,15 +32,15 @@ THE SOFTWARE.
       <j:if test="${count > 0}">
         <span class="jp-history-summary__tag jp-history-summary__tag--${type}"
               tooltip="${tooltip}">
-          <l:icon src="${icon}" />
-          ${count}
+          <l:icon src="${icon}" alt="${tooltip}" />
+          <span aria-hidden="true">${count}</span>
         </span>
       </j:if>
     </d:tag>
   </d:taglib>
 
   <j:set var="summary" value="${it.decorator.getSummary(it.build)}" />
-  <a href="${rootURL}/${it.build.url}testReport/" class="jp-history-summary">
+  <a href="${rootURL}/${it.build.url}${summary.urlName}/" class="jp-history-summary">
     <div class="jp-history-summary__tags">
       <local:tag count="${summary.failCount}" type="failed" tooltip="${%Failed(summary.failCount)}"
                  icon="symbol-close-outline plugin-ionicons-api" />

@@ -4,8 +4,9 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Run;
-import hudson.tasks.junit.CaseResult;
+import hudson.tasks.junit.TestResultAction;
 import hudson.widgets.HistoryWidget;
+import java.util.Objects;
 import jenkins.model.HistoricalBuild;
 import jenkins.widgets.HistoryPageEntryDecorator;
 import org.kohsuke.accmod.Restricted;
@@ -34,47 +35,33 @@ public class TestResultHistoryPageEntryDecorator extends HistoryPageEntryDecorat
 
     public static final class Summary {
 
+        private final String urlName;
         private final int failCount;
         private final int skipCount;
         private final int totalCount;
         private final int regressionCount;
         private final int fixedCount;
 
+        // Only uses counts stored with the build, as loading every build's full report would make the page slow
         Summary(AbstractTestResultAction<?> action) {
+            this.urlName = action.getUrlName();
             this.failCount = action.getFailCount();
             this.skipCount = action.getSkipCount();
             this.totalCount = action.getTotalCount();
-            this.regressionCount = countRegressions(action);
-            this.fixedCount = countFixed(action);
+            if (action instanceof TestResultAction testResultAction) {
+                this.regressionCount = Objects.requireNonNullElse(testResultAction.getRecordedRegressionCount(), 0);
+                this.fixedCount = Objects.requireNonNullElse(testResultAction.getRecordedFixedCount(), 0);
+            } else {
+                this.regressionCount = 0;
+                this.fixedCount = 0;
+            }
         }
 
-        // Only looks at this build's failures, unlike TestResult#getRegressionCount() which walks every test
-        private static int countRegressions(AbstractTestResultAction<?> action) {
-            int count = 0;
-            for (TestResult test : action.getFailedTests()) {
-                if (test instanceof CaseResult caseResult
-                        && caseResult.getCondition() == CaseResult.Status.REGRESSION) {
-                    count++;
-                }
-            }
-            return count;
-        }
-
-        // Walks the previous build's failures rather than this build's passes, as there are far fewer of them
-        private static int countFixed(AbstractTestResultAction<?> action) {
-            AbstractTestResultAction<?> previous = action.getPreviousResult();
-            if (previous == null || !(action.getResult() instanceof TestResult current)) {
-                return 0;
-            }
-
-            int count = 0;
-            for (TestResult test : previous.getFailedTests()) {
-                TestResult now = current.findCorrespondingResult(test.getId());
-                if (now != null && now.isPassed()) {
-                    count++;
-                }
-            }
-            return count;
+        /**
+         * The URL of the test report, relative to the build
+         */
+        public String getUrlName() {
+            return urlName;
         }
 
         public int getFailCount() {

@@ -59,6 +59,64 @@ class TestResultHistoryPageEntryDecoratorTest {
         assertEquals(4, summary.getTotalCount());
         assertEquals(1, summary.getRegressionCount());
         assertEquals(1, summary.getFixedCount());
+        assertEquals("testReport", summary.getUrlName());
+    }
+
+    @Test
+    void countsFixesOfTestsMissingFromThePreviousBuild(JenkinsRule rule) throws Exception {
+        FreeStyleProject p = createProject(rule);
+        FilePath report = rule.jenkins.getWorkspaceFor(p).child("x.xml");
+
+        report.write(
+                "<testsuite name='S'>"
+                        + "<testcase classname='A' name='flaky'><failure/></testcase>"
+                        + "<testcase classname='A' name='other'/>"
+                        + "</testsuite>",
+                null);
+        rule.assertBuildStatus(Result.UNSTABLE, p.scheduleBuild2(0));
+
+        // flaky doesn't run in this build, so the next build has to look further back to find it failing
+        report.write("<testsuite name='S'><testcase classname='A' name='other'/></testsuite>", null);
+        rule.buildAndAssertSuccess(p);
+
+        report.write(
+                "<testsuite name='S'>"
+                        + "<testcase classname='A' name='flaky'/>"
+                        + "<testcase classname='A' name='other'/>"
+                        + "</testsuite>",
+                null);
+        FreeStyleBuild build = rule.buildAndAssertSuccess(p);
+
+        assertEquals(1, summary(build).getFixedCount());
+    }
+
+    @Test
+    void doesNotMatchTestsWhoseIdsCollide(JenkinsRule rule) throws Exception {
+        FreeStyleProject p = createProject(rule);
+        FilePath report = rule.jenkins.getWorkspaceFor(p).child("x.xml");
+
+        // "test-a" and "test a" have the same ID once made safe for a URL
+        report.write(
+                "<testsuite name='S'><testcase classname='A' name='test-a'><failure/></testcase></testsuite>", null);
+        rule.assertBuildStatus(Result.UNSTABLE, p.scheduleBuild2(0));
+
+        report.write("<testsuite name='S'><testcase classname='A' name='test a'/></testsuite>", null);
+        FreeStyleBuild build = rule.buildAndAssertSuccess(p);
+
+        assertEquals(0, summary(build).getFixedCount());
+    }
+
+    @Test
+    void linksToTheReportOfTheAction(JenkinsRule rule) throws Exception {
+        FreeStyleProject p = rule.createFreeStyleProject();
+        FreeStyleBuild build = rule.buildAndAssertSuccess(p);
+        build.addAction(new CustomTestResultAction());
+
+        TestResultHistoryPageEntryDecorator.Summary summary = summary(build);
+        assertEquals("customReport", summary.getUrlName());
+        assertEquals(1, summary.getFailCount());
+        assertEquals(0, summary.getRegressionCount());
+        assertEquals(0, summary.getFixedCount());
     }
 
     @Test
@@ -69,6 +127,43 @@ class TestResultHistoryPageEntryDecoratorTest {
         TestResultHistoryPageEntryDecorator decorator =
                 HistoryPageEntryDecorator.all().get(TestResultHistoryPageEntryDecorator.class);
         assertFalse(decorator.isApplicable(widget(), build));
+    }
+
+    private static FreeStyleProject createProject(JenkinsRule rule) throws Exception {
+        FreeStyleProject p = rule.createFreeStyleProject();
+        p.getBuildersList().add(new TouchBuilder());
+        p.getPublishersList().add(new JUnitResultArchiver("x.xml"));
+        return p;
+    }
+
+    private static TestResultHistoryPageEntryDecorator.Summary summary(FreeStyleBuild build) {
+        return HistoryPageEntryDecorator.all()
+                .get(TestResultHistoryPageEntryDecorator.class)
+                .getSummary(build);
+    }
+
+    // Like an AggregatedTestResultPublisher.TestResultAction, which isn't served at testReport/
+    private static final class CustomTestResultAction extends AbstractTestResultAction<CustomTestResultAction> {
+
+        @Override
+        public String getUrlName() {
+            return "customReport";
+        }
+
+        @Override
+        public int getFailCount() {
+            return 1;
+        }
+
+        @Override
+        public int getTotalCount() {
+            return 2;
+        }
+
+        @Override
+        public Object getResult() {
+            return null;
+        }
     }
 
     // The decorator doesn't use the widget, and a real one needs an active request
