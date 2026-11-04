@@ -1245,7 +1245,11 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         appendPromptSection(prompt, "Stack trace", getErrorStackTrace());
         appendPromptSection(prompt, "Standard output", getStdout());
         appendPromptSection(prompt, "Standard error", getStderr());
-        appendPromptLine(prompt, "Page URL", getPageUrl());
+        String pageUrl = getPageUrl();
+        if (pageUrl != null && !pageUrl.isBlank()) {
+            prompt.append('\n');
+            appendPromptLine(prompt, "Page URL", pageUrl);
+        }
         return prompt.toString();
     }
 
