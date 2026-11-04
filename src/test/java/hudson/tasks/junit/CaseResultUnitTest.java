@@ -82,6 +82,33 @@ class CaseResultUnitTest {
         assertFalse(cr.isUrlValue("https://example.com\nsecond line"));
     }
 
+    @Test
+    void copyAsPromptIncludesFailureContext() {
+        CaseResult cr = new CaseResult(
+                null, "io.jenkins.example.SampleTest", "testFailure", "boom", null, 1.5f, "stdout", "stderr", "trace");
+
+        String prompt = cr.getCopyAsPrompt();
+
+        assertTrue(prompt.startsWith("Investigate this test failure."));
+        assertTrue(prompt.contains("Test: testFailure\n"));
+        assertTrue(prompt.contains("Class: io.jenkins.example.SampleTest\n"));
+        assertTrue(prompt.contains("Status: FAILED\n"));
+        assertTrue(prompt.contains("Duration: "));
+        assertTrue(prompt.contains("\nError details:\nboom\n"));
+        assertTrue(prompt.contains("\nStack trace:\ntrace\n"));
+        assertTrue(prompt.contains("\nStandard output:\nstdout\n"));
+        assertTrue(prompt.contains("\nStandard error:\nstderr\n"));
+        assertFalse(prompt.contains("Page URL: "));
+    }
+
+    @Test
+    void copyAsPromptIsUnavailableForPassingTests() {
+        CaseResult cr =
+                new CaseResult(null, "io.jenkins.example.SampleTest", "testPassing", null, null, 1.5f, "", "", null);
+
+        assertNull(cr.getCopyAsPrompt());
+    }
+
     @Issue("https://github.com/jenkinsci/junit-plugin/issues/753")
     @Test
     void isJavaStackTrace() {
