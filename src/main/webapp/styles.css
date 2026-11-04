@@ -13,14 +13,14 @@
 
   .jp-pill:not(.jenkins-button--primary) {
     &:not(:first-of-type) {
-      border-top-left-radius: 2px;
-      border-bottom-left-radius: 2px;
+      border-top-left-radius: 0.25rem;
+      border-bottom-left-radius: 0.25rem;
       padding-left: 0.75rem;
     }
 
     &:not(:last-of-type) {
-      border-top-right-radius: 2px;
-      border-bottom-right-radius: 2px;
+      border-top-right-radius: 0.25rem;
+      border-bottom-right-radius: 0.25rem;
       padding-right: 0.75rem;
     }
   }
@@ -31,17 +31,19 @@
 }
 
 .jp-pill {
+  --jp-pill-height: 1.875rem;
+
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.375rem;
-  border-radius: 100px;
+  border-radius: calc(var(--jp-pill-height) / 2);
   padding: 0 0.75rem;
-  min-height: 1.875rem;
+  min-height: var(--jp-pill-height);
   text-box: cap alphabetic;
   font-weight: 450;
   background: color-mix(in srgb, var(--color, var(--text-color-secondary)) 10%, transparent);
-  border: var(--jenkins-border-width) solid var(--jenkins-border-color--inherit-subtle);
+  border: var(--jenkins-border--inherit-subtle);
   color: var(--color, var(--text-color)) !important;
   text-decoration: none !important;
   transition: var(--standard-transition);
@@ -80,13 +82,27 @@ a.jp-pill, button.jp-pill {
 
 .jenkins-table {
   .jp-pill {
+    --jp-pill-height: 1.5625rem;
+
     padding: 0 0.625rem;
-    min-height: 1.5625rem;
   }
 
   .jenkins-copy-button {
     display: none;
   }
+}
+
+/* Keep the per-row link to the test page subdued until the row is interacted with */
+.jp-test-link {
+  color: var(--text-color-secondary) !important;
+  opacity: 0.45;
+  transition: opacity var(--standard-transition), color var(--standard-transition);
+}
+
+tr:hover .jp-test-link,
+tr:focus-within .jp-test-link {
+  color: var(--text-color) !important;
+  opacity: 1;
 }
 
 /* Custom table row */
@@ -232,6 +248,31 @@ a.jp-table-row {
       margin-top: 0.5rem;
       margin-bottom: 0;
     }
+  }
+}
+
+.jp-skipped-tests {
+  summary {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    list-style: none;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+
+    > svg {
+      width: 1rem;
+      height: 1rem;
+      color: var(--text-color-secondary);
+      transition: rotate var(--standard-transition);
+    }
+  }
+
+  &[open] summary > svg {
+    rotate: 90deg;
   }
 }
 

@@ -23,74 +23,109 @@ THE SOFTWARE.
 -->
 
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form" xmlns:i="jelly:fmt" xmlns:local="local" xmlns:test="/lib/test">
-  <l:layout title="Test">
-    <st:include page="sidepanel.jelly" it="${it.owner}"/>
-    <l:main-panel>
-      <h1>${it.displayName}</h1>
-      <j:choose>
-        <j:when test="${!it.hasFingerprintAction}">
-          ${%Fingerprinting not enabled on this build. Test aggregation requires fingerprinting.}
-        </j:when>
-        <j:otherwise>
-          <test:bar/>
-          <h2>${%Drill Down}</h2>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:f="/lib/form" xmlns:test="/lib/hudson/test">
+  <l:run-subpage>
+    <st:once>
+      <link rel="stylesheet" href="${resURL}/plugin/junit/styles.css" defer="true" />
+    </st:once>
+
+    <l:app-bar title="${it.displayName}" subtitle="${it.totalCount}">
+      <div class="jenkins-details">
+        <test:count-pills failCount="${it.failCount}" skipCount="${it.skipCount}"
+                          passCount="${it.totalCount - it.failCount - it.skipCount}" />
+      </div>
+    </l:app-bar>
+
+    <j:choose>
+      <j:when test="${!it.hasFingerprintAction}">
+        <l:notice title="${%Fingerprinting not enabled on this build. Test aggregation requires fingerprinting.}"
+                  icon="symbol-information-circle-outline plugin-ionicons-api" />
+      </j:when>
+      <j:otherwise>
+        <j:if test="${it.failCount != 0}">
+          <f:section title="${%All Failed Tests}">
+            <j:forEach var="i" items="${it.individuals}">
+              <j:if test="${i.failCount != 0}">
+                <h3>
+                  <a href="${rootURL}/${i.run.url}${i.urlName}/">${i.run.fullDisplayName}</a>
+                </h3>
+                <test:table items="${i.failedTests}"
+                            baseUrl="${rootURL}/${i.run.url}${i.urlName}/"
+                            relativeParent="${i.result}" />
+              </j:if>
+            </j:forEach>
+          </f:section>
+        </j:if>
+
+        <f:section title="${%Drill Down}">
           <table class="jenkins-table sortable">
             <thead>
               <tr>
                 <th>${%Test}</th>
-                <th style="text-align:right">${%Fail}</th>
-                <th style="text-align:right">${%Total}</th>
+                <th style="width: 8em;">${%Fail}</th>
+                <th style="width: 8em;">${%Skip}</th>
+                <th style="width: 8em;">${%Pass}</th>
+                <th style="width: 8em;">${%Total}</th>
               </tr>
             </thead>
-            <j:forEach var="i" items="${it.individuals}">
-              <j:set var="prev" value="${i.previousResult}" />
-              <tr>
-                <td class="pane">
-                  <t:buildLink jobName="${i.owner.project.fullDisplayName}" job="${i.owner.project}"
-                               number="${i.owner.number}" href="${rootURL}/${i.owner.url}${i.urlName}/" />
-                </td>
-                <td class="pane" style="text-align:right">
-                  ${i.failCount}
-                  ${h.getDiffString2(' (',i.failCount-prev.failCount,')')}
-                </td>
-                <td class="pane" style="text-align:right">
-                  ${i.totalCount}
-                  ${h.getDiffString2(' (',i.totalCount-prev.totalCount,')')}
-                </td>
-              </tr>
-            </j:forEach>
-            <j:forEach var="i" items="${it.didntRun}">
-              <tr>
-                <td class="pane">
-                  <a href="${rootURL}/${i.url}">${i.fullDisplayName}</a>
-                  (${%test result not available})
-                </td>
-                <td class="pane">
-                  ${%N/A}
-                </td>
-                <td class="pane">
-                  ${%N/A}
-                </td>
-              </tr>
-            </j:forEach>
-            <j:forEach var="i" items="${it.noFingerprints}">
-              <tr>
-                <td class="pane">
-                  <a href="${rootURL}/${i.url}">${i.fullDisplayName}</a>
-                  (${%last successful job is not fingerprinted})
-                </td>
-                <td class="pane">
-                  ${%N/A}
-                </td>
-                <td class="pane">
-                  ${%N/A}
-                </td>
-              </tr>
-            </j:forEach>
+            <tbody>
+              <j:forEach var="i" items="${it.individuals}">
+                <j:set var="prev" value="${i.previousResult}" />
+                <j:set var="passCount" value="${i.totalCount - i.failCount - i.skipCount}" />
+                <j:set var="prevPassCount" value="${prev.totalCount - prev.failCount - prev.skipCount}" />
+                <tr>
+                  <td>
+                    <a href="${rootURL}/${i.run.url}${i.urlName}/" class="jp-table-row">
+                      <l:icon src="symbol-status-${i.run.iconColor.iconName}" alt="${i.run.iconColor.description}" />
+                      ${i.run.fullDisplayName}
+                    </a>
+                  </td>
+                  <td>
+                    <span class="${i.failCount gt 0 ? '' : 'jenkins-!-text-color-secondary'}">${i.failCount}</span>
+                    <span class="jp-pill jenkins-!-margin-left-1">${h.getDiffString2(i.failCount - prev.failCount)}</span>
+                  </td>
+                  <td>
+                    <span class="${i.skipCount gt 0 ? '' : 'jenkins-!-text-color-secondary'}">${i.skipCount}</span>
+                    <span class="jp-pill jenkins-!-margin-left-1">${h.getDiffString2(i.skipCount - prev.skipCount)}</span>
+                  </td>
+                  <td>
+                    <span class="${passCount gt 0 ? '' : 'jenkins-!-text-color-secondary'}">${passCount}</span>
+                    <span class="jp-pill jenkins-!-margin-left-1">${h.getDiffString2(passCount - prevPassCount)}</span>
+                  </td>
+                  <td>
+                    ${i.totalCount}
+                    <span class="jp-pill jenkins-!-margin-left-1">${h.getDiffString2(i.totalCount - prev.totalCount)}</span>
+                  </td>
+                </tr>
+              </j:forEach>
+              <j:forEach var="p" items="${it.didntRun}">
+                <tr>
+                  <td>
+                    <a href="${rootURL}/${p.url}">${p.fullDisplayName}</a>
+                    <span class="jenkins-!-text-color-secondary jenkins-!-margin-left-2">${%test result not available}</span>
+                  </td>
+                  <td class="jenkins-!-text-color-secondary">${%N/A}</td>
+                  <td class="jenkins-!-text-color-secondary">${%N/A}</td>
+                  <td class="jenkins-!-text-color-secondary">${%N/A}</td>
+                  <td class="jenkins-!-text-color-secondary">${%N/A}</td>
+                </tr>
+              </j:forEach>
+              <j:forEach var="p" items="${it.noFingerprints}">
+                <tr>
+                  <td>
+                    <a href="${rootURL}/${p.url}">${p.fullDisplayName}</a>
+                    <span class="jenkins-!-text-color-secondary jenkins-!-margin-left-2">${%last successful job is not fingerprinted}</span>
+                  </td>
+                  <td class="jenkins-!-text-color-secondary">${%N/A}</td>
+                  <td class="jenkins-!-text-color-secondary">${%N/A}</td>
+                  <td class="jenkins-!-text-color-secondary">${%N/A}</td>
+                  <td class="jenkins-!-text-color-secondary">${%N/A}</td>
+                </tr>
+              </j:forEach>
+            </tbody>
           </table>
-        </j:otherwise>
-      </j:choose>
-    </l:main-panel>
-  </l:layout>
+        </f:section>
+      </j:otherwise>
+    </j:choose>
+  </l:run-subpage>
 </j:jelly>

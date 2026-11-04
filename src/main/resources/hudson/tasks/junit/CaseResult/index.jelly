@@ -23,7 +23,34 @@ THE SOFTWARE.
 -->
 
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:test="/lib/hudson/test" xmlns:p="/prism">
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:test="/lib/hudson/test" xmlns:p="/prism" xmlns:d="jelly:define" xmlns:local="local">
+  <d:taglib uri="local">
+    <d:tag name="streak">
+      <div class="jenkins-details__item__icon">
+        <j:choose>
+          <j:when test="${it.skipped}">
+            <l:icon src="symbol-play-skip-forward-circle-outline plugin-ionicons-api" />
+          </j:when>
+          <j:otherwise>
+            <l:icon src="symbol-close-circle-outline plugin-ionicons-api" />
+          </j:otherwise>
+        </j:choose>
+      </div>
+
+      <j:choose>
+        <j:when test="${it.skipped}">
+          ${%skippedFor(it.age)}
+        </j:when>
+        <j:otherwise>
+          ${%failingFor(it.age)}
+        </j:otherwise>
+      </j:choose>
+      ${%since.before}
+      #${it.skipped ? it.skippedSince : it.failedSince}
+      ${%since.after}
+    </d:tag>
+  </d:taglib>
+
   <j:set var="test" value="${it}" />
   <j:set var="it" value="${it.parentAction}" />
 
@@ -51,31 +78,21 @@ THE SOFTWARE.
         <div class="jenkins-details">
           <test:condition-tag test="${it}" />
 
-          <j:if test="${!it.passed}">
-            <a href="${rootURL}/${it.run.url}" class="jenkins-details__item">
-              <div class="jenkins-details__item__icon">
-                <j:choose>
-                  <j:when test="${it.skipped}">
-                    <l:icon src="symbol-play-skip-forward-circle-outline plugin-ionicons-api" />
-                  </j:when>
-                  <j:otherwise>
-                    <l:icon src="symbol-close-circle-outline plugin-ionicons-api" />
-                  </j:otherwise>
-                </j:choose>
-              </div>
-
-              <j:choose>
-                <j:when test="${it.skipped}">
-                  ${%skippedFor(it.age)}
-                </j:when>
-                <j:otherwise>
-                  ${%failingFor(it.age)}
-                </j:otherwise>
-              </j:choose>
-              ${%since.before}
-              #${it.failedSince}
-              ${%since.after}
-            </a>
+          <j:if test="${!it.passed and it.age != 0}">
+            <j:set var="sinceRun" value="${it.skipped ? it.skippedSinceRun : it.failedSinceRun}" />
+            <!-- the build where the streak started may have been discarded -->
+            <j:choose>
+              <j:when test="${sinceRun == null}">
+                <div class="jenkins-details__item">
+                  <local:streak />
+                </div>
+              </j:when>
+              <j:otherwise>
+                <a href="${rootURL}/${sinceRun.url}" class="jenkins-details__item">
+                  <local:streak />
+                </a>
+              </j:otherwise>
+            </j:choose>
           </j:if>
 
           <div class="jenkins-details__item">
@@ -102,12 +119,17 @@ THE SOFTWARE.
             <l:icon src="symbol-bar-chart-outline plugin-ionicons-api" />
           </a>
 
-          <t:editDescriptionButton permission="${it.run.UPDATE}" compact="true" />
+          <!-- descriptions of live results would not be kept: they are replaced by the recorded results -->
+          <j:if test="${it.parentAction.liveStatus == null}">
+            <t:editDescriptionButton permission="${it.run.UPDATE}" compact="true" />
+          </j:if>
         </div>
       </div>
     </div>
 
-    <t:editableDescription permission="${it.run.UPDATE}" hideButton="true" />
+    <j:if test="${it.parentAction.liveStatus == null}">
+      <t:editableDescription permission="${it.run.UPDATE}" hideButton="true" />
+    </j:if>
 
     <table>
       <j:forEach var="action" items="${it.testActions}">

@@ -24,6 +24,8 @@
 package hudson.tasks.junit;
 
 import com.thoughtworks.xstream.XStream;
+import edu.umd.cs.findbugs.annotations.CheckForNull;
+import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.Util;
@@ -56,6 +58,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import jenkins.tasks.SimpleBuildStep;
 import jenkins.util.SystemProperties;
+import org.kohsuke.accmod.Restricted;
+import org.kohsuke.accmod.restrictions.NoExternalUse;
 import org.kohsuke.stapler.StaplerProxy;
 
 /**
@@ -79,6 +83,9 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
     // Hudson < 1.25 didn't set these fields, so use Integer
     // so that we can distinguish between 0 tests vs not-computed-yet.
     private @Nullable Integer totalCount;
+    // Computed when the result is recorded, as working it out needs the full reports of this and earlier builds.
+    // null for results recorded by older versions of the plugin.
+    private @Nullable Integer regressionCount;
     private Double healthScaleFactor;
     private List<Data> testData = new ArrayList<>();
 
@@ -129,6 +136,10 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
         skipCount = result.getSkipCount();
 
         if (run != null) {
+            result.computeSkippedSince();
+            // Looking up the previous results needs the run
+            regressionCount = Math.toIntExact(result.getRegressionCount());
+
             // persist the data
             try {
                 resultCache.put(getDataFilePath(), new SoftReference<TestResult>(result));
@@ -221,6 +232,18 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
             getResult(); // this will compute the result
         }
         return totalCount;
+    }
+
+    /**
+     * Gets the number of tests that failed in this build but passed in the previous one, as of when the result was
+     * recorded, without loading the result.
+     *
+     * @return the count, or null if it wasn't recorded, e.g. for results recorded by older versions of the plugin
+     */
+    @CheckForNull
+    @Restricted(NoExternalUse.class)
+    public synchronized Integer getRecordedRegressionCount() {
+        return regressionCount;
     }
 
     @Override
@@ -337,6 +360,50 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
     @Override
     public Object getTarget() {
         return getResult();
+    }
+
+    /**
+     * A message describing tests that are still running, for results that are shown while tests run.
+     *
+     * @return {@code null} for recorded results
+     */
+    @Restricted(NoExternalUse.class)
+    @CheckForNull
+    public String getLiveStatus() {
+        return null;
+    }
+
+    /**
+     * Names of tests that are still running, for results that are shown while tests run.
+     */
+    @Restricted(NoExternalUse.class)
+    @NonNull
+    public List<String> getLiveRunningTests() {
+        return Collections.emptyList();
+    }
+
+    /**
+     * How often (in seconds) the results that are shown while tests run are refreshed.
+     */
+    @Restricted(NoExternalUse.class)
+    public int getLiveRefreshSeconds() {
+        return 5;
+    }
+
+    /**
+     * Changes whenever the results that are shown while tests run do, unlike when tests only start.
+     */
+    @Restricted(NoExternalUse.class)
+    public long getLiveResultsVersion() {
+        return 0;
+    }
+
+    /**
+     * How many tests are running besides those named by {@link #getLiveRunningTests}.
+     */
+    @Restricted(NoExternalUse.class)
+    public int getLiveMoreRunningTests() {
+        return 0;
     }
 
     public List<TestAction> getActions(TestObject object) {

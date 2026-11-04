@@ -28,6 +28,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.tasks.test.PipelineTestDetails;
 import hudson.tasks.test.TestObject;
 import hudson.util.io.ParserConfigurator;
+import io.jenkins.plugins.junit.opentest.OtrReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -140,6 +141,7 @@ public final class SuiteResult implements Serializable {
         this.name = src.name;
         this.id = src.id;
         this.duration = src.duration;
+        this.startTime = src.startTime;
         this.timestamp = src.timestamp;
         this.time = src.time;
         this.nodeId = src.nodeId;
@@ -348,6 +350,11 @@ public final class SuiteResult implements Serializable {
             boolean keepTestNames,
             PipelineTestDetails pipelineTestDetails)
             throws DocumentException, IOException, InterruptedException {
+        if (OtrReader.detect(xmlReport) != null) {
+            return OpenTestReportConverter.parse(
+                    xmlReport, stdioRetention, keepProperties, keepTestNames, pipelineTestDetails);
+        }
+
         List<SuiteResult> r = new ArrayList<>();
 
         // parse into DOM
@@ -552,6 +559,21 @@ public final class SuiteResult implements Serializable {
     }
 
     /**
+     * Replaces a case, e.g. by its result once rerun.
+     */
+    void replaceCase(int index, CaseResult cr) {
+        CaseResult old = cases.set(index, cr);
+        cr.replaceParent(this);
+        synchronized (this) {
+            casesByName = null;
+        }
+        // if suite time was not specified use sum of the cases' times
+        if (!hasTimeAttr()) {
+            duration += cr.getDuration() - old.getDuration();
+        }
+    }
+
+    /**
      * Returns true if the time attribute is present in this Suite.
      */
     private boolean hasTimeAttr() {
@@ -607,6 +629,12 @@ public final class SuiteResult implements Serializable {
         } else {
             return Collections.emptyList();
         }
+    }
+
+    /** Sets the output, once known; e.g. as how much of it is kept depends on the cases. */
+    void setStdio(@CheckForNull String stdout, @CheckForNull String stderr) {
+        this.stdout = CaseResult.fixNULs(stdout);
+        this.stderr = CaseResult.fixNULs(stderr);
     }
 
     /**
@@ -667,6 +695,30 @@ public final class SuiteResult implements Serializable {
 
     public void setStartTime(long start) {
         this.startTime = start;
+    }
+
+    /**
+     * Sets the details that a JUnit XML report would provide as attributes of the {@code testsuite} element,
+     * for suites built from other report formats.
+     *
+     * @param duration the suite duration in seconds, or a negative value to keep the sum of the case durations
+     */
+    void setReportDetails(
+            @CheckForNull String file,
+            @CheckForNull String timestamp,
+            long startTime,
+            float duration,
+            @CheckForNull Map<String, String> properties) {
+        this.file = file;
+        this.timestamp = timestamp;
+        this.startTime = startTime;
+        if (duration >= 0) {
+            this.duration = CaseResult.clampDuration(duration);
+            this.time = Float.toString(this.duration);
+        }
+        if (properties != null) {
+            this.properties = properties;
+        }
     }
 
     @Exported(visibility = 9)

@@ -1,0 +1,20 @@
+<?jelly escape-by-default='true'?>
+<!-- included in a table by the test page -->
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout">
+  <st:adjunct includes="hudson.tasks.junit.TestAttachments.attachments" />
+  <tr class="junit-attachments">
+    <td>
+      <l:card title="${%Attachments}">
+        <ul class="junit-attachments__list">
+          <j:forEach var="link" items="${it.links}">
+            <li class="junit-attachments__item">
+              <l:icon src="symbol-document-outline plugin-ionicons-api" class="junit-attachments__icon" />
+              <a href="${rootURL}/${link.url}">${link.name}</a>
+              <span class="junit-attachments__size">${link.fileSize}</span>
+            </li>
+          </j:forEach>
+        </ul>
+      </l:card>
+    </td>
+  </tr>
+</j:jelly>

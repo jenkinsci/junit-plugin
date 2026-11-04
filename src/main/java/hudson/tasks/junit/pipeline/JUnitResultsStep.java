@@ -77,6 +77,8 @@ public class JUnitResultsStep extends Step implements JUnitTask {
 
     private boolean skipOldReports;
 
+    private boolean archiveAttachments;
+
     @DataBoundConstructor
     public JUnitResultsStep(String testResults) {
         this.testResults = testResults;
@@ -249,6 +251,16 @@ public class JUnitResultsStep extends Step implements JUnitTask {
     @DataBoundSetter
     public void setSkipOldReports(boolean skipOldReports) {
         this.skipOldReports = skipOldReports;
+    }
+
+    @Override
+    public boolean isArchiveAttachments() {
+        return archiveAttachments;
+    }
+
+    @DataBoundSetter
+    public final void setArchiveAttachments(boolean archiveAttachments) {
+        this.archiveAttachments = archiveAttachments;
     }
 
     @Override

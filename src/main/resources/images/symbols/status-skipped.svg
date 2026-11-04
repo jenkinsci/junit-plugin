@@ -1,10 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" opacity="1" role="img" aria-label="failure">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" opacity="1" role="img" aria-label="skipped">
     <circle cx="256" cy="256" r="230" fill="var(--card-background)"/>
     <circle cx="256" cy="256" r="250" fill="var(--text-color-secondary)" opacity="var(--status-background-opacity, 0.125)" style="transition: var(--standard-transition);"/>
     <circle cx="256" cy="256" r="240" fill="none" stroke="var(--text-color-secondary)" stroke-width="20" stroke-opacity="var(--status-border-opacity, 0.25)"/>
     
-    <g transform="scale(0.5)" transform-origin="50% 50%">
-        <path d="M112 111v290c0 17.44 17 28.52 31 20.16l247.9-148.37c12.12-7.25 12.12-26.33 0-33.58L143 90.84c-14-8.36-31 2.72-31 20.16z" fill="none" stroke="var(--text-color-secondary)" stroke-miterlimit="10" stroke-width="64" />
-        <path fill="none" stroke="var(--text-color-secondary)" stroke-linecap="round" stroke-miterlimit="10" stroke-width="64" d="M400 80v352" />
-    </g>
+    <path d="M180 332.8l76.8-76.8-76.8-76.8M284 332.8l76.8-76.8-76.8-76.8" fill="none" stroke="var(--text-color-secondary)" stroke-width="28.8" stroke-linecap="round" stroke-linejoin="round" />
 </svg>

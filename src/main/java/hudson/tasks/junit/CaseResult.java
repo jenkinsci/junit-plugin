@@ -27,6 +27,7 @@ import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import hudson.model.Run;
+import hudson.tasks.test.AbstractTestResultAction;
 import hudson.tasks.test.TestResult;
 import hudson.util.TextFile;
 import io.jenkins.plugins.junit.storage.FileJunitTestResultStorage;
@@ -41,9 +42,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import jenkins.model.Jenkins;
@@ -116,6 +120,13 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
      */
     private int failedSince;
 
+    /**
+     * This test has been skipped since this build number (not id.)
+     *
+     * Null when not {@link #isSkipped() skipped} or not known yet, so that it is only saved for skipped tests.
+     */
+    private Integer skippedSince;
+
     private static float parseTime(Element testCase) {
         String time = testCase.attributeValue("time");
         return new TimeToFloat(time).parse();
@@ -161,6 +172,28 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
             String stdout,
             String stderr,
             String stacktrace) {
+        this(parent, className, testName, errorDetails, skippedMessage, duration, stdout, stderr, stacktrace, null);
+    }
+
+    /**
+     * Used by {@code JunitTestResultStorage} implementations to reconstruct a {@link CaseResult}
+     * from storage, including any test case properties that were retained at publish time (see
+     * {@link JUnitParser#JUnitParser(boolean, boolean, boolean, boolean)}'s {@code keepProperties}).
+     *
+     * @since TODO
+     */
+    @Restricted(Beta.class)
+    public CaseResult(
+            SuiteResult parent,
+            String className,
+            String testName,
+            String errorDetails,
+            String skippedMessage,
+            float duration,
+            String stdout,
+            String stderr,
+            String stacktrace,
+            @CheckForNull Map<String, String> properties) {
         this.className = className;
         this.testName = testName;
         this.errorStackTrace = stacktrace;
@@ -174,7 +207,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         this.isProperFailure = false;
         this.skipped = skippedMessage != null;
         this.skippedMessage = skippedMessage;
-        this.properties = Collections.emptyMap();
+        this.properties = properties == null ? Collections.emptyMap() : properties;
         this.keepTestNames = false;
     }
 
@@ -263,6 +296,7 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
 
     public CaseResult(CaseResult src) {
         this.duration = src.duration;
+        this.startTime = src.startTime;
         this.className = src.className;
         this.testName = src.testName;
         this.skippedMessage = src.skippedMessage;
@@ -272,12 +306,43 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         this.errorStackTrace = src.errorStackTrace;
         this.errorDetails = src.errorDetails;
         this.failedSince = src.failedSince;
+        this.skippedSince = src.skippedSince;
         this.stdout = src.stdout;
         this.stderr = src.stderr;
         this.properties = new HashMap<>();
         this.properties.putAll(src.properties);
         this.flakyFailures = src.flakyFailures;
         this.rerunFailures = src.rerunFailures;
+    }
+
+    /**
+     * The result of this test once rerun, as in the XML reports of Maven Surefire: a test that passes on a rerun
+     * passes, keeping the failures of its earlier attempts as flaky failures; a test that fails again keeps its first
+     * failure, with the later ones as rerun failures. A rerun that is skipped, e.g. by an assumption, leaves it as is.
+     *
+     * @param attempt the result of the rerun
+     * @return a new result, this one and the attempt are left untouched
+     */
+    CaseResult rerun(CaseResult attempt) {
+        CaseResult result;
+        if (attempt.isPassed()) {
+            result = new CaseResult(attempt);
+            result.flakyFailures = new ArrayList<>(getFlakyFailures());
+            result.flakyFailures.add(toFailure());
+            result.flakyFailures.addAll(getRerunFailures());
+            result.rerunFailures = null;
+        } else {
+            result = new CaseResult(this);
+            if (attempt.isFailed()) {
+                result.rerunFailures = new ArrayList<>(getRerunFailures());
+                result.rerunFailures.add(attempt.toFailure());
+            }
+        }
+        return result;
+    }
+
+    private Failure toFailure() {
+        return new Failure(errorDetails, null, errorStackTrace, stdout, stderr);
     }
 
     public static float clampDuration(float d) {
@@ -359,6 +424,10 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
                         break;
                     case "failedSince":
                         r.failedSince = Integer.parseInt(reader.getElementText());
+                        break;
+                    case "skippedSince":
+                        int skippedSince = Integer.parseInt(reader.getElementText());
+                        r.skippedSince = skippedSince > 0 ? skippedSince : null;
                         break;
                     case "stdout":
                         r.stdout = reader.getElementText();
@@ -526,6 +595,35 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
                 + cleanupTruncated(stdio.subSequence(len - halfMaxSize, len));
     }
 
+    /**
+     * Flavor of {@link #possiblyTrimStdio(Collection, StdioRetention, String)} for a single test whose failure state is
+     * already known.
+     */
+    static String possiblyTrimStdio(boolean failing, StdioRetention stdioRetention, String stdio) {
+        if (stdio == null) {
+            return null;
+        }
+        if (stdioRetention == StdioRetention.ALL || (stdioRetention == StdioRetention.FAILED && failing)) {
+            return stdio;
+        }
+        int halfMaxSize = failing ? HALF_MAX_FAILING_SIZE : HALF_MAX_SIZE;
+        int len = stdio.length();
+        int middle = len - halfMaxSize * 2;
+        if (middle <= 0) {
+            return stdio;
+        }
+        return cleanupTruncated(stdio.subSequence(0, halfMaxSize)) + "\n...[truncated " + middle + " chars]...\n"
+                + cleanupTruncated(stdio.subSequence(len - halfMaxSize, len));
+    }
+
+    /**
+     * Marks a failed test as a "proper" failure (an assertion failure, {@code <failure>} in JUnit XML)
+     * rather than an error.
+     */
+    void setProperFailure(boolean properFailure) {
+        this.isProperFailure = properFailure;
+    }
+
     static String fixNULs(String stdio) { // JENKINS-71139
         return stdio == null ? null : stdio.replace("\u0000", "^@");
     }
@@ -533,7 +631,6 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     /**
      * Flavor of {@link #possiblyTrimStdio(Collection, StdioRetention, String)} that doesn't try to read the whole thing into memory.
      */
-    @SuppressFBWarnings(value = "DM_DEFAULT_ENCODING", justification = "Expected behavior")
     static String possiblyTrimStdio(Collection<CaseResult> results, StdioRetention stdioRetention, File stdio)
             throws IOException {
         long len = stdio.length();
@@ -648,8 +745,9 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         if (!keepTestNames && !getEnclosingFlowNodeNames().isEmpty()) {
             Run<?, ?> r = getRun();
             if (r != null) {
-                TestResultAction action = r.getAction(TestResultAction.class);
-                if (action != null && action.getResult().hasMultipleBlocks()) {
+                // through the enclosing results, as results shown while tests run are not attached to the run
+                AbstractTestResultAction<?> a = getTestResultAction();
+                if (a instanceof TestResultAction action && action.getResult().hasMultipleBlocks()) {
                     List<String> enclosingFlowNodeNames = getEnclosingFlowNodeNames();
                     Collections.reverse(enclosingFlowNodeNames);
                     return String.join(" / ", enclosingFlowNodeNames) + " / " + rawName;
@@ -804,6 +902,14 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
 
     private void recomputeFailedSinceIfNeeded() {
         if (failedSince == 0 && getFailCount() == 1) {
+            JunitTestResultStorage storage = JunitTestResultStorage.find();
+            if (!(storage instanceof FileJunitTestResultStorage)) {
+                Run<?, ?> run = getFailedSinceRun();
+                if (run != null) {
+                    this.failedSince = run.getNumber();
+                    return;
+                }
+            }
             CaseResult prev = getPreviousResult();
             if (prev != null && prev.isFailed()) {
                 this.failedSince = prev.getFailedSince();
@@ -820,7 +926,10 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     public Run<?, ?> getFailedSinceRun() {
         JunitTestResultStorage storage = JunitTestResultStorage.find();
         if (!(storage instanceof FileJunitTestResultStorage)) {
-            Run<?, ?> run = Stapler.getCurrentRequest2().findAncestorObject(Run.class);
+            Run<?, ?> run = getRun();
+            if (run == null) {
+                return null;
+            }
             TestResultImpl pluggableStorage = storage.load(run.getParent().getFullName(), run.getNumber());
             return pluggableStorage.getFailedSinceRun(this);
         }
@@ -829,17 +938,108 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     }
 
     /**
+     * If this test was skipped, then return the build number
+     * when this test was first skipped.
+     */
+    @Exported(visibility = 9)
+    public int getSkippedSince() {
+        recomputeSkippedSinceIfNeeded(new HashMap<>());
+        return skippedSince != null ? skippedSince : 0;
+    }
+
+    /**
+     * Walks back through previous builds while this test stays skipped, stopping at a build that already
+     * knows its {@link #skippedSince} or after {@link #SKIPPED_SINCE_BACKTRACK_BUILDS_MAX} builds, in which
+     * case the age shown is a lower bound. Builds without test results or without this test count towards
+     * that limit but do not end the streak.
+     * Computed when the result is saved, see {@link TestResult#computeSkippedSince()}, or on first use for
+     * results saved without it; not in {@link #freeze(SuiteResult)}, so that loading a result does not load
+     * previous builds (JENKINS-31660).
+     * Pluggable storage provides it through {@link TestResultImpl#getSkippedSinceRun(CaseResult)} instead, and
+     * it stays unknown (0) when that is not supported.
+     */
+    void recomputeSkippedSinceIfNeeded(Map<Run<?, ?>, hudson.tasks.junit.TestResult> previousResults) {
+        if (skippedSince != null || !isSkipped()) {
+            return;
+        }
+        Run<?, ?> run = getRun();
+        if (run == null) {
+            return;
+        }
+        JunitTestResultStorage storage = JunitTestResultStorage.find();
+        if (!(storage instanceof FileJunitTestResultStorage)) {
+            // results are not cached or saved, so walking back would query the storage on every use
+            Run<?, ?> sinceRun =
+                    storage.load(run.getParent().getFullName(), run.getNumber()).getSkippedSinceRun(this);
+            skippedSince = sinceRun != null ? sinceRun.getNumber() : null;
+            return;
+        }
+        // walks builds directly rather than through getPreviousResult, which passes over any number of builds
+        // without test results and up to PREVIOUS_TEST_RESULT_BACKTRACK_BUILDS_MAX without this test
+        int since = run.getNumber();
+        Run<?, ?> build = run.getPreviousBuild();
+        for (int i = 0;
+                i < SKIPPED_SINCE_BACKTRACK_BUILDS_MAX && build != null;
+                i++, build = build.getPreviousBuild()) {
+            CaseResult prev = findCorrespondingCase(build, previousResults);
+            if (prev == null) {
+                continue;
+            }
+            if (!prev.isSkipped()) {
+                break;
+            }
+            if (prev.skippedSince != null) {
+                since = prev.skippedSince;
+                break;
+            }
+            since = build.getNumber();
+        }
+        skippedSince = since;
+    }
+
+    private CaseResult findCorrespondingCase(
+            Run<?, ?> build, Map<Run<?, ?>, hudson.tasks.junit.TestResult> previousResults) {
+        try {
+            hudson.tasks.junit.TestResult result = previousResults.computeIfAbsent(build, b -> {
+                TestResultAction action = b.getAction(TestResultAction.class);
+                return action != null ? action.getResult() : null;
+            });
+            return result != null ? result.getCase(parent.getName(), getTransformedFullDisplayName()) : null;
+        } catch (RuntimeException e) {
+            LOGGER.log(
+                    Level.WARNING,
+                    e,
+                    () -> "Failed to load (corrupt?) build " + build.getParent().getFullName() + " #"
+                            + build.getNumber() + ", skipping");
+            return null;
+        }
+    }
+
+    public Run<?, ?> getSkippedSinceRun() {
+        Run<?, ?> run = getRun();
+        if (run == null) {
+            return null;
+        }
+        return run.getParent().getBuildByNumber(getSkippedSince());
+    }
+
+    /**
      * Gets the number of consecutive builds (including this)
-     * that this test case has been failing.
+     * that this test case has been failing or skipped.
      *
-     * @return the number of consecutive failing builds.
+     * @return the number of consecutive failing or skipped builds.
      */
     @Exported(visibility = 9)
     public int getAge() {
         if (isPassed()) {
             return 0;
         } else if (getRun() != null) {
-            return getRun().getNumber() - getFailedSince() + 1;
+            int since = isSkipped() ? getSkippedSince() : getFailedSince();
+            if (since == 0) {
+                // unknown, see getSkippedSince
+                return 0;
+            }
+            return getRun().getNumber() - since + 1;
         } else {
             LOGGER.fine("Trying to get age of a CaseResult without an owner");
             return 0;
@@ -894,13 +1094,25 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
     static int PREVIOUS_TEST_RESULT_BACKTRACK_BUILDS_MAX = Integer.parseInt(System.getProperty(
             History.HistoryTableResult.class.getName() + ".PREVIOUS_TEST_RESULT_BACKTRACK_BUILDS_MAX", "25"));
 
+    /**
+     * Maximum number of previous builds to visit when computing {@link #skippedSince}, including builds without
+     * test results or without the test.
+     */
+    static int SKIPPED_SINCE_BACKTRACK_BUILDS_MAX = Integer.parseInt(
+            System.getProperty(CaseResult.class.getName() + ".SKIPPED_SINCE_BACKTRACK_BUILDS_MAX", "10"));
+
     @Override
     public CaseResult getPreviousResult() {
         if (parent == null) {
             return null;
         }
 
-        TestResult previousResult = parent.getParent();
+        hudson.tasks.junit.TestResult currentBuildResult = parent.getParent();
+        if (currentBuildResult != null && currentBuildResult.supportsPreviousCaseResultViaStorage()) {
+            return currentBuildResult.getPreviousCaseResultViaStorage(this).orElse(null);
+        }
+
+        TestResult previousResult = currentBuildResult;
         int n = 0;
         while (previousResult != null && n < PREVIOUS_TEST_RESULT_BACKTRACK_BUILDS_MAX) {
             previousResult = previousResult.getPreviousResult();
@@ -1077,6 +1289,33 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         return rootUrl == null ? relativeUrl : rootUrl + relativeUrl;
     }
 
+    void setKeepTestNames(boolean keepTestNames) {
+        this.keepTestNames = keepTestNames;
+    }
+
+    /**
+     * The properties shown by {@code test-output.jelly}: those not already shown otherwise, like archived attachments.
+     */
+    @Restricted(NoExternalUse.class)
+    public Map<String, String> getDisplayedProperties() {
+        List<TestAttachments.AttachmentsAction> attachments = new ArrayList<>();
+        for (TestAction action : getTestActions()) {
+            if (action instanceof TestAttachments.AttachmentsAction a) {
+                attachments.add(a);
+            }
+        }
+        if (attachments.isEmpty()) {
+            return properties;
+        }
+        Map<String, String> displayed = new LinkedHashMap<>();
+        for (Map.Entry<String, String> p : properties.entrySet()) {
+            if (attachments.stream().noneMatch(a -> a.shows(p.getKey(), p.getValue()))) {
+                displayed.put(p.getKey(), p.getValue());
+            }
+        }
+        return displayed;
+    }
+
     /**
      * Used by {@code test-output.jelly} to decide whether a property value should be rendered as a hyperlink.
      */
@@ -1091,6 +1330,16 @@ public class CaseResult extends TestResult implements Comparable<CaseResult> {
         } catch (URISyntaxException x) {
             return false;
         }
+    }
+
+    private static final Pattern JAVA_STACK_FRAME = Pattern.compile("^[ \\t]+at \\S+\\(", Pattern.MULTILINE);
+
+    /**
+     * Used by {@code test-output.jelly} to decide whether a value should be highlighted as a Java stack trace.
+     */
+    @Restricted(NoExternalUse.class)
+    public boolean isJavaStackTrace(String value) {
+        return value != null && JAVA_STACK_FRAME.matcher(value).find();
     }
 
     /**

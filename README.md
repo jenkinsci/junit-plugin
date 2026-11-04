@@ -86,6 +86,69 @@ stage('Ignored') {
 }
 ```
 
+### Open Test Reporting (JUnit Platform)
+
+The plugin also reads reports in the [Open Test Reporting](https://github.com/ota4j-team/open-test-reporting) format
+written by the [JUnit Platform](https://docs.junit.org/current/advanced-topics/junit-platform-reporting.html#open-test-reporting)
+(`open-test-report.xml`), in both its event-based and hierarchical forms.
+They are detected automatically, so they can be mixed with legacy JUnit XML reports in the same `junit` step:
+
+```groovy
+junit 'target/surefire-reports/**/*.xml'
+```
+
+Each test class becomes a suite named after the class, as with the legacy reports, so test history carries over.
+Unlike the legacy reports, parameterized, repeated and dynamic tests keep the name of the method they belong to,
+e.g. `add(int, int) > [1] 1, 2`. With `keepProperties`, report entries (`TestReporter.publishEntry`), tags and file
+attachments are kept as test properties: report entries under their keys, tags as `tags` and attachments as
+`attachment.1`, `attachment.2` and so on. A report entry whose key is one of those is kept as `data.<key>`.
+
+With `archiveAttachments`, files attached to tests (`TestReporter.publishFile`) are archived as build artifacts under
+`test-attachments/` and linked from the page of each test:
+
+```groovy
+junit archiveAttachments: true, testResults: 'target/surefire-reports/**/*.xml'
+```
+
+They are archived through the configured artifact manager, like `archiveArtifacts`, so they also work with cloud
+storage such as the Azure or S3 artifact managers. Only files inside the directory of their report (and the
+workspace) are archived.
+
+#### Streaming test results
+
+With JUnit Platform 6.1 or later, tests can stream their results to Jenkins while they run, without writing report
+files, using the `withOpenTestReporting` step:
+
+```groovy
+withOpenTestReporting {
+    sh 'mvn -B test'
+}
+```
+
+* Results can be followed live from the *Live Test Results* link of the build.
+* When the block ends (whether or not it succeeded), the results are recorded as if by `junit`, which accepts the same
+  options (except the report pattern) and returns the same summary. Unlike `junit`, properties are kept and attachments
+  are archived by default; use `keepProperties: false` or `archiveAttachments: false` to turn that off.
+* If a test JVM crashes or is killed, the results received so far are kept and the tests that were running are
+  reported as failures.
+
+The step listens on a socket on the loopback interface of the agent, so the tests must run in the same network
+namespace as the agent process: being on the same machine is not enough when they run in a separate container, such as
+with `docker.image(…).inside` without `--network host`.
+`org.junit.platform:junit-platform-reporting` must be on the test runtime classpath.
+Attached files are not part of the stream: test JVMs write them to their JUnit output directory
+(`junit.platform.reporting.output.dir`, by default `target` or `build`), and when the block ends they are looked up in
+the workspace by their relative path, ignoring files older than the block.
+By default, the JUnit configuration parameters that turn streaming on are added to the `JAVA_TOOL_OPTIONS` environment
+variable, so no change to the build is needed. To configure it yourself instead, use `javaToolOptions: false` and pass
+the port from the `JUNIT_OTR_SOCKET_PORT` environment variable:
+
+```groovy
+withOpenTestReporting(javaToolOptions: false) {
+    sh 'mvn -B test -Djunit.platform.reporting.open.xml.enabled=true -Djunit.platform.reporting.open.xml.socket=$JUNIT_OTR_SOCKET_PORT'
+}
+```
+
 ## Contributing
 
 Refer to our [contribution guidelines](https://github.com/jenkinsci/.github/blob/master/CONTRIBUTING.md)

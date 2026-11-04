@@ -130,4 +130,14 @@ class CustomColumnsTest {
                 "ROT13 for all packages on test page",
                 Pair.of("io.jenkins.example", "vb.wraxvaf.rknzcyr for package"));
     }
+
+    @Test
+    void failedTestsAreSortedByClassNameBeforeTestName() throws Exception {
+        JenkinsRule.WebClient wc = WebClientFactory.createWebClientWithDisabledJavaScript(jenkins);
+        HtmlPage page = wc.getPage(project, "/lastBuild/testReport/");
+        HtmlTable table = page.getFirstByXPath("//table[@id='failedtestresult']");
+        HtmlTableCell nameCell =
+                table.getBodies().get(0).getRows().get(0).getCells().get(0);
+        assertEquals("io.jenkins.example.AnExampleTestClass.testCaseA", nameCell.getAttribute("data"));
+    }
 }

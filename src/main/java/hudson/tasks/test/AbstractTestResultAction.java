@@ -252,6 +252,14 @@ public abstract class AbstractTestResultAction<T extends AbstractTestResultActio
     public abstract Object getResult();
 
     /**
+     * The type of the actions holding the results of other builds to compare with: normally this one's.
+     */
+    @Restricted(NoExternalUse.class)
+    public Class<? extends AbstractTestResultAction> getRecordedType() {
+        return getClass();
+    }
+
+    /**
      * Gets the test result of the previous build, if it's recorded, or null.
      */
     public T getPreviousResult() {
