@@ -44,13 +44,15 @@ public class TestResultHistoryPageEntryDecorator extends HistoryPageEntryDecorat
         // Only uses counts stored with the build, as loading every build's full report would make the page slow
         Summary(AbstractTestResultAction<?> action) {
             this.urlName = action.getUrlName();
-            this.failCount = action.getFailCount();
-            this.skipCount = action.getSkipCount();
-            this.totalCount = action.getTotalCount();
-            if (action instanceof TestResultAction testResultAction) {
-                this.regressionCount = Objects.requireNonNullElse(testResultAction.getRecordedRegressionCount(), 0);
-            } else {
-                this.regressionCount = 0;
+            // A running Pipeline can merge more results in between these reads, and TestResultAction#setResult holds
+            // the action's lock while it does, so reading under that lock gives counts that agree with each other
+            synchronized (action) {
+                this.failCount = action.getFailCount();
+                this.skipCount = action.getSkipCount();
+                this.totalCount = action.getTotalCount();
+                this.regressionCount = action instanceof TestResultAction testResultAction
+                        ? Objects.requireNonNullElse(testResultAction.getRecordedRegressionCount(), 0)
+                        : 0;
             }
         }
 
