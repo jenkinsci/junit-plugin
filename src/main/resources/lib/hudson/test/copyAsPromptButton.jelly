@@ -60,10 +60,14 @@ THE SOFTWARE.
             tooltip="${attrs.label != null ? null : attrs.tooltip ?: '%Copy'}"
             type="button"
             data-tooltip-append-to-parent="true">
-      <l:icon src="symbol-sparkles-outline plugin-ionicons-api" />
+      <span class="jp-copy-prompt-button__icon">
+        <l:icon src="symbol-sparkles-outline plugin-ionicons-api" class="jp-copy-prompt-button__idle" />
+        <l:icon src="symbol-check" class="jp-copy-prompt-button__done" />
+      </span>
       ${attrs.label}
     </button>
   </span>
 
   <st:adjunct includes="lib.layout.copyButton.copyButton"/>
+  <st:adjunct includes="lib.hudson.test.copyAsPromptButton.copyAsPromptButton"/>
 </j:jelly>

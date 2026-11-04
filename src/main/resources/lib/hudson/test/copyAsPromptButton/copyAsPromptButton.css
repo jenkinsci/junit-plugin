@@ -1,0 +1,53 @@
+/* Mirrors core's .jenkins-copy-button__icon animation, swapping the sparkles icon for a check once copied. */
+.jp-copy-prompt-button__icon {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr;
+  place-items: center;
+  width: 1.125rem;
+  height: 1.125rem;
+  transition: var(--standard-transition);
+
+  svg {
+    grid-area: 1 / 1;
+    width: 100%;
+    height: 100%;
+  }
+
+  .jp-copy-prompt-button__idle {
+    transition:
+      scale var(--standard-transition),
+      opacity var(--standard-transition),
+      filter var(--standard-transition);
+  }
+
+  .jp-copy-prompt-button__done {
+    scale: -0.5;
+    opacity: 0;
+    filter: blur(2px);
+    color: var(--success-color);
+    transition: var(--elastic-transition);
+
+    * {
+      stroke-width: 40px;
+    }
+  }
+
+  .jenkins-copy-button--copied & {
+    .jp-copy-prompt-button__idle {
+      scale: 1.25;
+      opacity: 0;
+      filter: blur(1px);
+    }
+
+    .jp-copy-prompt-button__done {
+      scale: 1.25;
+      opacity: 1;
+      filter: blur(0);
+    }
+  }
+
+  .jenkins-copy-button:active & {
+    transform: scale(0.85);
+  }
+}
