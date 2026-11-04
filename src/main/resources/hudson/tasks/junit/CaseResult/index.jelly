@@ -108,9 +108,7 @@ THE SOFTWARE.
 
           <j:set var="copyAsPrompt" value="${it.copyAsPrompt}" />
           <j:if test="${!empty copyAsPrompt}">
-            <test:copyAsPromptButton text="${copyAsPrompt}"
-                                     label="${%copyAsPrompt}"
-                                     message="${%copyAsPromptMessage}" />
+            <test:copyAsPromptButton text="${copyAsPrompt}" />
           </j:if>
 
           <a tooltip="${%History}"
