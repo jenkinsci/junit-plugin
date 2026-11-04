@@ -58,12 +58,6 @@ THE SOFTWARE.
           ${%Regressions(summary.regressionCount)}
         </span>
       </j:if>
-      <j:if test="${summary.fixedCount > 0}">
-        <span>
-          <l:icon src="symbol-trending-up-outline plugin-ionicons-api" />
-          ${%Fixed(summary.fixedCount)}
-        </span>
-      </j:if>
     </div>
   </a>
 </j:jelly>

@@ -83,10 +83,9 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
     // Hudson < 1.25 didn't set these fields, so use Integer
     // so that we can distinguish between 0 tests vs not-computed-yet.
     private @Nullable Integer totalCount;
-    // Computed when the result is recorded, as working them out needs the full reports of this and earlier builds.
+    // Computed when the result is recorded, as working it out needs the full reports of this and earlier builds.
     // null for results recorded by older versions of the plugin.
     private @Nullable Integer regressionCount;
-    private @Nullable Integer fixedCount;
     private Double healthScaleFactor;
     private List<Data> testData = new ArrayList<>();
 
@@ -140,7 +139,6 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
             result.computeSkippedSince();
             // Looking up the previous results needs the run
             regressionCount = Math.toIntExact(result.getRegressionCount());
-            fixedCount = Math.toIntExact(result.getFixedCount());
 
             // persist the data
             try {
@@ -246,18 +244,6 @@ public class TestResultAction extends AbstractTestResultAction<TestResultAction>
     @Restricted(NoExternalUse.class)
     public synchronized Integer getRecordedRegressionCount() {
         return regressionCount;
-    }
-
-    /**
-     * Gets the number of tests that passed in this build but failed in the previous one, as of when the result was
-     * recorded, without loading the result.
-     *
-     * @return the count, or null if it wasn't recorded, e.g. for results recorded by older versions of the plugin
-     */
-    @CheckForNull
-    @Restricted(NoExternalUse.class)
-    public synchronized Integer getRecordedFixedCount() {
-        return fixedCount;
     }
 
     @Override

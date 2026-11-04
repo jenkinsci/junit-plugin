@@ -40,7 +40,6 @@ public class TestResultHistoryPageEntryDecorator extends HistoryPageEntryDecorat
         private final int skipCount;
         private final int totalCount;
         private final int regressionCount;
-        private final int fixedCount;
 
         // Only uses counts stored with the build, as loading every build's full report would make the page slow
         Summary(AbstractTestResultAction<?> action) {
@@ -50,10 +49,8 @@ public class TestResultHistoryPageEntryDecorator extends HistoryPageEntryDecorat
             this.totalCount = action.getTotalCount();
             if (action instanceof TestResultAction testResultAction) {
                 this.regressionCount = Objects.requireNonNullElse(testResultAction.getRecordedRegressionCount(), 0);
-                this.fixedCount = Objects.requireNonNullElse(testResultAction.getRecordedFixedCount(), 0);
             } else {
                 this.regressionCount = 0;
-                this.fixedCount = 0;
             }
         }
 
@@ -82,10 +79,6 @@ public class TestResultHistoryPageEntryDecorator extends HistoryPageEntryDecorat
 
         public int getRegressionCount() {
             return regressionCount;
-        }
-
-        public int getFixedCount() {
-            return fixedCount;
         }
     }
 }
