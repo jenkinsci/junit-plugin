@@ -428,6 +428,23 @@ public class TestResultTest {
         assertEquals(-1, case12.getStartTime());
     }
 
+    @Test
+    void readResultWithManyEscapedCharacters() throws Exception {
+        SuiteResult suite = new SuiteResult("pkg.Big", "", "");
+        String stackTrace = "\tat pkg.Big.<init>(Big.java:1)\n".repeat(60_000);
+        suite.addCase(new CaseResult(suite, "big", stackTrace));
+        TestResult tr = new TestResult();
+        tr.getSuites().add(suite);
+        XmlFile f = new XmlFile(TestResultAction.XSTREAM, new File(tmp, "junitResult.xml"));
+        f.write(tr);
+
+        TestResult tr2 = new TestResult();
+        tr2.parse(f);
+
+        SuiteResult suite2 = tr2.getSuites().iterator().next();
+        assertEquals(stackTrace, suite2.getCases().get(0).getErrorStackTrace());
+    }
+
     /*
     For performance reasons, we parse the XML directly.
     Make sure parser handles all the fields.

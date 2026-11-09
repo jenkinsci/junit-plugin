@@ -310,10 +310,15 @@ public final class TestResult extends MetaTabulatedResult {
     static final XMLInputFactory xmlFactory;
 
     static {
-        xmlFactory = XMLInputFactory.newInstance();
+        // Always the JDK parser: newInstance() may resolve another one (such as Woodstox from jackson3-api),
+        // which would reject the JDK-specific jdk.xml.* properties set below
+        xmlFactory = XMLInputFactory.newDefaultFactory();
         if (SystemProperties.getBoolean(TestResult.class.getName() + ".USE_SAFE_XML_FACTORY", true)) {
             xmlFactory.setProperty(XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
             xmlFactory.setProperty(XMLInputFactory.IS_REPLACING_ENTITY_REFERENCES, Boolean.FALSE);
+            // DTDs are disabled, so the JDK 24+ entity size limits would only count built-in references like &lt;
+            xmlFactory.setProperty("jdk.xml.maxGeneralEntitySizeLimit", "0");
+            xmlFactory.setProperty("jdk.xml.totalEntitySizeLimit", "0");
         }
     }
 
