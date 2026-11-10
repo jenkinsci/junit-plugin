@@ -310,10 +310,15 @@ public final class TestResult extends MetaTabulatedResult {
     static final XMLInputFactory xmlFactory;
 
     static {
-        xmlFactory = XMLInputFactory.newInstance();
+        // newDefaultFactory() always returns the JDK parser. The jdk.xml.* properties set below only exist
+        // in the JDK parser; other StAX implementations, such as Woodstox, reject them
+        xmlFactory = XMLInputFactory.newDefaultFactory();
         if (SystemProperties.getBoolean(TestResult.class.getName() + ".USE_SAFE_XML_FACTORY", true)) {
             xmlFactory.setProperty(XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
             xmlFactory.setProperty(XMLInputFactory.IS_REPLACING_ENTITY_REFERENCES, Boolean.FALSE);
+            // JDK 24+ limits these to 100,000 escaped characters such as &lt;, which large test results exceed
+            xmlFactory.setProperty("jdk.xml.maxGeneralEntitySizeLimit", "0");
+            xmlFactory.setProperty("jdk.xml.totalEntitySizeLimit", "0");
         }
     }
 
