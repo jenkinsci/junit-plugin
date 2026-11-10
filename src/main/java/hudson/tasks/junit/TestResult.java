@@ -310,13 +310,13 @@ public final class TestResult extends MetaTabulatedResult {
     static final XMLInputFactory xmlFactory;
 
     static {
-        // Always the JDK parser: newInstance() may resolve another one (such as Woodstox from jackson3-api),
-        // which would reject the JDK-specific jdk.xml.* properties set below
+        // newDefaultFactory() always returns the JDK parser. The jdk.xml.* properties set below only exist
+        // in the JDK parser; other StAX implementations, such as Woodstox, reject them
         xmlFactory = XMLInputFactory.newDefaultFactory();
         if (SystemProperties.getBoolean(TestResult.class.getName() + ".USE_SAFE_XML_FACTORY", true)) {
             xmlFactory.setProperty(XMLInputFactory.SUPPORT_DTD, Boolean.FALSE);
             xmlFactory.setProperty(XMLInputFactory.IS_REPLACING_ENTITY_REFERENCES, Boolean.FALSE);
-            // DTDs are disabled, so the JDK 24+ entity size limits would only count built-in references like &lt;
+            // JDK 24+ limits these to 100,000 escaped characters such as &lt;, which large test results exceed
             xmlFactory.setProperty("jdk.xml.maxGeneralEntitySizeLimit", "0");
             xmlFactory.setProperty("jdk.xml.totalEntitySizeLimit", "0");
         }
