@@ -9,7 +9,7 @@
   </parent>
 
   <artifactId>junit</artifactId>
-  <version>${changelist}</version>
+  <version>1458.${changelist}</version>
   <packaging>hpi</packaging>
   <name>JUnit Plugin</name>
   <description>Allows JUnit-format test results to be published.</description>
