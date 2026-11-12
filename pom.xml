@@ -40,7 +40,7 @@
     <spotless.check.skip>false</spotless.check.skip>
     <ban-junit4-imports.skip>false</ban-junit4-imports.skip>
     <!-- TODO remove once the bom includes it, needed for https://github.com/jenkinsci/checks-api-plugin/pull/350 -->
-    <checks-api.version>434.va_a_3dd79d7723</checks-api.version>
+    <checks-api.version>440.v53a_b_6c39a_b_b_b_</checks-api.version>
   </properties>
 
   <dependencyManagement>
