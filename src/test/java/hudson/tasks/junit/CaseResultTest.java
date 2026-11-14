@@ -24,6 +24,8 @@
 package hudson.tasks.junit;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.collection.IsEmptyCollection.empty;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -223,6 +225,74 @@ class CaseResultTest {
         assertEquals(
                 "language-javastacktrace",
                 ((HtmlElement) errorStackTrace.getFirstByXPath(".//code")).getAttribute("class"));
+    }
+
+    @Issue("https://github.com/jenkinsci/junit-plugin/issues/1296")
+    @Test
+    void urlsInTestOutputAreRenderedAsLinks() throws Exception {
+        String report = "<testsuite name='url-demo' tests='2' failures='1' skipped='1'>"
+                + "<testcase classname='demo' name='failing'>"
+                + "<failure message='failed, see https://example.com/message'>java.lang.AssertionError: see https://example.com/trace\n"
+                + "\tat demo.T.t(T.java:1)</failure>"
+                + "<system-out>see https://example.com/plain for details &lt;b&gt;bold&lt;/b&gt; &lt;img src=x onerror=alert(1)&gt;</system-out>"
+                + "<system-err>err http://example.com/err?a=1&amp;b=2</system-err>"
+                + "</testcase>"
+                + "<testcase classname='demo' name='skipped'><skipped message='tracked in https://example.com/skip'/></testcase>"
+                + "</testsuite>";
+        FreeStyleProject p = rule.createFreeStyleProject("urls");
+        p.getBuildersList().add(new TestBuilder() {
+            @Override
+            public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener)
+                    throws InterruptedException, IOException {
+                build.getWorkspace().child("junit.xml").write(report, "UTF-8");
+                return true;
+            }
+        });
+        p.getPublishersList().add(new JUnitResultArchiver("*.xml"));
+        rule.assertBuildStatus(Result.UNSTABLE, p.scheduleBuild2(0).get());
+
+        JenkinsRule.WebClient wc = rule.createWebClient();
+        HtmlPage failing = wc.goTo("job/urls/1/testReport/(root)/demo/failing/");
+        assertLink(failing, "Error Details", "https://example.com/message");
+        assertLink(failing, "Stack Trace", "https://example.com/trace");
+        assertLink(failing, "Standard Output", "https://example.com/plain");
+        assertLink(failing, "Standard Error", "http://example.com/err?a=1&b=2");
+        // everything except the links stays escaped text
+        HtmlElement stdout = outputCode(failing, "Standard Output");
+        assertTrue(stdout.getElementsByTagName("b").isEmpty());
+        assertTrue(stdout.getElementsByTagName("img").isEmpty());
+        assertTrue(stdout.getTextContent().contains("<b>bold</b> <img src=x onerror=alert(1)>"));
+        // the copy button copies the raw text, not the generated HTML
+        HtmlElement copy = failing.getFirstByXPath(
+                "//summary[contains(normalize-space(.),'Standard Output')]//button[contains(@class,'jenkins-copy-button')]");
+        assertEquals(
+                "see https://example.com/plain for details <b>bold</b> <img src=x onerror=alert(1)>",
+                copy.getAttribute("text"));
+
+        assertLink(wc.goTo("job/urls/1/testReport/(root)/demo/skipped/"), "Skip Message", "https://example.com/skip");
+
+        // the expandable summary on the test report pages uses the same template
+        // (served as text/plain and inserted into the page by failureSummary.js)
+        String summary = wc.goTo("job/urls/1/testReport/(root)/demo/failing/summary", "text/plain")
+                .getWebResponse()
+                .getContentAsString();
+        assertThat(summary, containsString("<a href=\"https://example.com/plain\">https://example.com/plain</a>"));
+        assertThat(summary, containsString("<a href=\"https://example.com/trace\">https://example.com/trace</a>"));
+        assertThat(summary, not(containsString("<img")));
+    }
+
+    private static HtmlElement outputCode(HtmlPage page, String title) {
+        HtmlElement code =
+                page.getFirstByXPath("//summary[normalize-space(.)='" + title + "']/following-sibling::pre/code");
+        assertNotNull(code, title);
+        return code;
+    }
+
+    private static void assertLink(HtmlPage page, String title, String url) {
+        List<HtmlElement> links = outputCode(page, title).getElementsByTagName("a");
+        assertEquals(1, links.size(), title);
+        assertEquals(url, links.get(0).getAttribute("href"));
+        assertEquals(url, links.get(0).getTextContent());
     }
 
     @Test
