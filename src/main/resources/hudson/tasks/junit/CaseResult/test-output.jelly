@@ -45,7 +45,8 @@ THE SOFTWARE.
                             <j:otherwise>
                                 <pre class="jdl-component-code__code">
                                     <code class="${it.isJavaStackTrace(value) ? 'language-javastacktrace' : null}">
-                                        ${value}
+                                        <!-- annotate escapes the text and turns URLs into sanitized links -->
+                                        <j:out value="${it.annotate(value)}" />
                                     </code>
                                 </pre>
                             </j:otherwise>
