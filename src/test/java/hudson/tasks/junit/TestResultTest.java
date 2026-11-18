@@ -29,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import hudson.XmlFile;
+import hudson.model.Run;
 import hudson.tasks.test.PipelineTestDetails;
 import java.io.File;
 import java.io.IOException;
@@ -515,6 +516,54 @@ public class TestResultTest {
         assertTrue(
                 isTwoEqual,
                 "Forgot to implement XML parsing for something? Forgot to implement XML parsing for something?");
+    }
+
+    @Issue("GH-1298")
+    @Test
+    void flakyAndRerunFailuresSurviveBuildXmlRoundTrip() throws Exception {
+        TestResult testResult = new TestResult();
+        testResult.parse(getDataFile("gh-237/TEST-io.olamy.AlwaysFailTest.xml"), null);
+        testResult.parse(getDataFile("gh-237/TEST-io.olamy.FlakyTest.xml"), null);
+        testResult.tally();
+        CaseResult flaky = testResult.getSuite("io.olamy.FlakyTest").getCase("io.olamy.FlakyTest.testApp");
+        CaseResult rerun = testResult.getSuite("io.olamy.AlwaysFailTest").getCase("io.olamy.AlwaysFailTest.testApp");
+        assertFalse(flaky.getFlakyFailures().isEmpty());
+        assertFalse(rerun.getRerunFailures().isEmpty());
+
+        // Data contributed by a TestDataPublisher is stored in build.xml with Run.XSTREAM2, and may reference the
+        // TestResult itself (as Flaky Test Handler does), so CaseResult must be readable back with reflection.
+        TestResult read = (TestResult) Run.XSTREAM2.fromXML(Run.XSTREAM2.toXML(testResult));
+
+        assertEquals(
+                flaky.getFlakyFailures(),
+                findCase(read, "io.olamy.FlakyTest.testApp").getFlakyFailures());
+        assertEquals(
+                rerun.getRerunFailures(),
+                findCase(read, "io.olamy.AlwaysFailTest.testApp").getRerunFailures());
+    }
+
+    // the lookup maps of TestResult and SuiteResult are transient, so search the deserialized lists instead
+    private static CaseResult findCase(TestResult result, String fullName) {
+        return result.getSuites().stream()
+                .flatMap(suite -> suite.getCases().stream())
+                .filter(c -> c.getFullName().equals(fullName))
+                .findFirst()
+                .orElseThrow();
+    }
+
+    @Issue("GH-1298")
+    @Test
+    void failureWrittenByRecordVersionCanBeRead() {
+        // The XML that XStream wrote while Failure was a record, as found in build.xml files of affected builds.
+        String xml = """
+                <hudson.tasks.junit.Failure plugin="junit@1463.v7508416a_349c">
+                  <message>first attempt failed</message>
+                  <type>failure</type>
+                  <stackTrace>stack</stackTrace>
+                </hudson.tasks.junit.Failure>
+                """;
+        Failure failure = (Failure) Run.XSTREAM2.fromXML(xml);
+        assertEquals(new Failure("first attempt failed", "failure", "stack", null, null), failure);
     }
 
     @Issue("GH-237")
