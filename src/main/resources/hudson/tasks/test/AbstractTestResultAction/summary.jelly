@@ -62,7 +62,7 @@ THE SOFTWARE.
         </ul>
 
         <!-- Show failures link -->
-        <j:if test="${displayedCount &lt; failedTests.size() }">
+        <j:if test="${displayedCount - 1 &lt; failedTests.size() }">
           <st:adjunct includes="hudson.tasks.test.AbstractTestResultAction.show-failures" />
           <a id="showLink" name="editFailuresLink"
              href="#showFailuresLink">${%Show all failed tests} ${">>>"}</a>
