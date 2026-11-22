@@ -377,31 +377,32 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
             } else if (summary.getTotalCount() > 0) {
                 build.addAction(action);
             }
-
-            if (!task.isSkipPublishingChecks()) {
-                // If we haven't been provided with a checks name, and we have pipeline test details, set the checks
-                // name
-                // to be a ' / '-joined string of the enclosing blocks names, plus 'Tests' at the start. If there are no
-                // enclosing blocks, you'll end up with just 'Tests'.
-                String checksName = task.getChecksName();
-                if (checksName == null && pipelineTestDetails != null) {
-                    List<String> checksComponents = new ArrayList<>(pipelineTestDetails.getEnclosingBlockNames());
-                    checksComponents.add(DEFAULT_CHECKS_NAME);
-                    Collections.reverse(checksComponents);
-                    checksName = String.join(" / ", checksComponents);
-                }
-                if (Util.fixEmpty(checksName) == null) {
-                    checksName = DEFAULT_CHECKS_NAME;
-                }
-                try {
-                    new JUnitChecksPublisher(build, checksName, result, summary).publishChecks(listener);
-                } catch (Exception x) {
-                    Functions.printStackTrace(x, listener.error("Publishing JUnit checks failed:"));
-                }
-            }
-
-            return summary;
         }
+
+        // Publish outside the build lock: publishing calls out to e.g. GitHub, and while it hangs, anything else
+        // needing the build (such as WorkflowRun.save) would hang too.
+        if (!task.isSkipPublishingChecks()) {
+            // If we haven't been provided with a checks name, and we have pipeline test details, set the checks
+            // name to be a ' / '-joined string of the enclosing blocks names, plus 'Tests' at the start. If there
+            // are no enclosing blocks, you'll end up with just 'Tests'.
+            String checksName = task.getChecksName();
+            if (checksName == null && pipelineTestDetails != null) {
+                List<String> checksComponents = new ArrayList<>(pipelineTestDetails.getEnclosingBlockNames());
+                checksComponents.add(DEFAULT_CHECKS_NAME);
+                Collections.reverse(checksComponents);
+                checksName = String.join(" / ", checksComponents);
+            }
+            if (Util.fixEmpty(checksName) == null) {
+                checksName = DEFAULT_CHECKS_NAME;
+            }
+            try {
+                new JUnitChecksPublisher(build, checksName, result, summary).publishChecks(listener);
+            } catch (Exception x) {
+                Functions.printStackTrace(x, listener.error("Publishing JUnit checks failed:"));
+            }
+        }
+
+        return summary;
     }
 
     /**
