@@ -48,6 +48,7 @@ import hudson.tasks.test.PipelineTestDetails;
 import hudson.util.DescribableList;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import io.jenkins.plugins.checks.api.ChecksDetails;
 import io.jenkins.plugins.junit.checks.JUnitChecksPublisher;
 import io.jenkins.plugins.junit.storage.FileJunitTestResultStorage;
 import io.jenkins.plugins.junit.storage.JunitTestResultStorage;
@@ -332,6 +333,7 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                         listener)
                 : null;
 
+        ChecksDetails checksDetails = null;
         synchronized (build) {
             // TODO can the build argument be omitted now, or is it used prior to the call to addAction?
             TestResultAction action = build.getAction(TestResultAction.class);
@@ -380,9 +382,8 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
 
             if (!task.isSkipPublishingChecks()) {
                 // If we haven't been provided with a checks name, and we have pipeline test details, set the checks
-                // name
-                // to be a ' / '-joined string of the enclosing blocks names, plus 'Tests' at the start. If there are no
-                // enclosing blocks, you'll end up with just 'Tests'.
+                // name to be a ' / '-joined string of the enclosing blocks names, plus 'Tests' at the start. If
+                // there are no enclosing blocks, you'll end up with just 'Tests'.
                 String checksName = task.getChecksName();
                 if (checksName == null && pipelineTestDetails != null) {
                     List<String> checksComponents = new ArrayList<>(pipelineTestDetails.getEnclosingBlockNames());
@@ -393,15 +394,26 @@ public class JUnitResultArchiver extends Recorder implements SimpleBuildStep, JU
                 if (Util.fixEmpty(checksName) == null) {
                     checksName = DEFAULT_CHECKS_NAME;
                 }
+                // Build the checks now: a parallel junit step may merge into this result once the lock is released.
                 try {
-                    new JUnitChecksPublisher(build, checksName, result, summary).publishChecks(listener);
+                    checksDetails = new JUnitChecksPublisher(build, checksName, result, summary).extractChecksDetails();
                 } catch (Exception x) {
                     Functions.printStackTrace(x, listener.error("Publishing JUnit checks failed:"));
                 }
             }
-
-            return summary;
         }
+
+        if (checksDetails != null) {
+            // Publish outside the build lock: publishing calls out to e.g. GitHub, and while it hangs, anything else
+            // needing the build (such as WorkflowRun.save) would hang too.
+            try {
+                JUnitChecksPublisher.publishChecks(build, checksDetails, listener);
+            } catch (Exception x) {
+                Functions.printStackTrace(x, listener.error("Publishing JUnit checks failed:"));
+            }
+        }
+
+        return summary;
     }
 
     /**

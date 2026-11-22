@@ -1,6 +1,5 @@
 package io.jenkins.plugins.junit.checks;
 
-import edu.hm.hafner.util.VisibleForTesting;
 import hudson.model.Run;
 import hudson.model.TaskListener;
 import hudson.tasks.junit.CaseResult;
@@ -34,13 +33,20 @@ public class JUnitChecksPublisher {
         this.summary = summary;
     }
 
-    public void publishChecks(TaskListener listener) {
+    /**
+     * Publishes checks built by {@link #extractChecksDetails()}.
+     * This may call out to the SCM host, so don't call it while holding the build lock.
+     */
+    public static void publishChecks(Run<?, ?> run, ChecksDetails details, TaskListener listener) {
         ChecksPublisher publisher = ChecksPublisherFactory.fromRun(run, listener);
-        publisher.publish(extractChecksDetails());
+        publisher.publish(details);
     }
 
-    @VisibleForTesting
-    ChecksDetails extractChecksDetails() {
+    /**
+     * Builds the checks for the test result.
+     * The result can change when parallel steps merge into it, so call this while holding the build lock.
+     */
+    public ChecksDetails extractChecksDetails() {
         String testsURL = DisplayURLProvider.get().getTestsURL(run);
         String resultDetails = extractChecksTitle();
         ChecksOutput output = new ChecksOutput.ChecksOutputBuilder()
